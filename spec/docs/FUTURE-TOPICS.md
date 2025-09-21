@@ -75,13 +75,13 @@ These topics represent interesting research directions and framework improvement
 
 ---
 
-## 1. End-to-End Encryption Support
+## 1. Local-First Upgrade: End-to-End Encryption Support
 
 **Status**: Future Research (v2+)
 **Current Limitation**: Framework provides offline-first functionality and user-controlled storage but lacks end-to-end encryption (E2EE), which is essential for true local-first privacy guarantees.
 
 **Technical Challenge**:
-Implementing E2EE while maintaining RDF semantic interoperability and CRDT merge capabilities presents several design challenges:
+Implementing E2EE to achieve true local-first guarantees while maintaining RDF semantic interoperability and CRDT merge capabilities presents several design challenges:
 - **RDF Query Compatibility**: Encrypted RDF cannot be semantically queried or reasoned over
 - **CRDT Merge Operations**: Conflict resolution requires access to plaintext data structures
 - **Index Generation**: Sharded indices require plaintext access for semantic grouping and performance optimization
@@ -367,7 +367,7 @@ This represents a major expansion beyond single-Pod CRDT synchronization into di
 
 **v2+ Future Research (9 topics)**:
 
-1. End-to-End Encryption Support
+1. Local-First Upgrade: End-to-End Encryption Support
 2. Non-RDF Binary File Support
 3. Multi-Pod Application Integration
 4. Custom Tombstone Format Optimization
