@@ -46,7 +46,7 @@ jobs:
       - name: Build Flutter web app
         run: |
           cd packages/locorda/example
-          flutter build web --release --base-href /locorda/example/personal_notes_app/
+          flutter build web --release --base-href /example/personal_notes_app/
 
       - name: Setup deployment structure
         run: |
