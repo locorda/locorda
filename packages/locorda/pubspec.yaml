@@ -2,6 +2,7 @@ name: locorda
 description: Locorda - Sync offline-first apps using your user's remote storage
 version: 0.1.0+1
 publish_to: none
+publisher: locorda.dev
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
