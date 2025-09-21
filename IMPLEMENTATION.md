@@ -36,7 +36,7 @@ TBD
 This project uses Melos for multipackage management:
 
 ```bash
-git clone https://github.com/kkalass/locorda.git
+git clone https://github.com/locorda/locorda.git
 cd locorda
 dart pub get
 dart pub run melos bootstrap

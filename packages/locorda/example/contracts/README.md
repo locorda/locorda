@@ -1,7 +1,7 @@
 # Personal Notes App - Web Assets
 
 This directory contains assets intended for deployment to GitHub Pages at:
-`https://kkalass.github.io/locorda/example/personal_notes_app/`
+`https://locorda.dev/example/personal_notes_app/`
 
 ## Directory Structure
 
@@ -29,7 +29,7 @@ OIDC client configuration:
 These assets should be deployed to GitHub Pages to make them accessible at predictable URLs that the Flutter app can reference. The URLs are already configured in the Dart code:
 
 ```dart
-const baseUrl = 'https://kkalass.github.io/locorda/example/personal_notes_app/mappings';
+const baseUrl = 'https://locorda.dev/example/personal_notes_app/mappings';
 ```
 
 ## Vocabulary Design

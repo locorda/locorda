@@ -66,7 +66,7 @@ A multipackage Dart library that aims to become production-ready for real-world 
 ### 🌐 Web Resources
 | Resource | Purpose | Audience |
 |----------|---------|----------|
-| **[📋 RDF Vocabularies & Mappings](https://kkalass.github.io/locorda/)** | Web access to RDF vocabularies and semantic mappings | Developers, semantic web tools |
+| **[📋 RDF Vocabularies & Mappings](https://locorda.dev/)** | Web access to RDF vocabularies and semantic mappings | Developers, semantic web tools |
 
 ### 🛠️ Implementation Documents (Root Level)
 | Document | Purpose | Audience |

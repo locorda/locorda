@@ -1,6 +1,6 @@
 name: locorda
 
-repository: https://github.com/kkalass/locorda
+repository: https://github.com/locorda/locorda
 
 packages:
   - packages/**

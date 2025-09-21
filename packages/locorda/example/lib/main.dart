@@ -30,8 +30,7 @@ import 'services/notes_service.dart';
 import 'storage/database.dart' show AppDatabase;
 import 'storage/repositories.dart' show CategoryRepository, NoteRepository;
 
-const appBaseUrl =
-    'https://kkalass.github.io/locorda/example/personal_notes_app';
+const appBaseUrl = 'https://locorda.dev/example/personal_notes_app';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

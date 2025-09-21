@@ -14,7 +14,7 @@ import 'package:rdf_core/rdf_core.dart';
 class PersonalNotesVocab {
   /// Base IRI for the Personal Notes vocabulary
   static const baseIri =
-      'https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes#';
+      'https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes#';
 
   // Classes
 

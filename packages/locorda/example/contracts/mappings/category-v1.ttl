@@ -1,11 +1,11 @@
-@prefix : <https://kkalass.github.io/locorda/example/personal_notes_app/mappings/category-v1#> .
+@prefix : <https://locorda.dev/example/personal_notes_app/mappings/category-v1#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix mc: <https://w3id.org/solid-crdt-sync/vocab/merge-contract#> .
 @prefix algo: <https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#> .
 @prefix mappings: <https://w3id.org/solid-crdt-sync/mappings/> .
 @prefix schema: <https://schema.org/> .
-@prefix pnotes: <https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes#> .
+@prefix pnotes: <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes#> .
 
 # CRDT Document Mapping for Notes Categories
 # Defines merge strategies for NotesCategory properties

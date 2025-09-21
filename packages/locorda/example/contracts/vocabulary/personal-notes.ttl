@@ -1,4 +1,4 @@
-@prefix : <https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes#> .
+@prefix : <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -6,7 +6,7 @@
 @prefix schema: <https://schema.org/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
-<https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes>
+<https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes>
     a owl:Ontology ;
     rdfs:label "Personal Notes Vocabulary" ;
     rdfs:comment "A vocabulary for personal note-taking applications with categories and organization features." ;
@@ -23,14 +23,14 @@
     rdfs:label "Notes Category" ;
     rdfs:comment "A category for organizing personal notes. Provides a more specific classification than schema:CreativeWork for note organization purposes." ;
     rdfs:subClassOf schema:CreativeWork ;
-    rdfs:isDefinedBy <https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes> .
+    rdfs:isDefinedBy <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes> .
 
 :PersonalNote  
     a owl:Class ;
     rdfs:label "Personal Note" ;
     rdfs:comment "A personal note or memo. Specializes schema:NoteDigitalDocument for personal note-taking use cases." ;
     rdfs:subClassOf schema:NoteDigitalDocument ;
-    rdfs:isDefinedBy <https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes> .
+    rdfs:isDefinedBy <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes> .
 
 #
 # Properties
@@ -43,7 +43,7 @@
     rdfs:domain :PersonalNote ;
     rdfs:range :NotesCategory ;
     rdfs:subPropertyOf dcterms:subject ;
-    rdfs:isDefinedBy <https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes> .
+    rdfs:isDefinedBy <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes> .
 
 :categoryColor
     a owl:DatatypeProperty ;
@@ -51,7 +51,7 @@
     rdfs:comment "A color code (hex, name, etc.) associated with a category for UI display purposes." ;
     rdfs:domain :NotesCategory ;
     rdfs:range xsd:string ;
-    rdfs:isDefinedBy <https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes> .
+    rdfs:isDefinedBy <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes> .
 
 :categoryIcon
     a owl:DatatypeProperty ;
@@ -59,7 +59,7 @@
     rdfs:comment "An icon identifier or emoji associated with a category for UI display purposes." ;
     rdfs:domain :NotesCategory ;
     rdfs:range xsd:string ;
-    rdfs:isDefinedBy <https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes> .
+    rdfs:isDefinedBy <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes> .
 
 :archived
     a owl:DatatypeProperty ;
@@ -67,4 +67,4 @@
     rdfs:comment "Indicates that a category is archived (soft deleted) but remains referenceable." ;
     rdfs:domain :NotesCategory ;
     rdfs:range xsd:boolean ;
-    rdfs:isDefinedBy <https://kkalass.github.io/locorda/example/personal_notes_app/vocabulary/personal-notes> .
+    rdfs:isDefinedBy <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes> .

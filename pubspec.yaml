@@ -1,10 +1,10 @@
 name: locorda_workspace
 description: Workspace for the locorda monorepo
 version: 0.9.15-dev
-homepage: https://kkalass.github.io/locorda/
-repository: https://github.com/kkalass/locorda
-issue_tracker: https://github.com/kkalass/locorda/issues
-documentation: https://kkalass.github.io/locorda/
+homepage: https://locorda.dev/
+repository: https://github.com/locorda/locorda
+issue_tracker: https://github.com/locorda/locorda/issues
+documentation: https://locorda.dev/
 publish_to: none
 
 environment:
