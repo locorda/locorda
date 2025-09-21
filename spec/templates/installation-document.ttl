@@ -2,10 +2,11 @@
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix crdt: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
+@prefix solidsync: <https://w3id.org/solid-crdt-sync/vocab/solid#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix mappings: <https://w3id.org/solid-crdt-sync/mappings/> .
 
-# Template for Client Installation Document
+# Template for Client Installation Document (Solid-specific)
 # Placeholders: {WEBID_URI}, {APP_ID}, {TIMESTAMP}, {INSTALLATION_URI}
 
 <> a sync:ManagedDocument;
@@ -19,8 +20,8 @@
    ] .
 
 <#installation> a crdt:ClientInstallation;
-   crdt:belongsToWebID <{WEBID_URI}>;
-   crdt:applicationId <{APP_ID}>;
+   solidsync:belongsToWebID <{WEBID_URI}>;
+   solidsync:solidOidcClientId <{APP_ID}>;
    crdt:createdAt "{TIMESTAMP}"^^xsd:dateTime;
    crdt:lastActiveAt "{TIMESTAMP}"^^xsd:dateTime;
    crdt:maxInactivityPeriod "P6M"^^xsd:duration .

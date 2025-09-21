@@ -1,4 +1,4 @@
-# PaCoRS - Documentation Index
+# locorda - Documentation Index
 
 **Version:** 0.10.0-draft
 **Last Updated:** September 2025
@@ -13,10 +13,10 @@
 
 ### Version 0.10.0-draft (September 2025)
 - **MAJOR ARCHITECTURAL CHANGE:** Split monolithic specification into backend-agnostic core and backend-specific implementations
-- **System Generalization:** Renamed from "Solid-specific" to "PaCoRS" (Passive Storage Collaborative RDF Sync System) supporting multiple storage backends
+- **System Generalization:** Renamed from "Solid-specific" to "locorda" (Passive Storage Collaborative RDF Sync System) supporting multiple storage backends
 - **New Document Structure:**
-  - [PACORS-SPECIFICATION.md](PACORS-SPECIFICATION.md): PaCoRS core specification
-  - [PACORS-SOLID-BACKEND.md](PACORS-SOLID-BACKEND.md): PaCoRS Solid Pod implementation
+  - [locorda-SPECIFICATION.md](locorda-SPECIFICATION.md): locorda core specification
+  - [locorda-SOLID-BACKEND.md](locorda-SOLID-BACKEND.md): locorda Solid Pod implementation
   - ARCHITECTURE.md: Documentation index and navigation (this document)
 - **Backend Abstraction:** Defined backend interface requirements for resource discovery, storage operations, and authentication
 - **Maintained Compatibility:** All existing Solid functionality preserved in Solid backend specification
@@ -29,7 +29,7 @@ For historical changelog entries, see git history or the individual specificatio
 
 ### Core Framework (Backend-Agnostic)
 
-**[PACORS-SPECIFICATION.md](PACORS-SPECIFICATION.md)** - The complete PaCoRS core specification
+**[locorda-SPECIFICATION.md](locorda-SPECIFICATION.md)** - The complete locorda core specification
 - 4-layer architecture: Data Resource, Merge Contract, Indexing, Sync Strategy
 - CRDT algorithms and conflict resolution
 - Backend abstraction interfaces
@@ -40,7 +40,7 @@ For historical changelog entries, see git history or the individual specificatio
 
 ### Backend Implementations
 
-**[PACORS-SOLID-BACKEND.md](PACORS-SOLID-BACKEND.md)** - PaCoRS Solid Pod backend implementation
+**[locorda-SOLID-BACKEND.md](locorda-SOLID-BACKEND.md)** - locorda Solid Pod backend implementation
 - Solid Type Index integration for discovery isolation
 - Solid-OIDC authentication implementation
 - HTTP-based storage with ETag optimization
@@ -58,9 +58,9 @@ Additional backend specifications may be added as implementations are developed:
 
 ## Quick Start Guide
 
-1. **For Application Developers:** Start with [PACORS-SPECIFICATION.md](PACORS-SPECIFICATION.md) to understand the core concepts, then refer to your specific backend specification.
+1. **For Application Developers:** Start with [locorda-SPECIFICATION.md](locorda-SPECIFICATION.md) to understand the core concepts, then refer to your specific backend specification.
 
-2. **For Library Implementers:** Read the complete [PACORS-SPECIFICATION.md](PACORS-SPECIFICATION.md) specification, focusing on the backend abstraction interfaces in Section 4.4.
+2. **For Library Implementers:** Read the complete [locorda-SPECIFICATION.md](locorda-SPECIFICATION.md) specification, focusing on the backend abstraction interfaces in Section 4.4.
 
-3. **For Solid Developers:** Read [PACORS-SPECIFICATION.md](PACORS-SPECIFICATION.md) for foundations, then implement using [PACORS-SOLID-BACKEND.md](PACORS-SOLID-BACKEND.md).
+3. **For Solid Developers:** Read [locorda-SPECIFICATION.md](locorda-SPECIFICATION.md) for foundations, then implement using [locorda-SOLID-BACKEND.md](locorda-SOLID-BACKEND.md).
 

@@ -1,4 +1,4 @@
-# PaCoRS: Passive Storage Collaborative RDF Sync System
+# locorda: Passive Storage Collaborative RDF Sync System
 
 A comprehensive specification and Dart/Flutter implementation for building **local-first, collaborative, and truly interoperable applications** using passive storage backends with RDF and CRDT synchronization.
 
@@ -64,7 +64,7 @@ A multipackage Dart library that aims to become production-ready for real-world 
 ### 🌐 Web Resources
 | Resource | Purpose | Audience |
 |----------|---------|----------|
-| **[📋 RDF Vocabularies & Mappings](https://kkalass.github.io/pacors/)** | Web access to RDF vocabularies and semantic mappings | Developers, semantic web tools |
+| **[📋 RDF Vocabularies & Mappings](https://kkalass.github.io/locorda/)** | Web access to RDF vocabularies and semantic mappings | Developers, semantic web tools |
 
 ### 🛠️ Implementation Documents (Root Level)
 | Document | Purpose | Audience |
@@ -113,7 +113,7 @@ This work aligns with and wants to eventually contribute to:
 ## Contributing
 
 ### Specification Feedback
-- **Issues & Suggestions**: [GitHub Issues](https://github.com/klaaskalass/pacors/issues)
+- **Issues & Suggestions**: [GitHub Issues](https://github.com/klaaskalass/locorda/issues)
 - **Architectural Discussions**: [W3C CRDT for RDF Community Group](https://www.w3.org/community/crdt4rdf/)
 - **Pull Requests**: Documentation improvements and clarifications welcome
 
@@ -135,19 +135,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you use this work in academic research, please cite:
 
 ```bibtex
-@misc{kalaß2025pacors,
-  title={PaCoRS: Passive Storage Collaborative RDF Sync System},
+@misc{kalaß2025locorda,
+  title={locorda: Passive Storage Collaborative RDF Sync System},
   author={Klas Kalaß},
   year={2025},
-  url={https://github.com/klaaskalass/pacors}
+  url={https://github.com/klaaskalass/locorda}
 }
 ```
 
 ## Community
 
-- **Discussions**: [GitHub Discussions](https://github.com/klaaskalass/pacors/discussions)
+- **Discussions**: [GitHub Discussions](https://github.com/klaaskalass/locorda/discussions)
 - **W3C Community Group**: [CRDT for RDF](https://www.w3.org/community/crdt4rdf/)
-- **Matrix Chat**: [#pacors:matrix.org](https://matrix.to/#/#pacors:matrix.org) *(planned)*
+- **Matrix Chat**: [#locorda:matrix.org](https://matrix.to/#/#locorda:matrix.org) *(planned)*
 
 ## AI Assistance Acknowledgment
 

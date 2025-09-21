@@ -1,18 +1,18 @@
 # Gemini Code Assistant Context
 
-This document provides context for the Gemini Code Assistant to understand the `pacors` project.
+This document provides context for the Gemini Code Assistant to understand the `locorda` project.
 
 ## Project Overview
 
-`pacors` is a multipackage Dart library designed to facilitate local-first, collaborative applications by synchronizing RDF data with Solid Pods. It uses state-based Conflict-free Replicated Data Types (CRDTs) to ensure data consistency and enable offline functionality.
+`locorda` is a multipackage Dart library designed to facilitate local-first, collaborative applications by synchronizing RDF data with Solid Pods. It uses state-based Conflict-free Replicated Data Types (CRDTs) to ensure data consistency and enable offline functionality.
 
 ### Package Structure
 
 The project is organized as a monorepo with the following packages:
 
-- **`pacors_core`**: Platform-agnostic sync logic, CRDT implementations, and abstract interfaces
-- **`pacors_solid_auth`**: Authentication bridge to the solid-auth library for Solid Pod login
-- **`pacors_ui`**: Flutter UI components including login screens and sync status widgets
+- **`locorda_core`**: Platform-agnostic sync logic, CRDT implementations, and abstract interfaces
+- **`locorda_solid_auth`**: Authentication bridge to the solid-auth library for Solid Pod login
+- **`locorda_ui`**: Flutter UI components including login screens and sync status widgets
 
 The project's architecture is composed of four layers:
 

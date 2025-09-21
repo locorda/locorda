@@ -1,6 +1,6 @@
-name: pacors
+name: locorda
 
-repository: https://github.com/kkalass/pacors
+repository: https://github.com/kkalass/locorda
 
 packages:
   - packages/**

@@ -31,7 +31,7 @@ crdt:hasClockEntry a rdf:Property;
 
 crdt:installationId a rdf:Property;
     rdfs:label "installation ID";
-    rdfs:comment "The unique identifier for a client installation within a Hybrid Logical Clock entry. Corresponds to 'client ID' in CRDT literature, but uses 'installation' to avoid confusion with Solid OIDC client identifiers.";
+    rdfs:comment "The unique identifier for a client installation within a Hybrid Logical Clock entry. Corresponds to 'client ID' in CRDT literature, but uses 'installation' to avoid confusion with storage backend client identifiers.";
     rdfs:domain crdt:ClockEntry;
     rdfs:range rdfs:Resource . # Should be an IRI
 
@@ -55,15 +55,15 @@ crdt:clockHash a rdf:Property;
 
 # --- Installation Management Properties ---
 
-crdt:belongsToWebID a rdf:Property;
-    rdfs:label "belongs to WebID";
-    rdfs:comment "Links an installation to the WebID that owns it.";
+crdt:belongsToUser a rdf:Property;
+    rdfs:label "belongs to user";
+    rdfs:comment "Links an installation to the user identity that owns it. In Solid contexts, this would be a WebID; in other contexts, this could be any user identifier.";
     rdfs:domain crdt:ClientInstallation;
     rdfs:range rdfs:Resource .
 
 crdt:applicationId a rdf:Property;
     rdfs:label "application ID";
-    rdfs:comment "The unique identifier for the application that created this installation - the Client ID in Solid OIDC Terms.";
+    rdfs:comment "The unique identifier for the application that created this installation. In Solid contexts, this would be the OIDC Client ID; in other contexts, this could be any application identifier.";
     rdfs:domain crdt:ClientInstallation;
     rdfs:range rdfs:Resource .
 
@@ -97,24 +97,25 @@ crdt:deletedAt a rdf:Property;
 
 crdt:documentTombstoneRetentionPeriod a rdf:Property;
     rdfs:label "document tombstone retention period";
-    rdfs:comment "Duration to retain document tombstones (complete deleted documents) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P2Y' for 2 years). Applied to Type Index (for defaults) or Type Index registrations (for per-type overrides). Longer retention recommended due to high impact of zombie deletions affecting recreated documents.";
-    rdfs:domain [ a owl:Class; owl:unionOf (solid:TypeIndex solid:TypeRegistration) ];
+    rdfs:comment "Duration to retain document tombstones (complete deleted documents) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P2Y' for 2 years). Applied to storage backend configuration documents. Longer retention recommended due to high impact of zombie deletions affecting recreated documents.";
+    rdfs:domain rdfs:Resource;
     rdfs:range xsd:duration .
 
 crdt:enableDocumentTombstoneCleanup a rdf:Property;
     rdfs:label "enable document tombstone cleanup";
-    rdfs:comment "Boolean flag indicating whether the framework should automatically clean up document tombstones after the retention period. Applied to Type Index (for defaults) or Type Index registrations (for per-type overrides).";
-    rdfs:domain [ a owl:Class; owl:unionOf (solid:TypeIndex solid:TypeRegistration) ];
+    rdfs:comment "Boolean flag indicating whether the framework should automatically clean up document tombstones after the retention period. Applied to storage backend configuration documents.";
+    rdfs:domain rdfs:Resource;
     rdfs:range xsd:boolean .
 
 crdt:propertyTombstoneRetentionPeriod a rdf:Property;
     rdfs:label "property tombstone retention period";
-    rdfs:comment "Duration to retain property tombstones (deleted values within multi-value properties) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P6M' for 6 months). Applied to Type Index (for defaults) or Type Index registrations (for per-type overrides). Shorter retention acceptable due to lower impact of zombie deletions.";
-    rdfs:domain [ a owl:Class; owl:unionOf (solid:TypeIndex solid:TypeRegistration) ];
+    rdfs:comment "Duration to retain property tombstones (deleted values within multi-value properties) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P6M' for 6 months). Applied to storage backend configuration documents. Shorter retention acceptable due to lower impact of zombie deletions.";
+    rdfs:domain rdfs:Resource;
     rdfs:range xsd:duration .
 
 crdt:enablePropertyTombstoneCleanup a rdf:Property;
     rdfs:label "enable property tombstone cleanup";
-    rdfs:comment "Boolean flag indicating whether the framework should automatically clean up property tombstones after the retention period. Applied to Type Index (for defaults) or Type Index registrations (for per-type overrides).";
-    rdfs:domain [ a owl:Class; owl:unionOf (solid:TypeIndex solid:TypeRegistration) ];
+    rdfs:comment "Boolean flag indicating whether the framework should automatically clean up property tombstones after the retention period. Applied to storage backend configuration documents.";
+    rdfs:domain rdfs:Resource;
     rdfs:range xsd:boolean .
+

@@ -1,6 +1,6 @@
-# PaCoRS Specification
+# locorda Specification
 
-This document serves as the main entry point for the **PaCoRS (Passive Storage Collaborative RDF Sync System) Specification** - a comprehensive framework for building local-first, collaborative, and interoperable applications using passive storage backends with RDF and CRDT synchronization.
+This document serves as the main entry point for the **locorda (Passive Storage Collaborative RDF Sync System) Specification** - a comprehensive framework for building local-first, collaborative, and interoperable applications using passive storage backends with RDF and CRDT synchronization.
 
 ## Specification Overview
 

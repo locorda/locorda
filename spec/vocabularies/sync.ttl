@@ -13,7 +13,7 @@
 
 sync:ManagedDocument a rdfs:Class;
     rdfs:label "Managed Document";
-    rdfs:comment "A document that is managed by the CRDT sync framework, containing framework metadata and a primary resource topic.";
+    rdfs:comment "A document that is managed by the locorda sync framework, containing framework metadata and a primary resource topic.";
     rdfs:subClassOf <http://xmlns.com/foaf/0.1/Document> .
 
 # --- Property Definitions ---

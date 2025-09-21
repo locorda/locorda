@@ -1,0 +1,48 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix solid: <http://www.w3.org/ns/solid/terms#> .
+@prefix crdt: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
+@prefix solidsync: <https://w3id.org/solid-crdt-sync/vocab/solid#> .
+
+# --- Ontology Definition ---
+
+<https://w3id.org/solid-crdt-sync/vocab/solid> a owl:Ontology;
+    rdfs:label "Solid Backend Integration for CRDT Sync";
+    rdfs:comment "Solid-specific integration vocabulary that provides mappings and aliases for using the core CRDT sync framework with Solid Pods. This vocabulary does not define new concepts but provides Solid-specific interpretations of core framework concepts." .
+
+# --- Solid-Specific Property Aliases ---
+# These properties provide Solid-specific interpretations of core framework concepts
+
+solidsync:belongsToWebID a rdf:Property;
+    rdfs:label "belongs to WebID";
+    rdfs:comment "Solid-specific interpretation of crdt:belongsToUser. Links an installation to the Solid WebID that owns it. This is a semantic alias that clarifies the user identity type in Solid contexts.";
+    rdfs:subPropertyOf crdt:belongsToUser;
+    rdfs:domain crdt:ClientInstallation;
+    rdfs:range rdfs:Resource .
+
+solidsync:solidOidcClientId a rdf:Property;
+    rdfs:label "Solid OIDC client ID";
+    rdfs:comment "Solid-specific interpretation of crdt:applicationId. The OIDC Client ID as registered with the Solid identity provider. This is a semantic alias that clarifies the application identifier type in Solid contexts.";
+    rdfs:subPropertyOf crdt:applicationId;
+    rdfs:domain crdt:ClientInstallation;
+    rdfs:range rdfs:Resource .
+
+# --- Solid Configuration Patterns ---
+# Documentation of how core framework properties are used in Solid contexts
+
+# USAGE NOTE: Retention Policy Configuration in Solid
+# The core framework retention properties (crdt:documentTombstoneRetentionPeriod,
+# crdt:enableDocumentTombstoneCleanup, crdt:propertyTombstoneRetentionPeriod,
+# crdt:enablePropertyTombstoneCleanup) are used in Solid contexts as follows:
+#
+# 1. Applied to Type Index document itself for framework-wide defaults:
+#    <> crdt:documentTombstoneRetentionPeriod "P2Y"^^xsd:duration .
+#
+# 2. Applied to solid:TypeRegistration entries for type-specific overrides:
+#    solid:hasRegistration [
+#       a solid:TypeRegistration;
+#       solid:forClass sync:ManagedDocument;
+#       sync:managedResourceType schema:Recipe;
+#       crdt:documentTombstoneRetentionPeriod "P3Y"^^xsd:duration
+#    ] .

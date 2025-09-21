@@ -44,12 +44,12 @@ This runs both version and publish in preview mode.
 
 **Version individual package:**
 ```bash
-melos version --scope=pacors_core
+melos version --scope=locorda_core
 ```
 
 **Publish individual package:**
 ```bash
-melos publish --scope=pacors_core
+melos publish --scope=locorda_core
 ```
 
 ## Migration from Old Scripts

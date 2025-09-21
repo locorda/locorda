@@ -1,6 +1,6 @@
-# Contributing to pacors
+# Contributing to locorda
 
-Thank you for your interest in contributing to `pacors`! We welcome contributions of all kinds—bug reports, feature requests, documentation improvements, and code.
+Thank you for your interest in contributing to `locorda`! We welcome contributions of all kinds—bug reports, feature requests, documentation improvements, and code.
 
 ## How to Contribute
 

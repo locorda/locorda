@@ -1,10 +1,10 @@
-name: pacors_workspace
-description: Workspace for the pacors monorepo
+name: locorda_workspace
+description: Workspace for the locorda monorepo
 version: 0.9.15-dev
-homepage: https://kkalass.github.io/pacors/
-repository: https://github.com/kkalass/pacors
-issue_tracker: https://github.com/kkalass/pacors/issues
-documentation: https://kkalass.github.io/pacors/
+homepage: https://kkalass.github.io/locorda/
+repository: https://github.com/kkalass/locorda
+issue_tracker: https://github.com/kkalass/locorda/issues
+documentation: https://kkalass.github.io/locorda/
 publish_to: none
 
 environment:

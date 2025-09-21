@@ -27,13 +27,13 @@
 
    # Client installation documents index registration
    solid:hasRegistration [
-      a solid:TypeRegistration; 
+      a solid:TypeRegistration;
       solid:forClass idx:FullIndex;
       solid:instanceContainer <{FRAMEWORK_INDEX_CONTAINER_URI}>;
       idx:indexesClass crdt:ClientInstallation
    ];
 
-   # Framework garbage collection index registration  
+   # Framework garbage collection index registration
    solid:hasRegistration [
       a solid:TypeRegistration;
       solid:forClass idx:GroupIndexTemplate;

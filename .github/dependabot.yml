@@ -11,18 +11,18 @@ updates:
       
   # Core package
   - package-ecosystem: "pub"  
-    directory: "/packages/pacors_core"
+    directory: "/packages/locorda_core"
     schedule:
       interval: "weekly"
       
   # Auth package
   - package-ecosystem: "pub"
-    directory: "/packages/pacors_solid_auth" 
+    directory: "/packages/locorda_solid_auth" 
     schedule:
       interval: "weekly"
       
   # UI package
   - package-ecosystem: "pub"
-    directory: "/packages/pacors_ui"
+    directory: "/packages/locorda_ui"
     schedule:
       interval: "weekly"

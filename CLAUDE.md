@@ -13,16 +13,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a multipackage Dart library (`pacors`) that enables synchronization of RDF data to Solid Pods using CRDT (Conflict-free Replicated Data Types) for local-first, interoperable applications. The library follows a state-based CRDT approach with passive storage backends.
+This is a multipackage Dart library (`locorda`) that enables synchronization of RDF data to Solid Pods using CRDT (Conflict-free Replicated Data Types) for local-first, interoperable applications. The library follows a state-based CRDT approach with passive storage backends.
 
 The project is organized as a monorepo with the following packages:
-- `pacors` - Main entry point package with documentation and examples
-- `pacors_core` - Platform-agnostic sync logic and runtime engine
-- `pacors_annotations` - CRDT merge strategy annotations for code generation
-- `pacors_generator` - Build runner integration for RDF + CRDT code generation
-- `pacors_solid_auth` - Solid authentication integration using solid-auth library
-- `pacors_ui` - Flutter UI components including login forms and sync status widgets
-- `pacors_drift` - Drift (SQLite) storage backend implementation
+- `locorda` - Main entry point package with documentation and examples
+- `locorda_core` - Platform-agnostic sync logic and runtime engine
+- `locorda_annotations` - CRDT merge strategy annotations for code generation
+- `locorda_generator` - Build runner integration for RDF + CRDT code generation
+- `locorda_solid_auth` - Solid authentication integration using solid-auth library
+- `locorda_ui` - Flutter UI components including login forms and sync status widgets
+- `locorda_drift` - Drift (SQLite) storage backend implementation
 
 ## Key Architecture Concepts
 
@@ -132,20 +132,20 @@ The project follows these architectural principles established during developmen
 - **Separate packages with clear dependency chains** - No circular dependencies between packages
 - **No re-exports between packages** - Each package exports only its own functionality  
 - **Clean separation of concerns** - CRDT annotations separate from core runtime logic
-- **Single entry point package** - `pacors` provides documentation and convenient access
+- **Single entry point package** - `locorda` provides documentation and convenient access
 - **RDF mapper ecosystem integration** - CRDT annotations depend on `rdf_mapper_annotations`
 - **Good documentation** - Follow comprehensive documentation standards (see Documentation Guidelines below)
 
 ### Dependency Architecture
 ```
-pacors (main entry point)
-├── pacors_core (runtime engine)
-├── pacors_annotations (code gen annotations)
-├── pacors_solid_auth (authentication)
-├── pacors_ui (Flutter widgets)  
-└── pacors_drift (storage backend)
+locorda (main entry point)
+├── locorda_core (runtime engine)
+├── locorda_annotations (code gen annotations)
+├── locorda_solid_auth (authentication)
+├── locorda_ui (Flutter widgets)  
+└── locorda_drift (storage backend)
 
-pacors_annotations
+locorda_annotations
 └── rdf_mapper_annotations (external dependency)
 ```
 
@@ -167,14 +167,14 @@ pacors_annotations
 4. **Generated examples** - Show what the code generator produces, not just input
 
 ### Documentation Structure
-- Main `pacors` package README provides the complete story and mental model
+- Main `locorda` package README provides the complete story and mental model
 - Individual package READMEs focus on their specific role within the larger narrative
 - Examples demonstrate real-world usage patterns, not toy scenarios
 - API documentation includes both what and why for each component
 
 ### Architecture Decision Records (ADRs)
 
-**Location**: `packages/pacors/docs/adrs/` - See README.md and template.md in that directory for process and format.
+**Location**: `packages/locorda/docs/adrs/` - See README.md and template.md in that directory for process and format.
 
 ## Development Guidelines
 

@@ -34,9 +34,9 @@ Future<void> main() async {
   }
 
   print('For detailed coverage reports, run:');
-  print('  cd packages/pacors_core && dart test --coverage=coverage');
-  print('  cd packages/pacors_solid_auth && dart test --coverage=coverage');
-  print('  cd packages/pacors_ui && dart test --coverage=coverage');
+  print('  cd packages/locorda_core && dart test --coverage=coverage');
+  print('  cd packages/locorda_solid_auth && dart test --coverage=coverage');
+  print('  cd packages/locorda_ui && dart test --coverage=coverage');
   print('');
   print(
       'Note: Multipackage coverage aggregation requires individual package reports.');
