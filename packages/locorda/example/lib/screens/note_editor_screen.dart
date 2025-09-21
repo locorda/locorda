@@ -250,7 +250,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
             const SizedBox(height: 16),
 
-            // Local-first info
+            // Offline-first info
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(

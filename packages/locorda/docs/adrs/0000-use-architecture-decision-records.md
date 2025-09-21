@@ -7,7 +7,7 @@ ACCEPTED
 As the locorda package evolves, we need a systematic way to document important architectural decisions, especially during the early development phase where fundamental design choices need to be made and tracked.
 
 Key challenges:
-- Multiple architectural decisions needed for local-first sync design
+- Multiple architectural decisions needed for offline-first sync design
 - Complex interactions between RDF mapping, CRDT algorithms, and Solid Pod integration
 - Need to track rationale for future reference and onboarding
 - Work-in-progress nature requires flexibility in decision status

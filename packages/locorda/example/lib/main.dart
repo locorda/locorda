@@ -1,7 +1,7 @@
-/// Personal Notes App - Simple local-first application using locorda.
+/// Personal Notes App - Simple offline-first application using locorda.
 ///
 /// Demonstrates:
-/// - Local-first operation (works offline)
+/// - Offline-first operation (works offline)
 /// - Optional Solid Pod connection
 /// - CRDT conflict resolution
 /// - Simple, clean UI

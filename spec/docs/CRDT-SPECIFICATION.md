@@ -1,6 +1,6 @@
 # Locorda CRDT Specification
 
-**Locorda: Sync local-first apps using your user's remote storage**
+**Locorda: Sync offline-first apps using your user's remote storage**
 
 This document provides the detailed algorithms and mechanics for implementing state-based CRDTs with RDF data in the Locorda ecosystem.
 

@@ -1,5 +1,5 @@
 name: locorda
-description: Locorda - Sync local-first apps using your user's remote storage
+description: Locorda - Sync offline-first apps using your user's remote storage
 version: 0.1.0+1
 publish_to: none
 
@@ -34,5 +34,5 @@ topics:
   - rdf
   - crdt
   - solid
-  - local-first
+  - offline-first
   - sync

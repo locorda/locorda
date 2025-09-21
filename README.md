@@ -1,8 +1,8 @@
-# Locorda: Sync local-first apps using your user's remote storage
+# Locorda: Sync offline-first apps using your user's remote storage
 
 **Locorda** — the rope that connects and weaves local data together.
 
-A comprehensive specification and Dart/Flutter implementation for building **local-first applications** that sync seamlessly with **passive storage backends** like Solid Pods, Google Drive, or any file storage system. Users bring their own backend, developers get easy cross-device sync.
+A comprehensive specification and Dart/Flutter implementation for building **offline-first applications** that sync seamlessly with **passive storage backends** like Solid Pods, Google Drive, or any file storage system. Users bring their own backend, developers get easy cross-device sync.
 
 ## Overview
 
@@ -13,7 +13,7 @@ This project addresses the fundamental challenge of creating applications that a
 - **🔄 Conflict-Free Synchronization**: State-based CRDT algorithms ensure safe collaboration without coordination
 - **🌐 Semantic Interoperability**: All data stored as clean, standard RDF for maximum compatibility  
 - **⚡ Performance at Scale**: Three sync strategies (Full, Grouped, On-Demand) handle datasets from 100 to 100,000+ resources
-- **📱 Local-First**: Full offline functionality with sync when connectivity is available
+- **📱 Offline-First**: Full offline functionality with sync when connectivity is available
 - **🔒 Privacy-Preserving**: Maintains user data ownership with pluggable access control systems
 
 ## Quick Start

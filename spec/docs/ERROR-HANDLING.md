@@ -1,6 +1,6 @@
 # Locorda Error Handling and Resilience Guide
 
-**Locorda: Sync local-first apps using your user's remote storage**
+**Locorda: Sync offline-first apps using your user's remote storage**
 
 This document provides comprehensive error handling strategies for Locorda implementations. For architectural overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
 

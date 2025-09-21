@@ -2,7 +2,7 @@
 
 **Bring your own persistence layer and make it syncable to a Solid Pod.**
 
-Local-first CRDT synchronization with Solid Pods. Build Flutter apps that work offline and sync seamlessly with Solid Pods using conflict-free replicated data types (CRDTs).
+Offline-first CRDT synchronization with Solid Pods. Build Flutter apps that work offline and sync seamlessly with Solid Pods using conflict-free replicated data types (CRDTs).
 
 ## Quick Start
 
@@ -61,7 +61,7 @@ void main() async {
     id: 'note-1',
     title: 'My First Note',
     content: 'This works offline and syncs to Solid Pods!',
-    tags: {'local-first', 'crdt'},
+    tags: {'offline-first', 'crdt'},
   );
   
   await sync.save(note);
@@ -79,7 +79,7 @@ void main() async {
 
 ## Features
 
-- **Local-First**: Your app works completely offline
+- **Offline-First**: Your app works completely offline
 - **CRDT Merge Strategies**: Conflict-free synchronization
   - `@CrdtLwwRegister()` - Last writer wins (good for titles, content)
   - `@CrdtOrSet()` - Observed-remove sets (good for tags, lists)
@@ -101,7 +101,7 @@ This package provides a convenient entry point to the locorda ecosystem:
 ## Examples
 
 See the `example/` directory for a complete personal notes app demonstrating:
-- Local-first note creation and editing
+- Offline-first note creation and editing
 - CRDT merge strategies in action
 - Optional Solid Pod authentication
 - Conflict resolution when syncing

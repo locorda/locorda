@@ -4,7 +4,7 @@ This document provides context for the Gemini Code Assistant to understand the `
 
 ## Project Overview
 
-`locorda` is a multipackage Dart library designed to facilitate local-first, collaborative applications by synchronizing RDF data with Solid Pods. It uses state-based Conflict-free Replicated Data Types (CRDTs) to ensure data consistency and enable offline functionality.
+`locorda` is a multipackage Dart library designed to facilitate offline-first, collaborative applications by synchronizing RDF data with Solid Pods. It uses state-based Conflict-free Replicated Data Types (CRDTs) to ensure data consistency and enable offline functionality.
 
 ### Package Structure
 

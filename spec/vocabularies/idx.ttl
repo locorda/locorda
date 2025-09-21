@@ -9,7 +9,7 @@
 
 <https://w3id.org/solid-crdt-sync/vocab/idx> a owl:Ontology;
     rdfs:label "Indexing Vocabulary for CRDT Sync";
-    rdfs:comment "A vocabulary to describe the structure, configuration, and conventions of indices used for performance and discovery in a local-first, CRDT-based synchronization system." .
+    rdfs:comment "A vocabulary to describe the structure, configuration, and conventions of indices used for performance and discovery in a offline-first, CRDT-based synchronization system." .
 
 # --- Class Definitions ---
 

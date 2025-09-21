@@ -1,4 +1,4 @@
-/// Simple Note model with CRDT annotations for local-first sync.
+/// Simple Note model with CRDT annotations for offline-first sync.
 library;
 
 import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';

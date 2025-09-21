@@ -1,5 +1,5 @@
 name: personal_notes_app
-description: Simple local-first personal notes app demonstrating locorda
+description: Simple offline-first personal notes app demonstrating locorda
 publish_to: none
 version: 1.0.0+1
 

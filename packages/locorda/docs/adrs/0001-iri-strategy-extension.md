@@ -4,7 +4,7 @@
 PROPOSED
 
 ## Context
-The current RDF mapping approach using `IriStrategy()` is quite flexible and supports runtime context through template variables and custom mappers, but still doesn't seem sufficient for the complex requirements of Solid Pod integration in a local-first architecture.
+The current RDF mapping approach using `IriStrategy()` is quite flexible and supports runtime context through template variables and custom mappers, but still doesn't seem sufficient for the complex requirements of Solid Pod integration in a offline-first architecture.
 
 **Current IriStrategy capabilities:**
 ```dart

@@ -5,9 +5,9 @@ This directory contains Architecture Decision Records (ADRs) for the locorda pac
 ## Current Status Overview
 
 ### 🟡 Proposed (Need Decision)
-- **[ADR-0001](0001-iri-strategy-extension.md)**: IRI Strategy Extension for Local-First Architecture
+- **[ADR-0001](0001-iri-strategy-extension.md)**: IRI Strategy Extension for Offline-First Architecture
   - **Priority**: High (blocks model design)
-  - **Context**: How to handle dynamic IRI generation in local-first sync
+  - **Context**: How to handle dynamic IRI generation in offline-first sync
 
 ### 🟢 Accepted
 - **[ADR-0000](0000-use-architecture-decision-records.md)**: Use Architecture Decision Records

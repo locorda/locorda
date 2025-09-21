@@ -11,7 +11,7 @@ import '../models/note.dart';
 import '../models/note_index_entry.dart';
 import '../storage/repositories.dart';
 
-/// Service for managing notes with local-first CRDT synchronization.
+/// Service for managing notes with offline-first CRDT synchronization.
 ///
 /// This service demonstrates the add-on architecture where:
 /// - Repository handles all local queries, operations AND sync coordination

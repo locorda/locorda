@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/categories_service.dart';
 
-/// Screen for managing categories with local-first functionality.
+/// Screen for managing categories with offline-first functionality.
 ///
 /// Demonstrates:
 /// - FullIndex with prefetch (categories should load immediately)

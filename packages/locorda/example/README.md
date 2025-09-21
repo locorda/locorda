@@ -2,11 +2,11 @@
 
 **Bring your own persistence layer and make it syncable to a Solid Pod.**
 
-A simple local-first personal notes application demonstrating the `locorda` framework.
+A simple offline-first personal notes application demonstrating the `locorda` framework.
 
 ## Overview
 
-This example app showcases the key principles of local-first development with Solid Pod synchronization:
+This example app showcases the key principles of offline-first development with Solid Pod synchronization:
 
 - **Works immediately offline** - No account required to start using
 - **Optional Solid connection** - Connect to sync across devices when ready
@@ -21,7 +21,7 @@ This example app showcases the key principles of local-first development with So
 - Search notes by title, content, or tags
 - Automatic timestamps for created/modified dates
 
-### Local-First Operation
+### Offline-First Operation
 - Instant startup - no network required
 - All data stored locally using SQLite (via Drift)
 - Full functionality when offline
@@ -144,11 +144,11 @@ No additional setup required - uses native SQLite directly.
 - 📋 **RDF Generation** - Needs build_runner setup for mappers
 - 📋 **Solid Connection** - UI ready, backend integration pending
 
-This example serves as both a working demonstration and a template for building local-first applications with Solid Pod synchronization.
+This example serves as both a working demonstration and a template for building offline-first applications with Solid Pod synchronization.
 
 ## Key Takeaways
 
-1. **Local-first is accessible** - No complex setup or accounts needed
+1. **Offline-first is accessible** - No complex setup or accounts needed
 2. **CRDT sync is invisible** - Developers work with plain Dart objects  
 3. **Solid adds value** - Optional sync enhances rather than complicates
 4. **Architecture scales** - Same patterns work for simple and complex apps

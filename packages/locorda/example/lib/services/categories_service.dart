@@ -7,7 +7,7 @@ import 'dart:math';
 import '../models/category.dart';
 import '../storage/repositories.dart';
 
-/// Service for managing categories with local-first CRDT synchronization.
+/// Service for managing categories with offline-first CRDT synchronization.
 ///
 /// This service demonstrates the add-on architecture where:
 /// - Repository handles all local queries, operations AND sync coordination

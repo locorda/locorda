@@ -1,6 +1,6 @@
 # Locorda Performance Guide
 
-**Locorda: Sync local-first apps using your user's remote storage**
+**Locorda: Sync offline-first apps using your user's remote storage**
 
 This document provides detailed performance analysis and optimization guidance for Locorda implementations. For architectural overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
 

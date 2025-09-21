@@ -1,10 +1,10 @@
 # Locorda Specification
 
-**Locorda: Sync local-first apps using your user's remote storage**
+**Locorda: Sync offline-first apps using your user's remote storage**
 
 **Locorda** — the rope that connects and weaves local data together.
 
-This document serves as the main entry point for the **Locorda Specification** - a comprehensive framework for building local-first, collaborative, and interoperable applications using passive storage backends with RDF and CRDT synchronization.
+This document serves as the main entry point for the **Locorda Specification** - a comprehensive framework for building offline-first, collaborative, and interoperable applications using passive storage backends with RDF and CRDT synchronization.
 
 ## Specification Overview
 
@@ -95,11 +95,11 @@ This work aligns with and wants to eventually contribute to:
 
 ## Related Work and Acknowledgments
 
-This work builds upon and was inspired by several important projects in the local-first and semantic web ecosystems:
+This work builds upon and was inspired by several important projects in the offline-first and semantic web ecosystems:
 
-### Local-First RDF Systems
+### Offline-First RDF Systems
 - **[m-ld](https://m-ld.org/)** - A pioneering approach to collaborative, live information using JSON-LD and CRDTs
-- **[NextGraph](https://nextgraph.org/)** - A decentralized, secure, and local-first web platform with RDF foundations
+- **[NextGraph](https://nextgraph.org/)** - A decentralized, secure, and offline-first web platform with RDF foundations
 
 Both m-ld and NextGraph demonstrate the viability of combining RDF with CRDT approaches, though they target different storage backends than Solid Pods.
 
@@ -109,7 +109,7 @@ Both m-ld and NextGraph demonstrate the viability of combining RDF with CRDT app
 Noel's work with aerogel provided valuable insights into the challenges of building collaborative Solid applications. This specification takes a different architectural approach with state-based CRDTs and emphasizes cooperative indexing strategies, but benefits from Noel de Martin's generous sharing of insights from building aerogel.
 
 ### Gratitude
-Special thanks to the broader Solid community, W3C CRDT for RDF Community Group members, and local-first software researchers whose work and discussions helped shape this specification's design decisions.
+Special thanks to the broader Solid community, W3C CRDT for RDF Community Group members, and offline-first software researchers whose work and discussions helped shape this specification's design decisions.
 
 ## Version History
 

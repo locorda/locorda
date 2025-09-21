@@ -9,7 +9,7 @@ import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
 import 'package:locorda_core/locorda_core.dart';
 
-/// Local-first IRI mapping service for offline and pre-pod-connection usage.
+/// Offline-first IRI mapping service for offline and pre-pod-connection usage.
 ///
 /// This service generates stable, deterministic local IRIs using the scheme:
 /// `app://local/{type-name}/{id}` for both resources and references.

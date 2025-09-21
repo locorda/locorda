@@ -1,4 +1,4 @@
-# Locorda: Sync local-first apps using your user's remote storage
+# Locorda: Sync offline-first apps using your user's remote storage
 
 **Locorda** — the rope that connects and weaves local data together.
 
@@ -44,7 +44,7 @@ This is a **draft specification** under active development. The architecture and
 
 ### 1.1. Framework Overview
 
-This document outlines an architecture for building **local-first, collaborative, and truly interoperable applications** using storage backends for synchronization. The core challenge is twofold: first, to enable robust, conflict-free data merging without sacrificing semantic interoperability; and second, to provide a scalable solution for building performant applications, regardless of dataset size.
+This document outlines an architecture for building **offline-first, collaborative, and truly interoperable applications** using storage backends for synchronization. The core challenge is twofold: first, to enable robust, conflict-free data merging without sacrificing semantic interoperability; and second, to provide a scalable solution for building performant applications, regardless of dataset size.
 
 The proposed solution addresses both challenges through a declarative, developer-centric framework. Unlike operation-based approaches (such as SU-Set) that synchronize individual change events, our architecture uses a **state-based CRDT model**. This means the entire state of a resource is synchronized, a choice that works seamlessly with passive storage backends. To ensure data integrity, developers declaratively **link data properties to CRDT merge strategies**. To manage performance, they define a high-level **Sync Strategy** per type (full, groups, or on-demand). This approach allows the library to act as a flexible "add-on" to an existing application, rather than a monolithic database, while ensuring all data at rest in the storage backend is clean, standard RDF.
 
@@ -72,7 +72,7 @@ This framework is designed for personal to small-organization scale collaboratio
 
 ## 2. Core Principles
 
-* **Local-First:** The application must be fully functional offline, working primarily with data cached on the device. To ensure this principle remains practical for large datasets, the architecture supports optional partial sync strategies. This allows an application to work with a local, consistent cache of the *relevant* data, maintaining speed and offline availability without requiring a full data download.
+* **Offline-First:** The application must be fully functional offline, working primarily with data cached on the device. To ensure this principle remains practical for large datasets, the architecture supports optional partial sync strategies. This allows an application to work with a local, consistent cache of the *relevant* data, maintaining speed and offline availability without requiring a full data download.
 
 * **CRDT Interoperability:** The data is clean, standard RDF within CRDT-managed documents (`sync:ManagedDocument`). CRDT-enabled applications achieve interoperability by discovering managed resources via `sync:managedResourceType` and following the public merge contracts that define collaboration rules.
 

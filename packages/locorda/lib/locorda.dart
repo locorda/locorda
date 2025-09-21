@@ -1,4 +1,4 @@
-/// Local-first CRDT synchronization with Solid Pods.
+/// Offline-first CRDT synchronization with Solid Pods.
 ///
 /// This is the main entry point package that provides documentation,
 /// examples, and convenient access to the locorda ecosystem.
@@ -9,7 +9,7 @@
 /// import 'package:locorda/locorda.dart';
 /// import 'package:locorda_drift/locorda_drift.dart';
 ///
-/// // Set up local-first sync system
+/// // Set up offline-first sync system
 /// final storage = DriftStorage(path: 'app.db');
 /// final sync = await SolidCrdtSync.setup(storage: storage);
 ///
@@ -17,7 +17,7 @@
 /// final note = Note(
 ///   id: 'note-1',
 ///   title: 'My first note',
-///   content: 'Local-first with optional Solid sync!',
+///   content: 'Offline-first with optional Solid sync!',
 /// );
 ///
 /// await sync.save(note);

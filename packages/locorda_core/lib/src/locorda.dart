@@ -31,7 +31,7 @@ typedef MapperInitializerFunction = RdfMapper Function(
 
 /// Main facade for the locorda system.
 ///
-/// Provides a simple, high-level API for local-first applications with
+/// Provides a simple, high-level API for offline-first applications with
 /// optional Solid Pod synchronization. Handles RDF mapping, storage,
 /// and sync operations transparently.
 class SolidCrdtSync {
@@ -223,7 +223,7 @@ class SolidCrdtSync {
   ///
   /// This method guarantees that after its successful completion, the requested
   /// resource will exist in the local database and be managed by the sync system.
-  /// It follows a "local-first" approach.
+  /// It follows a "offline-first" approach.
   ///
   /// The process is as follows:
   /// 1. It first attempts to retrieve the item from the local database using the

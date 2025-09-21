@@ -75,9 +75,70 @@ These topics represent interesting research directions and framework improvement
 
 ---
 
-## 1. Multi-Pod Application Integration
+## 1. End-to-End Encryption Support
 
-**Status**: Future Research  
+**Status**: Future Research (v2+)
+**Current Limitation**: Framework provides offline-first functionality and user-controlled storage but lacks end-to-end encryption (E2EE), which is essential for true local-first privacy guarantees.
+
+**Technical Challenge**:
+Implementing E2EE while maintaining RDF semantic interoperability and CRDT merge capabilities presents several design challenges:
+- **RDF Query Compatibility**: Encrypted RDF cannot be semantically queried or reasoned over
+- **CRDT Merge Operations**: Conflict resolution requires access to plaintext data structures
+- **Index Generation**: Sharded indices require plaintext access for semantic grouping and performance optimization
+- **Cross-Application Interoperability**: Encrypted data cannot be shared between applications without key sharing
+
+**Potential Approaches**:
+1. **Hybrid Architecture**: Store encrypted application data with plaintext metadata for indexing and CRDT operations
+2. **Client-Side Decryption**: Decrypt data locally for CRDT operations, re-encrypt for storage
+3. **Homomorphic Operations**: Limited CRDT algorithms that support encrypted operations (research area)
+4. **Layered Encryption**: Different encryption levels for different data sensitivity levels
+
+**Related Work**:
+- **[ANUSII](https://anusii.com/)** approaches to E2EE RDF data
+- Academic research on encrypted CRDT operations
+- **[Solid OIDC](https://solid.github.io/solid-oidc/)** integration for key management
+
+**Architecture Impact**: E2EE support would require significant extensions to the current 4-layer architecture, particularly affecting the indexing layer and merge contract semantics.
+
+---
+
+## 2. Non-RDF Binary File Support
+
+**Status**: Future Research (v2+)
+**Current Limitation**: Framework focuses exclusively on RDF data synchronization but doesn't address binary files (images, documents, media) that applications often need to store and sync alongside structured data.
+
+**Use Case Scenarios**:
+- **Photo Management App**: Store image metadata as RDF while managing binary image files
+- **Document Collaboration**: Sync PDF/Word documents with RDF annotations and version metadata
+- **Media Applications**: Manage audio/video files with RDF-based playlists and metadata
+
+**Technical Challenges**:
+- **Binary File Versioning**: CRDTs work with structured data; binary files need different conflict resolution strategies
+- **Storage Efficiency**: Large binary files require different sync strategies than small RDF documents
+- **Reference Integrity**: Maintaining consistency between RDF references and binary file availability
+- **Bandwidth Management**: Selective sync for large files vs always-sync for RDF metadata
+
+**Potential Approaches**:
+1. **Content-Addressed Storage**: Use hash-based addressing for immutable binary files with RDF metadata
+2. **Layered Sync Strategy**: Fast RDF sync with optional binary file sync based on application needs
+3. **External Storage Integration**: RDF references to files stored in specialized binary storage services
+4. **Version-Controlled Files**: Git-LFS-like approach with RDF-tracked versions and metadata
+
+**Architecture Considerations**:
+- Binary files likely need separate storage patterns from RDF sharding strategies
+- Application-level policies for bandwidth and storage management
+- Integration with existing file storage APIs (cloud storage, CDNs)
+
+**Related Standards**:
+- **[Linked Data Platform (LDP)](https://www.w3.org/TR/ldp/)** binary resource handling
+- **[IPFS](https://ipfs.io/)** content-addressing approaches
+- Solid Protocol non-RDF resource management patterns
+
+---
+
+## 3. Multi-Pod Application Integration
+
+**Status**: Future Research
 **Current Limitation**: Framework focuses on single-Pod CRDT synchronization but doesn't address applications that need to integrate data from multiple Pods, including Pods not owned by the user.
 
 **Use Case Scenario:**
@@ -153,7 +214,7 @@ This represents a major expansion beyond single-Pod CRDT synchronization into di
 
 **Related**: Builds on all current framework concepts but extends them into distributed, multi-authority scenarios that go beyond the current single-Pod collaborative model.
 
-## 2. Custom Tombstone Format Optimization
+## 4. Custom Tombstone Format Optimization
 
 **Status**: Future Research  
 **Current Approach**: Uses RDF Reification for semantic correctness but with significant overhead.
@@ -170,7 +231,7 @@ This represents a major expansion beyond single-Pod CRDT synchronization into di
 
 ---
 
-## 3. Provenance and Audit Trail Support
+## 5. Provenance and Audit Trail Support
 
 **Status**: Future Research  
 **Problem**: Framework tracks basic causality through Hybrid Logical Clocks but doesn't provide rich provenance information for auditing and compliance needs.
@@ -197,7 +258,7 @@ This represents a major expansion beyond single-Pod CRDT synchronization into di
 
 ---
 
-## 4. Legacy Data Import (Optional Extension)
+## 6. Legacy Data Import (Optional Extension)
 
 **Status**: Future Research  
 **Problem**: Framework requires new data to be CRDT-managed from creation, but many users have existing Solid data.
@@ -220,7 +281,7 @@ This represents a major expansion beyond single-Pod CRDT synchronization into di
 
 ---
 
-## 5. Proactive Access Control Integration
+## 7. Proactive Access Control Integration
 
 **Status**: Future Research  
 **Problem**: Framework assumes access control is handled externally, but production systems may need proactive permission checking to improve user experience.
@@ -241,7 +302,7 @@ This represents a major expansion beyond single-Pod CRDT synchronization into di
 
 ---
 
-## 6. Data Validation Integration
+## 8. Data Validation Integration
 
 **Status**: Future Research  
 **Problem**: Framework performs CRDT merge operations without semantic validation, potentially allowing invalid data states.
@@ -268,7 +329,7 @@ This represents a major expansion beyond single-Pod CRDT synchronization into di
 
 ---
 
-## 7. Private Type Index Support
+## 9. Private Type Index Support
 
 **Status**: Future Research (Low Priority)  
 **Current Approach**: Framework uses only the Public Type Index, making all CRDT-managed resources discoverable by other applications.
@@ -292,14 +353,6 @@ This represents a major expansion beyond single-Pod CRDT synchronization into di
 
 **Related**: Current Public Type Index usage in ARCHITECTURE.md section 4.2
 
----
-
-## 8. End to End Encryption
-
-It would be really great, if we could support an approach like the one from ANUSII to end-to-end-encrypt (e2ee) the rdf data
-
-## 9. Non-RDF File support
-what about storing e.g. images in the pod, for example for a photo app? How can this be done and managed?
 
 ---
 
@@ -312,15 +365,17 @@ what about storing e.g. images in the pod, for example for a photo app? How can 
 2. Framework Version Compatibility Strategy
 3. ~~Permanent IRI Strategy~~ ✅ **COMPLETED**
 
-**v2+ Future Research (7 topics)**:
+**v2+ Future Research (9 topics)**:
 
-1. Multi-Pod Application Integration
-2. Custom Tombstone Format Optimization
-3. Provenance and Audit Trail Support
-4. Legacy Data Import
-5. Proactive Access Control Integration
-6. Data Validation Integration
-7. Private Type Index Support
+1. End-to-End Encryption Support
+2. Non-RDF Binary File Support
+3. Multi-Pod Application Integration
+4. Custom Tombstone Format Optimization
+5. Provenance and Audit Trail Support
+6. Legacy Data Import
+7. Proactive Access Control Integration
+8. Data Validation Integration
+9. Private Type Index Support
 
 ---
 

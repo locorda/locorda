@@ -1,6 +1,6 @@
 # Locorda Solid Backend Specification
 
-**Locorda: Sync local-first apps using your user's remote storage**
+**Locorda: Sync offline-first apps using your user's remote storage**
 
 **Version:** 0.10.0-draft
 **Last Updated:** September 2025

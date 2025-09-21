@@ -13,11 +13,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Locorda: Sync local-first apps using your user's remote storage**
+**Locorda: Sync offline-first apps using your user's remote storage**
 
 **Locorda** — the rope that connects and weaves local data together.
 
-This is a multipackage Dart library (`locorda`) that enables synchronization of RDF data to Solid Pods using CRDT (Conflict-free Replicated Data Types) for local-first, interoperable applications. The library follows a state-based CRDT approach with passive storage backends.
+This is a multipackage Dart library (`locorda`) that enables synchronization of RDF data to Solid Pods using CRDT (Conflict-free Replicated Data Types) for offline-first, interoperable applications. The library follows a state-based CRDT approach with passive storage backends.
 
 The project is organized as a monorepo with the following packages:
 - `locorda` - Main entry point package with documentation and examples
@@ -30,7 +30,7 @@ The project is organized as a monorepo with the following packages:
 
 ## Key Architecture Concepts
 
-The project is built around a **4-layer architecture** that enables local-first, collaborative, and truly interoperable applications using passive storage backends (with Solid Pods as the primary focus):
+The project is built around a **4-layer architecture** that enables offline-first, collaborative, and truly interoperable applications using passive storage backends (with Solid Pods as the primary focus):
 
 ### 4-Layer Architecture
 
@@ -56,7 +56,7 @@ The project is built around a **4-layer architecture** that enables local-first,
 
 ### Core Design Principles
 
-- **Local-First**: Fully functional offline with cached data, optional partial sync for large datasets
+- **Offline-First**: Fully functional offline with cached data, optional partial sync for large datasets
 - **State-Based CRDTs**: Synchronizes complete resource states (not operations) using property-specific algorithms
 - **Hybrid Logical Clocks**: Combines logical causality tracking with physical timestamps for tamper-resistant ordering
 - **Passive Storage Integration**: Works with Solid Pods as simple storage buckets, all logic client-side
