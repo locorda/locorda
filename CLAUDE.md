@@ -25,7 +25,7 @@ The project is organized as a monorepo with the following packages:
 - `locorda_annotations` - CRDT merge strategy annotations for code generation
 - `locorda_generator` - Build runner integration for RDF + CRDT code generation
 - `locorda_solid_auth` - Solid authentication integration using solid-auth library
-- `locorda_ui` - Flutter UI components including login forms and sync status widgets
+- `locorda_solid_ui` - Flutter UI components including login forms and sync status widgets
 - `locorda_drift` - Drift (SQLite) storage backend implementation
 
 ## Key Architecture Concepts
@@ -146,7 +146,7 @@ locorda (main entry point)
 ├── locorda_core (runtime engine)
 ├── locorda_annotations (code gen annotations)
 ├── locorda_solid_auth (authentication)
-├── locorda_ui (Flutter widgets)  
+├── locorda_solid_ui (Flutter widgets)  
 └── locorda_drift (storage backend)
 
 locorda_annotations

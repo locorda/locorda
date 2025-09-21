@@ -12,7 +12,7 @@ The project is organized as a monorepo with the following packages:
 
 - **`locorda_core`**: Platform-agnostic sync logic, CRDT implementations, and abstract interfaces
 - **`locorda_solid_auth`**: Authentication bridge to the solid-auth library for Solid Pod login
-- **`locorda_ui`**: Flutter UI components including login screens and sync status widgets
+- **`locorda_solid_ui`**: Flutter UI components including login screens and sync status widgets
 
 The project's architecture is composed of four layers:
 

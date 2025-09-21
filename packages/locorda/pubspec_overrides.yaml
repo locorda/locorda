@@ -1,4 +1,4 @@
-# melos_managed_dependency_overrides: locorda_annotations,locorda_solid_auth,locorda_core,locorda_drift,locorda_ui,locorda_solid
+# melos_managed_dependency_overrides: locorda_annotations,locorda_solid_auth,locorda_core,locorda_drift,locorda_solid,locorda_solid_ui
 dependency_overrides:
   locorda_annotations:
     path: ../locorda_annotations
@@ -8,7 +8,7 @@ dependency_overrides:
     path: ../locorda_core
   locorda_drift:
     path: ../locorda_drift
-  locorda_ui:
-    path: ../locorda_solid_ui
   locorda_solid:
     path: ../locorda_solid
+  locorda_solid_ui:
+    path: ../locorda_solid_ui

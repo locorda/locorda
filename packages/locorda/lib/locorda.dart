@@ -35,7 +35,7 @@
 /// - `locorda_annotations` - CRDT merge strategy annotations
 /// - `locorda_drift` - SQLite storage backend
 /// - `locorda_solid_auth` - Solid authentication
-/// - `locorda_ui` - Flutter UI components
+/// - `locorda_solid_ui` - Flutter UI components
 library locorda;
 
 // Re-export the main API from core

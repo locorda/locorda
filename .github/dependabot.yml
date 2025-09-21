@@ -23,6 +23,6 @@ updates:
       
   # UI package
   - package-ecosystem: "pub"
-    directory: "/packages/locorda_ui"
+    directory: "/packages/locorda_solid_ui"
     schedule:
       interval: "weekly"

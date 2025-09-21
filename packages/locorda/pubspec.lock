@@ -512,7 +512,7 @@ packages:
       relative: true
     source: path
     version: "0.9.15-dev"
-  locorda_ui:
+  locorda_solid_ui:
     dependency: "direct main"
     description:
       path: "../locorda_solid_ui"

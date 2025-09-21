@@ -21,7 +21,7 @@ The Dart implementation is organized as a monorepo with the following packages:
   - Auth UI components: `SolidLoginScreen`, `SolidStatusWidget`
   - **Depends on:** Flutter + locorda_core + solid_auth
 
-- **`locorda_ui`**: Flutter UI components for sync functionality
+- **`locorda_solid_ui`**: Flutter UI components for sync functionality
   - Pure sync-related UI components that don't depend on auth state
   - **Depends on:** Flutter + locorda_core
 
@@ -69,7 +69,7 @@ Additional packages planned:
 packages/
 ├── locorda_core/      # ✅ Platform-agnostic core
 ├── locorda_solid_auth/      # 🚧 Authentication bridge  
-├── locorda_ui/        # ✅ Flutter UI components
+├── locorda_solid_ui/        # ✅ Flutter UI components
 ├── locorda_drift/     # 📋 Drift storage backend
 ```
 
