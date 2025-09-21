@@ -1,5 +1,5 @@
 name: locorda_drift
-description: Drift (SQLite) storage implementation for locorda_core
+description: Locorda Drift - SQLite storage implementation for locorda_core
 version: 0.9.15-dev
 homepage: https://kkalass.github.io/locorda/
 repository: https://github.com/kkalass/locorda

@@ -1,6 +1,8 @@
-# locorda: Passive Storage Collaborative RDF Sync System
+# Locorda: Sync local-first apps using your user's remote storage
 
-A comprehensive specification and Dart/Flutter implementation for building **local-first, collaborative, and truly interoperable applications** using passive storage backends with RDF and CRDT synchronization.
+**Locorda** — the rope that connects and weaves local data together.
+
+A comprehensive specification and Dart/Flutter implementation for building **local-first applications** that sync seamlessly with **passive storage backends** like Solid Pods, Google Drive, or any file storage system. Users bring their own backend, developers get easy cross-device sync.
 
 ## Overview
 

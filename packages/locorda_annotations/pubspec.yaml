@@ -1,5 +1,5 @@
 name: locorda_annotations
-description: CRDT merge strategy annotations for locorda code generation
+description: Locorda Annotations - CRDT merge strategy annotations for code generation
 version: 0.1.0+1
 
 environment:

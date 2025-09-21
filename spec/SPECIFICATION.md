@@ -1,6 +1,10 @@
-# locorda Specification
+# Locorda Specification
 
-This document serves as the main entry point for the **locorda (Passive Storage Collaborative RDF Sync System) Specification** - a comprehensive framework for building local-first, collaborative, and interoperable applications using passive storage backends with RDF and CRDT synchronization.
+**Locorda: Sync local-first apps using your user's remote storage**
+
+**Locorda** — the rope that connects and weaves local data together.
+
+This document serves as the main entry point for the **Locorda Specification** - a comprehensive framework for building local-first, collaborative, and interoperable applications using passive storage backends with RDF and CRDT synchronization.
 
 ## Specification Overview
 

@@ -1,6 +1,8 @@
-# Performance Guide
+# Locorda Performance Guide
 
-This document provides detailed performance analysis and optimization guidance for locorda implementations. For architectural overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
+**Locorda: Sync local-first apps using your user's remote storage**
+
+This document provides detailed performance analysis and optimization guidance for Locorda implementations. For architectural overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## 1. Sync Performance Patterns
 

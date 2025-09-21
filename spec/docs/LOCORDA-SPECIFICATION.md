@@ -1,4 +1,6 @@
-# locorda: A Framework for Local-First, Interoperable Apps
+# Locorda: Sync local-first apps using your user's remote storage
+
+**Locorda** — the rope that connects and weaves local data together.
 
 **Version:** 0.10.0-draft
 **Last Updated:** September 2025

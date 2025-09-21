@@ -1,5 +1,5 @@
 name: locorda_solid_auth
-description: Solid authentication implementation for locorda using solid-auth
+description: Locorda Solid Auth - Solid authentication implementation for locorda using solid-auth
 version: 0.9.15-dev
 homepage: https://kkalass.github.io/locorda/
 repository: https://github.com/kkalass/locorda

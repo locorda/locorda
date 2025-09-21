@@ -1,6 +1,8 @@
-# Error Handling and Resilience Guide
+# Locorda Error Handling and Resilience Guide
 
-This document provides comprehensive error handling strategies for locorda implementations. For architectural overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
+**Locorda: Sync local-first apps using your user's remote storage**
+
+This document provides comprehensive error handling strategies for Locorda implementations. For architectural overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## 1. Network and Connectivity Failures
 

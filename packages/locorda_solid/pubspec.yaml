@@ -1,5 +1,5 @@
 name: locorda_solid
-description: Solid Pod backend implementation for locorda CRDT synchronization
+description: Locorda Solid - Solid Pod backend implementation for locorda CRDT synchronization
 version: 0.9.15-dev
 homepage: https://kkalass.github.io/locorda/
 repository: https://github.com/kkalass/locorda

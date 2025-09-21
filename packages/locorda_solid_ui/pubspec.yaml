@@ -1,5 +1,5 @@
-name: locorda_ui
-description: Flutter UI components for locorda including login forms and sync widgets
+name: locorda_solid_ui
+description: Locorda UI - Flutter UI components for locorda including login forms and sync widgets
 version: 0.9.15-dev
 homepage: https://kkalass.github.io/locorda/
 repository: https://github.com/kkalass/locorda

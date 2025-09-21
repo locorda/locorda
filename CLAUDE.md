@@ -13,6 +13,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
+**Locorda: Sync local-first apps using your user's remote storage**
+
+**Locorda** — the rope that connects and weaves local data together.
+
 This is a multipackage Dart library (`locorda`) that enables synchronization of RDF data to Solid Pods using CRDT (Conflict-free Replicated Data Types) for local-first, interoperable applications. The library follows a state-based CRDT approach with passive storage backends.
 
 The project is organized as a monorepo with the following packages:

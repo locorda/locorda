@@ -1,5 +1,5 @@
 name: locorda
-description: Bring your own persistence layer and make it syncable to a Solid Pod - Local-first CRDT synchronization
+description: Locorda - Sync local-first apps using your user's remote storage
 version: 0.1.0+1
 publish_to: none
 
@@ -18,8 +18,8 @@ dependencies:
     path: ../locorda_drift
   locorda_solid_auth:
     path: ../locorda_solid_auth
-  locorda_ui:
-    path: ../locorda_ui
+  locorda_solid_ui:
+    path: ../locorda_solid_ui
 
 dev_dependencies:
   flutter_test:

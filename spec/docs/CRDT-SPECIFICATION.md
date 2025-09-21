@@ -1,6 +1,8 @@
-# CRDT Specification for RDF Synchronization
+# Locorda CRDT Specification
 
-This document provides the detailed algorithms and mechanics for implementing state-based CRDTs with RDF data in the Solid ecosystem.
+**Locorda: Sync local-first apps using your user's remote storage**
+
+This document provides the detailed algorithms and mechanics for implementing state-based CRDTs with RDF data in the Locorda ecosystem.
 
 ## 1. Overview
 

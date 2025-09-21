@@ -1,5 +1,5 @@
 name: locorda_core
-description: Core CRDT synchronization logic for Solid Pods (platform-agnostic)
+description: Locorda Core - Platform-agnostic CRDT synchronization engine
 version: 0.9.15-dev
 homepage: https://kkalass.github.io/locorda/
 repository: https://github.com/kkalass/locorda
