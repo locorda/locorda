@@ -34,7 +34,7 @@ typedef MapperInitializerFunction = RdfMapper Function(
 /// Provides a simple, high-level API for offline-first applications with
 /// optional Solid Pod synchronization. Handles RDF mapping, storage,
 /// and sync operations transparently.
-class SolidCrdtSync {
+class LocordaSync {
   final Storage _storage;
   final RdfMapper _mapper;
   // ignore: unused_field
@@ -46,7 +46,7 @@ class SolidCrdtSync {
   late final IndexItemConverterRegistry _converterRegistry;
   late final HydrationEmitter _emitter;
   late final GroupIndexSubscriptionManager _groupIndexManager;
-  SolidCrdtSync._({
+  LocordaSync._({
     required Storage storage,
     required RdfMapper mapper,
     required Backend backend,
@@ -79,7 +79,7 @@ class SolidCrdtSync {
   /// with their paths, CRDT mappings, and indices all defined together.
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
-  static Future<SolidCrdtSync> setup({
+  static Future<LocordaSync> setup({
     required Backend backend,
     required Storage storage,
     required MapperInitializerFunction mapperInitializer,
@@ -111,7 +111,7 @@ class SolidCrdtSync {
 
     // Initialize storage
     await storage.initialize();
-    return SolidCrdtSync._(
+    return LocordaSync._(
         storage: storage,
         mapper: mapper,
         backend: backend,

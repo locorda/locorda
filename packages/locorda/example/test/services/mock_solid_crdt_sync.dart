@@ -1,11 +1,11 @@
-/// Mock SolidCrdtSync implementation for testing.
+/// Mock LocordaSync implementation for testing.
 library;
 
 import 'dart:async';
 import 'package:locorda_core/locorda_core.dart';
 
 /// Simple mock implementation for testing
-class MockSolidCrdtSync implements SolidCrdtSync {
+class MockLocordaSync implements LocordaSync {
   final List<dynamic> savedObjects = [];
 
   @override

@@ -17,7 +17,7 @@ import 'database.dart';
 /// Repository becomes "sync-aware storage" following add-on architecture.
 class CategoryRepository {
   final CategoryDao _categoryDao;
-  final SolidCrdtSync _syncSystem;
+  final LocordaSync _syncSystem;
   final StreamSubscription _hydrationSubscription;
 
   static const String _resourceType = 'category';
@@ -38,7 +38,7 @@ class CategoryRepository {
   static Future<CategoryRepository> create(
     CategoryDao categoryDao,
     CursorDao cursorDao,
-    SolidCrdtSync syncSystem,
+    LocordaSync syncSystem,
   ) async {
     final repository = CategoryRepository._(
         categoryDao,
@@ -152,7 +152,7 @@ class CategoryRepository {
 class NoteRepository {
   final NoteDao _noteDao;
   final NoteIndexEntryDao _noteIndexDao;
-  final SolidCrdtSync _syncSystem;
+  final LocordaSync _syncSystem;
   final StreamSubscription _dataHydrationSubscription;
   final StreamSubscription _indexHydrationSubscription;
 
@@ -178,7 +178,7 @@ class NoteRepository {
     NoteDao noteDao,
     NoteIndexEntryDao noteIndexDao,
     CursorDao cursorDao,
-    SolidCrdtSync syncSystem,
+    LocordaSync syncSystem,
   ) async {
     final repository = NoteRepository._(
         noteDao,

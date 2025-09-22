@@ -47,11 +47,11 @@ void main() async {
 /// - RDF mapper with user dependencies
 /// - All resources (Note, Category) with their paths, indices, and CRDT mappings
 /// - Returns a fully configured sync system
-Future<SolidCrdtSync> initializeSolidCrdtSync(
+Future<LocordaSync> initializeLocordaSync(
     {DriftWebOptions? driftWeb,
     DriftNativeOptions? driftNative,
     required SolidAuth solidAuth}) async {
-  return await SolidCrdtSync.setup(
+  return await LocordaSync.setup(
     /* control behaviour and system integration */
     storage: DriftStorage(web: driftWeb, native: driftNative),
     backend: SolidBackend(auth: SolidAuthBridge(solidAuth)),
@@ -127,7 +127,7 @@ class AppInitializer extends StatefulWidget {
 
 class _AppInitializerState extends State<AppInitializer>
     with WidgetsBindingObserver {
-  SolidCrdtSync? syncSystem;
+  LocordaSync? syncSystem;
   AppDatabase? appDatabase;
   CategoryRepository? categoryRepository;
   NoteRepository? noteRepository;
@@ -183,12 +183,12 @@ class _AppInitializerState extends State<AppInitializer>
       // See spec/docs/SECURITY.md for detailed security considerations
       final solidAuthInstance = SolidAuth(
           oidcClientId: '$appBaseUrl/auth/client-config.json',
-          appUrlScheme: 'de.kalass.solidcrdtsync.personalnotes',
+          appUrlScheme: 'de.kalass.locorda.personalnotes',
           frontendRedirectUrl: Uri.parse('$appBaseUrl/redirect.html'));
       await solidAuthInstance.init();
 
       // Initialize the CRDT sync system
-      final syncSys = await initializeSolidCrdtSync(
+      final syncSys = await initializeLocordaSync(
           driftWeb: webOptions, solidAuth: solidAuthInstance);
 
       // Initialize app database (Drift)

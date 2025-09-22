@@ -11,7 +11,7 @@
 ///
 /// // Set up offline-first sync system
 /// final storage = DriftStorage(path: 'app.db');
-/// final sync = await SolidCrdtSync.setup(storage: storage);
+/// final sync = await LocordaSync.setup(storage: storage);
 ///
 /// // Use your annotated models
 /// final note = Note(

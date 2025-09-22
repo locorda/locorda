@@ -79,7 +79,7 @@ class PodIriStrategy extends IriStrategy {
 /// See also:
 /// - [RdfGlobalResource] - The base annotation this extends
 /// - CRDT annotations: [CrdtLwwRegister], [CrdtFwwRegister], [CrdtOrSet], [CrdtImmutable]
-/// - [SolidCrdtSync] - The main synchronization engine
+/// - [LocordaSync] - The main synchronization engine
 class PodResource extends RdfGlobalResource {
   /// Creates a Solid Pod resource annotation.
   ///
@@ -88,7 +88,7 @@ class PodResource extends RdfGlobalResource {
   ///
   /// The [classIri] parameter defines the RDF type for this resource class.
   /// The IRI strategy is configured globally when initializing the
-  /// [SolidCrdtSync] system rather than per-annotation, providing consistent
+  /// [LocordaSync] system rather than per-annotation, providing consistent
   /// IRI generation across all Solid Pod resources.
   ///
   /// Example:

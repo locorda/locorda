@@ -65,7 +65,7 @@ class Note {
 ### Setup (main.dart)
 ```dart
 // Simple one-line setup connecting all components
-final syncSystem = await SolidCrdtSync.setup(
+final syncSystem = await LocordaSync.setup(
   storage: DriftStorage(),        // SQLite via Drift
   mapper: getGeneratedRdfMapper(), // RDF annotations → RDF conversion
   // authProvider: optional initially

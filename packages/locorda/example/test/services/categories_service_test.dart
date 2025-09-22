@@ -66,7 +66,7 @@ void main() {
       });
     });
 
-    // Note: More comprehensive tests would be added once the SolidCrdtSync
+    // Note: More comprehensive tests would be added once the LocordaSync
     // API is fully implemented. These tests demonstrate the basic structure
     // and test the logic that doesn't depend on the sync system.
   });

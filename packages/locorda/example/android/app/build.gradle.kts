@@ -20,14 +20,14 @@ android {
     }
 
     defaultConfig {
-        applicationId = "de.kalass.solidcrdtsync.personalnotes"
+        applicationId = "de.kalass.locorda.personalnotes"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = maxOf(21, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["appAuthRedirectScheme"] = "de.kalass.solidcrdtsync.personalnotes"
+        manifestPlaceholders["appAuthRedirectScheme"] = "de.kalass.locorda.personalnotes"
     }
 
     buildTypes {

@@ -23,7 +23,7 @@ The sync system provides synchronization capabilities as an overlay service whil
 ### API Design
 
 ```dart
-class SolidCrdtSync {
+class LocordaSync {
   // Robust save method with callback for atomic consistency
   Future<void> saveWithCallback<T>(T object, {
     required void Function(T processedObject) onLocalUpdate,
@@ -39,7 +39,7 @@ class SolidCrdtSync {
 ```dart
 class ExampleService {
   final AppStorage _appStorage;      // App queries here
-  final SolidCrdtSync _syncSystem;   // CRDT + Pod sync here
+  final LocordaSync _syncSystem;   // CRDT + Pod sync here
   
   // Saves: Through sync system with callback
   Future<void> save(Object obj) async {
