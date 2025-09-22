@@ -3,24 +3,16 @@ library;
 
 import 'dart:async';
 
-import 'package:locorda_core/src/backend/backend.dart';
-import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
-import 'package:locorda_core/src/index/index_config.dart';
-import 'package:locorda_core/src/index/index_converter.dart';
-import 'package:locorda_core/src/index/index_item_converter.dart';
-import 'package:locorda_core/src/mapping/local_resource_iri_service.dart';
-import 'package:locorda_core/src/mapping/solid_mapping_context.dart';
+import 'package:locorda/locorda.dart';
+import 'package:locorda/src/config/sync_config_converter.dart';
+import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda/src/config/sync_config_validator.dart';
+import 'package:locorda/src/index/group_index_subscription_manager.dart';
+import 'package:locorda/src/mapping/local_resource_iri_service.dart';
+import 'package:locorda/src/mapping/solid_mapping_context.dart';
+import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
-
-import 'config/resource_config.dart';
-import 'config/validation.dart';
-import 'hydration/hydration_emitter.dart';
-import 'hydration/hydration_stream_manager.dart';
-import 'hydration/index_item_converter_registry.dart';
-import 'hydration/type_local_name_key.dart';
-import 'hydration_result.dart';
-import 'storage/storage_interface.dart';
 
 /// Type alias for mapper initializer functions.
 ///
@@ -35,38 +27,27 @@ typedef MapperInitializerFunction = RdfMapper Function(
 /// optional Solid Pod synchronization. Handles RDF mapping, storage,
 /// and sync operations transparently.
 class LocordaSync {
-  final Storage _storage;
+  final LocordaGraphSync _syncSystem;
   final RdfMapper _mapper;
-  // ignore: unused_field
-  final Backend? _backend; // TODO: Use for Pod synchronization
   final SyncConfig _config;
   final Map<Type, IriTerm> _resourceTypeCache;
-  late final IndexConverter _indexConverter;
-  late final HydrationStreamManager _streamManager;
-  late final IndexItemConverterRegistry _converterRegistry;
-  late final HydrationEmitter _emitter;
-  late final GroupIndexSubscriptionManager _groupIndexManager;
+  late final GroupKeyConverter _groupKeyConverter;
+  final LocalReferenceConverter _localReferenceConverter;
+
   LocordaSync._({
-    required Storage storage,
+    required LocordaGraphSync locordaGraphSync,
     required RdfMapper mapper,
-    required Backend backend,
     required SyncConfig config,
     required Map<Type, IriTerm> resourceTypeCache,
-  })  : _storage = storage,
+    required LocalReferenceConverter localReferenceConverter,
+  })  : _syncSystem = locordaGraphSync,
         _mapper = mapper,
-        _backend = backend,
         _config = config,
-        _resourceTypeCache = resourceTypeCache {
-    _indexConverter = IndexConverter(_mapper);
-    _streamManager = HydrationStreamManager();
-    _converterRegistry = IndexItemConverterRegistry();
-    _groupIndexManager = GroupIndexSubscriptionManager(
+        _resourceTypeCache = resourceTypeCache,
+        _localReferenceConverter = localReferenceConverter {
+    _groupKeyConverter = GroupKeyConverter(
       config: _config,
       mapper: _mapper,
-    );
-    _emitter = HydrationEmitter(
-      streamManager: _streamManager,
-      converterRegistry: _converterRegistry,
     );
   }
 
@@ -85,18 +66,19 @@ class LocordaSync {
     required MapperInitializerFunction mapperInitializer,
     required SyncConfig config,
   }) async {
-    final iriService = LocalResourceIriService();
+    final localReferenceConverter = LocalReferenceConverter();
+    final iriService = LocalResourceIriService(localReferenceConverter);
     final mappingContext = SolidMappingContext(
       resourceIriFactory: iriService.createResourceIriMapper,
       resourceRefFactory: iriService.createResourceRefMapper,
     );
     final mapper = mapperInitializer(mappingContext);
 
-    final resourceTypeCache = config.buildResourceTypeCache(mapper);
+    final resourceTypeCache = buildResourceTypeCache(mapper, config);
 
     // Validate configuration before proceeding
-    final configValidationResult =
-        config.validate(resourceTypeCache, mapper: mapper);
+    final configValidationResult = SyncConfigValidator()
+        .validate(config, resourceTypeCache, mapper: mapper);
 
     // Validate IRI service setup and finish setup if valid
     final iriServiceValidationResult =
@@ -109,13 +91,19 @@ class LocordaSync {
     // Throw if any validation failed
     combinedValidationResult.throwIfInvalid();
 
-    // Initialize storage
-    await storage.initialize();
+    final syncGraphConfig = toSyncGraphConfig(config, resourceTypeCache);
+    // Setup the actual sync system
+    final graphSync = await LocordaGraphSync.setup(
+      backend: backend,
+      storage: storage,
+      config: syncGraphConfig,
+    );
+
     return LocordaSync._(
-        storage: storage,
+        locordaGraphSync: graphSync,
         mapper: mapper,
-        backend: backend,
         config: config,
+        localReferenceConverter: localReferenceConverter,
         resourceTypeCache: resourceTypeCache);
   }
 
@@ -166,7 +154,7 @@ class LocordaSync {
   /// );
   /// ```
   ///
-  /// Throws [GroupIndexSubscriptionException] if:
+  /// Throws [GroupIndexGraphSubscriptionException] if:
   /// - No GroupIndex is configured for type G with the given localName
   /// - The group key cannot be serialized to RDF
   /// - No group identifiers can be generated from the group key
@@ -175,18 +163,11 @@ class LocordaSync {
       G groupKey, ItemFetchPolicy itemFetchPolicy,
       {String localName = defaultIndexLocalName}) async {
     // Use the GroupIndexSubscriptionManager to handle validation and processing
-    final groupIdentifiers = await _groupIndexManager
-        .getGroupIdentifiers<G>(groupKey, localName: localName);
-    print(
-        'configure called for group key: $groupKey, resolved to group identifiers: $groupIdentifiers');
-    // TODO: Implement actual subscription logic with itemFetchPolicy
-    // This should:
-    // 1. Load existing items for the generated group identifiers
-    // 2. Set up hydration streams for the group
-    // 3. Apply the ItemFetchPolicy (OnDemand, Eager, etc.)
-    // 4. Schedule sync operations if connected to Pod
-
-    //return groupIdentifiers;
+    final (indexName: indexName, groupKeyGraph: groupKeyGraph) =
+        await _groupKeyConverter.convertGroupKey<G>(groupKey,
+            localName: localName);
+    return _syncSystem.configureGroupIndexSubscription(
+        indexName, groupKeyGraph, itemFetchPolicy);
   }
 
   /// Save an object with CRDT processing.
@@ -201,22 +182,17 @@ class LocordaSync {
   /// 3. Hydration stream automatically emits update
   /// 4. Schedule async Pod sync
   Future<void> save<T>(T object) async {
-    final resourceConfig = _config.getResourceConfig(T)!;
-    // Basic implementation to maintain hydration stream contract
-    // TODO: Add proper CRDT processing and storage persistence
+    IriTerm typeIri = _getTypeIri(T);
+    final graph =
+        _mapper.graph.encodeObject(object); // Validate object can be mapped;
+    _syncSystem.save(typeIri, graph);
+  }
 
-    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-
-    // Emit data change
-    _emitter.emit(
-        HydrationResult<T>(
-          items: [object],
-          deletedItems: [],
-          originalCursor: null,
-          nextCursor: timestamp,
-          hasMore: false,
-        ),
-        resourceConfig);
+  IriTerm _getTypeIri(Type type) {
+    final typeIri = _resourceTypeCache[type] ??
+        (throw Exception(
+            'Type $type is not a registered resource type in the sync configuration.'));
+    return typeIri;
   }
 
   /// Ensures a resource is available locally, fetching it from the remote source if necessary.
@@ -272,38 +248,26 @@ class LocordaSync {
   Future<T?> ensure<T>(String id,
       {required Future<T?> Function(String id) loadFromLocal,
       Duration? timeout = const Duration(seconds: 15)}) async {
-    // 1. First, try to load from the local database.
-    final localItem = await loadFromLocal(id);
-    if (localItem != null) {
-      return localItem;
+    // Shortcut the _syncSystem.ensure() if the data is available locally - this
+    // saves us from converting from and to RDF unnecessarily.
+    final r = await loadFromLocal(id);
+    if (r != null) {
+      return r;
     }
 
-    // TODO: properly implement remote fetch with pending fetch tracking
-/*
-Check with https://g.co/gemini/share/60e9b2d3036e for the details
+    IriTerm typeIri = _getTypeIri(T);
 
-    // 2. If not found, check if a fetch is already in progress.
-    if (_pendingFetches.containsKey(id)) {
-      return (await _pendingFetches[id]!.future) as T?;
-    }
+    // If not found locally, ensure it from the sync system
+    final localIri = _localReferenceConverter.toIri(T, id);
 
-    // 3. If not, initiate a new fetch.
-    final completer = Completer<T?>();
-    _pendingFetches[id] = completer;
+    final graph = await _syncSystem.ensure(typeIri, localIri,
+        skipInitialFetch: true, loadFromLocal: (IriTerm iri) async {
+      final id = _localReferenceConverter.fromIri(T, iri);
+      final obj = await loadFromLocal(id);
+      return obj == null ? null : _mapper.graph.encodeObject(obj);
+    }, timeout: timeout);
 
-    // 4. Trigger the remote fetch in the background.
-    // (This reuses the logic from the previous proposal)
-    _fetchAndEmit<T>(id);
-
-    // 5. Return the future, which completes when the item arrives.
-    return completer.future.timeout(const Duration(seconds: 15), onTimeout: () {
-      _pendingFetches.remove(id);
-      // Return null or throw a custom exception on timeout.
-      return null;
-    });
-
-    */
-    return null;
+    return graph != null ? _mapper.graph.decodeObject<T>(graph) : null;
   }
 
   /// Delete a document with CRDT processing.
@@ -319,98 +283,10 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   /// 3. Store updated document in sync system
   /// 4. Hydration stream automatically emits deletion
   /// 5. Schedule async Pod sync
-  Future<void> deleteDocument<T>(T object) async {
-    final resourceConfig = _config.getResourceConfig(T)!;
-    // Basic implementation to maintain hydration stream contract
-    // TODO: Add proper CRDT deletion processing and storage persistence
-
-    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-
-    // Emit data change
-    _emitter.emit(
-        HydrationResult<T>(
-          items: [],
-          deletedItems: [object],
-          originalCursor: null,
-          nextCursor: timestamp,
-          hasMore: false,
-        ),
-        resourceConfig);
-  }
-
-  /// Create an IndexItemConverter if T matches an index item type
-  IndexItemConverter<T>? _createIndexItemConverter<T>(
-          SyncConfig config, String localName) =>
-      switch (config.findIndexConfigForType<T>(localName)) {
-        (final resourceConfig, final index) => IndexItemConverter<T>(
-            converter: _indexConverter,
-            indexItem: index.item!,
-            resourceType: _resourceTypeCache[resourceConfig.type]!,
-          ),
-        null => null,
-      };
-
-  /// Load changes from sync storage since the given cursor.
-  ///
-  /// Returns items that have been updated or deleted since the cursor position.
-  /// Use null cursor to load from the beginning.
-  Future<HydrationResult<T>> _loadChangesSince<T>(
-    String? cursor, {
-    int limit = 100,
-  }) async {
-    // TODO: Implement loading changes from sync storage
-    return HydrationResult<T>(
-      items: [],
-      deletedItems: [],
-      originalCursor: cursor,
-      nextCursor: null,
-      hasMore: false,
-    );
-  }
-
-  /// One-time hydration that handles pagination and cursor management.
-  ///
-  /// This method automatically handles:
-  /// - Pagination through all changes since lastCursor
-  /// - Cursor management and persistence
-  /// - Separate handling of updates and deletions
-  ///
-  /// Use this for manual hydration or catch-up scenarios. For ongoing hydration
-  /// with live updates, use [hydrateStreaming] instead.
-  ///
-  /// Callbacks:
-  /// - [onUpdate]: Called for each new/updated item
-  /// - [onDelete]: Called for each deleted item (with last known state)
-  /// - [onCursorUpdate]: Called to persist cursor for next hydration
-  Future<void> _hydrateOnce<T>({
-    required String? lastCursor,
-    required Future<void> Function(T item) onUpdate,
-    required Future<void> Function(T item) onDelete,
-    required Future<void> Function(String cursor) onCursorUpdate,
-    int limit = 100,
-  }) async {
-    String? currentCursor = lastCursor;
-    HydrationResult<T> result;
-
-    do {
-      result = await _loadChangesSince<T>(currentCursor, limit: limit);
-
-      // Apply updates
-      for (final item in result.items) {
-        await onUpdate(item);
-      }
-
-      // Apply deletions
-      for (final item in result.deletedItems) {
-        await onDelete(item);
-      }
-
-      // Update cursor
-      if (result.nextCursor != null) {
-        await onCursorUpdate(result.nextCursor!);
-        currentCursor = result.nextCursor;
-      }
-    } while (result.hasMore);
+  Future<void> deleteDocument<T>(String id) async {
+    IriTerm typeIri = _getTypeIri(T);
+    final localIri = _localReferenceConverter.toIri(T, id);
+    return _syncSystem.deleteDocument(typeIri, localIri);
   }
 
   /// Streaming hydration that performs initial catch-up and then maintains live updates.
@@ -434,66 +310,44 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   /// - [onUpdate]: Called for each new/updated item
   /// - [onDelete]: Called for each deleted item (with last known state)
   /// - [onCursorUpdate]: Called to persist cursor updates
-  Future<StreamSubscription<HydrationResult<T>>> hydrateStreaming<T>({
+  Future<HydrationSubscription> hydrateStreaming<T>({
     required Future<String?> Function() getCurrentCursor,
     required Future<void> Function(T item) onUpdate,
     required Future<void> Function(T item) onDelete,
     required Future<void> Function(String cursor) onCursorUpdate,
     String localName = defaultIndexLocalName,
-    int limit = 100,
+    int batchSize = 100,
   }) async {
-    // Check if T is a registered resource type
+    final IriTerm typeIri;
+    final String? indexName;
     final resourceConfig = _config.getResourceConfig(T);
-    if (resourceConfig == null) {
-      // T is not a resource type, check if it's an index item type
-      final converter = _createIndexItemConverter<T>(_config, localName);
-      if (converter == null) {
+    if (resourceConfig != null) {
+      typeIri = _resourceTypeCache[T]!;
+      indexName = null;
+    } else {
+      // Not a resource type, check if it's an index item type
+      final r = findIndexConfigForType<T>(_config, localName);
+      if (r == null) {
         throw Exception(
             'Type $T is not a registered resource or index item type.');
       }
-      final key = TypeLocalNameKey(T, localName);
-      _converterRegistry.registerConverter(key, converter);
+      final (resourceConfig, index) = r;
+      indexName = getIndexName(resourceConfig, index);
+      typeIri = _resourceTypeCache[resourceConfig.type]!;
     }
-
-    // 1. Set up live hydration updates
-    final subscription = _streamManager
-        .getOrCreateController<T>(localName)
-        .stream
-        .listen((result) async {
-      // TODO: Implement proper cursor consistency checking
-      // The current originalCursor check is too strict and prevents local changes
-      // from being applied immediately. Need to design a better approach that:
-      // 1. Allows immediate application of local changes (save/delete operations)
-      // 2. Provides proper consistency checking for remote sync updates
-      // 3. Handles cursor mismatches gracefully without blocking updates
-
-      // Apply changes directly without cursor consistency check for now
-      for (final item in result.items) {
-        await onUpdate(item);
-      }
-      for (final item in result.deletedItems) {
-        await onDelete(item);
-      }
-      if (result.nextCursor != null) {
-        await onCursorUpdate(result.nextCursor!);
-      }
-    });
-
-    // 2. Initial catch-up hydration
-    final initialCursor = await getCurrentCursor();
-    await _hydrateOnce<T>(
-      lastCursor: initialCursor,
-      onUpdate: onUpdate,
-      onDelete: onDelete,
-      onCursorUpdate: onCursorUpdate,
-      limit: limit,
-    );
-    return subscription;
+    return _syncSystem.hydrateStreaming(
+        typeIri: typeIri,
+        indexName: indexName,
+        getCurrentCursor: getCurrentCursor,
+        onUpdate: (identifiedGraph) =>
+            onUpdate(_mapper.graph.decodeObject<T>(identifiedGraph.$2)),
+        onDelete: (identifiedGraph) =>
+            onDelete(_mapper.graph.decodeObject<T>(identifiedGraph.$2)),
+        onCursorUpdate: onCursorUpdate);
   }
 
   /// Close the sync system and free resources.
   Future<void> close() async {
-    await _streamManager.close();
-    await _storage.close();
+    await _syncSystem.close();
   }
 }

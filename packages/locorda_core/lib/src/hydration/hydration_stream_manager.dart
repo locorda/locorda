@@ -2,7 +2,9 @@
 library;
 
 import 'dart:async';
-import '../hydration_result.dart';
+import 'package:locorda_core/locorda_core.dart';
+import 'package:rdf_core/rdf_core.dart';
+
 import 'type_local_name_key.dart';
 
 /// Manages stream controllers for hydration updates.
@@ -10,20 +12,28 @@ import 'type_local_name_key.dart';
 /// Handles creation, storage, and emission for broadcast streams
 /// keyed by (Type, localName) pairs.
 class HydrationStreamManager {
-  final Map<TypeLocalNameKey, StreamController> _controllers = {};
+  final Map<TypeOrIndexKey, StreamController> _controllers = {};
 
   /// Get or create a stream controller for the given type and local name
-  StreamController<HydrationResult<T>> getOrCreateController<T>(
-      String localName) {
-    final key = TypeLocalNameKey(T, localName);
+  StreamController<HydrationResult<IdentifiedGraph>> getOrCreateController(
+      IriTerm type,
+      [String? indexName]) {
+    final key = TypeOrIndexKey(type, indexName);
     if (!_controllers.containsKey(key)) {
-      _controllers[key] = StreamController<HydrationResult<T>>.broadcast();
+      _controllers[key] =
+          StreamController<HydrationResult<IdentifiedGraph>>.broadcast();
     }
-    return _controllers[key]! as StreamController<HydrationResult<T>>;
+    return _controllers[key]!
+        as StreamController<HydrationResult<IdentifiedGraph>>;
+  }
+
+  bool hasController(TypeOrIndexKey key) {
+    return _controllers.containsKey(key);
   }
 
   /// Emit a result to the stream identified by the given key
-  void emitToStream<T>(TypeLocalNameKey key, HydrationResult<T> result) {
+  void emitToStream(
+      TypeOrIndexKey key, HydrationResult<IdentifiedGraph> result) {
     final controller = _controllers[key];
     if (controller == null) {
       throw StateError(

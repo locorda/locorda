@@ -2,7 +2,18 @@
 library;
 
 import 'dart:async';
-import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda/locorda.dart';
+
+class _MockHydrationSubscription implements HydrationSubscription {
+  @override
+  Future<void> cancel() {
+    // Mock implementation - do nothing
+    return Future.value();
+  }
+
+  @override
+  bool get isActive => true;
+}
 
 /// Simple mock implementation for testing
 class MockLocordaSync implements LocordaSync {
@@ -17,21 +28,21 @@ class MockLocordaSync implements LocordaSync {
   Future<void> close() async {}
 
   @override
-  Future<void> deleteDocument<T>(T object) async {
-    savedObjects.removeWhere((item) => item == object);
+  Future<void> deleteDocument<T>(String id) async {
+    savedObjects.removeWhere((item) => item.id == id);
   }
 
   @override
-  Future<StreamSubscription<HydrationResult<T>>> hydrateStreaming<T>({
+  Future<HydrationSubscription> hydrateStreaming<T>({
     required Future<String?> Function() getCurrentCursor,
     required Future<void> Function(T item) onUpdate,
     required Future<void> Function(T item) onDelete,
     required Future<void> Function(String cursor) onCursorUpdate,
     String? localName,
-    int limit = 100,
+    int batchSize = 100,
   }) async {
     // Mock implementation - return empty subscription
-    return Stream<HydrationResult<T>>.empty().listen(null);
+    return _MockHydrationSubscription();
   }
 
   @override

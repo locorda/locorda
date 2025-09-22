@@ -19,12 +19,12 @@ environment:
   sdk: ^3.6.0
 
 dependencies:
-  logging: ^1.2.0
+  logging: ^1.3.0
   crypto: ^3.0.3
 
-  # RDF mapping
+  # RDF 
   rdf_core: ^0.9.14
-  rdf_mapper: ^0.10.1
+  
 
 dev_dependencies:
   test: ^1.24.0

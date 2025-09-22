@@ -33,6 +33,10 @@ class LocalResourceIriService {
   late Map<Type, IriTerm> _resourceTypeCache;
   final List<ValidationError> _setupErrors = [];
 
+  final LocalReferenceConverter _converter;
+
+  LocalResourceIriService(this._converter);
+
   /// Creates a mapper for primary resource IRI mapping during setup phase.
   ///
   /// **Setup Phase Only**: This method must only be called before
@@ -60,7 +64,7 @@ class LocalResourceIriService {
     }
 
     // Create local IRI mapper for type T using the tuple (String id,) pattern
-    return _LocalResourceIriMapper<T>();
+    return _LocalResourceIriMapper<T>(_converter);
   }
 
   /// Creates a mapper for resource reference mapping during setup phase.
@@ -83,7 +87,7 @@ class LocalResourceIriService {
     _referencedTypes.add(targetType);
 
     // Create local reference mapper that uses the same IRI scheme as resources
-    return _LocalReferenceIriMapper(targetType);
+    return _LocalReferenceIriMapper(_converter, targetType);
   }
 
   /// Validates the current setup configuration.
@@ -175,38 +179,46 @@ class LocalResourceIriService {
 
 /// Local IRI mapper for primary resources using the app://local/{type}/{id} scheme.
 class _LocalResourceIriMapper<T> implements IriTermMapper<(String,)> {
+  final LocalReferenceConverter _converter;
+
+  const _LocalResourceIriMapper(this._converter);
+
   @override
   (String,) fromRdfTerm(IriTerm term, DeserializationContext context) {
-    final iri = term.iri;
-    final typeName = T.toString();
-    final expectedPrefix = 'app://local/$typeName/';
-
-    if (!iri.startsWith(expectedPrefix)) {
-      throw ArgumentError(
-          'IRI $iri does not match expected pattern for type $T');
-    }
-
-    final id = iri.substring(expectedPrefix.length);
+    final id = _converter.fromIri(T, term);
     return (id,);
   }
 
   @override
   IriTerm toRdfTerm((String,) value, SerializationContext context) {
     final (id,) = value;
-    final typeName = T.toString();
-    final iri = 'app://local/$typeName/$id';
-    return IriTerm(iri);
+    return _converter.toIri(T, id);
   }
 }
 
 /// Local IRI mapper for resource references using the same scheme as resources.
 class _LocalReferenceIriMapper implements IriTermMapper<String> {
   final Type targetType;
+  final LocalReferenceConverter _converter;
 
-  const _LocalReferenceIriMapper(this.targetType);
+  const _LocalReferenceIriMapper(this._converter, this.targetType);
 
   @override
   String fromRdfTerm(IriTerm term, DeserializationContext context) {
+    return _converter.fromIri(targetType, term);
+  }
+
+  @override
+  IriTerm toRdfTerm(String value, SerializationContext context) {
+    return _converter.toIri(targetType, value);
+  }
+}
+
+/// Local IRI mapper for resource references using the same scheme as resources.
+class LocalReferenceConverter {
+  const LocalReferenceConverter();
+
+  String fromIri(Type targetType, IriTerm term) {
     final iri = term.iri;
     final typeName = targetType.toString();
     final expectedPrefix = 'app://local/$typeName/';
@@ -220,8 +232,7 @@ class _LocalReferenceIriMapper implements IriTermMapper<String> {
     return iri.substring(expectedPrefix.length);
   }
 
-  @override
-  IriTerm toRdfTerm(String value, SerializationContext context) {
+  IriTerm toIri(Type targetType, String value) {
     final typeName = targetType.toString();
     final iri = 'app://local/$typeName/$value';
     return IriTerm(iri);

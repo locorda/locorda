@@ -1,7 +1,6 @@
-import 'package:test/test.dart';
+import 'package:locorda/locorda.dart';
 import 'package:rdf_core/rdf_core.dart';
-import 'package:locorda_core/src/config/resource_config.dart';
-import 'package:locorda_core/src/index/index_config.dart';
+import 'package:test/test.dart';
 
 import '../test_models.dart';
 
@@ -16,7 +15,9 @@ void main() {
       expect(config.type, equals(TestDocument));
       expect(config.crdtMapping.toString(),
           equals('https://example.com/document.ttl'));
-      expect(config.indices, isEmpty);
+      expect(config.indices, isNotEmpty);
+      expect(config.indices.length, equals(1));
+      expect(config.indices.first, isA<FullIndex>());
     });
 
     test('should create ResourceConfig with indices', () {
@@ -53,23 +54,7 @@ void main() {
       );
 
       expect(config.type, equals(TestDocument));
-      expect(config.indices, isEmpty);
-    });
-
-    test(
-        'should create ResourceConfig with single index using named constructor',
-        () {
-      final index = FullIndex(localName: 'documents');
-
-      final config = ResourceConfig.withSingleIndex(
-        type: TestDocument,
-        crdtMapping: Uri.parse('https://example.com/document.ttl'),
-        index: index,
-      );
-
-      expect(config.type, equals(TestDocument));
       expect(config.indices, hasLength(1));
-      expect(config.indices.first, equals(index));
     });
   });
 
@@ -128,7 +113,7 @@ void main() {
       );
 
       final allIndices = config.getAllIndices();
-      expect(allIndices, isEmpty);
+      expect(allIndices, hasLength(1)); // Default FullIndex exists
     });
 
     test('should get resource config by type', () {

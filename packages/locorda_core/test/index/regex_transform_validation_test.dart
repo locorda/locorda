@@ -1,4 +1,4 @@
-import 'package:locorda_core/src/index/index_config.dart';
+import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/index/regex_transform_validation.dart';
 import 'package:test/test.dart';
 

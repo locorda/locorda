@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
-import 'package:locorda_core/src/mapping/local_resource_iri_service.dart';
+import '../../../locorda/lib/src/mapping/local_resource_iri_service.dart';
 import 'package:locorda_core/src/mapping/pod_iri_config.dart';
 
 // Mock types for testing
@@ -18,7 +18,7 @@ void main() {
     late PodIriConfig mockConfig;
 
     setUp(() {
-      service = LocalResourceIriService();
+      service = LocalResourceIriService(LocalReferenceConverter());
       mockResourceTypeCache = {
         TestNote: IriTerm('http://example.org/Note'),
         TestCategory: IriTerm('http://example.org/Category'),

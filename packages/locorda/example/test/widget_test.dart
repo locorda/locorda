@@ -6,7 +6,9 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:locorda_solid_auth/locorda_solid_auth.dart';
 import 'package:personal_notes_app/screens/notes_list_screen.dart';
 import 'package:personal_notes_app/services/categories_service.dart';
 import 'package:personal_notes_app/services/notes_service.dart';
@@ -34,6 +36,10 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         title: 'Personal Notes',
+        localizationsDelegates: const [
+          ...GlobalMaterialLocalizations.delegates,
+          SolidAuthLocalizations.delegate,
+        ],
         home: NotesListScreen(
           notesService: mockNotesService,
           categoriesService: mockCategoriesService,

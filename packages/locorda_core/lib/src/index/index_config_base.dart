@@ -7,8 +7,6 @@ library;
 
 import 'package:rdf_core/rdf_core.dart';
 
-const defaultIndexLocalName = "default";
-
 enum ItemFetchPolicy {
   /// Proactive item fetching - all items referenced in the index are automatically
   /// downloaded from the pod to local when they are updated remotely or not already present locally.
@@ -24,21 +22,18 @@ enum ItemFetchPolicy {
 ///
 /// Specifies both the Dart type for deserialization and the RDF properties
 /// to include in index items for efficient querying.
-class IndexItem {
-  /// Dart type for index item deserialization (e.g., NoteIndexEntry)
-  final Type itemType;
-
+abstract class IndexItemConfigBase {
   /// RDF properties to include in index items
   final Set<IriTerm> properties;
 
-  const IndexItem(this.itemType, this.properties);
+  const IndexItemConfigBase(this.properties);
 }
 
 /// The Dart type being indexed (e.g., Note - the source data type) is inferred from the ResourceConfig
 /// which contains this index configuration.
-sealed class CrdtIndexConfig {
-  /// Local name for referencing this index within the app (not used in Remote Storage structure)
-  /// Defaults to [defaultIndexLocalName]. Must be unique per index item type
+abstract class CrdtIndexConfigBase {
+  /// Local name for referencing this index within the app (not used in Remote Storage structure).
+  /// Must be unique per index item type
   /// across all resources (e.g., if multiple resources use NoteIndexEntry,
   /// they must have different local names).
   /// Used for referencing in indexUpdatesStream<T>(localName) calls.
@@ -47,32 +42,29 @@ sealed class CrdtIndexConfig {
   /// Configuration for index items (type and properties) - if null then we
   /// do not have index properties and the index items cannot be queried, but
   /// the synchronization of the data still happens.
-  IndexItem? get item;
+  IndexItemConfigBase? get item;
 
-  const CrdtIndexConfig();
+  const CrdtIndexConfigBase();
 }
 
 /// Defines a grouped index configuration that will generate an idx:GroupIndexTemplate.
 ///
 /// Groups data by time periods or other criteria for efficient partial sync.
 /// Example: Group notes by year-month for scalable historical data handling.
-class GroupIndex extends CrdtIndexConfig {
-  final Type groupKeyType;
-
+abstract class GroupIndexConfigBase extends CrdtIndexConfigBase {
   /// Local name for referencing this index within the app (not used in Remote Storage structure)
   @override
   final String localName;
 
   /// Configuration for index items (type and properties)
   @override
-  final IndexItem? item;
+  final IndexItemConfigBase? item;
 
   /// Properties used for grouping resources, must be in sync with the groupKeyType
   final List<GroupingProperty> groupingProperties;
 
-  const GroupIndex(
-    this.groupKeyType, {
-    this.localName = defaultIndexLocalName,
+  const GroupIndexConfigBase({
+    required this.localName,
     this.item,
     required this.groupingProperties,
   }) : assert(groupingProperties.length > 0,
@@ -83,19 +75,20 @@ class GroupIndex extends CrdtIndexConfig {
 ///
 /// Creates a single index covering an entire dataset for bounded collections.
 /// Example: All user contacts, recipe collection, document library.
-class FullIndex extends CrdtIndexConfig {
-  /// Local name for referencing this index within the app (not used in Pod structure)
+abstract class FullIndexConfigBase extends CrdtIndexConfigBase {
+  /// Local name for referencing this index within the app (not used in Pod structure), must be unique
+  /// within the app.
   @override
   final String localName;
 
   /// Configuration for index items (type and properties)
   @override
-  final IndexItem? item;
+  final IndexItemConfigBase? item;
 
   final ItemFetchPolicy itemFetchPolicy;
 
-  const FullIndex({
-    this.localName = defaultIndexLocalName,
+  const FullIndexConfigBase({
+    required this.localName,
     this.item,
     this.itemFetchPolicy = ItemFetchPolicy.prefetch,
   });

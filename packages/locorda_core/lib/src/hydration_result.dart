@@ -40,3 +40,11 @@ class HydrationResult<T> {
         'hasMore: $hasMore)';
   }
 }
+
+abstract interface class HydrationSubscription {
+  /// Cancel the subscription and stop receiving updates.
+  Future<void> cancel();
+
+  /// Whether the subscription is currently active.
+  bool get isActive;
+}

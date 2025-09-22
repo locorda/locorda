@@ -3,7 +3,7 @@ library;
 
 import 'dart:async';
 import 'package:drift/drift.dart';
-import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda/locorda.dart';
 import '../models/category.dart' as models;
 import '../models/note.dart' as models;
 import '../models/note_index_entry.dart' as models;
@@ -18,7 +18,7 @@ import 'database.dart';
 class CategoryRepository {
   final CategoryDao _categoryDao;
   final LocordaSync _syncSystem;
-  final StreamSubscription _hydrationSubscription;
+  final HydrationSubscription _hydrationSubscription;
 
   static const String _resourceType = 'category';
 
@@ -153,8 +153,8 @@ class NoteRepository {
   final NoteDao _noteDao;
   final NoteIndexEntryDao _noteIndexDao;
   final LocordaSync _syncSystem;
-  final StreamSubscription _dataHydrationSubscription;
-  final StreamSubscription _indexHydrationSubscription;
+  final HydrationSubscription _dataHydrationSubscription;
+  final HydrationSubscription _indexHydrationSubscription;
 
   static const String _resourceType = 'note';
   static const String _indexResourceType = 'noteIndexEntry';
@@ -251,7 +251,7 @@ class NoteRepository {
     final note = await getNote(id);
     if (note != null) {
       // Use sync system - local storage will be updated via hydration stream
-      await _syncSystem.deleteDocument<models.Note>(note);
+      await _syncSystem.deleteDocument<models.Note>(id);
     }
   }
 

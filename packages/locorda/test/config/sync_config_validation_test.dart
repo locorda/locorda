@@ -1,9 +1,10 @@
+import 'package:locorda/locorda.dart';
+import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda/src/config/sync_config_validator.dart';
 import 'package:locorda_core/src/config/validation.dart';
 import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
-import 'package:locorda_core/src/config/resource_config.dart';
-import 'package:locorda_core/src/index/index_config.dart';
 
 import '../test_models.dart';
 
@@ -92,11 +93,13 @@ void main() {
         final result = validate(config, mockMapper);
         expect(result.isValid, isFalse);
         expect(result.errors, hasLength(2));
-        expect(result.errors.first.message, contains('No RDF type IRI found'));
-        expect(result.errors.first.message, contains('UnmappedType'));
-        expect(result.errors.first.message, contains('@PodResource'));
-        expect(result.errors.last.message,
+        final last = result.errors.last;
+        final first = result.errors.first;
+        expect(first.message,
             contains('Type UnmappedType is not registered in RdfMapper'));
+        expect(last.message, contains('No RDF type IRI found'));
+        expect(last.message, contains('UnmappedType'));
+        expect(last.message, contains('@PodResource'));
       });
     });
 
@@ -510,9 +513,7 @@ void main() {
           ],
         );
 
-        final result = config.validate(
-            config.buildResourceTypeCache(mockMapper),
-            mapper: mockMapper);
+        final result = validate(config, mockMapper);
         expect(result.isValid, isFalse);
         expect(
             result.errors.any((e) =>
@@ -1219,5 +1220,7 @@ void main() {
   });
 }
 
-ValidationResult validate(SyncConfig config, RdfMapper mockMapper) => config
-    .validate(config.buildResourceTypeCache(mockMapper), mapper: mockMapper);
+ValidationResult validate(SyncConfig config, RdfMapper mockMapper) =>
+    SyncConfigValidator().validate(
+        config, buildResourceTypeCache(mockMapper, config),
+        mapper: mockMapper);

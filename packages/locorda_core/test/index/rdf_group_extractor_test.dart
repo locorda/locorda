@@ -1,5 +1,5 @@
 import 'package:rdf_core/rdf_core.dart';
-import 'package:locorda_core/src/index/index_config.dart';
+import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/index/rdf_group_extractor.dart';
 import 'package:test/test.dart';
 

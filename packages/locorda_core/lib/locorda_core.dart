@@ -11,7 +11,7 @@
 library locorda_core;
 
 // Main API facade
-export 'src/locorda.dart';
+export 'src/locorda_graph_sync.dart';
 export 'src/hydration_result.dart';
 
 // Core interfaces
@@ -32,11 +32,13 @@ export 'src/crdt/hybrid_logical_clock.dart';
 export 'src/sync/sync_engine.dart';
 
 // Mapping configuration
-export 'src/mapping/solid_mapping_context.dart';
-export 'src/index/index_config.dart';
+export 'src/index/index_config_base.dart';
 
 // Resource-focused configuration
-export 'src/config/resource_config.dart';
+export 'src/config/sync_config_base.dart';
+export 'src/config/sync_config_base_validator.dart';
+export 'src/config/sync_graph_config.dart';
+export 'src/config/sync_graph_config_validator.dart';
 export 'src/config/validation.dart';
 export 'src/mapping/pod_iri_config.dart';
 

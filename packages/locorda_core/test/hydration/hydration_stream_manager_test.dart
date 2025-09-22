@@ -1,15 +1,22 @@
 import 'dart:async';
 import 'package:test/test.dart';
+import 'package:rdf_core/rdf_core.dart';
 import 'package:locorda_core/src/hydration/hydration_stream_manager.dart';
 import 'package:locorda_core/src/hydration/type_local_name_key.dart';
 import 'package:locorda_core/src/hydration_result.dart';
 
+typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
+
 void main() {
   group('HydrationStreamManager', () {
     late HydrationStreamManager manager;
+    late IriTerm testTypeIri;
+    late IriTerm otherTypeIri;
 
     setUp(() {
       manager = HydrationStreamManager();
+      testTypeIri = IriTerm('https://example.com/TestDocument');
+      otherTypeIri = IriTerm('https://example.com/OtherDocument');
     });
 
     tearDown(() async {
@@ -17,38 +24,44 @@ void main() {
     });
 
     test('should create and return stream controller', () {
-      final controller = manager.getOrCreateController<String>('test');
+      final controller = manager.getOrCreateController(testTypeIri, 'test');
 
       expect(controller, isNotNull);
       expect(controller.stream, isNotNull);
     });
 
-    test('should return same controller for same type and local name', () {
-      final controller1 = manager.getOrCreateController<String>('test');
-      final controller2 = manager.getOrCreateController<String>('test');
+    test('should return same controller for same type and index name', () {
+      final controller1 = manager.getOrCreateController(testTypeIri, 'test');
+      final controller2 = manager.getOrCreateController(testTypeIri, 'test');
 
       expect(controller1, equals(controller2));
     });
 
     test('should return different controllers for different types', () {
-      final controller1 = manager.getOrCreateController<String>('test');
-      final controller2 = manager.getOrCreateController<int>('test');
+      final controller1 = manager.getOrCreateController(testTypeIri, 'test');
+      final controller2 = manager.getOrCreateController(otherTypeIri, 'test');
 
       expect(controller1, isNot(equals(controller2)));
     });
 
-    test('should return different controllers for different local names', () {
-      final controller1 = manager.getOrCreateController<String>('test1');
-      final controller2 = manager.getOrCreateController<String>('test2');
+    test('should return different controllers for different index names', () {
+      final controller1 = manager.getOrCreateController(testTypeIri, 'test1');
+      final controller2 = manager.getOrCreateController(testTypeIri, 'test2');
 
       expect(controller1, isNot(equals(controller2)));
     });
 
     test('should emit to correct stream', () async {
-      final controller = manager.getOrCreateController<String>('test');
-      final key = TypeLocalNameKey(String, 'test');
-      final result = HydrationResult<String>(
-        items: ['item1', 'item2'],
+      final controller = manager.getOrCreateController(testTypeIri, 'test');
+      final key = TypeOrIndexKey(testTypeIri, 'test');
+
+      final documentIri = IriTerm('https://example.com/doc1');
+      final graph = RdfGraph(triples: [
+        Triple(documentIri, IriTerm('https://example.com/title'), LiteralTerm('Test Document'))
+      ]);
+
+      final result = HydrationResult<IdentifiedGraph>(
+        items: [(documentIri, graph)],
         deletedItems: [],
         originalCursor: null,
         nextCursor: 'cursor1',
@@ -56,7 +69,7 @@ void main() {
       );
 
       // Listen to the stream
-      final streamEvents = <HydrationResult<String>>[];
+      final streamEvents = <HydrationResult<IdentifiedGraph>>[];
       final subscription = controller.stream.listen(streamEvents.add);
 
       // Emit to the stream
@@ -72,9 +85,15 @@ void main() {
     });
 
     test('should throw when emitting to non-existent stream', () {
-      final key = TypeLocalNameKey(String, 'nonexistent');
-      final result = HydrationResult<String>(
-        items: ['item1'],
+      final key = TypeOrIndexKey(testTypeIri, 'nonexistent');
+
+      final documentIri = IriTerm('https://example.com/doc1');
+      final graph = RdfGraph(triples: [
+        Triple(documentIri, IriTerm('https://example.com/title'), LiteralTerm('Test Document'))
+      ]);
+
+      final result = HydrationResult<IdentifiedGraph>(
+        items: [(documentIri, graph)],
         deletedItems: [],
         originalCursor: null,
         nextCursor: null,
@@ -93,11 +112,16 @@ void main() {
     });
 
     test('should handle multiple concurrent listeners', () async {
-      final controller = manager.getOrCreateController<String>('test');
-      final key = TypeLocalNameKey(String, 'test');
+      final controller = manager.getOrCreateController(testTypeIri, 'test');
+      final key = TypeOrIndexKey(testTypeIri, 'test');
 
-      final result = HydrationResult<String>(
-        items: ['broadcast'],
+      final documentIri = IriTerm('https://example.com/doc1');
+      final graph = RdfGraph(triples: [
+        Triple(documentIri, IriTerm('https://example.com/title'), LiteralTerm('Broadcast Document'))
+      ]);
+
+      final result = HydrationResult<IdentifiedGraph>(
+        items: [(documentIri, graph)],
         deletedItems: [],
         originalCursor: null,
         nextCursor: null,
@@ -105,8 +129,8 @@ void main() {
       );
 
       // Set up multiple listeners
-      final events1 = <HydrationResult<String>>[];
-      final events2 = <HydrationResult<String>>[];
+      final events1 = <HydrationResult<IdentifiedGraph>>[];
+      final events2 = <HydrationResult<IdentifiedGraph>>[];
 
       final sub1 = controller.stream.listen(events1.add);
       final sub2 = controller.stream.listen(events2.add);
@@ -126,8 +150,8 @@ void main() {
     });
 
     test('should close all controllers', () async {
-      final controller1 = manager.getOrCreateController<String>('test1');
-      final controller2 = manager.getOrCreateController<int>('test2');
+      final controller1 = manager.getOrCreateController(testTypeIri, 'test1');
+      final controller2 = manager.getOrCreateController(otherTypeIri, 'test2');
 
       expect(controller1.isClosed, isFalse);
       expect(controller2.isClosed, isFalse);

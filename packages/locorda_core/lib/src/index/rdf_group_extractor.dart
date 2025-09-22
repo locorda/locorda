@@ -2,7 +2,7 @@
 library;
 
 import 'package:rdf_core/rdf_core.dart';
-import 'index_config.dart';
+import 'index_config_base.dart';
 
 /// Extracts group identifiers from RDF terms based on RegexTransform configuration.
 ///

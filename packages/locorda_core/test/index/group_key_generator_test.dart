@@ -1,7 +1,7 @@
 import 'package:rdf_core/rdf_core.dart';
-import 'package:rdf_vocabularies_schema/schema.dart';
 import 'package:locorda_core/src/index/group_key_generator.dart';
-import 'package:locorda_core/src/index/index_config.dart';
+import 'package:locorda_core/src/index/index_config_base.dart';
+import 'package:locorda_core/src/config/sync_graph_config.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -9,14 +9,15 @@ void main() {
     // Test vocabulary for consistent URIs
     final testSubject = IriTerm('http://example.org/resource/123');
     final categoryPredicate = IriTerm('http://example.org/category');
+    final dateCreatedPredicate = IriTerm('https://schema.org/dateCreated');
 
     group('basic functionality', () {
       test('generates simple group key from single property', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               transforms: [
                 RegexTransform(
                     r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}-${2}'),
@@ -27,7 +28,7 @@ void main() {
 
         final generator = GroupKeyGenerator(config);
         final triples = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
 
@@ -36,8 +37,8 @@ void main() {
       });
 
       test('generates group key without transforms', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],
@@ -53,10 +54,10 @@ void main() {
       });
 
       test('returns null when required property is missing', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
-            GroupingProperty(SchemaNoteDigitalDocument.dateCreated),
+            GroupingProperty(dateCreatedPredicate),
           ],
         );
 
@@ -71,8 +72,8 @@ void main() {
       });
 
       test('uses missing value when property is absent', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
@@ -83,7 +84,7 @@ void main() {
 
         final generator = GroupKeyGenerator(config);
         final triples = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
           // Missing the category property
         ];
@@ -95,11 +96,11 @@ void main() {
 
     group('hierarchical grouping', () {
       test('generates hierarchical group key with multiple levels', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               hierarchyLevel: 1,
               transforms: [
                 RegexTransform(
@@ -107,7 +108,7 @@ void main() {
               ],
             ),
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               hierarchyLevel: 2,
               transforms: [
                 RegexTransform(r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$',
@@ -119,7 +120,7 @@ void main() {
 
         final generator = GroupKeyGenerator(config);
         final triples = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
 
@@ -128,16 +129,15 @@ void main() {
       });
 
       test('handles multiple properties at the same hierarchy level', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate, // http://example.org/category
               hierarchyLevel: 1,
             ),
             GroupingProperty(
-              SchemaNoteDigitalDocument
-                  .dateCreated, // https://schema.org/dateCreated
+              dateCreatedPredicate,
               hierarchyLevel: 1,
               transforms: [
                 RegexTransform(
@@ -150,7 +150,7 @@ void main() {
         final generator = GroupKeyGenerator(config);
         final triples = [
           Triple(testSubject, categoryPredicate, LiteralTerm.string('work')),
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
 
@@ -161,11 +161,11 @@ void main() {
       });
 
       test('processes hierarchy levels in correct order', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               hierarchyLevel: 3, // Intentionally out of order
               transforms: [
                 RegexTransform(
@@ -177,7 +177,7 @@ void main() {
               hierarchyLevel: 1,
             ),
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               hierarchyLevel: 2,
               transforms: [
                 RegexTransform(
@@ -190,7 +190,7 @@ void main() {
         final generator = GroupKeyGenerator(config);
         final triples = [
           Triple(testSubject, categoryPredicate, LiteralTerm.string('work')),
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
 
@@ -201,11 +201,11 @@ void main() {
 
     group('regex transform integration', () {
       test('applies multiple transforms in order - first match wins', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               transforms: [
                 RegexTransform(r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$',
                     r'${1}-${2}'), // ISO format
@@ -220,22 +220,22 @@ void main() {
 
         // Test ISO format (first transform should match)
         final isoTriples = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
         expect(generator.generateGroupKeys(isoTriples), equals({'2024-08'}));
 
         // Test US format (second transform should match)
         final usTriples = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024/08/15')),
         ];
         expect(generator.generateGroupKeys(usTriples), equals({'2024-08'}));
       });
 
       test('handles complex transform patterns from specification', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
@@ -268,8 +268,8 @@ void main() {
       });
 
       test('uses original value when no transforms match', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
@@ -293,8 +293,8 @@ void main() {
 
     group('RDF term type handling', () {
       test('handles IRI objects', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
@@ -316,11 +316,11 @@ void main() {
       });
 
       test('handles literal with datatype', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               transforms: [
                 RegexTransform(
                     r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}-${2}'),
@@ -331,7 +331,7 @@ void main() {
 
         final generator = GroupKeyGenerator(config);
         final triples = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
 
@@ -340,8 +340,8 @@ void main() {
       });
 
       test('returns null for blank node objects', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],
@@ -362,16 +362,15 @@ void main() {
           'generates cartesian product from multiple properties with multiple values',
           () {
         // Test the core Cartesian product functionality as specified in ARCHITECTURE.md 5.3.3
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
                 categoryPredicate), // Multiple values: work, personal
-            GroupingProperty(SchemaNoteDigitalDocument.dateCreated,
-                transforms: [
-                  RegexTransform(
-                      r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}-${2}'),
-                ]), // Multiple values: 2024-08, 2024-09
+            GroupingProperty(dateCreatedPredicate, transforms: [
+              RegexTransform(
+                  r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}-${2}'),
+            ]), // Multiple values: 2024-08, 2024-09
           ],
         );
 
@@ -382,9 +381,9 @@ void main() {
           Triple(
               testSubject, categoryPredicate, LiteralTerm.string('personal')),
           // Two date values
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-09-20')),
         ];
 
@@ -404,14 +403,14 @@ void main() {
       test('generates cartesian product across hierarchy levels', () {
         final priorityPredicate = IriTerm('http://example.org/priority');
 
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             // Level 1: Two properties, each with multiple values
             GroupingProperty(categoryPredicate, hierarchyLevel: 1),
             GroupingProperty(priorityPredicate, hierarchyLevel: 1),
             // Level 2: One property with multiple values
-            GroupingProperty(SchemaNoteDigitalDocument.dateCreated,
+            GroupingProperty(dateCreatedPredicate,
                 hierarchyLevel: 2,
                 transforms: [
                   RegexTransform(
@@ -430,9 +429,9 @@ void main() {
           Triple(testSubject, priorityPredicate, LiteralTerm.string('high')),
           Triple(testSubject, priorityPredicate, LiteralTerm.string('low')),
           // Two years
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2023-08-15')),
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
 
@@ -455,15 +454,14 @@ void main() {
       });
 
       test('handles cartesian product with missing values', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate, missingValue: 'default'),
-            GroupingProperty(SchemaNoteDigitalDocument.dateCreated,
-                transforms: [
-                  RegexTransform(
-                      r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}-${2}'),
-                ]),
+            GroupingProperty(dateCreatedPredicate, transforms: [
+              RegexTransform(
+                  r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}-${2}'),
+            ]),
           ],
         );
 
@@ -471,9 +469,9 @@ void main() {
         final triples = [
           // No category (will use missing value)
           // Two dates
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-09-20')),
         ];
 
@@ -491,8 +489,8 @@ void main() {
     group('deduplication and edge cases', () {
       test('deduplicates identical group keys from different transform paths',
           () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
@@ -519,21 +517,20 @@ void main() {
       });
 
       test('handles different datatypes with same string representation', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
-            GroupingProperty(SchemaNoteDigitalDocument.dateCreated),
+            GroupingProperty(dateCreatedPredicate),
           ],
         );
 
         final generator = GroupKeyGenerator(config);
         final triples = [
           // Different RDF datatypes but same string content
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
-              LiteralTerm.string('42')),
+          Triple(testSubject, dateCreatedPredicate, LiteralTerm.string('42')),
           Triple(
               testSubject,
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               LiteralTerm('42',
                   datatype:
                       IriTerm('http://www.w3.org/2001/XMLSchema#integer'))),
@@ -545,8 +542,8 @@ void main() {
       });
 
       test('handles literals with language tags', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],
@@ -570,8 +567,8 @@ void main() {
       test(
           'generates multiple group keys when multiple property values present',
           () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],
@@ -585,7 +582,7 @@ void main() {
               categoryPredicate,
               LiteralTerm.string(
                   'personal')), // Second value creates Cartesian product
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
 
@@ -594,11 +591,11 @@ void main() {
       });
 
       test('handles mixed relevant and irrelevant triples', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               transforms: [
                 RegexTransform(
                     r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}-${2}'),
@@ -611,7 +608,7 @@ void main() {
         final triples = [
           Triple(testSubject, IriTerm('http://example.org/title'),
               LiteralTerm.string('Some Title')),
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
           Triple(testSubject, IriTerm('http://example.org/content'),
               LiteralTerm.string('Content here')),
@@ -624,8 +621,8 @@ void main() {
 
     group('edge cases and error handling', () {
       test('handles empty triples list', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],
@@ -638,8 +635,8 @@ void main() {
       });
 
       test('handles empty triples list with missing values', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
@@ -658,16 +655,16 @@ void main() {
         // This should not happen in practice due to assertion in GroupIndex constructor
         // The constructor should throw an assertion error for empty grouping properties
         expect(
-            () => GroupIndex(
-                  String, // groupKeyType
+            () => GroupIndexGraphConfig(
+                  localName: 'test-index',
                   groupingProperties: [], // This will fail assertion
                 ),
             throwsA(isA<AssertionError>()));
       });
 
       test('handles mixed missing and present properties', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
@@ -675,7 +672,7 @@ void main() {
               missingValue: 'uncategorized',
             ),
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               hierarchyLevel: 2,
               transforms: [
                 RegexTransform(
@@ -687,7 +684,7 @@ void main() {
 
         final generator = GroupKeyGenerator(config);
         final triples = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
           // Missing category property
         ];
@@ -699,12 +696,11 @@ void main() {
 
     group('performance and efficiency', () {
       test('efficiently organizes extractors by level', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate, hierarchyLevel: 2),
-            GroupingProperty(SchemaNoteDigitalDocument.dateCreated,
-                hierarchyLevel: 1),
+            GroupingProperty(dateCreatedPredicate, hierarchyLevel: 1),
             GroupingProperty(IriTerm('http://example.org/priority'),
                 hierarchyLevel: 2),
           ],
@@ -713,7 +709,7 @@ void main() {
         final generator = GroupKeyGenerator(config);
         final triples = [
           Triple(testSubject, categoryPredicate, LiteralTerm.string('work')),
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
           Triple(testSubject, IriTerm('http://example.org/priority'),
               LiteralTerm.string('high')),
@@ -730,8 +726,8 @@ void main() {
         final aProperty = IriTerm('http://example.org/a');
         final zProperty = IriTerm('http://example.org/z');
 
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             // Intentionally declare in reverse alphabetical order
             GroupingProperty(zProperty, hierarchyLevel: 1),
@@ -751,11 +747,11 @@ void main() {
       });
 
       test('reuses compiled regex patterns', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               transforms: [
                 RegexTransform(
                     r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}-${2}'),
@@ -768,11 +764,11 @@ void main() {
 
         // Multiple calls should reuse the compiled patterns efficiently
         final triples1 = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
         final triples2 = [
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-09-20')),
         ];
 
@@ -783,8 +779,8 @@ void main() {
 
     group('filesystem safety integration', () {
       test('preserves safe group keys unchanged', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],
@@ -801,8 +797,8 @@ void main() {
       });
 
       test('makes unsafe single-level group keys filesystem-safe', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],
@@ -822,15 +818,15 @@ void main() {
       });
 
       test('makes unsafe hierarchical group keys filesystem-safe', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
               hierarchyLevel: 1,
             ),
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               hierarchyLevel: 2,
               transforms: [
                 RegexTransform(
@@ -844,7 +840,7 @@ void main() {
         final triples = [
           Triple(testSubject, categoryPredicate,
               LiteralTerm.string('unsafe:category')),
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
         ];
 
@@ -857,15 +853,15 @@ void main() {
 
       test('handles mixed safe and unsafe components in hierarchical paths',
           () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
               categoryPredicate,
               hierarchyLevel: 1,
             ),
             GroupingProperty(
-              SchemaNoteDigitalDocument.dateCreated,
+              dateCreatedPredicate,
               hierarchyLevel: 2,
               transforms: [
                 RegexTransform(r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$', r'${1}'),
@@ -878,7 +874,7 @@ void main() {
         final triples = [
           Triple(testSubject, categoryPredicate,
               LiteralTerm.string('work')), // Safe
-          Triple(testSubject, SchemaNoteDigitalDocument.dateCreated,
+          Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')), // Safe after transform
         ];
 
@@ -888,8 +884,8 @@ void main() {
       });
 
       test('handles IRI values with filesystem safety', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],
@@ -909,8 +905,8 @@ void main() {
       });
 
       test('ensures deterministic filesystem-safe results', () {
-        final config = GroupIndex(
-          String, // groupKeyType
+        final config = GroupIndexGraphConfig(
+          localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
           ],

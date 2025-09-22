@@ -2,7 +2,7 @@
 library;
 
 import '../config/validation.dart';
-import 'index_config.dart';
+import 'index_config_base.dart';
 
 /// Validates RegexTransform objects according to the cross-platform compatible regex subset.
 class RegexTransformValidator {

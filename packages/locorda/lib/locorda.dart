@@ -39,4 +39,6 @@
 library locorda;
 
 // Re-export the main API from core
-export 'package:locorda_core/locorda_core.dart';
+export 'src/config/sync_config.dart';
+export 'src/locorda_sync.dart';
+export 'package:locorda_core/locorda_core.dart' show HydrationSubscription;

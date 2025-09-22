@@ -532,7 +532,7 @@ packages:
     source: path
     version: "0.1.0+1"
   locorda_core:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       path: "../../locorda_core"
       relative: true

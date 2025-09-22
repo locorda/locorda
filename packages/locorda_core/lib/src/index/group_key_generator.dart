@@ -1,9 +1,9 @@
 /// Generates group keys from Triple lists using GroupIndex configuration.
 library;
 
+import 'package:locorda_core/src/config/sync_graph_config.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'filesystem_safety.dart';
-import 'index_config.dart';
 import 'rdf_group_extractor.dart';
 
 /// Generates group keys from RDF triples based on GroupIndex configuration.
@@ -22,7 +22,7 @@ class GroupKeyGenerator {
   ///
   /// Efficiently organizes extractors by hierarchy level and pre-compiles
   /// regex patterns for optimal performance.
-  GroupKeyGenerator(GroupIndex config)
+  GroupKeyGenerator(GroupIndexGraphConfig config)
       : _extractorsByLevel = _organizeExtractorsByLevel(config);
 
   /// Generates group keys from a list of triples according to ARCHITECTURE.md 5.3.3.
@@ -181,7 +181,7 @@ class GroupKeyGenerator {
   /// Within each level, extractors are sorted by lexicographic IRI ordering
   /// according to the ARCHITECTURE.md specification.
   static Map<int, List<_PropertyExtractor>> _organizeExtractorsByLevel(
-      GroupIndex config) {
+      GroupIndexGraphConfig config) {
     final extractorsByLevel = <int, List<_PropertyExtractor>>{};
 
     for (final property in config.groupingProperties) {
@@ -202,7 +202,6 @@ class GroupKeyGenerator {
 
     return extractorsByLevel;
   }
-
 }
 
 /// Internal helper class for property extraction with regex transforms.

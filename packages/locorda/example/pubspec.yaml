@@ -29,8 +29,6 @@ dependencies:
     path: ../
   locorda_annotations:
     path: ../../locorda_annotations
-  locorda_core:
-    path: ../../locorda_core
   locorda_solid_auth:
     path: ../../locorda_solid_auth
   locorda_solid:
