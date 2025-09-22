@@ -183,7 +183,7 @@ class _AppInitializerState extends State<AppInitializer>
       // See spec/docs/SECURITY.md for detailed security considerations
       final solidAuthInstance = SolidAuth(
           oidcClientId: '$appBaseUrl/auth/client-config.json',
-          appUrlScheme: 'de.kalass.locorda.personalnotes',
+          appUrlScheme: 'dev.locorda.personalnotes',
           frontendRedirectUrl: Uri.parse('$appBaseUrl/redirect.html'));
       await solidAuthInstance.init();
 

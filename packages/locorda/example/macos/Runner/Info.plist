@@ -35,7 +35,7 @@
 				<string>Editor</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<string>de.kalass.locorda.personalnotes</string>
+					<string>dev.locorda.personalnotes</string>
 				</array>
 			</dict>
 		</array>
