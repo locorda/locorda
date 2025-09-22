@@ -37,18 +37,12 @@ class IndexItem {
 /// The Dart type being indexed (e.g., Note - the source data type) is inferred from the ResourceConfig
 /// which contains this index configuration.
 sealed class CrdtIndexConfig {
-  /// Local name for referencing this index within the app (not used in Pod structure)
+  /// Local name for referencing this index within the app (not used in Remote Storage structure)
   /// Defaults to [defaultIndexLocalName]. Must be unique per index item type
   /// across all resources (e.g., if multiple resources use NoteIndexEntry,
   /// they must have different local names).
   /// Used for referencing in indexUpdatesStream<T>(localName) calls.
   String get localName;
-
-  /// Default path for storing this index on the Pod.
-  /// Used when there's no existing entry in the type registry and the user
-  /// allows us to create one with our suggested default.
-  /// Example: '/index/notes', '/index/categories'
-  String? get defaultIndexPath;
 
   /// Configuration for index items (type and properties) - if null then we
   /// do not have index properties and the index items cannot be queried, but
@@ -65,13 +59,9 @@ sealed class CrdtIndexConfig {
 class GroupIndex extends CrdtIndexConfig {
   final Type groupKeyType;
 
-  /// Local name for referencing this index within the app (not used in Pod structure)
+  /// Local name for referencing this index within the app (not used in Remote Storage structure)
   @override
   final String localName;
-
-  /// Default path for storing this index on the Pod
-  @override
-  final String? defaultIndexPath;
 
   /// Configuration for index items (type and properties)
   @override
@@ -83,7 +73,6 @@ class GroupIndex extends CrdtIndexConfig {
   const GroupIndex(
     this.groupKeyType, {
     this.localName = defaultIndexLocalName,
-    this.defaultIndexPath,
     this.item,
     required this.groupingProperties,
   }) : assert(groupingProperties.length > 0,
@@ -99,10 +88,6 @@ class FullIndex extends CrdtIndexConfig {
   @override
   final String localName;
 
-  /// Default path for storing this index on the Pod
-  @override
-  final String? defaultIndexPath;
-
   /// Configuration for index items (type and properties)
   @override
   final IndexItem? item;
@@ -111,7 +96,6 @@ class FullIndex extends CrdtIndexConfig {
 
   const FullIndex({
     this.localName = defaultIndexLocalName,
-    this.defaultIndexPath,
     this.item,
     this.itemFetchPolicy = ItemFetchPolicy.prefetch,
   });

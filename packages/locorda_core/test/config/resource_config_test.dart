@@ -10,12 +10,10 @@ void main() {
     test('should create basic ResourceConfig', () {
       final config = ResourceConfig(
         type: TestDocument,
-        defaultResourcePath: '/data/documents',
         crdtMapping: Uri.parse('https://example.com/document.ttl'),
       );
 
       expect(config.type, equals(TestDocument));
-      expect(config.defaultResourcePath, equals('/data/documents'));
       expect(config.crdtMapping.toString(),
           equals('https://example.com/document.ttl'));
       expect(config.indices, isEmpty);
@@ -39,7 +37,6 @@ void main() {
 
       final config = ResourceConfig(
         type: TestDocument,
-        defaultResourcePath: '/data/documents',
         crdtMapping: Uri.parse('https://example.com/document.ttl'),
         indices: indices,
       );
@@ -56,7 +53,6 @@ void main() {
       );
 
       expect(config.type, equals(TestDocument));
-      expect(config.defaultResourcePath, isNull);
       expect(config.indices, isEmpty);
     });
 
@@ -67,13 +63,11 @@ void main() {
 
       final config = ResourceConfig.withSingleIndex(
         type: TestDocument,
-        defaultResourcePath: '/data/documents',
         crdtMapping: Uri.parse('https://example.com/document.ttl'),
         index: index,
       );
 
       expect(config.type, equals(TestDocument));
-      expect(config.defaultResourcePath, equals('/data/documents'));
       expect(config.indices, hasLength(1));
       expect(config.indices.first, equals(index));
     });
@@ -84,12 +78,10 @@ void main() {
       final resources = [
         ResourceConfig(
           type: TestDocument,
-          defaultResourcePath: '/data/documents',
           crdtMapping: Uri.parse('https://example.com/document.ttl'),
         ),
         ResourceConfig(
           type: TestCategory,
-          defaultResourcePath: '/data/categories',
           crdtMapping: Uri.parse('https://example.com/category.ttl'),
         ),
       ];
@@ -108,13 +100,11 @@ void main() {
         resources: [
           ResourceConfig(
             type: TestDocument,
-            defaultResourcePath: '/data/documents',
             crdtMapping: Uri.parse('https://example.com/document.ttl'),
             indices: [docIndex],
           ),
           ResourceConfig(
             type: TestCategory,
-            defaultResourcePath: '/data/categories',
             crdtMapping: Uri.parse('https://example.com/category.ttl'),
             indices: [categoryIndex],
           ),
@@ -132,7 +122,6 @@ void main() {
         resources: [
           ResourceConfig(
             type: TestDocument,
-            defaultResourcePath: '/data/documents',
             crdtMapping: Uri.parse('https://example.com/document.ttl'),
           ),
         ],
@@ -145,12 +134,10 @@ void main() {
     test('should get resource config by type', () {
       final docConfig = ResourceConfig(
         type: TestDocument,
-        defaultResourcePath: '/data/documents',
         crdtMapping: Uri.parse('https://example.com/document.ttl'),
       );
       final categoryConfig = ResourceConfig(
         type: TestCategory,
-        defaultResourcePath: '/data/categories',
         crdtMapping: Uri.parse('https://example.com/category.ttl'),
       );
 
@@ -166,7 +153,6 @@ void main() {
         resources: [
           ResourceConfig(
             type: TestDocument,
-            defaultResourcePath: '/data/documents',
             crdtMapping: Uri.parse('https://example.com/document.ttl'),
           ),
         ],

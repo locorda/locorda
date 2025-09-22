@@ -21,12 +21,6 @@ class ResourceConfig {
   /// The Dart type this configuration applies to.
   final Type type;
 
-  /// Default path for storing resources of this type on the Pod.
-  /// Used when there's no existing entry in the type registry and the user
-  /// allows us to create one with our suggested default.
-  /// Example: '/data/notes', '/data/categories'
-  final String? defaultResourcePath;
-
   /// Uri to the CRDT mapping file for this resource type.
   final Uri crdtMapping;
 
@@ -36,7 +30,6 @@ class ResourceConfig {
 
   const ResourceConfig({
     required this.type,
-    this.defaultResourcePath,
     required this.crdtMapping,
     this.indices = const [],
   });
@@ -44,7 +37,6 @@ class ResourceConfig {
   /// Create a resource config with a simple single index.
   ResourceConfig.withSingleIndex({
     required this.type,
-    this.defaultResourcePath,
     required this.crdtMapping,
     required CrdtIndexConfig index,
   }) : indices = [index];
@@ -117,7 +109,6 @@ class SyncConfig {
     final result = ValidationResult();
 
     _validateResourceUniqueness(result, resourceTypeCache);
-    _validateDefaultPaths(result);
     _validateCrdtMappings(result);
     _validateIndexConfigurations(result);
 
@@ -171,67 +162,6 @@ class SyncConfig {
             context: {'type': resource.type, 'error': e.toString()});
       }
     }
-  }
-
-  void _validateDefaultPaths(ValidationResult result) {
-    // Check for path conflicts and invalid paths
-    final resourcePaths = <String, List<Type>>{};
-    final indexPaths = <String, List<Type>>{};
-
-    for (final resource in resources) {
-      // Check resource paths
-      if (resource.defaultResourcePath != null) {
-        final path = resource.defaultResourcePath!;
-
-        if (path.isEmpty) {
-          result.addError(
-              'Default resource path cannot be empty for ${resource.type}',
-              context: {'type': resource.type});
-        } else if (!path.startsWith('/')) {
-          result.addError(
-              'Default resource path must start with "/" for ${resource.type}: $path',
-              context: {'type': resource.type, 'path': path});
-        }
-
-        resourcePaths.putIfAbsent(path, () => []).add(resource.type);
-      }
-
-      // Check index paths
-      for (final index in resource.indices) {
-        if (index.defaultIndexPath != null) {
-          final path = index.defaultIndexPath!;
-
-          if (path.isEmpty) {
-            result.addError(
-                'Default index path cannot be empty for ${resource.type}',
-                context: {'type': resource.type, 'index': index});
-          } else if (!path.startsWith('/')) {
-            result.addError(
-                'Default index path must start with "/" for ${resource.type}: $path',
-                context: {'type': resource.type, 'path': path, 'index': index});
-          }
-
-          indexPaths.putIfAbsent(path, () => []).add(resource.type);
-        }
-      }
-    }
-
-    // Warn about path reuse (not necessarily an error)
-    resourcePaths.forEach((path, types) {
-      if (types.length > 1) {
-        result.addWarning(
-            'Multiple resource types use the same default path: $path (${types.join(', ')})',
-            context: {'path': path, 'types': types});
-      }
-    });
-
-    indexPaths.forEach((path, types) {
-      if (types.length > 1) {
-        result.addWarning(
-            'Multiple indices use the same default path: $path (${types.join(', ')})',
-            context: {'path': path, 'types': types});
-      }
-    });
   }
 
   void _validateCrdtMappings(ValidationResult result) {

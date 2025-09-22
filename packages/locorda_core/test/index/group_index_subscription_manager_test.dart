@@ -18,7 +18,6 @@ void main() {
         resources: [
           ResourceConfig(
             type: TestDocument,
-            defaultResourcePath: '/documents/',
             crdtMapping: Uri.parse('http://example.org/crdt/document'),
             indices: [
               GroupIndex(

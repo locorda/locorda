@@ -21,12 +21,10 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
             ),
             ResourceConfig(
               type: TestCategory,
-              defaultResourcePath: '/data/categories',
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
             ),
           ],
@@ -42,12 +40,10 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents1',
               crdtMapping: Uri.parse('https://example.com/document1.ttl'),
             ),
             ResourceConfig(
               type: TestDocument, // Duplicate!
-              defaultResourcePath: '/data/documents2',
               crdtMapping: Uri.parse('https://example.com/document2.ttl'),
             ),
           ],
@@ -66,12 +62,10 @@ void main() {
           resources: [
             ResourceConfig(
               type: ConflictingTypeA,
-              defaultResourcePath: '/data/typeA',
               crdtMapping: Uri.parse('https://example.com/typeA.ttl'),
             ),
             ResourceConfig(
               type: ConflictingTypeB,
-              defaultResourcePath: '/data/typeB',
               crdtMapping: Uri.parse('https://example.com/typeB.ttl'),
             ),
           ],
@@ -90,7 +84,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: UnmappedType,
-              defaultResourcePath: '/data/unmapped',
               crdtMapping: Uri.parse('https://example.com/unmapped.ttl'),
             ),
           ],
@@ -107,75 +100,12 @@ void main() {
       });
     });
 
-    group('Path Validation', () {
-      test('should fail with empty resource path', () {
-        final config = SyncConfig(
-          resources: [
-            ResourceConfig(
-              type: TestDocument,
-              defaultResourcePath: '', // Empty!
-              crdtMapping: Uri.parse('https://example.com/document.ttl'),
-            ),
-          ],
-        );
-
-        final result = validate(config, mockMapper);
-        expect(result.isValid, isFalse);
-        expect(
-            result.errors
-                .any((e) => e.message.contains('path cannot be empty')),
-            isTrue);
-      });
-
-      test('should fail with relative resource path', () {
-        final config = SyncConfig(
-          resources: [
-            ResourceConfig(
-              type: TestDocument,
-              defaultResourcePath: 'data/documents', // No leading slash!
-              crdtMapping: Uri.parse('https://example.com/document.ttl'),
-            ),
-          ],
-        );
-
-        final result = validate(config, mockMapper);
-        expect(result.isValid, isFalse);
-        expect(
-            result.errors.any((e) => e.message.contains('must start with "/"')),
-            isTrue);
-      });
-
-      test('should warn about duplicate resource paths', () {
-        final config = SyncConfig(
-          resources: [
-            ResourceConfig(
-              type: TestDocument,
-              defaultResourcePath: '/data/shared',
-              crdtMapping: Uri.parse('https://example.com/document.ttl'),
-            ),
-            ResourceConfig(
-              type: TestCategory,
-              defaultResourcePath: '/data/shared', // Same path!
-              crdtMapping: Uri.parse('https://example.com/category.ttl'),
-            ),
-          ],
-        );
-
-        final result = validate(config, mockMapper);
-        expect(result.isValid, isTrue);
-        expect(result.warnings, hasLength(1));
-        expect(result.warnings.first.message,
-            contains('Multiple resource types use the same default path'));
-      });
-    });
-
     group('CRDT Mapping Validation', () {
       test('should fail with relative URI', () {
         final config = SyncConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('mappings/document.ttl'), // Relative!
             ),
           ],
@@ -192,7 +122,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse(
                   'http://example.com/document.ttl'), // HTTP not HTTPS!
             ),
@@ -214,7 +143,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 FullIndex(localName: ''), // Empty local name!
@@ -239,7 +167,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 FullIndex(localName: 'shared', item: testIndexItem),
@@ -247,7 +174,6 @@ void main() {
             ),
             ResourceConfig(
               type: TestCategory,
-              defaultResourcePath: '/data/categories',
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [
                 FullIndex(
@@ -288,7 +214,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -314,7 +239,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -355,7 +279,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -392,7 +315,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -406,7 +328,6 @@ void main() {
             ),
             ResourceConfig(
               type: TestCategory,
-              defaultResourcePath: '/data/categories',
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [
                 GroupIndex(
@@ -438,7 +359,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -452,7 +372,6 @@ void main() {
             ),
             ResourceConfig(
               type: TestCategory,
-              defaultResourcePath: '/data/categories',
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [
                 GroupIndex(
@@ -477,7 +396,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -491,7 +409,6 @@ void main() {
             ),
             ResourceConfig(
               type: TestCategory,
-              defaultResourcePath: '/data/categories',
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [
                 GroupIndex(
@@ -518,7 +435,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: UnmappedType, // This type has no mapper!
-              defaultResourcePath: '/data/unmapped',
               crdtMapping: Uri.parse('https://example.com/unmapped.ttl'),
               indices: [
                 GroupIndex(
@@ -549,7 +465,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -579,7 +494,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -614,7 +528,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument, // Has mapper
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -641,7 +554,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -672,7 +584,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -706,7 +617,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -739,7 +649,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -768,7 +677,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -799,7 +707,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -839,7 +746,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -910,7 +816,6 @@ void main() {
             resources: [
               ResourceConfig(
                 type: TestDocument,
-                defaultResourcePath: '/data/documents',
                 crdtMapping: Uri.parse('https://example.com/document.ttl'),
                 indices: [
                   GroupIndex(
@@ -950,7 +855,6 @@ void main() {
             resources: [
               ResourceConfig(
                 type: TestDocument,
-                defaultResourcePath: '/data/documents',
                 crdtMapping: Uri.parse('https://example.com/document.ttl'),
                 indices: [
                   GroupIndex(
@@ -998,7 +902,6 @@ void main() {
             resources: [
               ResourceConfig(
                 type: TestDocument,
-                defaultResourcePath: '/data/documents',
                 crdtMapping: Uri.parse('https://example.com/document.ttl'),
                 indices: [
                   GroupIndex(
@@ -1033,7 +936,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument, // Has global mapper
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 FullIndex(
@@ -1052,7 +954,6 @@ void main() {
             ),
             ResourceConfig(
               type: TestCategory, // Has global mapper
-              defaultResourcePath: '/data/categories',
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [
                 GroupIndex(
@@ -1080,7 +981,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: UnmappedType, // No mapper
-              defaultResourcePath: '/data/unmapped1',
               crdtMapping: Uri.parse('https://example.com/unmapped1.ttl'),
               indices: [
                 GroupIndex(
@@ -1112,7 +1012,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument, // Has mapper
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -1160,7 +1059,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -1187,7 +1085,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -1223,7 +1120,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -1257,7 +1153,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
@@ -1289,7 +1184,6 @@ void main() {
           resources: [
             ResourceConfig(
               type: TestDocument,
-              defaultResourcePath: '/data/documents',
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndex(
