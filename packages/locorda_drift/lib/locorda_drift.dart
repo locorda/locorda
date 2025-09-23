@@ -7,4 +7,3 @@
 library locorda_drift;
 
 export 'src/drift_storage.dart';
-export 'src/database.dart';
