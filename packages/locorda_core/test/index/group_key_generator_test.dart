@@ -7,9 +7,10 @@ import 'package:test/test.dart';
 void main() {
   group('GroupKeyGenerator', () {
     // Test vocabulary for consistent URIs
-    final testSubject = IriTerm('http://example.org/resource/123');
-    final categoryPredicate = IriTerm('http://example.org/category');
-    final dateCreatedPredicate = IriTerm('https://schema.org/dateCreated');
+    final testSubject = const IriTerm('http://example.org/resource/123');
+    final categoryPredicate = const IriTerm('http://example.org/category');
+    final dateCreatedPredicate =
+        const IriTerm('https://schema.org/dateCreated');
 
     group('basic functionality', () {
       test('generates simple group key from single property', () {
@@ -308,7 +309,7 @@ void main() {
         final generator = GroupKeyGenerator(config);
         final triples = [
           Triple(testSubject, categoryPredicate,
-              IriTerm('http://example.org/category/work')),
+              const IriTerm('http://example.org/category/work')),
         ];
 
         final result = generator.generateGroupKeys(triples);
@@ -401,7 +402,7 @@ void main() {
       });
 
       test('generates cartesian product across hierarchy levels', () {
-        final priorityPredicate = IriTerm('http://example.org/priority');
+        final priorityPredicate = const IriTerm('http://example.org/priority');
 
         final config = GroupIndexGraphConfig(
           localName: 'test-index',
@@ -532,8 +533,8 @@ void main() {
               testSubject,
               dateCreatedPredicate,
               LiteralTerm('42',
-                  datatype:
-                      IriTerm('http://www.w3.org/2001/XMLSchema#integer'))),
+                  datatype: const IriTerm(
+                      'http://www.w3.org/2001/XMLSchema#integer'))),
         ];
 
         final result = generator.generateGroupKeys(triples);
@@ -606,11 +607,11 @@ void main() {
 
         final generator = GroupKeyGenerator(config);
         final triples = [
-          Triple(testSubject, IriTerm('http://example.org/title'),
+          Triple(testSubject, const IriTerm('http://example.org/title'),
               LiteralTerm.string('Some Title')),
           Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
-          Triple(testSubject, IriTerm('http://example.org/content'),
+          Triple(testSubject, const IriTerm('http://example.org/content'),
               LiteralTerm.string('Content here')),
         ];
 
@@ -701,7 +702,7 @@ void main() {
           groupingProperties: [
             GroupingProperty(categoryPredicate, hierarchyLevel: 2),
             GroupingProperty(dateCreatedPredicate, hierarchyLevel: 1),
-            GroupingProperty(IriTerm('http://example.org/priority'),
+            GroupingProperty(const IriTerm('http://example.org/priority'),
                 hierarchyLevel: 2),
           ],
         );
@@ -711,7 +712,7 @@ void main() {
           Triple(testSubject, categoryPredicate, LiteralTerm.string('work')),
           Triple(testSubject, dateCreatedPredicate,
               LiteralTerm.string('2024-08-15')),
-          Triple(testSubject, IriTerm('http://example.org/priority'),
+          Triple(testSubject, const IriTerm('http://example.org/priority'),
               LiteralTerm.string('high')),
         ];
 
@@ -723,8 +724,8 @@ void main() {
 
       test('enforces lexicographic IRI ordering within same level', () {
         // Create predicates with clear lexicographic ordering
-        final aProperty = IriTerm('http://example.org/a');
-        final zProperty = IriTerm('http://example.org/z');
+        final aProperty = const IriTerm('http://example.org/a');
+        final zProperty = const IriTerm('http://example.org/z');
 
         final config = GroupIndexGraphConfig(
           localName: 'test-index',
@@ -894,7 +895,7 @@ void main() {
         final generator = GroupKeyGenerator(config);
         final triples = [
           Triple(testSubject, categoryPredicate,
-              IriTerm('http://example.org/category/work')),
+              const IriTerm('http://example.org/category/work')),
         ];
 
         final result = generator.generateGroupKeys(triples);

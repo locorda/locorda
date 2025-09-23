@@ -52,7 +52,7 @@ The app demonstrates different CRDT merge strategies:
 
 ### Data Model
 ```dart
-@RdfGlobalResource(IriTerm.prevalidated('https://example.org/vocab/Note'), IriStrategy())
+@RdfGlobalResource(IriTerm('https://example.org/vocab/Note'), IriStrategy())
 class Note {
   @RdfIriPart String id;
   @RdfProperty(Schema.name) @LwwRegister() String title;

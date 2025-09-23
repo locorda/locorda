@@ -20,7 +20,7 @@ Create a model with CRDT annotations:
 import 'package:locorda/locorda.dart';
 import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';
 
-@RdfGlobalResource(IriTerm.prevalidated('https://example.org/Note'))
+@RdfGlobalResource(IriTerm('https://example.org/Note'))
 class Note {
   @RdfProperty(Schema.identifier)
   @RdfIriPart()

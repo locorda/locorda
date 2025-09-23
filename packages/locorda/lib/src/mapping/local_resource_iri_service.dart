@@ -216,10 +216,13 @@ class _LocalReferenceIriMapper implements IriTermMapper<String> {
 
 /// Local IRI mapper for resource references using the same scheme as resources.
 class LocalReferenceConverter {
-  const LocalReferenceConverter();
+  final IriTermFactory _iriTermFactory;
+  const LocalReferenceConverter(
+      {IriTermFactory iriTermFactory = IriTerm.validated})
+      : _iriTermFactory = iriTermFactory;
 
   String fromIri(Type targetType, IriTerm term) {
-    final iri = term.iri;
+    final iri = term.value;
     final typeName = targetType.toString();
     final expectedPrefix = 'app://local/$typeName/';
 
@@ -235,6 +238,6 @@ class LocalReferenceConverter {
   IriTerm toIri(Type targetType, String value) {
     final typeName = targetType.toString();
     final iri = 'app://local/$typeName/$value';
-    return IriTerm(iri);
+    return _iriTermFactory(iri);
   }
 }

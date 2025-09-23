@@ -16,7 +16,7 @@ export 'src/hydration_result.dart';
 
 // Core interfaces
 export 'src/auth/auth_interface.dart';
-export 'src/storage/storage_interface.dart';
+export 'src/storage/storage_interface.dart' show Storage, StoredDocument, DocumentMetadata, PropertyChange;
 export 'src/backend/backend.dart';
 export 'src/mapping/resource_locator.dart';
 export 'src/storage/remote_storage.dart';

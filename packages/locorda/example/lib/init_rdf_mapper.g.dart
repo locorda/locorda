@@ -11,7 +11,7 @@ import 'package:rdf_mapper/rdf_mapper.dart';
 
 import 'package:personal_notes_app/models/category.dart' as category;
 import 'package:personal_notes_app/models/category.rdf_mapper.g.dart' as crmg;
-import 'package:locorda_core/locorda_core.dart' as scsc;
+import 'package:locorda_core/locorda_core.dart' as locorda_core;
 import 'package:personal_notes_app/models/note.dart' as note;
 import 'package:personal_notes_app/models/note.rdf_mapper.g.dart' as nrmg;
 import 'package:personal_notes_app/models/note_group_key.dart' as ngk;
@@ -28,8 +28,8 @@ import 'package:personal_notes_app/models/note_index_entry.rdf_mapper.g.dart'
 /// * [$resourceRefFactory]
 RdfMapper initRdfMapper({
   RdfMapper? rdfMapper,
-  required IriTermMapper<(String id,)> Function<T>(scsc.PodIriConfig)
-      $resourceIriFactory,
+  required IriTermMapper<(String id,)> Function<T>(locorda_core.PodIriConfig)
+  $resourceIriFactory,
   required IriTermMapper<String> Function<T>(Type) $resourceRefFactory,
 }) {
   if (rdfMapper == null) {
@@ -40,14 +40,16 @@ RdfMapper initRdfMapper({
   registry.registerMapper<category.Category>(
     crmg.CategoryMapper(
       iriMapper: $resourceIriFactory<category.Category>(
-        const scsc.PodIriConfig(),
+        const locorda_core.PodIriConfig(),
       ),
     ),
   );
   registry.registerMapper<note.Note>(
     nrmg.NoteMapper(
       categoryIdMapper: $resourceRefFactory<String?>(category.Category),
-      iriMapper: $resourceIriFactory<note.Note>(const scsc.PodIriConfig()),
+      iriMapper: $resourceIriFactory<note.Note>(
+        const locorda_core.PodIriConfig(),
+      ),
     ),
   );
   registry.registerMapper<ngk.NoteGroupKey>(ngkrmg.NoteGroupKeyMapper());

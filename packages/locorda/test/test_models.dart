@@ -7,12 +7,12 @@ import 'package:rdf_mapper/rdf_mapper.dart';
 /// Test vocabulary constants
 class TestVocab {
   static const baseIri = 'https://test.example/vocab#';
-  static const testDocument = IriTerm.prevalidated('${baseIri}TestDocument');
-  static const testCategory = IriTerm.prevalidated('${baseIri}TestCategory');
-  static const testNote = IriTerm.prevalidated('${baseIri}TestNote');
-  static const note = IriTerm.prevalidated('${baseIri}Note');
-  static const noteIndex = IriTerm.prevalidated('${baseIri}NoteIndex');
-  static const sameTypeIri = IriTerm.prevalidated('${baseIri}SameType');
+  static const testDocument = IriTerm('${baseIri}TestDocument');
+  static const testCategory = IriTerm('${baseIri}TestCategory');
+  static const testNote = IriTerm('${baseIri}TestNote');
+  static const note = IriTerm('${baseIri}Note');
+  static const noteIndex = IriTerm('${baseIri}NoteIndex');
+  static const sameTypeIri = IriTerm('${baseIri}SameType');
 }
 
 /// Test document model
@@ -211,9 +211,9 @@ class MultiPropertyGroupKeyMapper
       BlankNodeTerm subject, DeserializationContext context) {
     final reader = context.reader(subject);
     final String category = reader.require(TestVocab.testCategory);
-    final String priority = reader.require(IriTerm.prevalidated(
+    final String priority = reader.require(const IriTerm(
         'https://test.example/vocab#priority')); // Assuming it's a string
-    final String department = reader.require(IriTerm.prevalidated(
+    final String department = reader.require(const IriTerm(
         'https://test.example/vocab#department')); // Assuming it's a string
     return MultiPropertyGroupKey(
       category: category,
@@ -230,9 +230,9 @@ class MultiPropertyGroupKeyMapper
     return context
         .resourceBuilder(subject)
         .addValue(TestVocab.testCategory, resource.category)
-        .addValue(IriTerm.prevalidated('https://test.example/vocab#priority'),
+        .addValue(const IriTerm('https://test.example/vocab#priority'),
             resource.priority)
-        .addValue(IriTerm.prevalidated('https://test.example/vocab#department'),
+        .addValue(const IriTerm('https://test.example/vocab#department'),
             resource.department)
         .build();
   }
@@ -248,10 +248,10 @@ class IriPropertyGroupKeyMapper
       BlankNodeTerm subject, DeserializationContext context) {
     final reader = context.reader(subject);
     final String category = reader.require(TestVocab.testCategory);
-    final Uri resourceIri = Uri.parse(reader.require(
-        IriTerm.prevalidated('https://test.example/vocab#resourceIri')));
-    final Uri relatedDocument = Uri.parse(reader.require(
-        IriTerm.prevalidated('https://test.example/vocab#relatedDocument')));
+    final Uri resourceIri = Uri.parse(reader
+        .require(const IriTerm('https://test.example/vocab#resourceIri')));
+    final Uri relatedDocument = Uri.parse(reader
+        .require(const IriTerm('https://test.example/vocab#relatedDocument')));
     return IriPropertyGroupKey(
       category: category,
       resourceIri: resourceIri,
@@ -267,11 +267,9 @@ class IriPropertyGroupKeyMapper
     return context
         .resourceBuilder(subject)
         .addValue(TestVocab.testCategory, resource.category)
-        .addValue(
-            IriTerm.prevalidated('https://test.example/vocab#resourceIri'),
+        .addValue(const IriTerm('https://test.example/vocab#resourceIri'),
             resource.resourceIri.toString())
-        .addValue(
-            IriTerm.prevalidated('https://test.example/vocab#relatedDocument'),
+        .addValue(const IriTerm('https://test.example/vocab#relatedDocument'),
             resource.relatedDocument.toString())
         .build();
   }
@@ -285,7 +283,7 @@ class DateTimeGroupKeyMapper implements LocalResourceMapper<DateTimeGroupKey> {
   DateTimeGroupKey fromRdfResource(
       BlankNodeTerm subject, DeserializationContext context) {
     final reader = context.reader(subject);
-    final String createdAtStr = reader.require(IriTerm(
+    final String createdAtStr = reader.require(const IriTerm(
         'https://test.example/vocab#createdAt')); // Assuming it's a string
     final DateTime createdAt = DateTime.parse(createdAtStr);
     return DateTimeGroupKey(createdAt: createdAt);
@@ -298,7 +296,7 @@ class DateTimeGroupKeyMapper implements LocalResourceMapper<DateTimeGroupKey> {
     final subject = BlankNodeTerm();
     return context
         .resourceBuilder(subject)
-        .addValue(IriTerm('https://test.example/vocab#createdAt'),
+        .addValue(const IriTerm('https://test.example/vocab#createdAt'),
             resource.createdAt.toIso8601String())
         .build();
   }

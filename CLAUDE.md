@@ -256,5 +256,6 @@ Uses Dart's built-in `test` package with comprehensive coverage across all archi
 - Maintain interoperability through public merge contracts and standard RDF
 
 ### Code Quality
+  - Clean and minimal, please
   - Write idiomatic Dart following language conventions and best practices
   - Use Dart's type system effectively - catch specific exceptions, handle nulls explicitly

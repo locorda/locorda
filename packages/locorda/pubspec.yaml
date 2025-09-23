@@ -23,8 +23,8 @@ dependencies:
     path: ../locorda_solid_ui
 
   # RDF mapping
-  rdf_core: ^0.9.14
-  rdf_mapper: ^0.10.1
+  rdf_core: ^0.9.15
+  rdf_mapper: ^0.10.2
 
 dev_dependencies:
   flutter_test:

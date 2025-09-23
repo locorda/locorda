@@ -11,10 +11,10 @@ class IdxVocab {
       'https://w3id.org/solid-crdt-sync/vocab/idx#';
 
   /// Property linking index items back to their source resource
-  static const IriTerm resource = IriTerm.prevalidated('${_namespace}resource');
+  static const IriTerm resource = IriTerm('${_namespace}resource');
 
   // Future vocabulary terms can be added here as needed:
-  // static final IriTerm groupIndex = IriTerm.prevalidated('${_namespace}GroupIndex');
-  // static final IriTerm fullIndex = IriTerm.prevalidated('${_namespace}FullIndex');
-  // static final IriTerm indexEntry = IriTerm.prevalidated('${_namespace}IndexEntry');
+  // static final IriTerm groupIndex = const IriTerm('${_namespace}GroupIndex');
+  // static final IriTerm fullIndex = const IriTerm('${_namespace}FullIndex');
+  // static final IriTerm indexEntry = const IriTerm('${_namespace}IndexEntry');
 }

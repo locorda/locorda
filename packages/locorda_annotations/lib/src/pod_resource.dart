@@ -93,7 +93,7 @@ class PodResource extends RdfGlobalResource {
   ///
   /// Example:
   /// ```dart
-  /// @SolidPodResource(IriTerm.prevalidated('https://example.org/Note'))
+  /// @PodResource(const IriTerm('https://example.org/Note'))
   /// class Note extends RdfResource {
   ///   @LwwRegister()
   ///   late String title;

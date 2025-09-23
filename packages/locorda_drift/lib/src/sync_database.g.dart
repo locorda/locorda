@@ -214,8 +214,8 @@ class $SyncDocumentsTable extends SyncDocuments
       'document_iri_id', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'UNIQUE REFERENCES sync_iris (id)'));
   static const VerificationMeta _documentContentMeta =
       const VerificationMeta('documentContent');
   @override
@@ -900,6 +900,40 @@ final class $$SyncIrisTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$SyncPropertyChangesTable,
+      List<SyncPropertyChange>> _resourceIriTable(
+          _$SyncDatabase db) =>
+      MultiTypedResultKey.fromTable(db.syncPropertyChanges,
+          aliasName: $_aliasNameGenerator(
+              db.syncIris.id, db.syncPropertyChanges.resourceIriId));
+
+  $$SyncPropertyChangesTableProcessedTableManager get resourceIri {
+    final manager = $$SyncPropertyChangesTableTableManager(
+            $_db, $_db.syncPropertyChanges)
+        .filter((f) => f.resourceIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_resourceIriTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$SyncPropertyChangesTable,
+      List<SyncPropertyChange>> _propertyIriTable(
+          _$SyncDatabase db) =>
+      MultiTypedResultKey.fromTable(db.syncPropertyChanges,
+          aliasName: $_aliasNameGenerator(
+              db.syncIris.id, db.syncPropertyChanges.propertyIriId));
+
+  $$SyncPropertyChangesTableProcessedTableManager get propertyIri {
+    final manager = $$SyncPropertyChangesTableTableManager(
+            $_db, $_db.syncPropertyChanges)
+        .filter((f) => f.propertyIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_propertyIriTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$SyncIrisTableFilterComposer
@@ -930,6 +964,48 @@ class $$SyncIrisTableFilterComposer
             $$SyncDocumentsTableFilterComposer(
               $db: $db,
               $table: $db.syncDocuments,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> resourceIri(
+      Expression<bool> Function($$SyncPropertyChangesTableFilterComposer f) f) {
+    final $$SyncPropertyChangesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.syncPropertyChanges,
+        getReferencedColumn: (t) => t.resourceIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncPropertyChangesTableFilterComposer(
+              $db: $db,
+              $table: $db.syncPropertyChanges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> propertyIri(
+      Expression<bool> Function($$SyncPropertyChangesTableFilterComposer f) f) {
+    final $$SyncPropertyChangesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.syncPropertyChanges,
+        getReferencedColumn: (t) => t.propertyIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncPropertyChangesTableFilterComposer(
+              $db: $db,
+              $table: $db.syncPropertyChanges,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -990,6 +1066,52 @@ class $$SyncIrisTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> resourceIri<T extends Object>(
+      Expression<T> Function($$SyncPropertyChangesTableAnnotationComposer a)
+          f) {
+    final $$SyncPropertyChangesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.syncPropertyChanges,
+            getReferencedColumn: (t) => t.resourceIriId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SyncPropertyChangesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.syncPropertyChanges,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> propertyIri<T extends Object>(
+      Expression<T> Function($$SyncPropertyChangesTableAnnotationComposer a)
+          f) {
+    final $$SyncPropertyChangesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.syncPropertyChanges,
+            getReferencedColumn: (t) => t.propertyIriId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SyncPropertyChangesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.syncPropertyChanges,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$SyncIrisTableTableManager extends RootTableManager<
@@ -1003,7 +1125,8 @@ class $$SyncIrisTableTableManager extends RootTableManager<
     $$SyncIrisTableUpdateCompanionBuilder,
     (SyncIri, $$SyncIrisTableReferences),
     SyncIri,
-    PrefetchHooks Function({bool syncDocumentsRefs})> {
+    PrefetchHooks Function(
+        {bool syncDocumentsRefs, bool resourceIri, bool propertyIri})> {
   $$SyncIrisTableTableManager(_$SyncDatabase db, $SyncIrisTable table)
       : super(TableManagerState(
           db: db,
@@ -1034,11 +1157,16 @@ class $$SyncIrisTableTableManager extends RootTableManager<
               .map((e) =>
                   (e.readTable(table), $$SyncIrisTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({syncDocumentsRefs = false}) {
+          prefetchHooksCallback: (
+              {syncDocumentsRefs = false,
+              resourceIri = false,
+              propertyIri = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (syncDocumentsRefs) db.syncDocuments
+                if (syncDocumentsRefs) db.syncDocuments,
+                if (resourceIri) db.syncPropertyChanges,
+                if (propertyIri) db.syncPropertyChanges
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -1055,6 +1183,32 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.documentIriId == item.id),
+                        typedResults: items),
+                  if (resourceIri)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            SyncPropertyChange>(
+                        currentTable: table,
+                        referencedTable:
+                            $$SyncIrisTableReferences._resourceIriTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0)
+                                .resourceIri,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.resourceIriId == item.id),
+                        typedResults: items),
+                  if (propertyIri)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            SyncPropertyChange>(
+                        currentTable: table,
+                        referencedTable:
+                            $$SyncIrisTableReferences._propertyIriTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0)
+                                .propertyIri,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.propertyIriId == item.id),
                         typedResults: items)
                 ];
               },
@@ -1074,7 +1228,8 @@ typedef $$SyncIrisTableProcessedTableManager = ProcessedTableManager<
     $$SyncIrisTableUpdateCompanionBuilder,
     (SyncIri, $$SyncIrisTableReferences),
     SyncIri,
-    PrefetchHooks Function({bool syncDocumentsRefs})>;
+    PrefetchHooks Function(
+        {bool syncDocumentsRefs, bool resourceIri, bool propertyIri})>;
 typedef $$SyncDocumentsTableCreateCompanionBuilder = SyncDocumentsCompanion
     Function({
   Value<int> id,

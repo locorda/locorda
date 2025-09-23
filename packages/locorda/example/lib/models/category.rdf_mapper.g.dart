@@ -15,7 +15,7 @@ import 'package:rdf_mapper/rdf_mapper.dart';
 import 'package:personal_notes_app/models/category.dart' as category;
 import 'package:personal_notes_app/vocabulary/personal_notes_vocab.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
-import 'package:locorda_core/locorda_core.dart' as scsc;
+import 'package:locorda_core/locorda_core.dart' as locorda_core;
 
 /// Generated mapper for [category.Category] global resources.
 ///
@@ -26,7 +26,7 @@ class CategoryMapper implements GlobalResourceMapper<category.Category> {
 
   /// Constructor
   const CategoryMapper({required IriTermMapper<(String id,)> iriMapper})
-      : _iriMapper = iriMapper;
+    : _iriMapper = iriMapper;
 
   @override
   IriTerm? get typeIri => PersonalNotesVocab.NotesCategory;

@@ -11,7 +11,7 @@ import 'package:rdf_core/rdf_core.dart';
 /// Configuration for the entire sync system organized by resources.
 class SyncGraphConfigValidator {
   final SyncConfigBaseValidator _baseValidator =
-      SyncConfigBaseValidator((c) => (c as ResourceGraphConfig).typeIri.iri);
+      SyncConfigBaseValidator((c) => (c as ResourceGraphConfig).typeIri.value);
 
   SyncGraphConfigValidator();
 

@@ -532,7 +532,7 @@ packages:
     source: path
     version: "0.1.0+1"
   locorda_core:
-    dependency: "direct overridden"
+    dependency: "direct main"
     description:
       path: "../../locorda_core"
       relative: true
@@ -851,18 +851,18 @@ packages:
     dependency: "direct main"
     description:
       name: rdf_core
-      sha256: "30245c9b2cb7ab42b4db9c6e5bc9a099fd7d870fe3b0f278998fb76260b48650"
+      sha256: cc208fdc51227d11d32ba82dd28c741637f006cdfbee99b27366317083efe4f6
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.14"
+    version: "0.9.15"
   rdf_mapper:
     dependency: "direct main"
     description:
       name: rdf_mapper
-      sha256: "86eda5c4a70c5647e00015c161285c47c5d2089e1e944ed170d87534942e73aa"
+      sha256: c0814bdaf420f2c80a6af64e66556bf096e3584624afe64c4bf508ba11534a33
       url: "https://pub.dev"
     source: hosted
-    version: "0.10.1"
+    version: "0.10.2"
   rdf_mapper_annotations:
     dependency: "direct main"
     description:
@@ -875,10 +875,10 @@ packages:
     dependency: "direct dev"
     description:
       name: rdf_mapper_generator
-      sha256: "245552756c1213c2e825401bb69c6d454475760bad1f05f14cc606dff2c2f898"
+      sha256: "10e5265eeb5f89dd55ac258921b368e99dca1916e2aeca78b7898ab0117792c9"
       url: "https://pub.dev"
     source: hosted
-    version: "0.10.4"
+    version: "0.10.5"
   rdf_vocabularies_core:
     dependency: "direct main"
     description:

@@ -29,6 +29,8 @@ dependencies:
     path: ../
   locorda_annotations:
     path: ../../locorda_annotations
+  locorda_core:
+    path: ../../locorda_core
   locorda_solid_auth:
     path: ../../locorda_solid_auth
   locorda_solid:
@@ -39,8 +41,8 @@ dependencies:
     path: ../../locorda_drift
     
   # RDF mapping
-  rdf_core: ^0.9.14
-  rdf_mapper: ^0.10.1
+  rdf_core: ^0.9.15
+  rdf_mapper: ^0.10.2
   rdf_vocabularies_schema: ^0.4.4
   rdf_vocabularies_core: ^0.4.4
   rdf_mapper_annotations: ^0.10.2
@@ -62,7 +64,7 @@ dev_dependencies:
   # Code generation
   build_runner: ^2.4.0
   drift_dev: ^2.19.0
-  rdf_mapper_generator: ^0.10.4
+  rdf_mapper_generator: ^0.10.5
 
 flutter:
   uses-material-design: true

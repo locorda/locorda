@@ -15,12 +15,12 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [],
             ),
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Category'),
+              typeIri: const IriTerm('https://example.org/Category'),
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [],
             ),
@@ -33,7 +33,7 @@ void main() {
       });
 
       test('should fail with duplicate type IRIs', () {
-        final duplicateIri = IriTerm('https://example.org/Document');
+        final duplicateIri = const IriTerm('https://example.org/Document');
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
@@ -62,7 +62,7 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [],
             ),
@@ -78,7 +78,7 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('document.ttl'), // Relative!
               indices: [],
             ),
@@ -95,7 +95,7 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('http://example.com/document.ttl'), // HTTP
               indices: [],
             ),
@@ -116,13 +116,13 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 FullIndexGraphConfig(
                   localName: '', // Empty!
                   item: IndexItemGraphConfig({
-                    IriTerm('https://schema.org/name'),
+                    const IriTerm('https://schema.org/name'),
                   }),
                 ),
               ],
@@ -157,14 +157,14 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm.prevalidated(''), // Empty IRI!
+                      const IriTerm(''), // Empty IRI!
                     ),
                   ],
                 ),
@@ -183,14 +183,14 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/category'),
+                      const IriTerm('https://schema.org/category'),
                       hierarchyLevel: 0, // Invalid!
                     ),
                   ],
@@ -212,14 +212,14 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/category'),
+                      const IriTerm('https://schema.org/category'),
                       hierarchyLevel: -1, // Invalid!
                     ),
                   ],
@@ -241,14 +241,14 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/category'),
+                      const IriTerm('https://schema.org/category'),
                       missingValue: '', // Empty string!
                     ),
                   ],
@@ -270,14 +270,14 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/category'),
+                      const IriTerm('https://schema.org/category'),
                       missingValue: null, // OK
                     ),
                   ],
@@ -298,14 +298,14 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/dateCreated'),
+                      const IriTerm('https://schema.org/dateCreated'),
                       transforms: [
                         RegexTransform(
                           r'[invalid', // Malformed regex!
@@ -329,14 +329,14 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/dateCreated'),
+                      const IriTerm('https://schema.org/dateCreated'),
                       transforms: [
                         RegexTransform(
                           r'([0-9]{4})', // Only 1 capture group
@@ -361,14 +361,14 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/dateCreated'),
+                      const IriTerm('https://schema.org/dateCreated'),
                       transforms: [
                         RegexTransform(
                           r'^([0-9]{4})-([0-9]{2})-([0-9]{2}).*',
@@ -394,18 +394,18 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/category'),
+                      const IriTerm('https://schema.org/category'),
                       hierarchyLevel: 1,
                     ),
                     GroupingProperty(
-                      IriTerm('https://schema.org/priority'),
+                      const IriTerm('https://schema.org/priority'),
                       hierarchyLevel: 3, // Gap! (missing level 2)
                     ),
                   ],
@@ -427,18 +427,18 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/category'),
+                      const IriTerm('https://schema.org/category'),
                       hierarchyLevel: 1,
                     ),
                     GroupingProperty(
-                      IriTerm('https://schema.org/priority'),
+                      const IriTerm('https://schema.org/priority'),
                       hierarchyLevel: 2, // Consecutive
                     ),
                   ],
@@ -459,35 +459,35 @@ void main() {
         final config = SyncGraphConfig(
           resources: [
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Document'),
+              typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
                 FullIndexGraphConfig(
                   localName: 'full-index',
                   item: IndexItemGraphConfig({
-                    IriTerm('https://schema.org/name'),
-                    IriTerm('https://schema.org/dateCreated'),
+                    const IriTerm('https://schema.org/name'),
+                    const IriTerm('https://schema.org/dateCreated'),
                   }),
                 ),
                 GroupIndexGraphConfig(
                   localName: 'category-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/category'),
+                      const IriTerm('https://schema.org/category'),
                     ),
                   ],
                 ),
               ],
             ),
             ResourceGraphConfig(
-              typeIri: IriTerm('https://example.org/Category'),
+              typeIri: const IriTerm('https://example.org/Category'),
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [
                 GroupIndexGraphConfig(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/dateCreated'),
+                      const IriTerm('https://schema.org/dateCreated'),
                       transforms: [
                         RegexTransform(
                           r'^([0-9]{4})-([0-9]{2})-([0-9]{2}).*',

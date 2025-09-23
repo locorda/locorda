@@ -63,14 +63,19 @@ class LocordaSync {
   static Future<LocordaSync> setup({
     required Backend backend,
     required Storage storage,
-    required MapperInitializerFunction mapperInitializer,
     required SyncConfig config,
+    required MapperInitializerFunction mapperInitializer,
+    IriTermFactory? iriTermFactory,
   }) async {
-    final localReferenceConverter = LocalReferenceConverter();
+    iriTermFactory ??= IriTerm.validated;
+    final localReferenceConverter =
+        LocalReferenceConverter(iriTermFactory: iriTermFactory);
     final iriService = LocalResourceIriService(localReferenceConverter);
     final mappingContext = SolidMappingContext(
       resourceIriFactory: iriService.createResourceIriMapper,
       resourceRefFactory: iriService.createResourceRefMapper,
+      baseRdfMapper:
+          RdfMapper.withDefaultRegistry(iriTermFactory: iriTermFactory),
     );
     final mapper = mapperInitializer(mappingContext);
 

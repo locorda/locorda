@@ -15,7 +15,8 @@ class DriftStorage implements Storage {
   final SyncDocumentDao documentDao;
   final SyncPropertyChangeDao propertyChangeDao;
   final SyncDatabase _database;
-  final TurtleCodec _turtle;
+  final RdfGraphCodec _codec;
+  final IriTermFactory _iriTermFactory;
 
   bool _initialized = false;
 
@@ -23,18 +24,34 @@ class DriftStorage implements Storage {
     required this.documentDao,
     required this.propertyChangeDao,
     required SyncDatabase database,
-    TurtleCodec? turtle,
+    IriTermFactory iriTermFactory = IriTerm.validated,
   })  : _database = database,
-        _turtle = turtle ?? TurtleCodec();
+        _iriTermFactory = iriTermFactory,
+        _codec = TurtleCodec(iriTermFactory: iriTermFactory);
 
   /// Create DriftStorage with database options
-  factory DriftStorage({DriftWebOptions? web, DriftNativeOptions? native}) {
+  factory DriftStorage({
+    DriftWebOptions? web,
+    DriftNativeOptions? native,
+    IriTermFactory iriTermFactory = IriTerm.validated,
+  }) {
     final database = SyncDatabase(web: web, native: native);
 
+    return DriftStorage._(
+        documentDao: database.syncDocumentDao,
+        propertyChangeDao: database.syncPropertyChangeDao,
+        database: database,
+        iriTermFactory: iriTermFactory);
+  }
+
+  /// Create DriftStorage with custom database instance (for testing)
+  factory DriftStorage.withDatabase(SyncDatabase database,
+      {IriTermFactory iriTermFactory = IriTerm.validated}) {
     return DriftStorage._(
       documentDao: database.syncDocumentDao,
       propertyChangeDao: database.syncPropertyChangeDao,
       database: database,
+      iriTermFactory: iriTermFactory,
     );
   }
 
@@ -57,15 +74,14 @@ class DriftStorage implements Storage {
       DocumentMetadata metadata, List<PropertyChange> changes) async {
     await _database.transaction(() async {
       // Serialize RDF graph to Turtle
-      final content = _turtle.encode(document, baseUri: documentIri.iri);
-      final updatedAt = DateTime.now().millisecondsSinceEpoch;
+      final content = _codec.encode(document, baseUri: documentIri.value);
 
       // Save document with metadata and get the document ID
       final documentId = await documentDao.saveDocument(
-        documentIri: documentIri.iri,
+        documentIri: documentIri.value,
         content: content,
         ourPhysicalClock: metadata.ourPhysicalClock,
-        updatedAt: updatedAt,
+        updatedAt: metadata.updatedAt,
       );
 
       // Save property changes in batch
@@ -80,12 +96,12 @@ class DriftStorage implements Storage {
 
   @override
   Future<StoredDocument?> getDocument(IriTerm documentIri) async {
-    final document = await documentDao.getDocument(documentIri.iri);
+    final document = await documentDao.getDocument(documentIri.value);
     if (document == null) return null;
 
     // Parse RDF content
     final graph =
-        _turtle.decode(document.documentContent, documentUrl: documentIri.iri);
+        _codec.decode(document.documentContent, documentUrl: documentIri.value);
 
     return StoredDocument(
       documentIri: documentIri,
@@ -100,7 +116,7 @@ class DriftStorage implements Storage {
   @override
   Future<List<PropertyChange>> getPropertyChanges(IriTerm documentIri,
       {int? sinceLogicalClock}) async {
-    final documentId = await documentDao.getDocumentId(documentIri.iri);
+    final documentId = await documentDao.getDocumentId(documentIri.value);
     if (documentId == null) return [];
 
     final changes = await propertyChangeDao.getPropertyChanges(
@@ -110,8 +126,8 @@ class DriftStorage implements Storage {
 
     return changes
         .map((change) => PropertyChange(
-              resourceIri: IriTerm(change.resourceIri),
-              propertyIri: IriTerm(change.propertyIri),
+              resourceIri: _iriTermFactory(change.resourceIri),
+              propertyIri: _iriTermFactory(change.propertyIri),
               changedAtMs: change.changedAtMs,
               changeLogicalClock: change.changeLogicalClock,
             ))
@@ -138,10 +154,10 @@ class DriftStorage implements Storage {
       List<DocumentWithIri> documents) {
     return documents.map((doc) {
       final graph =
-          _turtle.decode(doc.document.documentContent, documentUrl: doc.iri);
+          _codec.decode(doc.document.documentContent, documentUrl: doc.iri);
 
       return StoredDocument(
-        documentIri: IriTerm(doc.iri),
+        documentIri: _iriTermFactory(doc.iri),
         document: graph,
         metadata: DocumentMetadata(
           ourPhysicalClock: doc.document.ourPhysicalClock,

@@ -146,7 +146,7 @@ class Category { ... }
 class BlogPost { ... }
 
 // AFTER: Unique types
-@PodResource(IriTerm.prevalidated('https://personal-notes.example/vocab#NotesCategory'))
+@PodResource(IriTerm('https://personal-notes.example/vocab#NotesCategory'))
 class NotesCategory { ... }
 
 @PodResource(SchemaBlogPosting.classIri)  // More specific standard type

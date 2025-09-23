@@ -128,7 +128,7 @@ class SyncConfigValidator {
       try {
         final rdfTypeIri = resourceTypeCache[resource.type];
         if (rdfTypeIri != null) {
-          final rdfTypeIriString = rdfTypeIri.iri;
+          final rdfTypeIriString = rdfTypeIri.value;
           if (rdfTypeIris.containsKey(rdfTypeIriString)) {
             result.addError(
                 'RDF type IRI collision: ${resource.type} and ${rdfTypeIris[rdfTypeIriString]} '

@@ -69,7 +69,7 @@ void main() {
           RegexTransform(r'^http://example\.org/(.+)$', r'${1}'),
         ]);
 
-        final iri = IriTerm.prevalidated('http://example.org/resource');
+        final iri = const IriTerm('http://example.org/resource');
         final result = extractor.extractGroupKey(iri);
 
         expect(result, equals('resource'));

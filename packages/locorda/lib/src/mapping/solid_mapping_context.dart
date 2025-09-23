@@ -16,9 +16,10 @@ import 'package:locorda_core/locorda_core.dart';
 class SolidMappingContext {
   IriTermMapper<(String id,)> Function<T>(PodIriConfig) resourceIriFactory;
   IriTermMapper<String> Function<T>(Type) resourceRefFactory;
-
+  RdfMapper baseRdfMapper;
   SolidMappingContext({
     required this.resourceIriFactory,
     required this.resourceRefFactory,
+    required this.baseRdfMapper,
   });
 }

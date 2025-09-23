@@ -37,14 +37,14 @@ void main() {
     setUp(() {
       // Set up test configurations
       final noteIndexItem =
-          IndexItem(TestNoteIndex, {IriTerm('http://example.org/title')});
+          IndexItem(TestNoteIndex, {const IriTerm('http://example.org/title')});
       noteIndex = FullIndex(
         localName: 'note-title-index',
         item: noteIndexItem,
       );
 
-      final contactIndexItem =
-          IndexItem(TestContactIndex, {IriTerm('http://example.org/name')});
+      final contactIndexItem = IndexItem(
+          TestContactIndex, {const IriTerm('http://example.org/name')});
       contactIndex = FullIndex(
         localName: 'contact-name-index',
         item: contactIndexItem,
@@ -113,7 +113,7 @@ void main() {
     test('should handle resource with multiple indices', () {
       // Add another index to the note resource
       final noteTagsIndexItem =
-          IndexItem(String, {IriTerm('http://example.org/tags')});
+          IndexItem(String, {const IriTerm('http://example.org/tags')});
       final noteTagsIndex = FullIndex(
         localName: 'note-tags-index',
         item: noteTagsIndexItem,
@@ -196,9 +196,9 @@ void main() {
     test('should distinguish between different local names for same type', () {
       // Create two indices with same item type but different local names
       final noteIndexItem1 =
-          IndexItem(TestNoteIndex, {IriTerm('http://example.org/title')});
-      final noteIndexItem2 =
-          IndexItem(TestNoteIndex, {IriTerm('http://example.org/content')});
+          IndexItem(TestNoteIndex, {const IriTerm('http://example.org/title')});
+      final noteIndexItem2 = IndexItem(
+          TestNoteIndex, {const IriTerm('http://example.org/content')});
 
       final noteIndex1 = FullIndex(
         localName: 'note-title-index',

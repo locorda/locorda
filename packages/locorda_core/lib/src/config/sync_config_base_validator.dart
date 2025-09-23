@@ -17,10 +17,11 @@ class SyncConfigBaseValidator {
 
   /// Validates an IRI string by attempting to construct an IriTerm from it.
   /// Adds an error to the ValidationResult if the IRI is invalid.
-  static void _validateIri(String iri, ValidationResult result, String context,
+  static void _validateIri(IriTerm iri, ValidationResult result, String context,
       {Map<String, Object>? contextData}) {
     try {
-      IriTerm(iri);
+      // Attempt to create a validated IriTerm to ensure the IRI is valid
+      IriTerm.validated(iri.value);
     } catch (e) {
       result.addError('$context: Invalid IRI "$iri" - $e', context: {
         'iri': iri,
@@ -81,12 +82,12 @@ class SyncConfigBaseValidator {
           for (final property in index.groupingProperties) {
             // Validate predicate IRI
             _validateIri(
-              property.predicate.iri,
+              property.predicate,
               result,
               'GroupingProperty predicate for ${_getDebugName(resource)}',
               contextData: {
                 'type': _getDebugName(resource),
-                'property': property.predicate.iri,
+                'property': property.predicate.value,
                 'index': index,
               },
             );
@@ -97,7 +98,7 @@ class SyncConfigBaseValidator {
                   'GroupingProperty hierarchy level must be positive for ${_getDebugName(resource)}. Got: ${property.hierarchyLevel}',
                   context: {
                     'type': _getDebugName(resource),
-                    'property': property.predicate.iri,
+                    'property': property.predicate.value,
                     'hierarchyLevel': property.hierarchyLevel,
                     'index': index,
                   });
@@ -110,7 +111,7 @@ class SyncConfigBaseValidator {
                   'GroupingProperty missing value cannot be empty for ${_getDebugName(resource)}. Use null to indicate no default value.',
                   context: {
                     'type': _getDebugName(resource),
-                    'property': property.predicate.iri,
+                    'property': property.predicate.value,
                     'missingValue': property.missingValue,
                     'index': index,
                   });
@@ -122,10 +123,10 @@ class SyncConfigBaseValidator {
               final transformValidationResult =
                   RegexTransformValidator.validateList(property.transforms!);
               result.addSubvalidationResult(
-                  '[${_getDebugName(resource)}][Grouping][${property.predicate.iri}]',
+                  '[${_getDebugName(resource)}][Grouping][${property.predicate.value}]',
                   {
                     'type': _getDebugName(resource),
-                    'property': property.predicate.iri,
+                    'property': property.predicate.value,
                     'index': index,
                   },
                   transformValidationResult);

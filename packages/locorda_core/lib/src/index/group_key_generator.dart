@@ -197,7 +197,7 @@ class GroupKeyGenerator {
 
     // Sort extractors within each level by lexicographic IRI ordering
     for (final extractors in extractorsByLevel.values) {
-      extractors.sort((a, b) => a.predicate.iri.compareTo(b.predicate.iri));
+      extractors.sort((a, b) => a.predicate.value.compareTo(b.predicate.value));
     }
 
     return extractorsByLevel;

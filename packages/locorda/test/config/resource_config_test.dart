@@ -29,7 +29,7 @@ void main() {
           item: IndexItem(TestDocument, {}),
           groupingProperties: [
             GroupingProperty(
-              IriTerm.prevalidated('https://schema.org/category'),
+              const IriTerm('https://schema.org/category'),
               // No transforms - use raw value as group key
             ),
           ],

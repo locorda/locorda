@@ -59,7 +59,7 @@ class RdfGroupExtractor {
         // Extract string content, ignoring datatypes and language tags
         LiteralTerm() => term.value,
         // Use IRI string representation
-        IriTerm() => term.iri,
+        IriTerm() => term.value,
         // Blank nodes not supported per specification - no stable string representation
         BlankNodeTerm() => null,
       };

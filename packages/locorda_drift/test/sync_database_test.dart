@@ -1,0 +1,562 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_drift/src/sync_database.dart';
+import 'package:rdf_core/rdf_core.dart';
+
+import 'test_sync_database.dart';
+
+void main() {
+  // Disable drift's multiple database warning for tests
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+
+  group('SyncDatabase', () {
+    late SyncDatabase database;
+
+    setUp(() async {
+      // Create database with in-memory database for tests
+      database = TestSyncDatabase.memory();
+    });
+
+    tearDown(() async {
+      await database.close();
+    });
+
+    group('IriBatchLoader Mixin', () {
+      late SyncDocumentDao dao;
+
+      setUp(() {
+        dao = database.syncDocumentDao;
+      });
+
+      testWidgets('creates and retrieves IRI IDs in batch', (tester) async {
+        // Arrange
+        final iris = {
+          'https://example.com/doc1',
+          'https://example.com/doc2',
+          'https://example.com/doc3',
+        };
+
+        // Act
+        final iriToIdMap = await dao.getOrCreateIriIdsBatch(iris);
+
+        // Assert
+        expect(iriToIdMap.keys, containsAll(iris));
+        expect(iriToIdMap.values.toSet(),
+            hasLength(3)); // All IDs should be unique
+      });
+
+      testWidgets('reuses existing IRI IDs', (tester) async {
+        // Arrange
+        final iris1 = {'https://example.com/doc1', 'https://example.com/doc2'};
+        final iris2 = {'https://example.com/doc2', 'https://example.com/doc3'};
+
+        // Act
+        final firstBatch = await dao.getOrCreateIriIdsBatch(iris1);
+        final secondBatch = await dao.getOrCreateIriIdsBatch(iris2);
+
+        // Assert
+        expect(firstBatch['https://example.com/doc2'],
+            equals(secondBatch['https://example.com/doc2']));
+        expect(
+            secondBatch.keys,
+            containsAll(
+                ['https://example.com/doc2', 'https://example.com/doc3']));
+        expect(secondBatch.values.toSet(), hasLength(2));
+      });
+
+      testWidgets('handles empty IRI set', (tester) async {
+        // Act
+        final result = await dao.getOrCreateIriIdsBatch(<String>{});
+
+        // Assert
+        expect(result, isEmpty);
+      });
+
+      testWidgets('retrieves IRIs by IDs in batch', (tester) async {
+        // Arrange
+        final iris = {'https://example.com/doc1', 'https://example.com/doc2'};
+        final iriToIdMap = await dao.getOrCreateIriIdsBatch(iris);
+        final iriIds = iriToIdMap.values.toSet();
+
+        // Act
+        final idToIriMap = await dao.getIrisBatch(iriIds);
+
+        // Assert
+        expect(idToIriMap.keys, containsAll(iriIds));
+        expect(idToIriMap.values.toSet(), containsAll(iris));
+      });
+
+      testWidgets('handles empty ID set in getIrisBatch', (tester) async {
+        // Act
+        final result = await dao.getIrisBatch(<int>{});
+
+        // Assert
+        expect(result, isEmpty);
+      });
+
+      testWidgets('handles large batch sizes efficiently', (tester) async {
+        // Arrange - Create more than the batch size limit (999)
+        final iris = <String>{};
+        for (int i = 0; i < 1500; i++) {
+          iris.add('https://example.com/doc$i');
+        }
+
+        // Act
+        final iriToIdMap = await dao.getOrCreateIriIdsBatch(iris);
+
+        // Assert
+        expect(iriToIdMap.keys, containsAll(iris));
+        expect(iriToIdMap.values.toSet(), hasLength(1500));
+      });
+    });
+
+    group('SyncDocumentDao', () {
+      late SyncDocumentDao dao;
+
+      setUp(() {
+        dao = database.syncDocumentDao;
+      });
+
+      testWidgets('saves and retrieves document content', (tester) async {
+        // Arrange
+        const documentIri = 'https://example.com/doc1';
+        const content =
+            '<https://example.com/doc1#it> <https://schema.org/name> "Test" .';
+
+        // Act
+        final documentId = await dao.saveDocument(
+          documentIri: documentIri,
+          content: content,
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+
+        final retrievedContent = await dao.getDocumentContent(documentIri);
+        final document = await dao.getDocument(documentIri);
+        final retrievedDocumentId = await dao.getDocumentId(documentIri);
+
+        // Assert
+        expect(documentId, isPositive);
+        expect(retrievedContent, equals(content));
+        expect(document, isNotNull);
+        expect(document!.documentContent, equals(content));
+        expect(document.ourPhysicalClock, equals(1000));
+        expect(document.updatedAt, equals(2000));
+        expect(retrievedDocumentId, equals(documentId));
+      });
+
+      testWidgets('updates existing document on conflict', (tester) async {
+        // Arrange
+        const documentIri = 'https://example.com/doc1';
+        const content1 =
+            '<https://example.com/doc1#it> <https://schema.org/name> "First" .';
+        const content2 =
+            '<https://example.com/doc1#it> <https://schema.org/name> "Second" .';
+
+        // Act
+        final firstId = await dao.saveDocument(
+          documentIri: documentIri,
+          content: content1,
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+
+        final secondId = await dao.saveDocument(
+          documentIri: documentIri,
+          content: content2,
+          ourPhysicalClock: 1500,
+          updatedAt: 2500,
+        );
+
+        final document = await dao.getDocument(documentIri);
+
+        // Assert
+        expect(firstId, equals(secondId)); // Should reuse the same document ID
+        expect(document!.documentContent, equals(content2));
+        expect(document.ourPhysicalClock, equals(1500));
+        expect(document.updatedAt, equals(2500));
+      });
+
+      testWidgets('returns null for non-existent document', (tester) async {
+        // Act
+        final content =
+            await dao.getDocumentContent('https://example.com/nonexistent');
+        final document =
+            await dao.getDocument('https://example.com/nonexistent');
+        final documentId =
+            await dao.getDocumentId('https://example.com/nonexistent');
+
+        // Assert
+        expect(content, isNull);
+        expect(document, isNull);
+        expect(documentId, isNull);
+      });
+
+      testWidgets('gets documents modified since timestamp', (tester) async {
+        // Arrange
+        await dao.saveDocument(
+          documentIri: 'https://example.com/doc1',
+          content: 'content1',
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+        await dao.saveDocument(
+          documentIri: 'https://example.com/doc2',
+          content: 'content2',
+          ourPhysicalClock: 1100,
+          updatedAt: 2500,
+        );
+        await dao.saveDocument(
+          documentIri: 'https://example.com/doc3',
+          content: 'content3',
+          ourPhysicalClock: 1200,
+          updatedAt: 3000,
+        );
+
+        // Act
+        final docs = await dao.getDocumentsModifiedSince(2200, limit: 10);
+
+        // Assert
+        expect(docs, hasLength(2));
+        expect(
+            docs.map((d) => d.iri),
+            containsAll(
+                ['https://example.com/doc2', 'https://example.com/doc3']));
+        // Should be ordered by updatedAt ascending
+        expect(
+            docs[0].document.updatedAt, lessThan(docs[1].document.updatedAt));
+      });
+
+      testWidgets('gets documents changed by us since timestamp',
+          (tester) async {
+        // Arrange
+        await dao.saveDocument(
+          documentIri: 'https://example.com/doc1',
+          content: 'content1',
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+        await dao.saveDocument(
+          documentIri: 'https://example.com/doc2',
+          content: 'content2',
+          ourPhysicalClock: 1500,
+          updatedAt: 2500,
+        );
+        await dao.saveDocument(
+          documentIri: 'https://example.com/doc3',
+          content: 'content3',
+          ourPhysicalClock: 2000,
+          updatedAt: 3000,
+        );
+
+        // Act
+        final docs = await dao.getDocumentsChangedByUsSince(1200, limit: 10);
+
+        // Assert
+        expect(docs, hasLength(2));
+        expect(
+            docs.map((d) => d.iri),
+            containsAll(
+                ['https://example.com/doc2', 'https://example.com/doc3']));
+        // Should be ordered by ourPhysicalClock ascending
+        expect(docs[0].document.ourPhysicalClock,
+            lessThan(docs[1].document.ourPhysicalClock));
+      });
+
+      testWidgets('respects limit parameter in queries', (tester) async {
+        // Arrange
+        for (int i = 0; i < 5; i++) {
+          await dao.saveDocument(
+            documentIri: 'https://example.com/doc$i',
+            content: 'content$i',
+            ourPhysicalClock: 1000 + i,
+            updatedAt: 2000 + i,
+          );
+        }
+
+        // Act
+        final modifiedDocs =
+            await dao.getDocumentsModifiedSince(2001, limit: 2);
+        final changedDocs =
+            await dao.getDocumentsChangedByUsSince(1001, limit: 3);
+
+        // Assert
+        expect(modifiedDocs, hasLength(2));
+        expect(changedDocs, hasLength(3));
+      });
+    });
+
+    group('SyncPropertyChangeDao', () {
+      late SyncPropertyChangeDao propertyDao;
+      late SyncDocumentDao documentDao;
+
+      setUp(() {
+        propertyDao = database.syncPropertyChangeDao;
+        documentDao = database.syncDocumentDao;
+      });
+
+      testWidgets('records and retrieves property changes in batch',
+          (tester) async {
+        // Arrange
+        final documentId = await documentDao.saveDocument(
+          documentIri: 'https://example.com/doc1',
+          content: 'content',
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+
+        final changes = [
+          PropertyChange(
+            resourceIri: const IriTerm('https://example.com/doc1#it'),
+            propertyIri: const IriTerm('https://schema.org/name'),
+            changedAtMs: 1500,
+            changeLogicalClock: 10,
+          ),
+          PropertyChange(
+            resourceIri: const IriTerm('https://example.com/doc1#it'),
+            propertyIri: const IriTerm('https://schema.org/description'),
+            changedAtMs: 1600,
+            changeLogicalClock: 15,
+          ),
+        ];
+
+        // Act
+        await propertyDao.recordPropertyChangesBatch(
+          documentId: documentId,
+          changes: changes,
+        );
+
+        final retrievedChanges =
+            await propertyDao.getPropertyChanges(documentId);
+
+        // Assert
+        expect(retrievedChanges, hasLength(2));
+
+        final nameChange = retrievedChanges.firstWhere(
+          (c) => c.propertyIri == 'https://schema.org/name',
+        );
+        expect(nameChange.resourceIri, equals('https://example.com/doc1#it'));
+        expect(nameChange.changedAtMs, equals(1500));
+        expect(nameChange.changeLogicalClock, equals(10));
+
+        final descChange = retrievedChanges.firstWhere(
+          (c) => c.propertyIri == 'https://schema.org/description',
+        );
+        expect(descChange.changedAtMs, equals(1600));
+        expect(descChange.changeLogicalClock, equals(15));
+      });
+
+      testWidgets('handles empty property changes batch', (tester) async {
+        // Arrange
+        final documentId = await documentDao.saveDocument(
+          documentIri: 'https://example.com/doc1',
+          content: 'content',
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+
+        // Act
+        await propertyDao.recordPropertyChangesBatch(
+          documentId: documentId,
+          changes: [],
+        );
+
+        final retrievedChanges =
+            await propertyDao.getPropertyChanges(documentId);
+
+        // Assert
+        expect(retrievedChanges, isEmpty);
+      });
+
+      testWidgets('filters property changes by logical clock', (tester) async {
+        // Arrange
+        final documentId = await documentDao.saveDocument(
+          documentIri: 'https://example.com/doc1',
+          content: 'content',
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+
+        final changes = [
+          PropertyChange(
+            resourceIri: const IriTerm('https://example.com/doc1#it'),
+            propertyIri: const IriTerm('https://schema.org/name'),
+            changedAtMs: 1500,
+            changeLogicalClock: 10,
+          ),
+          PropertyChange(
+            resourceIri: const IriTerm('https://example.com/doc1#it'),
+            propertyIri: const IriTerm('https://schema.org/description'),
+            changedAtMs: 1600,
+            changeLogicalClock: 15,
+          ),
+          PropertyChange(
+            resourceIri: const IriTerm('https://example.com/doc1#it'),
+            propertyIri: const IriTerm('https://schema.org/title'),
+            changedAtMs: 1700,
+            changeLogicalClock: 20,
+          ),
+        ];
+
+        await propertyDao.recordPropertyChangesBatch(
+          documentId: documentId,
+          changes: changes,
+        );
+
+        // Act
+        final filteredChanges = await propertyDao.getPropertyChanges(
+          documentId,
+          sinceLogicalClock: 12,
+        );
+
+        // Assert
+        expect(filteredChanges, hasLength(2));
+        expect(
+          filteredChanges.every((c) => c.changeLogicalClock > 12),
+          isTrue,
+        );
+        expect(
+          filteredChanges.map((c) => c.propertyIri),
+          containsAll(
+              ['https://schema.org/description', 'https://schema.org/title']),
+        );
+      });
+
+      testWidgets('handles multiple resources and properties efficiently',
+          (tester) async {
+        // Arrange
+        final documentId = await documentDao.saveDocument(
+          documentIri: 'https://example.com/doc1',
+          content: 'content',
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+
+        final changes = <PropertyChange>[];
+        for (int i = 0; i < 100; i++) {
+          changes.add(PropertyChange(
+            resourceIri: IriTerm.validated('https://example.com/resource$i'),
+            propertyIri: IriTerm.validated('https://schema.org/property$i'),
+            changedAtMs: 1500 + i,
+            changeLogicalClock: 10 + i,
+          ));
+        }
+
+        // Act
+        await propertyDao.recordPropertyChangesBatch(
+          documentId: documentId,
+          changes: changes,
+        );
+
+        final retrievedChanges =
+            await propertyDao.getPropertyChanges(documentId);
+
+        // Assert
+        expect(retrievedChanges, hasLength(100));
+        // Verify all unique IRIs were created
+        final resourceIris = retrievedChanges.map((c) => c.resourceIri).toSet();
+        final propertyIris = retrievedChanges.map((c) => c.propertyIri).toSet();
+        expect(resourceIris, hasLength(100));
+        expect(propertyIris, hasLength(100));
+      });
+    });
+
+    group('Database Schema', () {
+      testWidgets('creates all tables and indices', (tester) async {
+        // Act - Database should be initialized in setUp
+        final tables = await database
+            .customSelect('SELECT name FROM sqlite_master WHERE type="table"')
+            .get();
+        final indices = await database
+            .customSelect('SELECT name FROM sqlite_master WHERE type="index"')
+            .get();
+
+        // Assert
+        final tableNames = tables.map((t) => t.data['name']).toList();
+        expect(
+            tableNames,
+            containsAll(
+                ['sync_iris', 'sync_documents', 'sync_property_changes']));
+
+        final indexNames = indices.map((i) => i.data['name']).toList();
+        expect(indexNames, contains('idx_sync_documents_iri'));
+        expect(indexNames, contains('idx_sync_documents_updated'));
+        expect(indexNames, contains('idx_sync_iris_iri'));
+        expect(indexNames, contains('idx_property_changes_document'));
+      });
+
+      testWidgets('enforces foreign key constraints', (tester) async {
+        // Arrange
+        final documentDao = database.syncDocumentDao;
+        final propertyDao = database.syncPropertyChangeDao;
+
+        final documentId = await documentDao.saveDocument(
+          documentIri: 'https://example.com/doc1',
+          content: 'content',
+          ourPhysicalClock: 1000,
+          updatedAt: 2000,
+        );
+
+        // Act & Assert - Should not throw for valid document ID
+        await propertyDao.recordPropertyChangesBatch(
+          documentId: documentId,
+          changes: [
+            PropertyChange(
+              resourceIri: const IriTerm('https://example.com/doc1#it'),
+              propertyIri: const IriTerm('https://schema.org/name'),
+              changedAtMs: 1500,
+              changeLogicalClock: 10,
+            ),
+          ],
+        );
+
+        // Should throw for invalid document ID
+        expect(
+          () => propertyDao.recordPropertyChangesBatch(
+            documentId: 99999, // Non-existent document ID
+            changes: [
+              PropertyChange(
+                resourceIri: const IriTerm('https://example.com/doc1#it'),
+                propertyIri: const IriTerm('https://schema.org/name'),
+                changedAtMs: 1500,
+                changeLogicalClock: 10,
+              ),
+            ],
+          ),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
+    group('Transaction Behavior', () {
+      testWidgets('transaction rollback preserves database consistency',
+          (tester) async {
+        // Arrange
+        final documentDao = database.syncDocumentDao;
+
+        // Act & Assert
+        try {
+          await database.transaction(() async {
+            await documentDao.saveDocument(
+              documentIri: 'https://example.com/doc1',
+              content: 'content',
+              ourPhysicalClock: 1000,
+              updatedAt: 2000,
+            );
+
+            // Force an error to trigger rollback
+            throw Exception('Forced error');
+          });
+        } catch (e) {
+          // Expected exception
+        }
+
+        // Verify that the document was not saved due to rollback
+        final document =
+            await documentDao.getDocument('https://example.com/doc1');
+        expect(document, isNull);
+      });
+    });
+  });
+}

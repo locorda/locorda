@@ -21,29 +21,28 @@ class PersonalNotesVocab {
   /// A category for organizing personal notes.
   /// Subclass of schema:CreativeWork.
   // ignore: constant_identifier_names
-  static const NotesCategory = IriTerm.prevalidated('${baseIri}NotesCategory');
+  static const NotesCategory = IriTerm('${baseIri}NotesCategory');
 
   /// A personal note or memo.
   /// Subclass of schema:NoteDigitalDocument.
   // ignore: constant_identifier_names
-  static const PersonalNote = IriTerm.prevalidated('${baseIri}PersonalNote');
+  static const PersonalNote = IriTerm('${baseIri}PersonalNote');
 
   // Properties
 
   /// Indicates that a note belongs to a specific notes category.
   /// Domain: PersonalNote, Range: NotesCategory
-  static const belongsToCategory =
-      IriTerm.prevalidated('${baseIri}belongsToCategory');
+  static const belongsToCategory = IriTerm('${baseIri}belongsToCategory');
 
   /// A color code (hex, name, etc.) associated with a category for UI display.
   /// Domain: NotesCategory, Range: xsd:string
-  static const categoryColor = IriTerm.prevalidated('${baseIri}categoryColor');
+  static const categoryColor = IriTerm('${baseIri}categoryColor');
 
   /// An icon identifier or emoji associated with a category for UI display.
   /// Domain: NotesCategory, Range: xsd:string
-  static const categoryIcon = IriTerm.prevalidated('${baseIri}categoryIcon');
+  static const categoryIcon = IriTerm('${baseIri}categoryIcon');
 
   /// Indicates that a category is archived (soft deleted).
   /// Domain: NotesCategory, Range: xsd:boolean
-  static const archived = IriTerm.prevalidated('${baseIri}archived');
+  static const archived = IriTerm('${baseIri}archived');
 }

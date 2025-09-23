@@ -420,7 +420,7 @@ void main() {
                   groupingProperties: [
                     GroupingProperty(TestVocab.testCategory),
                     GroupingProperty(
-                        IriTerm('https://test.example/vocab#priority')),
+                        const IriTerm('https://test.example/vocab#priority')),
                   ],
                 ),
               ],
@@ -563,10 +563,10 @@ void main() {
                   groupingProperties: [
                     GroupingProperty(TestVocab.testCategory, hierarchyLevel: 1),
                     GroupingProperty(
-                        IriTerm('https://test.example/vocab#priority'),
+                        const IriTerm('https://test.example/vocab#priority'),
                         hierarchyLevel: 2),
                     GroupingProperty(
-                        IriTerm('https://test.example/vocab#department'),
+                        const IriTerm('https://test.example/vocab#department'),
                         hierarchyLevel: 3),
                   ],
                 ),
@@ -593,7 +593,7 @@ void main() {
                   groupingProperties: [
                     GroupingProperty(TestVocab.testCategory, hierarchyLevel: 1),
                     GroupingProperty(
-                        IriTerm('https://test.example/vocab#priority'),
+                        const IriTerm('https://test.example/vocab#priority'),
                         hierarchyLevel: 3), // Gap! Missing level 2
                   ],
                 ),
@@ -626,11 +626,11 @@ void main() {
                   groupingProperties: [
                     GroupingProperty(TestVocab.testCategory, hierarchyLevel: 1),
                     GroupingProperty(
-                        IriTerm('https://test.example/vocab#priority'),
+                        const IriTerm('https://test.example/vocab#priority'),
                         hierarchyLevel:
                             1), // Same level = Cartesian product (valid)
                     GroupingProperty(
-                        IriTerm('https://test.example/vocab#department'),
+                        const IriTerm('https://test.example/vocab#department'),
                         hierarchyLevel: 2),
                   ],
                 ),
@@ -715,7 +715,7 @@ void main() {
                   localName: 'multi-transform',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/dateCreated'),
+                      const IriTerm('https://schema.org/dateCreated'),
                       transforms: [
                         // Multiple transforms for different date formats
                         RegexTransform(
@@ -964,7 +964,7 @@ void main() {
                   groupingProperties: [
                     GroupingProperty(TestVocab.testCategory),
                     GroupingProperty(
-                        IriTerm('https://test.example/vocab#priority')),
+                        const IriTerm('https://test.example/vocab#priority')),
                   ],
                 ),
               ],
@@ -1050,7 +1050,7 @@ void main() {
       test('should fail with null predicate in GroupingProperty', () {
         expect(
           () => GroupingProperty(
-            IriTerm.prevalidated(''), // Empty IRI
+            const IriTerm(''), // Empty IRI
           ),
           returnsNormally, // Constructor should accept this, validation catches it
         );
@@ -1066,8 +1066,7 @@ void main() {
                   TestDocumentGroupKey,
                   localName: 'empty-predicate',
                   groupingProperties: [
-                    GroupingProperty(
-                        IriTerm.prevalidated('')), // Empty predicate
+                    GroupingProperty(const IriTerm('')), // Empty predicate
                   ],
                 ),
               ],
@@ -1192,7 +1191,7 @@ void main() {
                   localName: 'multi-format-dates',
                   groupingProperties: [
                     GroupingProperty(
-                      IriTerm('https://schema.org/dateCreated'),
+                      const IriTerm('https://schema.org/dateCreated'),
                       transforms: [
                         // Handle multiple date formats per GROUP-INDEXING.md examples
                         RegexTransform(r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$',

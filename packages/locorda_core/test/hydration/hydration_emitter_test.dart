@@ -55,9 +55,9 @@ void main() {
     late HydrationEmitter emitter;
 
     // Test vocabulary
-    final testTypeIri = IriTerm('https://example.org/TestNote');
-    final titlePredicate = IriTerm('https://schema.org/name');
-    final contentPredicate = IriTerm('https://example.org/content');
+    final testTypeIri = const IriTerm('https://example.org/TestNote');
+    final titlePredicate = const IriTerm('https://schema.org/name');
+    final contentPredicate = const IriTerm('https://example.org/content');
 
     setUp(() {
       streamManager = TestHydrationStreamManager();
@@ -74,7 +74,7 @@ void main() {
         indices: [],
       );
 
-      final resourceSubject = IriTerm('https://example.org/notes/test');
+      final resourceSubject = const IriTerm('https://example.org/notes/test');
       final resourceGraph = RdfGraph(triples: [
         Triple(resourceSubject, titlePredicate, LiteralTerm.string('Test')),
         Triple(
@@ -93,7 +93,7 @@ void main() {
 
       // Should emit only to resource stream
       expect(streamManager.emittedKeys, hasLength(1));
-      expect(streamManager.emittedKeys.first, contains(testTypeIri.iri));
+      expect(streamManager.emittedKeys.first, contains(testTypeIri.value));
       expect(
           streamManager.emittedKeys.first, contains('null')); // No index name
       expect(streamManager.emittedResults.first, equals(result));
@@ -122,7 +122,7 @@ void main() {
       final indexKey = TypeOrIndexKey(testTypeIri, 'title-index');
       streamManager.addController(indexKey);
 
-      final resourceSubject = IriTerm('https://example.org/notes/test');
+      final resourceSubject = const IriTerm('https://example.org/notes/test');
       final resourceGraph = RdfGraph(triples: [
         Triple(
             resourceSubject, titlePredicate, LiteralTerm.string('Test Title')),
@@ -144,12 +144,12 @@ void main() {
       expect(streamManager.emittedKeys, hasLength(2));
 
       // Check resource stream emission
-      expect(streamManager.emittedKeys[0], contains(testTypeIri.iri));
+      expect(streamManager.emittedKeys[0], contains(testTypeIri.value));
       expect(streamManager.emittedKeys[0], contains('null'));
       expect(streamManager.emittedResults[0], equals(result));
 
       // Check index stream emission
-      expect(streamManager.emittedKeys[1], contains(testTypeIri.iri));
+      expect(streamManager.emittedKeys[1], contains(testTypeIri.value));
       expect(streamManager.emittedKeys[1], contains('title-index'));
 
       final indexResult = streamManager.emittedResults[1];
@@ -185,7 +185,7 @@ void main() {
       final indexKey = TypeOrIndexKey(testTypeIri, 'title-index');
       streamManager.addController(indexKey);
 
-      final deletedSubject = IriTerm('https://example.org/notes/deleted');
+      final deletedSubject = const IriTerm('https://example.org/notes/deleted');
       final deletedGraph = RdfGraph(triples: [
         Triple(deletedSubject, titlePredicate,
             LiteralTerm.string('Deleted Title')),
@@ -235,7 +235,7 @@ void main() {
 
       // Don't add the index controller to stream manager
 
-      final resourceSubject = IriTerm('https://example.org/notes/test');
+      final resourceSubject = const IriTerm('https://example.org/notes/test');
       final resourceGraph = RdfGraph(triples: [
         Triple(resourceSubject, titlePredicate, LiteralTerm.string('Test')),
         Triple(
@@ -254,7 +254,7 @@ void main() {
 
       // Should emit only to resource stream (no controller for index)
       expect(streamManager.emittedKeys, hasLength(1));
-      expect(streamManager.emittedKeys.first, contains(testTypeIri.iri));
+      expect(streamManager.emittedKeys.first, contains(testTypeIri.value));
       expect(streamManager.emittedKeys.first, contains('null'));
     });
 
@@ -270,7 +270,7 @@ void main() {
         indices: [index],
       );
 
-      final resourceSubject = IriTerm('https://example.org/notes/test');
+      final resourceSubject = const IriTerm('https://example.org/notes/test');
       final resourceGraph = RdfGraph(triples: [
         Triple(resourceSubject, titlePredicate, LiteralTerm.string('Test')),
         Triple(
@@ -321,7 +321,7 @@ void main() {
       streamManager.addController(titleKey);
       // contentIndex controller not added
 
-      final resourceSubject = IriTerm('https://example.org/notes/test');
+      final resourceSubject = const IriTerm('https://example.org/notes/test');
       final resourceGraph = RdfGraph(triples: [
         Triple(
             resourceSubject, titlePredicate, LiteralTerm.string('Test Title')),
@@ -341,9 +341,9 @@ void main() {
 
       // Should emit to resource stream + title index only
       expect(streamManager.emittedKeys, hasLength(2));
-      expect(streamManager.emittedKeys[0], contains(testTypeIri.iri));
+      expect(streamManager.emittedKeys[0], contains(testTypeIri.value));
       expect(streamManager.emittedKeys[0], contains('null'));
-      expect(streamManager.emittedKeys[1], contains(testTypeIri.iri));
+      expect(streamManager.emittedKeys[1], contains(testTypeIri.value));
       expect(streamManager.emittedKeys[1], contains('title-index'));
     });
 
@@ -366,13 +366,13 @@ void main() {
       final indexKey = TypeOrIndexKey(testTypeIri, 'title-index');
       streamManager.addController(indexKey);
 
-      final itemSubject = IriTerm('https://example.org/notes/item');
+      final itemSubject = const IriTerm('https://example.org/notes/item');
       final itemGraph = RdfGraph(triples: [
         Triple(itemSubject, titlePredicate, LiteralTerm.string('Item')),
         Triple(itemSubject, contentPredicate, LiteralTerm.string('Content')),
       ]);
 
-      final deletedSubject = IriTerm('https://example.org/notes/deleted');
+      final deletedSubject = const IriTerm('https://example.org/notes/deleted');
       final deletedGraph = RdfGraph(triples: [
         Triple(deletedSubject, titlePredicate, LiteralTerm.string('Deleted')),
         Triple(deletedSubject, contentPredicate, LiteralTerm.string('Content')),

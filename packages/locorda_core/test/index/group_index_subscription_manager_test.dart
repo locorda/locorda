@@ -9,9 +9,10 @@ void main() {
     late GroupIndexGraphSubscriptionManager manager;
 
     // Test vocabulary
-    final testTypeIri = IriTerm('https://example.org/TestDocument');
-    final categoryPredicate = IriTerm('https://example.org/category');
-    final createdAtPredicate = IriTerm('https://test.example/vocab#createdAt');
+    final testTypeIri = const IriTerm('https://example.org/TestDocument');
+    final categoryPredicate = const IriTerm('https://example.org/category');
+    final createdAtPredicate =
+        const IriTerm('https://test.example/vocab#createdAt');
 
     setUp(() {
       // Create a test config with a GroupIndex
@@ -36,10 +37,12 @@ void main() {
     });
 
     group('getGroupIdentifiers', () {
-      test('successfully generates group identifiers from valid graph', () async {
-        final groupKeySubject = IriTerm('https://example.org/groupkey/1');
+      test('successfully generates group identifiers from valid graph',
+          () async {
+        final groupKeySubject = const IriTerm('https://example.org/groupkey/1');
         final groupKeyGraph = RdfGraph(triples: [
-          Triple(groupKeySubject, categoryPredicate, LiteralTerm.string('work')),
+          Triple(
+              groupKeySubject, categoryPredicate, LiteralTerm.string('work')),
         ]);
 
         final groupIdentifiers = await manager.getGroupIdentifiers(
@@ -78,11 +81,13 @@ void main() {
           ],
         );
 
-        final dateManager = GroupIndexGraphSubscriptionManager(config: dateConfig);
+        final dateManager =
+            GroupIndexGraphSubscriptionManager(config: dateConfig);
 
-        final groupKeySubject = IriTerm('https://example.org/groupkey/2');
+        final groupKeySubject = const IriTerm('https://example.org/groupkey/2');
         final groupKeyGraph = RdfGraph(triples: [
-          Triple(groupKeySubject, createdAtPredicate, LiteralTerm.string('2023-10-05T10:30:00Z')),
+          Triple(groupKeySubject, createdAtPredicate,
+              LiteralTerm.string('2023-10-05T10:30:00Z')),
         ]);
 
         final groupIdentifiers = await dateManager.getGroupIdentifiers(
@@ -95,9 +100,10 @@ void main() {
       });
 
       test('throws exception for unknown index name', () async {
-        final groupKeySubject = IriTerm('https://example.org/groupkey/3');
+        final groupKeySubject = const IriTerm('https://example.org/groupkey/3');
         final groupKeyGraph = RdfGraph(triples: [
-          Triple(groupKeySubject, categoryPredicate, LiteralTerm.string('work')),
+          Triple(
+              groupKeySubject, categoryPredicate, LiteralTerm.string('work')),
         ]);
 
         expect(
@@ -108,9 +114,10 @@ void main() {
 
       test('throws exception when no group identifiers generated', () async {
         // Use a graph that doesn't contain the required property
-        final groupKeySubject = IriTerm('https://example.org/groupkey/4');
+        final groupKeySubject = const IriTerm('https://example.org/groupkey/4');
         final groupKeyGraph = RdfGraph(triples: [
-          Triple(groupKeySubject, IriTerm('https://example.org/other'), LiteralTerm.string('value')),
+          Triple(groupKeySubject, const IriTerm('https://example.org/other'),
+              LiteralTerm.string('value')),
         ]);
 
         expect(
@@ -131,7 +138,8 @@ void main() {
                   localName: 'multi-groups',
                   groupingProperties: [
                     GroupingProperty(categoryPredicate),
-                    GroupingProperty(IriTerm('https://example.org/priority')),
+                    GroupingProperty(
+                        const IriTerm('https://example.org/priority')),
                   ],
                 ),
               ],
@@ -139,12 +147,15 @@ void main() {
           ],
         );
 
-        final multiManager = GroupIndexGraphSubscriptionManager(config: multiConfig);
+        final multiManager =
+            GroupIndexGraphSubscriptionManager(config: multiConfig);
 
-        final groupKeySubject = IriTerm('https://example.org/groupkey/5');
+        final groupKeySubject = const IriTerm('https://example.org/groupkey/5');
         final groupKeyGraph = RdfGraph(triples: [
-          Triple(groupKeySubject, categoryPredicate, LiteralTerm.string('work')),
-          Triple(groupKeySubject, IriTerm('https://example.org/priority'), LiteralTerm.string('high')),
+          Triple(
+              groupKeySubject, categoryPredicate, LiteralTerm.string('work')),
+          Triple(groupKeySubject, const IriTerm('https://example.org/priority'),
+              LiteralTerm.string('high')),
         ]);
 
         final groupIdentifiers = await multiManager.getGroupIdentifiers(
@@ -173,7 +184,8 @@ void main() {
                       createdAtPredicate,
                       hierarchyLevel: 1,
                       transforms: [
-                        RegexTransform(r'^([0-9]{4})-([0-9]{2})-([0-9]{2}).*', r'${1}'), // Year
+                        RegexTransform(r'^([0-9]{4})-([0-9]{2})-([0-9]{2}).*',
+                            r'${1}'), // Year
                       ],
                     ),
                     GroupingProperty(
@@ -187,12 +199,15 @@ void main() {
           ],
         );
 
-        final hierarchyManager = GroupIndexGraphSubscriptionManager(config: hierarchyConfig);
+        final hierarchyManager =
+            GroupIndexGraphSubscriptionManager(config: hierarchyConfig);
 
-        final groupKeySubject = IriTerm('https://example.org/groupkey/6');
+        final groupKeySubject = const IriTerm('https://example.org/groupkey/6');
         final groupKeyGraph = RdfGraph(triples: [
-          Triple(groupKeySubject, createdAtPredicate, LiteralTerm.string('2023-10-05T10:30:00Z')),
-          Triple(groupKeySubject, categoryPredicate, LiteralTerm.string('work')),
+          Triple(groupKeySubject, createdAtPredicate,
+              LiteralTerm.string('2023-10-05T10:30:00Z')),
+          Triple(
+              groupKeySubject, categoryPredicate, LiteralTerm.string('work')),
         ]);
 
         final groupIdentifiers = await hierarchyManager.getGroupIdentifiers(

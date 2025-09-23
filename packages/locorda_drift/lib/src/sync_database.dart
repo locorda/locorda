@@ -17,7 +17,7 @@ class SyncIris extends Table {
 /// Document storage table
 class SyncDocuments extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get documentIriId => integer().references(SyncIris, #id)();
+  IntColumn get documentIriId => integer().references(SyncIris, #id).unique()();
   TextColumn get documentContent => text()();
   IntColumn get ourPhysicalClock => integer()();
   IntColumn get updatedAt => integer()();
@@ -26,8 +26,13 @@ class SyncDocuments extends Table {
 /// Property-level change tracking table
 class SyncPropertyChanges extends Table {
   IntColumn get documentId => integer().references(SyncDocuments, #id)();
+
+  @ReferenceName('resourceIri')
   IntColumn get resourceIriId => integer().references(SyncIris, #id)();
+
+  @ReferenceName('propertyIri')
   IntColumn get propertyIriId => integer().references(SyncIris, #id)();
+
   IntColumn get changedAtMs => integer()();
   IntColumn get changeLogicalClock => integer()();
 
@@ -136,14 +141,32 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
     final iriToIdMap = await getOrCreateIriIdsBatch({documentIri});
     final documentIriId = iriToIdMap[documentIri]!;
 
-    return await into(syncDocuments).insertOnConflictUpdate(
-      SyncDocumentsCompanion(
-        documentIriId: Value(documentIriId),
+    // Try to get existing document first
+    final existingDocument = await (select(syncDocuments)
+          ..where((d) => d.documentIriId.equals(documentIriId)))
+        .getSingleOrNull();
+
+    if (existingDocument != null) {
+      // Update existing document
+      await (update(syncDocuments)
+            ..where((d) => d.id.equals(existingDocument.id)))
+          .write(SyncDocumentsCompanion(
         documentContent: Value(content),
         ourPhysicalClock: Value(ourPhysicalClock),
         updatedAt: Value(updatedAt),
-      ),
-    );
+      ));
+      return existingDocument.id;
+    } else {
+      // Insert new document
+      return await into(syncDocuments).insert(
+        SyncDocumentsCompanion(
+          documentIriId: Value(documentIriId),
+          documentContent: Value(content),
+          ourPhysicalClock: Value(ourPhysicalClock),
+          updatedAt: Value(updatedAt),
+        ),
+      );
+    }
   }
 
   /// Get document content by IRI
@@ -244,8 +267,8 @@ class SyncPropertyChangeDao extends DatabaseAccessor<SyncDatabase>
     // Collect all unique IRIs that need IDs
     final allIris = changes
         .expand((change) => [
-              change.resourceIri.iri,
-              change.propertyIri.iri,
+              change.resourceIri.value,
+              change.propertyIri.value,
             ])
         .toSet();
 
@@ -256,8 +279,8 @@ class SyncPropertyChangeDao extends DatabaseAccessor<SyncDatabase>
     final companions = changes
         .map((change) => SyncPropertyChangesCompanion(
               documentId: Value(documentId),
-              resourceIriId: Value(iriToIdMap[change.resourceIri.iri]!),
-              propertyIriId: Value(iriToIdMap[change.propertyIri.iri]!),
+              resourceIriId: Value(iriToIdMap[change.resourceIri.value]!),
+              propertyIriId: Value(iriToIdMap[change.propertyIri.value]!),
               changedAtMs: Value(change.changedAtMs),
               changeLogicalClock: Value(change.changeLogicalClock),
             ))
@@ -337,6 +360,9 @@ class DocumentWithIri {
 class SyncDatabase extends _$SyncDatabase {
   SyncDatabase({DriftWebOptions? web, DriftNativeOptions? native})
       : super(_openConnection(web: web, native: native));
+
+  /// Internal constructor for test subclasses
+  SyncDatabase.forExecutor(QueryExecutor executor) : super(executor);
 
   @override
   int get schemaVersion => 1;

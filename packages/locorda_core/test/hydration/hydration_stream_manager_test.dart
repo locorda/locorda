@@ -15,8 +15,8 @@ void main() {
 
     setUp(() {
       manager = HydrationStreamManager();
-      testTypeIri = IriTerm('https://example.com/TestDocument');
-      otherTypeIri = IriTerm('https://example.com/OtherDocument');
+      testTypeIri = const IriTerm('https://example.com/TestDocument');
+      otherTypeIri = const IriTerm('https://example.com/OtherDocument');
     });
 
     tearDown(() async {
@@ -55,9 +55,10 @@ void main() {
       final controller = manager.getOrCreateController(testTypeIri, 'test');
       final key = TypeOrIndexKey(testTypeIri, 'test');
 
-      final documentIri = IriTerm('https://example.com/doc1');
+      final documentIri = const IriTerm('https://example.com/doc1');
       final graph = RdfGraph(triples: [
-        Triple(documentIri, IriTerm('https://example.com/title'), LiteralTerm('Test Document'))
+        Triple(documentIri, const IriTerm('https://example.com/title'),
+            LiteralTerm('Test Document'))
       ]);
 
       final result = HydrationResult<IdentifiedGraph>(
@@ -87,9 +88,10 @@ void main() {
     test('should throw when emitting to non-existent stream', () {
       final key = TypeOrIndexKey(testTypeIri, 'nonexistent');
 
-      final documentIri = IriTerm('https://example.com/doc1');
+      final documentIri = const IriTerm('https://example.com/doc1');
       final graph = RdfGraph(triples: [
-        Triple(documentIri, IriTerm('https://example.com/title'), LiteralTerm('Test Document'))
+        Triple(documentIri, const IriTerm('https://example.com/title'),
+            LiteralTerm('Test Document'))
       ]);
 
       final result = HydrationResult<IdentifiedGraph>(
@@ -115,9 +117,10 @@ void main() {
       final controller = manager.getOrCreateController(testTypeIri, 'test');
       final key = TypeOrIndexKey(testTypeIri, 'test');
 
-      final documentIri = IriTerm('https://example.com/doc1');
+      final documentIri = const IriTerm('https://example.com/doc1');
       final graph = RdfGraph(triples: [
-        Triple(documentIri, IriTerm('https://example.com/title'), LiteralTerm('Broadcast Document'))
+        Triple(documentIri, const IriTerm('https://example.com/title'),
+            LiteralTerm('Broadcast Document'))
       ]);
 
       final result = HydrationResult<IdentifiedGraph>(

@@ -20,9 +20,9 @@ void main() {
     setUp(() {
       service = LocalResourceIriService(LocalReferenceConverter());
       mockResourceTypeCache = {
-        TestNote: IriTerm('http://example.org/Note'),
-        TestCategory: IriTerm('http://example.org/Category'),
-        TestUser: IriTerm('http://example.org/User'),
+        TestNote: const IriTerm('http://example.org/Note'),
+        TestCategory: const IriTerm('http://example.org/Category'),
+        TestUser: const IriTerm('http://example.org/User'),
       };
       mockConfig = const PodIriConfig();
     });
@@ -199,11 +199,11 @@ void main() {
 
         // Test forward mapping (tuple to IRI)
         final iri = mapper.toRdfTerm(('note123',), MockSerializationContext());
-        expect(iri.iri, equals('app://local/TestNote/note123'));
+        expect(iri.value, equals('app://local/TestNote/note123'));
 
         // Test reverse mapping (IRI to tuple)
         final tuple = mapper.fromRdfTerm(
-            IriTerm('app://local/TestNote/note456'),
+            const IriTerm('app://local/TestNote/note456'),
             MockDeserializationContext());
         expect(tuple, equals(('note456',)));
       });
@@ -220,15 +220,16 @@ void main() {
         final refIri =
             refMapper.toRdfTerm('note123', MockSerializationContext());
 
-        expect(resourceIri.iri, equals(refIri.iri));
-        expect(resourceIri.iri, equals('app://local/TestNote/note123'));
+        expect(resourceIri.value, equals(refIri.value));
+        expect(resourceIri.value, equals('app://local/TestNote/note123'));
       });
 
       test('should validate IRI patterns in reverse mapping', () {
         final mapper = service.createResourceIriMapper<TestNote>(mockConfig);
 
         expect(
-          () => mapper.fromRdfTerm(IriTerm('http://invalid.com/wrong/pattern'),
+          () => mapper.fromRdfTerm(
+              const IriTerm('http://invalid.com/wrong/pattern'),
               MockDeserializationContext()),
           throwsA(isA<ArgumentError>().having(
             (e) => e.message,
