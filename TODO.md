@@ -3,11 +3,21 @@
 ## Up Next
 
 ### Priority 1: Document Persistence (Core Foundation)
+- [x] Storage Layer: save documents
+- [x] LocordaGraphSync: save base implementation
+- [ ] rdf canonicalization 
+- [ ] fix w3id.org redirects
+- [ ] mapping documents: We need those in the app, right? How do we ensure we have mapping documents available locally, and in an efficient form?
+- [ ] Implement context-identification for blank nodes and use that as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
+- [ ] Storage Layer: save locorda indices
+- [ ] Implement locorda index files in db and fill/update them on save
+- [ ] Create tombstones on save where needed (e.g. change detection)
+- [ ] What about tombstones for blank nodes?
 - [ ] Implement saving/loading/merging documents with local storage persistence
   - Currently `save()` just emits hydration events without storage persistence
-  - Need CRDT merging logic and actual storage operations
+  - Need CRDT merging logic and actual storage operations => CRDT merging is not part of pure persistence
   - This unblocks the example app's core functionality
-
+ 
 ### Priority 2: SyncManager with Status Stream
 - [ ] Create SyncManager with status stream and automatic sync triggering
   - Essential for user-facing sync control and feedback
