@@ -1,5 +1,4 @@
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/generated/_index.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 /// Convert a resource to an index item using RDF transformation.
