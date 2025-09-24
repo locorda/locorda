@@ -9,351 +9,180 @@ import 'package:rdf_core/rdf_core.dart';
 
 /// Main Crdt vocabulary class containing all terms
 ///
-/// Contains all terms defined in the https://w3id.org/solid-crdt-sync/vocab/idx# vocabulary.
+/// Contains all terms defined in the https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics# vocabulary.
 class Crdt {
   // Private constructor prevents instantiation
   const Crdt._();
 
   /// Base IRI for Crdt vocabulary
-  /// [Spec](https://w3id.org/solid-crdt-sync/vocab/idx#)
-  static const String namespace = 'https://w3id.org/solid-crdt-sync/vocab/idx#';
+  /// [Spec](https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#)
+  static const String namespace =
+      'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#';
   static const String prefix = 'crdt';
 
-  /// IRI for crdt:Index
+  /// IRI for crdt:ClockEntry
   ///
-  /// An abstract base class for any sharded index that directly contains entries pointing to data resources.
+  /// A single entry in a Hybrid Logical Clock (HLC), mapping an installation ID to both its logical time (causality counter) and physical time (wall-clock timestamp for tie-breaking).
   ///
-  static const Index = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#Index',
+  static const ClockEntry = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry',
   );
 
-  /// IRI for crdt:FullIndex
+  /// IRI for crdt:ClientInstallation
   ///
-  /// A concrete index for a FullSync or OnDemandSync strategy. It represents a single, self-contained index for a whole class of data.
+  /// A unique installation of a CRDT-enabled application, providing traceability and identity for Hybrid Logical Clock entries across the distributed system.
   ///
-  static const FullIndex = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex',
+  static const ClientInstallation = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation',
   );
 
-  /// IRI for crdt:GroupIndexTemplate
+  /// IRI for crdt:hasClockEntry [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
-  /// A 'rulebook' resource that defines how a data type is grouped. It does not contain data entries itself, but points to the GroupIndex instances that do.
-  ///
-  static const GroupIndexTemplate = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate',
-  );
-
-  /// IRI for crdt:GroupIndex
-  ///
-  /// A concrete index representing a single, logical subset of data (e.g., 'August 2025'). It functions like a FullIndex but for a group.
-  ///
-  static const GroupIndex = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex',
-  );
-
-  /// IRI for crdt:GroupingRule
-  ///
-  /// A declarative rule that describes how a data resource should be assigned to a specific group based on its properties. Contains multiple GroupingRuleProperty instances. Group paths are generated deterministically from the properties.
-  ///
-  static const GroupingRule = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRule',
-  );
-
-  /// IRI for crdt:GroupingRuleProperty
-  ///
-  /// An individual property specification within a GroupingRule that defines how to extract and format values from a source property for group assignment.
-  ///
-  static const GroupingRuleProperty = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty',
-  );
-
-  /// IRI for crdt:ModuloHashSharding
-  ///
-  /// A sharding strategy that calculates a hash of a resource's IRI and then uses the modulo operator to assign it to a shard.
-  ///
-  static const ModuloHashSharding = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding',
-  );
-
-  /// IRI for crdt:Shard
-  ///
-  /// A document that contains a list of entries, each pointing to a data resource and its associated metadata (e.g., Hybrid Logical Clock hash).
-  ///
-  static const Shard = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#Shard',
-  );
-
-  /// IRI for crdt:ShardEntry
-  ///
-  /// A structured entry within a shard that contains a reference to a data resource plus optional header properties and required clock hash metadata.
-  ///
-  static const ShardEntry = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#ShardEntry',
-  );
-
-  /// IRI for crdt:IndexedProperty
-  ///
-  /// A configuration object that specifies which property should be indexed and tracks which installations actively read from it. Used within idx:indexedProperty to enable property-level reader management.
-  ///
-  static const IndexedProperty = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty',
-  );
-
-  /// IRI for crdt:RegexTransform
-  ///
-  /// A transform rule that applies regex pattern matching and replacement to RDF literal values for group key generation. Uses cross-platform compatible regex subset.
-  ///
-  static const RegexTransform = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform',
-  );
-
-  /// IRI for crdt:belongsToIndexShard [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// Links a data resource to the specific index shard it is a member of.
+  /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const belongsToIndexShard = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
+  static const hasClockEntry = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#hasClockEntry',
   );
 
-  /// IRI for crdt:indexesClass [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
+  /// IRI for crdt:installationId [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
-  /// Specifies which class of resource this index tracks (e.g., schema:Recipe, idx:Shard, sync:ManagedDocument). Index entries contain resource-level properties for querying, while sync operations depend on resource type: if resources are documents themselves (e.g., idx:FullIndex), all operations are document-level; if resources use fragment identifiers (e.g., schema:Recipe), sync operations are on the containing document while resource operations are on the specific resource.
+  /// The unique identifier for a client installation within a Hybrid Logical Clock entry. Corresponds to 'client ID' in CRDT literature, but uses 'installation' to avoid confusion with storage backend client identifiers.
   ///
-  /// Can be used on all classes in this vocabulary
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
   ///
-  static const indexesClass = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#indexesClass',
+  static const installationId = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#installationId',
   );
 
-  /// IRI for crdt:indexedProperty [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty]
+  /// IRI for crdt:logicalTime [Expects: http://www.w3.org/2001/XMLSchema#long]
   ///
-  /// Links an index to an IndexedProperty configuration object that specifies which property should be indexed and tracks which installations read from it.
+  /// The logical time component of a Hybrid Logical Clock entry - a monotonically increasing counter that tracks causality relationships between operations. Provides tamper-proof causality tracking even when physical clocks are manipulated.
   ///
-  /// Can be used on all classes in this vocabulary
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
   ///
-  static const indexedProperty = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#indexedProperty',
+  static const logicalTime = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#logicalTime',
   );
 
-  /// IRI for crdt:hasShard [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// IRI for crdt:physicalTime [Expects: http://www.w3.org/2001/XMLSchema#long]
   ///
-  /// Links an Index to its shard files. This provides the canonical list of active shards.
+  /// The physical time component of a Hybrid Logical Clock entry - wall-clock timestamp in milliseconds since Unix epoch. Used for intuitive tie-breaking when operations are truly concurrent (logical times don't establish dominance).
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#Index
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
   ///
-  static const hasShard = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#hasShard',
+  static const physicalTime = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#physicalTime',
   );
 
-  /// IRI for crdt:shardingAlgorithm [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// IRI for crdt:clockHash [Expects: http://www.w3.org/2001/XMLSchema#string]
   ///
-  /// Defines the algorithm used to place new items into shards.
-  ///
-  /// Can be used on all classes in this vocabulary
-  ///
-  static const shardingAlgorithm = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#shardingAlgorithm',
-  );
-
-  /// IRI for crdt:hashAlgorithm [Expects: http://www.w3.org/2001/XMLSchema#string]
-  ///
-  /// The hashing algorithm to be used (e.g., 'md5').
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding
-  ///
-  static const hashAlgorithm = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#hashAlgorithm',
-  );
-
-  /// IRI for crdt:numberOfShards [Expects: http://www.w3.org/2001/XMLSchema#integer]
-  ///
-  /// The number of shards to distribute items across.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding
-  ///
-  static const numberOfShards = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#numberOfShards',
-  );
-
-  /// IRI for crdt:configVersion [Expects: http://www.w3.org/2001/XMLSchema#string]
-  ///
-  /// Version string for shard configuration using format 'major_scale_conflict' where major is developer-controlled, scale auto-increments for capacity scaling, and conflict auto-increments for 2P-Set resolution.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding
-  ///
-  static const configVersion = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#configVersion',
-  );
-
-  /// IRI for crdt:autoScaleThreshold [Expects: http://www.w3.org/2001/XMLSchema#integer]
-  ///
-  /// The number of entries per shard that triggers automatic scaling to more shards (default: 1000).
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding
-  ///
-  static const autoScaleThreshold = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#autoScaleThreshold',
-  );
-
-  /// IRI for crdt:isShardOf [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
-  ///
-  /// A back-link from a shard to the root index or partition it belongs to.
+  /// A pre-calculated, lightweight hash of the resource's full Hybrid Logical Clock, used for efficient change detection in indices. Hash includes both logical and physical time components. Domain is kept general (rdfs:Resource) to allow usage in various contexts including idx:ShardEntry instances.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const isShardOf = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
+  static const clockHash = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
   );
 
-  /// IRI for crdt:groupedBy [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRule]
+  /// IRI for crdt:belongsToUser [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
-  /// Links a GroupIndexTemplate to its declarative GroupingRule.
+  /// Links an installation to the user identity that owns it. In Solid contexts, this would be a WebID; in other contexts, this could be any user identifier.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const groupedBy = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#groupedBy',
+  static const belongsToUser = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#belongsToUser',
   );
 
-  /// IRI for crdt:property [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty]
+  /// IRI for crdt:applicationId [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
-  /// Links a GroupingRule to its GroupingRuleProperty instances. Multi-value property for complex grouping scenarios.
+  /// The unique identifier for the application that created this installation. In Solid contexts, this would be the OIDC Client ID; in other contexts, this could be any application identifier.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRule
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const property = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#property',
+  static const applicationId = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#applicationId',
   );
 
-  /// IRI for crdt:sourceProperty [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
+  /// IRI for crdt:createdAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
-  /// The property in the data resource to extract grouping values from.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
-  ///
-  static const sourceProperty = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#sourceProperty',
-  );
-
-  /// IRI for crdt:transform [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
-  ///
-  /// Ordered list of regex transform rules to apply to the sourceProperty's value for group key generation. Transforms are tried in order, first match wins.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
-  ///
-  static const transform = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#transform',
-  );
-
-  /// IRI for crdt:hierarchyLevel [Expects: http://www.w3.org/2001/XMLSchema#integer]
-  ///
-  /// Optional hierarchy level for multi-property grouping (default: 1). Properties with explicit levels create nested directory structures sorted by level. Properties without levels are joined with '-' separator after lexicographic IRI ordering.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
-  ///
-  static const hierarchyLevel = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#hierarchyLevel',
-  );
-
-  /// IRI for crdt:missingValue [Expects: http://www.w3.org/2001/XMLSchema#string]
-  ///
-  /// Optional default value to use when the sourceProperty is absent. If not specified, resources without this property create no groups.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
-  ///
-  static const missingValue = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#missingValue',
-  );
-
-  /// IRI for crdt:basedOn [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate]
-  ///
-  /// A back-link from a GroupIndex to the GroupIndexTemplate rulebook that defines it.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex
-  ///
-  static const basedOn = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#basedOn',
-  );
-
-  /// IRI for crdt:containsEntry [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#ShardEntry]
-  ///
-  /// Links a Shard to a structured entry containing resource reference and metadata.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#Shard
-  ///
-  static const containsEntry = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#containsEntry',
-  );
-
-  /// IRI for crdt:readBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// An OR-Set of installation IRIs that actively read from this index or specific indexed property. Used for collaborative lifecycle management and property cleanup when readers are tombstoned.
+  /// Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const readBy = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#readBy',
+  static const createdAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
   );
 
-  /// IRI for crdt:populationState [Expects: http://www.w3.org/2001/XMLSchema#string]
+  /// IRI for crdt:lastActiveAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
-  /// State of index population process. Values: 'populating' (initial background processing required), 'active' (ready for normal use). Uses LWW_Register for collaborative state transitions.
+  /// Timestamp of the last activity from this installation. Updated collaboratively by other installations to track dormancy.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#Index
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const populationState = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#populationState',
+  static const lastActiveAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#lastActiveAt',
   );
 
-  /// IRI for crdt:hasPopulatingShard [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// IRI for crdt:maxInactivityPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
-  /// References temporary populating shards used during distributed index creation. These shards are tombstoned when population is complete. Uses OR-Set for collaborative shard management.
+  /// Duration after which this installation should be considered for tombstoning if no activity is detected. Expressed as ISO 8601 duration (e.g., 'P6M' for 6 months). If not specified, uses framework default.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#Index
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const hasPopulatingShard = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#hasPopulatingShard',
+  static const maxInactivityPeriod = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#maxInactivityPeriod',
   );
 
-  /// IRI for crdt:resource [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// IRI for crdt:deletedAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
-  /// Points to the actual data resource from a shard entry. Links shard entry metadata to the primary resource.
+  /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ShardEntry
+  /// Can be used on all classes in this vocabulary
   ///
-  static const resource = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#resource',
+  static const deletedAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
   );
 
-  /// IRI for crdt:trackedProperty [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
+  /// IRI for crdt:documentTombstoneRetentionPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
-  /// Specifies which RDF property is being tracked in an indexed property configuration object.
+  /// Duration to retain document tombstones (complete deleted documents) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P2Y' for 2 years). Applied to storage backend configuration documents. Longer retention recommended due to high impact of zombie deletions affecting recreated documents.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const trackedProperty = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#trackedProperty',
+  static const documentTombstoneRetentionPeriod = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#documentTombstoneRetentionPeriod',
   );
 
-  /// IRI for crdt:pattern [Expects: http://www.w3.org/2001/XMLSchema#string]
+  /// IRI for crdt:enableDocumentTombstoneCleanup [Expects: http://www.w3.org/2001/XMLSchema#boolean]
   ///
-  /// Cross-platform compatible regex pattern for matching RDF literal values. No alternation (|) or named character classes allowed.
+  /// Boolean flag indicating whether the framework should automatically clean up document tombstones after the retention period. Applied to storage backend configuration documents.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const pattern = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#pattern',
+  static const enableDocumentTombstoneCleanup = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enableDocumentTombstoneCleanup',
   );
 
-  /// IRI for crdt:replacement [Expects: http://www.w3.org/2001/XMLSchema#string]
+  /// IRI for crdt:propertyTombstoneRetentionPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
-  /// Replacement template with ${n} backreferences to capture groups. Uses braced syntax for maximum cross-platform compatibility.
+  /// Duration to retain property tombstones (deleted values within multi-value properties) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P6M' for 6 months). Applied to storage backend configuration documents. Shorter retention acceptable due to lower impact of zombie deletions.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const replacement = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#replacement',
+  static const propertyTombstoneRetentionPeriod = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#propertyTombstoneRetentionPeriod',
+  );
+
+  /// IRI for crdt:enablePropertyTombstoneCleanup [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  ///
+  /// Boolean flag indicating whether the framework should automatically clean up property tombstones after the retention period. Applied to storage backend configuration documents.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const enablePropertyTombstoneCleanup = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
   );
 }

@@ -21,35 +21,19 @@ class CrdtUniversalProperties {
   // Private constructor prevents instantiation
   const CrdtUniversalProperties._();
 
-  /// indexesClass [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
+  /// createdAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
-  /// Specifies which class of resource this index tracks (e.g., schema:Recipe, idx:Shard, sync:ManagedDocument). Index entries contain resource-level properties for querying, while sync operations depend on resource type: if resources are documents themselves (e.g., idx:FullIndex), all operations are document-level; if resources use fragment identifiers (e.g., schema:Recipe), sync operations are on the containing document while resource operations are on the specific resource.
+  /// Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.
   ///
-  static const indexesClass = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#indexesClass',
+  static const createdAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
   );
 
-  /// indexedProperty [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty]
+  /// deletedAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
-  /// Links an index to an IndexedProperty configuration object that specifies which property should be indexed and tracks which installations read from it.
+  /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.
   ///
-  static const indexedProperty = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#indexedProperty',
-  );
-
-  /// shardingAlgorithm [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// Defines the algorithm used to place new items into shards.
-  ///
-  static const shardingAlgorithm = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#shardingAlgorithm',
-  );
-
-  /// readBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// An OR-Set of installation IRIs that actively read from this index or specific indexed property. Used for collaborative lifecycle management and property cleanup when readers are tombstoned.
-  ///
-  static const readBy = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#readBy',
+  static const deletedAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
   );
 }

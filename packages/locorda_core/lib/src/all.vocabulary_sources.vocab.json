@@ -1,18 +1,18 @@
 {
   "vocabularies": {
-    "idx": {
+    "algo": {
       "type": "file",
       "namespace": "https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#",
       "source": "../../spec/vocabularies/crdt-algorithms.ttl",
       "generate": true
     },
-    "algo": {
+    "crdt": {
       "type": "file",
       "namespace": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#",
       "source": "../../spec/vocabularies/crdt-mechanics.ttl",
       "generate": true
     },
-    "crdt": {
+    "idx": {
       "type": "file",
       "namespace": "https://w3id.org/solid-crdt-sync/vocab/idx#",
       "source": "../../spec/vocabularies/idx.ttl",

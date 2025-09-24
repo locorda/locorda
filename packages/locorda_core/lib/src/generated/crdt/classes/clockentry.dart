@@ -7,104 +7,134 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// Rule class from Mc vocabulary
+/// ClockEntry class from Crdt vocabulary
 ///
-/// A declarative rule that links a specific predicate/property to a CRDT merge algorithm.
+/// A single entry in a Hybrid Logical Clock (HLC), mapping an installation ID to both its logical time (causality counter) and physical time (wall-clock timestamp for tie-breaking).
 ///
 /// Inherits from:
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
 ///
-/// This class provides access to all properties that can be used with Rule.
-/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule)
+/// This class provides access to all properties that can be used with ClockEntry.
+/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry)
 ///
-/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/merge-contract#)
-class McRule {
+/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#)
+class CrdtClockEntry {
   // Private constructor prevents instantiation
-  const McRule._();
+  const CrdtClockEntry._();
 
-  /// IRI term for the Rule class
+  /// IRI term for the ClockEntry class
   /// Use this to specify that a resource is of this type.
   static const classIri = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule',
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry',
   );
 
-  /// predicate [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
-  ///
-  /// Specifies the RDF predicate that a PropertyMapping applies to.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
-  ///
-  static const predicate = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#predicate',
-  );
-
-  /// isIdentifying [Expects: http://www.w3.org/2001/XMLSchema#boolean]
-  ///
-  /// A boolean flag used within mc:Rule to declare whether a specific predicate can be used to identify blank nodes within contexts. This enables context-based blank node identification for CRDT operations that require object identity (e.g., OR-Set, 2P-Set tombstone matching). When true, the predicate serves as part of a compound identification key along with other identifying predicates from any applicable mapping scope.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
-  ///
-  static const isIdentifying = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#isIdentifying',
-  );
-
-  /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
+  /// hasClockEntry [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
   /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtHasClockEntry = const IriTerm(
+  static const hasClockEntry = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#hasClockEntry',
   );
 
-  /// clockHash from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#string]
+  /// installationId [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The unique identifier for a client installation within a Hybrid Logical Clock entry. Corresponds to 'client ID' in CRDT literature, but uses 'installation' to avoid confusion with storage backend client identifiers.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
+  ///
+  static const installationId = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#installationId',
+  );
+
+  /// logicalTime [Expects: http://www.w3.org/2001/XMLSchema#long]
+  ///
+  /// The logical time component of a Hybrid Logical Clock entry - a monotonically increasing counter that tracks causality relationships between operations. Provides tamper-proof causality tracking even when physical clocks are manipulated.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
+  ///
+  static const logicalTime = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#logicalTime',
+  );
+
+  /// physicalTime [Expects: http://www.w3.org/2001/XMLSchema#long]
+  ///
+  /// The physical time component of a Hybrid Logical Clock entry - wall-clock timestamp in milliseconds since Unix epoch. Used for intuitive tie-breaking when operations are truly concurrent (logical times don't establish dominance).
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
+  ///
+  static const physicalTime = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#physicalTime',
+  );
+
+  /// clockHash [Expects: http://www.w3.org/2001/XMLSchema#string]
   ///
   /// A pre-calculated, lightweight hash of the resource's full Hybrid Logical Clock, used for efficient change detection in indices. Hash includes both logical and physical time components. Domain is kept general (rdfs:Resource) to allow usage in various contexts including idx:ShardEntry instances.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtClockHash = const IriTerm(
+  static const clockHash = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
   );
 
-  /// documentTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
+  /// createdAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  ///
+  /// Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const createdAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
+  );
+
+  /// deletedAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  ///
+  /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const deletedAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
+  );
+
+  /// documentTombstoneRetentionPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration to retain document tombstones (complete deleted documents) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P2Y' for 2 years). Applied to storage backend configuration documents. Longer retention recommended due to high impact of zombie deletions affecting recreated documents.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtDocumentTombstoneRetentionPeriod = const IriTerm(
+  static const documentTombstoneRetentionPeriod = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#documentTombstoneRetentionPeriod',
   );
 
-  /// enableDocumentTombstoneCleanup from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  /// enableDocumentTombstoneCleanup [Expects: http://www.w3.org/2001/XMLSchema#boolean]
   ///
   /// Boolean flag indicating whether the framework should automatically clean up document tombstones after the retention period. Applied to storage backend configuration documents.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtEnableDocumentTombstoneCleanup = const IriTerm(
+  static const enableDocumentTombstoneCleanup = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enableDocumentTombstoneCleanup',
   );
 
-  /// propertyTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
+  /// propertyTombstoneRetentionPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration to retain property tombstones (deleted values within multi-value properties) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P6M' for 6 months). Applied to storage backend configuration documents. Shorter retention acceptable due to lower impact of zombie deletions.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtPropertyTombstoneRetentionPeriod = const IriTerm(
+  static const propertyTombstoneRetentionPeriod = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#propertyTombstoneRetentionPeriod',
   );
 
-  /// enablePropertyTombstoneCleanup from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  /// enablePropertyTombstoneCleanup [Expects: http://www.w3.org/2001/XMLSchema#boolean]
   ///
   /// Boolean flag indicating whether the framework should automatically clean up property tombstones after the retention period. Applied to storage backend configuration documents.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtEnablePropertyTombstoneCleanup = const IriTerm(
+  static const enablePropertyTombstoneCleanup = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
   );
 

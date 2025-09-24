@@ -49,83 +49,83 @@ class SyncManagedDocument {
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
 
-  /// hasClockEntry from algo vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
+  /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
   /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const algoHasClockEntry = const IriTerm(
+  static const crdtHasClockEntry = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#hasClockEntry',
   );
 
-  /// clockHash from algo vocabulary [Expects: http://www.w3.org/2001/XMLSchema#string]
+  /// clockHash from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#string]
   ///
   /// A pre-calculated, lightweight hash of the resource's full Hybrid Logical Clock, used for efficient change detection in indices. Hash includes both logical and physical time components. Domain is kept general (rdfs:Resource) to allow usage in various contexts including idx:ShardEntry instances.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const algoClockHash = const IriTerm(
+  static const crdtClockHash = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
   );
 
-  /// documentTombstoneRetentionPeriod from algo vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
+  /// documentTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration to retain document tombstones (complete deleted documents) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P2Y' for 2 years). Applied to storage backend configuration documents. Longer retention recommended due to high impact of zombie deletions affecting recreated documents.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const algoDocumentTombstoneRetentionPeriod = const IriTerm(
+  static const crdtDocumentTombstoneRetentionPeriod = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#documentTombstoneRetentionPeriod',
   );
 
-  /// enableDocumentTombstoneCleanup from algo vocabulary [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  /// enableDocumentTombstoneCleanup from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#boolean]
   ///
   /// Boolean flag indicating whether the framework should automatically clean up document tombstones after the retention period. Applied to storage backend configuration documents.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const algoEnableDocumentTombstoneCleanup = const IriTerm(
+  static const crdtEnableDocumentTombstoneCleanup = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enableDocumentTombstoneCleanup',
   );
 
-  /// propertyTombstoneRetentionPeriod from algo vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
+  /// propertyTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration to retain property tombstones (deleted values within multi-value properties) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P6M' for 6 months). Applied to storage backend configuration documents. Shorter retention acceptable due to lower impact of zombie deletions.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const algoPropertyTombstoneRetentionPeriod = const IriTerm(
+  static const crdtPropertyTombstoneRetentionPeriod = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#propertyTombstoneRetentionPeriod',
   );
 
-  /// enablePropertyTombstoneCleanup from algo vocabulary [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  /// enablePropertyTombstoneCleanup from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#boolean]
   ///
   /// Boolean flag indicating whether the framework should automatically clean up property tombstones after the retention period. Applied to storage backend configuration documents.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const algoEnablePropertyTombstoneCleanup = const IriTerm(
+  static const crdtEnablePropertyTombstoneCleanup = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
   );
 
-  /// belongsToIndexShard from crdt vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// belongsToIndexShard from idx vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
   /// Links a data resource to the specific index shard it is a member of.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtBelongsToIndexShard = const IriTerm(
+  static const idxBelongsToIndexShard = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
   );
 
-  /// isShardOf from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
+  /// isShardOf from idx vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
   ///
   /// A back-link from a shard to the root index or partition it belongs to.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtIsShardOf = const IriTerm(
+  static const idxIsShardOf = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
   );
 

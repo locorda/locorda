@@ -7,36 +7,28 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// Main Algo vocabulary class containing all terms
+/// ClientInstallation class from Crdt vocabulary
 ///
-/// Contains all terms defined in the https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics# vocabulary.
-class Algo {
+/// A unique installation of a CRDT-enabled application, providing traceability and identity for Hybrid Logical Clock entries across the distributed system.
+///
+/// Inherits from:
+/// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
+///
+/// This class provides access to all properties that can be used with ClientInstallation.
+/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation)
+///
+/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#)
+class CrdtClientInstallation {
   // Private constructor prevents instantiation
-  const Algo._();
+  const CrdtClientInstallation._();
 
-  /// Base IRI for Algo vocabulary
-  /// [Spec](https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#)
-  static const String namespace =
-      'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#';
-  static const String prefix = 'algo';
-
-  /// IRI for algo:ClockEntry
-  ///
-  /// A single entry in a Hybrid Logical Clock (HLC), mapping an installation ID to both its logical time (causality counter) and physical time (wall-clock timestamp for tie-breaking).
-  ///
-  static const ClockEntry = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry',
-  );
-
-  /// IRI for algo:ClientInstallation
-  ///
-  /// A unique installation of a CRDT-enabled application, providing traceability and identity for Hybrid Logical Clock entries across the distributed system.
-  ///
-  static const ClientInstallation = const IriTerm(
+  /// IRI term for the ClientInstallation class
+  /// Use this to specify that a resource is of this type.
+  static const classIri = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation',
   );
 
-  /// IRI for algo:hasClockEntry [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
+  /// hasClockEntry [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
   /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
   ///
@@ -46,37 +38,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#hasClockEntry',
   );
 
-  /// IRI for algo:installationId [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// The unique identifier for a client installation within a Hybrid Logical Clock entry. Corresponds to 'client ID' in CRDT literature, but uses 'installation' to avoid confusion with storage backend client identifiers.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
-  ///
-  static const installationId = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#installationId',
-  );
-
-  /// IRI for algo:logicalTime [Expects: http://www.w3.org/2001/XMLSchema#long]
-  ///
-  /// The logical time component of a Hybrid Logical Clock entry - a monotonically increasing counter that tracks causality relationships between operations. Provides tamper-proof causality tracking even when physical clocks are manipulated.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
-  ///
-  static const logicalTime = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#logicalTime',
-  );
-
-  /// IRI for algo:physicalTime [Expects: http://www.w3.org/2001/XMLSchema#long]
-  ///
-  /// The physical time component of a Hybrid Logical Clock entry - wall-clock timestamp in milliseconds since Unix epoch. Used for intuitive tie-breaking when operations are truly concurrent (logical times don't establish dominance).
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
-  ///
-  static const physicalTime = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#physicalTime',
-  );
-
-  /// IRI for algo:clockHash [Expects: http://www.w3.org/2001/XMLSchema#string]
+  /// clockHash [Expects: http://www.w3.org/2001/XMLSchema#string]
   ///
   /// A pre-calculated, lightweight hash of the resource's full Hybrid Logical Clock, used for efficient change detection in indices. Hash includes both logical and physical time components. Domain is kept general (rdfs:Resource) to allow usage in various contexts including idx:ShardEntry instances.
   ///
@@ -86,7 +48,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
   );
 
-  /// IRI for algo:belongsToUser [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// belongsToUser [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
   /// Links an installation to the user identity that owns it. In Solid contexts, this would be a WebID; in other contexts, this could be any user identifier.
   ///
@@ -96,7 +58,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#belongsToUser',
   );
 
-  /// IRI for algo:applicationId [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// applicationId [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
   /// The unique identifier for the application that created this installation. In Solid contexts, this would be the OIDC Client ID; in other contexts, this could be any application identifier.
   ///
@@ -106,7 +68,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#applicationId',
   );
 
-  /// IRI for algo:createdAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  /// createdAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
   /// Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.
   ///
@@ -116,7 +78,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
   );
 
-  /// IRI for algo:lastActiveAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  /// lastActiveAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
   /// Timestamp of the last activity from this installation. Updated collaboratively by other installations to track dormancy.
   ///
@@ -126,7 +88,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#lastActiveAt',
   );
 
-  /// IRI for algo:maxInactivityPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
+  /// maxInactivityPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration after which this installation should be considered for tombstoning if no activity is detected. Expressed as ISO 8601 duration (e.g., 'P6M' for 6 months). If not specified, uses framework default.
   ///
@@ -136,7 +98,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#maxInactivityPeriod',
   );
 
-  /// IRI for algo:deletedAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  /// deletedAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
   /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.
   ///
@@ -146,7 +108,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
   );
 
-  /// IRI for algo:documentTombstoneRetentionPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
+  /// documentTombstoneRetentionPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration to retain document tombstones (complete deleted documents) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P2Y' for 2 years). Applied to storage backend configuration documents. Longer retention recommended due to high impact of zombie deletions affecting recreated documents.
   ///
@@ -156,7 +118,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#documentTombstoneRetentionPeriod',
   );
 
-  /// IRI for algo:enableDocumentTombstoneCleanup [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  /// enableDocumentTombstoneCleanup [Expects: http://www.w3.org/2001/XMLSchema#boolean]
   ///
   /// Boolean flag indicating whether the framework should automatically clean up document tombstones after the retention period. Applied to storage backend configuration documents.
   ///
@@ -166,7 +128,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enableDocumentTombstoneCleanup',
   );
 
-  /// IRI for algo:propertyTombstoneRetentionPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
+  /// propertyTombstoneRetentionPeriod [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration to retain property tombstones (deleted values within multi-value properties) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P6M' for 6 months). Applied to storage backend configuration documents. Shorter retention acceptable due to lower impact of zombie deletions.
   ///
@@ -176,7 +138,7 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#propertyTombstoneRetentionPeriod',
   );
 
-  /// IRI for algo:enablePropertyTombstoneCleanup [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  /// enablePropertyTombstoneCleanup [Expects: http://www.w3.org/2001/XMLSchema#boolean]
   ///
   /// Boolean flag indicating whether the framework should automatically clean up property tombstones after the retention period. Applied to storage backend configuration documents.
   ///
@@ -184,5 +146,125 @@ class Algo {
   ///
   static const enablePropertyTombstoneCleanup = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
+  );
+
+  /// belongsToIndexShard from idx vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Links a data resource to the specific index shard it is a member of.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const idxBelongsToIndexShard = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
+  );
+
+  /// isShardOf from idx vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
+  ///
+  /// A back-link from a shard to the root index or partition it belongs to.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const idxIsShardOf = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
+  );
+
+  /// belongsToWebID from solidsync vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Solid-specific interpretation of crdt:belongsToUser. Links an installation to the Solid WebID that owns it. This is a semantic alias that clarifies the user identity type in Solid contexts.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
+  ///
+  static const solidsyncBelongsToWebID = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/solid#belongsToWebID',
+  );
+
+  /// solidOidcClientId from solidsync vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Solid-specific interpretation of crdt:applicationId. The OIDC Client ID as registered with the Solid identity provider. This is a semantic alias that clarifies the application identifier type in Solid contexts.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
+  ///
+  static const solidsyncSolidOidcClientId = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/solid#solidOidcClientId',
+  );
+
+  /// isGovernedBy from sync vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Links a data or index resource to the public rules file that defines its merge behavior.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const syncIsGovernedBy = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#isGovernedBy',
+  );
+
+  /// comment from rdfs vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// A description of the subject resource.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfsComment = const IriTerm(
+    'http://www.w3.org/2000/01/rdf-schema#comment',
+  );
+
+  /// label from rdfs vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// A human-readable name for the subject.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfsLabel = const IriTerm(
+    'http://www.w3.org/2000/01/rdf-schema#label',
+  );
+
+  /// seeAlso from rdfs vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Further information about the subject resource.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfsSeeAlso = const IriTerm(
+    'http://www.w3.org/2000/01/rdf-schema#seeAlso',
+  );
+
+  /// isDefinedBy from rdfs vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The definition of the subject resource.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfsIsDefinedBy = const IriTerm(
+    'http://www.w3.org/2000/01/rdf-schema#isDefinedBy',
+  );
+
+  /// member from rdfs vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// A member of the subject resource.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfsMember = const IriTerm(
+    'http://www.w3.org/2000/01/rdf-schema#member',
+  );
+
+  /// type from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
+  ///
+  /// The subject is an instance of a class.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfType = const IriTerm(
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+  );
+
+  /// value from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Idiomatic property used for structured values.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfValue = const IriTerm(
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#value',
   );
 }

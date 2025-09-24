@@ -7,45 +7,105 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// Rule class from Mc vocabulary
+/// RegexTransform class from Idx vocabulary
 ///
-/// A declarative rule that links a specific predicate/property to a CRDT merge algorithm.
+/// A transform rule that applies regex pattern matching and replacement to RDF literal values for group key generation. Uses cross-platform compatible regex subset.
 ///
 /// Inherits from:
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
 ///
-/// This class provides access to all properties that can be used with Rule.
-/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule)
+/// This class provides access to all properties that can be used with RegexTransform.
+/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform)
 ///
-/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/merge-contract#)
-class McRule {
+/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/idx#)
+class IdxRegexTransform {
   // Private constructor prevents instantiation
-  const McRule._();
+  const IdxRegexTransform._();
 
-  /// IRI term for the Rule class
+  /// IRI term for the RegexTransform class
   /// Use this to specify that a resource is of this type.
   static const classIri = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule',
+    'https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform',
   );
 
-  /// predicate [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
+  /// belongsToIndexShard [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
-  /// Specifies the RDF predicate that a PropertyMapping applies to.
+  /// Links a data resource to the specific index shard it is a member of.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const predicate = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#predicate',
+  static const belongsToIndexShard = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
   );
 
-  /// isIdentifying [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  /// indexesClass [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
   ///
-  /// A boolean flag used within mc:Rule to declare whether a specific predicate can be used to identify blank nodes within contexts. This enables context-based blank node identification for CRDT operations that require object identity (e.g., OR-Set, 2P-Set tombstone matching). When true, the predicate serves as part of a compound identification key along with other identifying predicates from any applicable mapping scope.
+  /// Specifies which class of resource this index tracks (e.g., schema:Recipe, idx:Shard, sync:ManagedDocument). Index entries contain resource-level properties for querying, while sync operations depend on resource type: if resources are documents themselves (e.g., idx:FullIndex), all operations are document-level; if resources use fragment identifiers (e.g., schema:Recipe), sync operations are on the containing document while resource operations are on the specific resource.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
+  /// Can be used on all classes in this vocabulary
   ///
-  static const isIdentifying = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#isIdentifying',
+  static const indexesClass = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#indexesClass',
+  );
+
+  /// indexedProperty [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty]
+  ///
+  /// Links an index to an IndexedProperty configuration object that specifies which property should be indexed and tracks which installations read from it.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const indexedProperty = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#indexedProperty',
+  );
+
+  /// shardingAlgorithm [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Defines the algorithm used to place new items into shards.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const shardingAlgorithm = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#shardingAlgorithm',
+  );
+
+  /// isShardOf [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
+  ///
+  /// A back-link from a shard to the root index or partition it belongs to.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const isShardOf = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
+  );
+
+  /// readBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// An OR-Set of installation IRIs that actively read from this index or specific indexed property. Used for collaborative lifecycle management and property cleanup when readers are tombstoned.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const readBy = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#readBy',
+  );
+
+  /// pattern [Expects: http://www.w3.org/2001/XMLSchema#string]
+  ///
+  /// Cross-platform compatible regex pattern for matching RDF literal values. No alternation (|) or named character classes allowed.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform
+  ///
+  static const pattern = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#pattern',
+  );
+
+  /// replacement [Expects: http://www.w3.org/2001/XMLSchema#string]
+  ///
+  /// Replacement template with ${n} backreferences to capture groups. Uses braced syntax for maximum cross-platform compatibility.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform
+  ///
+  static const replacement = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#replacement',
   );
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
@@ -106,26 +166,6 @@ class McRule {
   ///
   static const crdtEnablePropertyTombstoneCleanup = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
-  );
-
-  /// belongsToIndexShard from idx vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// Links a data resource to the specific index shard it is a member of.
-  ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
-  ///
-  static const idxBelongsToIndexShard = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
-  );
-
-  /// isShardOf from idx vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
-  ///
-  /// A back-link from a shard to the root index or partition it belongs to.
-  ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
-  ///
-  static const idxIsShardOf = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
   );
 
   /// isGovernedBy from sync vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
