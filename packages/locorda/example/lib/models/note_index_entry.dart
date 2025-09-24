@@ -23,7 +23,7 @@ import 'package:locorda_core/locorda_core.dart';
 @RdfLocalResource()
 class NoteIndexEntry {
   /// Note ID - same as the full Note resource
-  @RdfProperty(IdxVocab.resource, iri: PodResourceRef(Note))
+  @RdfProperty(IdxShardEntry.resource, iri: PodResourceRef(Note))
   final String id;
 
   /// Note title for display in lists

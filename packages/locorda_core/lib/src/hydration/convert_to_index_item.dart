@@ -1,4 +1,5 @@
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/generated/_index.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 /// Convert a resource to an index item using RDF transformation.
@@ -29,7 +30,7 @@ IdentifiedGraph convertToIndexItem(IriTerm resourceType,
       .where((t) => indexItem.properties.contains(t.predicate))
       .map((t) => Triple(indexItemSubject, t.predicate, t.object))
       .toList()
-    ..add(Triple(indexItemSubject, IdxVocab.resource, subject));
+    ..add(Triple(indexItemSubject, IdxShardEntry.resource, subject));
 
   // Convert filtered RDF back to index item type
 

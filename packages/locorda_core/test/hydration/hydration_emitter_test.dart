@@ -1,10 +1,11 @@
 import 'dart:async';
+
 import 'package:locorda_core/locorda_core.dart';
-import 'package:test/test.dart';
 import 'package:locorda_core/src/hydration/hydration_emitter.dart';
 import 'package:locorda_core/src/hydration/hydration_stream_manager.dart';
 import 'package:locorda_core/src/hydration/type_local_name_key.dart';
 import 'package:rdf_core/rdf_core.dart';
+import 'package:test/test.dart';
 
 typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
 
@@ -104,7 +105,7 @@ void main() {
         () {
       // Set up index configuration
       final indexItem = IndexItemGraphConfig({
-        IdxVocab.resource,
+        IdxShardEntry.resource,
         titlePredicate,
       });
       final index = FullIndexGraphConfig(
@@ -161,14 +162,15 @@ void main() {
       final (indexSubject, indexGraph) = indexResult.items.first;
       final indexTriples = indexGraph.triples.toList();
       expect(indexTriples.any((t) => t.predicate == titlePredicate), isTrue);
-      expect(indexTriples.any((t) => t.predicate == IdxVocab.resource), isTrue);
+      expect(indexTriples.any((t) => t.predicate == IdxShardEntry.resource),
+          isTrue);
       expect(indexTriples.any((t) => t.predicate == contentPredicate),
           isFalse); // Filtered out
     });
 
     test('should handle deletions in index conversion', () {
       final indexItem = IndexItemGraphConfig({
-        IdxVocab.resource,
+        IdxShardEntry.resource,
         titlePredicate,
       });
       final index = FullIndexGraphConfig(
@@ -214,12 +216,13 @@ void main() {
           indexResult.deletedItems.first;
       final indexTriples = deletedIndexGraph.triples.toList();
       expect(indexTriples.any((t) => t.predicate == titlePredicate), isTrue);
-      expect(indexTriples.any((t) => t.predicate == IdxVocab.resource), isTrue);
+      expect(indexTriples.any((t) => t.predicate == IdxShardEntry.resource),
+          isTrue);
     });
 
     test('should skip index emission when no stream controller exists', () {
       final indexItem = IndexItemGraphConfig({
-        IdxVocab.resource,
+        IdxShardEntry.resource,
         titlePredicate,
       });
       final index = FullIndexGraphConfig(
@@ -292,11 +295,11 @@ void main() {
 
     test('should handle multiple indices', () {
       final titleIndexItem = IndexItemGraphConfig({
-        IdxVocab.resource,
+        IdxShardEntry.resource,
         titlePredicate,
       });
       final contentIndexItem = IndexItemGraphConfig({
-        IdxVocab.resource,
+        IdxShardEntry.resource,
         contentPredicate,
       });
 
@@ -349,7 +352,7 @@ void main() {
 
     test('should preserve all HydrationResult fields in conversion', () {
       final indexItem = IndexItemGraphConfig({
-        IdxVocab.resource,
+        IdxShardEntry.resource,
         titlePredicate,
       });
       final index = FullIndexGraphConfig(

@@ -87,4 +87,4 @@ export 'src/config/validation.dart'
 export 'src/mapping/pod_iri_config.dart' show PodIriConfig;
 
 // Vocabularies
-export 'src/vocabulary/idx_vocab.dart' show IdxVocab;
+export 'src/generated/_index.dart' show IdxShardEntry;

@@ -45,7 +45,7 @@ class NoteIndexEntryMapper implements LocalResourceMapper<nie.NoteIndexEntry> {
     final reader = context.reader(subject);
 
     final String id = reader.require(
-      IdxVocab.resource,
+      IdxShardEntry.resource,
       deserializer: _idMapper,
     );
     final String name = reader.require(SchemaNoteDigitalDocument.name);
@@ -84,7 +84,7 @@ class NoteIndexEntryMapper implements LocalResourceMapper<nie.NoteIndexEntry> {
 
     return context
         .resourceBuilder(subject)
-        .addValue(IdxVocab.resource, resource.id, serializer: _idMapper)
+        .addValue(IdxShardEntry.resource, resource.id, serializer: _idMapper)
         .addValue(SchemaNoteDigitalDocument.name, resource.name)
         .addValue(SchemaNoteDigitalDocument.dateCreated, resource.dateCreated)
         .addValue(SchemaNoteDigitalDocument.dateModified, resource.dateModified)

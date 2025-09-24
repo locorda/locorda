@@ -1,7 +1,7 @@
+import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hydration/convert_to_index_item.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:locorda_core/src/config/sync_graph_config.dart';
-import 'package:locorda_core/src/vocabulary/idx_vocab.dart';
 import 'package:test/test.dart';
 
 typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
@@ -38,7 +38,7 @@ void main() {
 
       // Define index item configuration with only selected properties
       final indexItem = IndexItemGraphConfig({
-        IdxVocab.resource,
+        IdxShardEntry.resource,
         titlePredicate,
         createdPredicate,
         modifiedPredicate,
@@ -58,7 +58,8 @@ void main() {
       // Should have the idx:resource reference
       expect(
           indexTriples.any((t) =>
-              t.predicate == IdxVocab.resource && t.object == resourceSubject),
+              t.predicate == IdxShardEntry.resource &&
+              t.object == resourceSubject),
           isTrue,
           reason: 'Should include idx:resource reference');
 
@@ -93,7 +94,7 @@ void main() {
       final identifiedGraph = (resourceSubject, resourceGraph);
 
       final indexItem = IndexItemGraphConfig({
-        IdxVocab.resource,
+        IdxShardEntry.resource,
         titlePredicate,
         createdPredicate,
         keywordsPredicate, // This property doesn't exist in the resource
@@ -115,7 +116,8 @@ void main() {
           reason: 'Should include available creation date');
 
       // Should include idx:resource reference
-      expect(indexTriples.any((t) => t.predicate == IdxVocab.resource), isTrue,
+      expect(indexTriples.any((t) => t.predicate == IdxShardEntry.resource),
+          isTrue,
           reason: 'Should include idx:resource reference');
 
       // Should not include missing properties (keywords)
@@ -136,7 +138,7 @@ void main() {
       final identifiedGraph = (resourceSubject, resourceGraph);
 
       final indexItem = IndexItemGraphConfig({
-        titlePredicate, // Note: not explicitly including IdxVocab.resource
+        titlePredicate, // Note: not explicitly including IdxShardEntry.resource
       });
 
       final (indexSubject, indexGraph) = convertToIndexItem(
@@ -150,7 +152,8 @@ void main() {
       // The idx:resource should be automatically added by the converter
       expect(
           indexTriples.any((t) =>
-              t.predicate == IdxVocab.resource && t.object == resourceSubject),
+              t.predicate == IdxShardEntry.resource &&
+              t.object == resourceSubject),
           isTrue,
           reason: 'Should automatically add idx:resource reference');
 
@@ -187,7 +190,7 @@ void main() {
       expect(indexTriples, hasLength(1),
           reason: 'Should only contain idx:resource reference');
 
-      expect(indexTriples.first.predicate, equals(IdxVocab.resource));
+      expect(indexTriples.first.predicate, equals(IdxShardEntry.resource));
       expect(indexTriples.first.object, equals(resourceSubject));
     });
   });
