@@ -6,6 +6,8 @@ import 'package:rdf_core/rdf_core.dart';
 
 import 'test_sync_database.dart';
 
+const IriTerm typeIri = IriTerm('https://example.com/TestType');
+
 void main() {
   // Disable drift's multiple database warning for tests
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -127,6 +129,7 @@ void main() {
         // Act
         final documentId = await dao.saveDocument(
           documentIri: documentIri,
+          typeIri: typeIri.value,
           content: content,
           ourPhysicalClock: 1000,
           updatedAt: 2000,
@@ -157,6 +160,7 @@ void main() {
         // Act
         final firstId = await dao.saveDocument(
           documentIri: documentIri,
+          typeIri: typeIri.value,
           content: content1,
           ourPhysicalClock: 1000,
           updatedAt: 2000,
@@ -164,6 +168,7 @@ void main() {
 
         final secondId = await dao.saveDocument(
           documentIri: documentIri,
+          typeIri: typeIri.value,
           content: content2,
           ourPhysicalClock: 1500,
           updatedAt: 2500,
@@ -197,25 +202,29 @@ void main() {
         // Arrange
         await dao.saveDocument(
           documentIri: 'https://example.com/doc1',
+          typeIri: typeIri.value,
           content: 'content1',
           ourPhysicalClock: 1000,
           updatedAt: 2000,
         );
         await dao.saveDocument(
           documentIri: 'https://example.com/doc2',
+          typeIri: typeIri.value,
           content: 'content2',
           ourPhysicalClock: 1100,
           updatedAt: 2500,
         );
         await dao.saveDocument(
           documentIri: 'https://example.com/doc3',
+          typeIri: typeIri.value,
           content: 'content3',
           ourPhysicalClock: 1200,
           updatedAt: 3000,
         );
 
         // Act
-        final docs = await dao.getDocumentsModifiedSince(2200, limit: 10);
+        final docs = await dao.getDocumentsModifiedSince(typeIri.value, '2200',
+            limit: 10);
 
         // Assert
         expect(docs, hasLength(2));
@@ -233,25 +242,29 @@ void main() {
         // Arrange
         await dao.saveDocument(
           documentIri: 'https://example.com/doc1',
+          typeIri: typeIri.value,
           content: 'content1',
           ourPhysicalClock: 1000,
           updatedAt: 2000,
         );
         await dao.saveDocument(
           documentIri: 'https://example.com/doc2',
+          typeIri: typeIri.value,
           content: 'content2',
           ourPhysicalClock: 1500,
           updatedAt: 2500,
         );
         await dao.saveDocument(
           documentIri: 'https://example.com/doc3',
+          typeIri: typeIri.value,
           content: 'content3',
           ourPhysicalClock: 2000,
           updatedAt: 3000,
         );
 
         // Act
-        final docs = await dao.getDocumentsChangedByUsSince(1200, limit: 10);
+        final docs = await dao
+            .getDocumentsChangedByUsSince(typeIri.value, '1200', limit: 10);
 
         // Assert
         expect(docs, hasLength(2));
@@ -269,6 +282,7 @@ void main() {
         for (int i = 0; i < 5; i++) {
           await dao.saveDocument(
             documentIri: 'https://example.com/doc$i',
+            typeIri: typeIri.value,
             content: 'content$i',
             ourPhysicalClock: 1000 + i,
             updatedAt: 2000 + i,
@@ -276,10 +290,10 @@ void main() {
         }
 
         // Act
-        final modifiedDocs =
-            await dao.getDocumentsModifiedSince(2001, limit: 2);
-        final changedDocs =
-            await dao.getDocumentsChangedByUsSince(1001, limit: 3);
+        final modifiedDocs = await dao
+            .getDocumentsModifiedSince(typeIri.value, '2001', limit: 2);
+        final changedDocs = await dao
+            .getDocumentsChangedByUsSince(typeIri.value, '1001', limit: 3);
 
         // Assert
         expect(modifiedDocs, hasLength(2));
@@ -301,6 +315,7 @@ void main() {
         // Arrange
         final documentId = await documentDao.saveDocument(
           documentIri: 'https://example.com/doc1',
+          typeIri: typeIri.value,
           content: 'content',
           ourPhysicalClock: 1000,
           updatedAt: 2000,
@@ -351,6 +366,7 @@ void main() {
         // Arrange
         final documentId = await documentDao.saveDocument(
           documentIri: 'https://example.com/doc1',
+          typeIri: typeIri.value,
           content: 'content',
           ourPhysicalClock: 1000,
           updatedAt: 2000,
@@ -373,6 +389,7 @@ void main() {
         // Arrange
         final documentId = await documentDao.saveDocument(
           documentIri: 'https://example.com/doc1',
+          typeIri: typeIri.value,
           content: 'content',
           ourPhysicalClock: 1000,
           updatedAt: 2000,
@@ -428,6 +445,7 @@ void main() {
         // Arrange
         final documentId = await documentDao.saveDocument(
           documentIri: 'https://example.com/doc1',
+          typeIri: typeIri.value,
           content: 'content',
           ourPhysicalClock: 1000,
           updatedAt: 2000,
@@ -493,6 +511,7 @@ void main() {
 
         final documentId = await documentDao.saveDocument(
           documentIri: 'https://example.com/doc1',
+          typeIri: typeIri.value,
           content: 'content',
           ourPhysicalClock: 1000,
           updatedAt: 2000,
@@ -540,6 +559,7 @@ void main() {
           await database.transaction(() async {
             await documentDao.saveDocument(
               documentIri: 'https://example.com/doc1',
+              typeIri: typeIri.value,
               content: 'content',
               ourPhysicalClock: 1000,
               updatedAt: 2000,

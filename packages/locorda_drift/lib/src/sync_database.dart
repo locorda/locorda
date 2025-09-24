@@ -18,6 +18,10 @@ class SyncIris extends Table {
 class SyncDocuments extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get documentIriId => integer().references(SyncIris, #id).unique()();
+
+  @ReferenceName('typeIri')
+  IntColumn get typeIriId => integer().references(SyncIris, #id)();
+
   TextColumn get documentContent => text()();
   IntColumn get ourPhysicalClock => integer()();
   IntColumn get updatedAt => integer()();
@@ -42,6 +46,8 @@ class SyncPropertyChanges extends Table {
 }
 
 /// Mixin for efficient IRI batch loading and creation
+///
+/// TODO: can we optimize this further by caching recently used IRIs in memory?
 mixin IriBatchLoader on DatabaseAccessor<SyncDatabase> {
   /// Efficiently load multiple IRIs by their IDs with automatic batching
   Future<Map<int, String>> getIrisBatch(Set<int> iriIds) async {
@@ -106,6 +112,12 @@ mixin IriBatchLoader on DatabaseAccessor<SyncDatabase> {
     return result;
   }
 
+  /// Get existing IRI ID for a single IRI, or null if not found
+  Future<int?> _getExistingIriId(String iri) async {
+    final result = await _getExistingIriIds({iri});
+    return result[iri];
+  }
+
   /// Create missing IRIs and return their IDs
   Future<Map<String, int>> _createMissingIris(Set<String> iris) async {
     if (iris.isEmpty) return {};
@@ -133,13 +145,15 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
   /// Save a document with content and timestamps, returning the document ID
   Future<int> saveDocument({
     required String documentIri,
+    required String typeIri,
     required String content,
     required int ourPhysicalClock,
     required int updatedAt,
   }) async {
     // Use the mixin for consistency
-    final iriToIdMap = await getOrCreateIriIdsBatch({documentIri});
+    final iriToIdMap = await getOrCreateIriIdsBatch({documentIri, typeIri});
     final documentIriId = iriToIdMap[documentIri]!;
+    final typeIriId = iriToIdMap[typeIri]!;
 
     // Try to get existing document first
     final existingDocument = await (select(syncDocuments)
@@ -151,6 +165,7 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
       await (update(syncDocuments)
             ..where((d) => d.id.equals(existingDocument.id)))
           .write(SyncDocumentsCompanion(
+        typeIriId: Value(typeIriId),
         documentContent: Value(content),
         ourPhysicalClock: Value(ourPhysicalClock),
         updatedAt: Value(updatedAt),
@@ -161,6 +176,7 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
       return await into(syncDocuments).insert(
         SyncDocumentsCompanion(
           documentIriId: Value(documentIriId),
+          typeIriId: Value(typeIriId),
           documentContent: Value(content),
           ourPhysicalClock: Value(ourPhysicalClock),
           updatedAt: Value(updatedAt),
@@ -172,8 +188,7 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
   /// Get document content by IRI
   Future<String?> getDocumentContent(String documentIri) async {
     // For read operations, we should only get existing IRIs, not create them
-    final existingIriIds = await _getExistingIriIds({documentIri});
-    final documentIriId = existingIriIds[documentIri];
+    final documentIriId = await _getExistingIriId(documentIri);
     if (documentIriId == null) return null;
 
     final document = await (select(syncDocuments)
@@ -186,8 +201,7 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
   /// Get document with metadata by IRI
   Future<SyncDocument?> getDocument(String documentIri) async {
     // For read operations, we should only get existing IRIs, not create them
-    final existingIriIds = await _getExistingIriIds({documentIri});
-    final documentIriId = existingIriIds[documentIri];
+    final documentIriId = await _getExistingIriId(documentIri);
     if (documentIriId == null) return null;
 
     return await (select(syncDocuments)
@@ -198,8 +212,7 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
   /// Get document ID by IRI (for property changes)
   Future<int?> getDocumentId(String documentIri) async {
     // For read operations, we should only get existing IRIs, not create them
-    final existingIriIds = await _getExistingIriIds({documentIri});
-    final documentIriId = existingIriIds[documentIri];
+    final documentIriId = await _getExistingIriId(documentIri);
     if (documentIriId == null) return null;
 
     final document = await (select(syncDocuments)
@@ -209,11 +222,19 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
     return document?.id;
   }
 
-  /// Get documents modified since timestamp (local OR remote changes), ordered by updatedAt ascending
-  Future<List<DocumentWithIri>> getDocumentsModifiedSince(int timestamp,
+  /// Get documents of a specific type modified since cursor, ordered by updatedAt ascending
+  Future<List<DocumentWithIri>> getDocumentsModifiedSince(
+      String typeIri, String? cursor,
       {required int limit}) async {
+    final typeIriId = await _getExistingIriId(typeIri);
+    if (typeIriId == null) return [];
+
+    final timestamp = cursor != null ? int.parse(cursor) : 0;
+
     final documents = await (select(syncDocuments)
-          ..where((d) => d.updatedAt.isBiggerThanValue(timestamp))
+          ..where((d) =>
+              d.typeIriId.equals(typeIriId) &
+              d.updatedAt.isBiggerThanValue(timestamp))
           ..orderBy([(d) => OrderingTerm(expression: d.updatedAt)])
           ..limit(limit))
         .get();
@@ -221,16 +242,37 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
     return _convertDocumentsWithIris(documents);
   }
 
-  /// Get documents changed by us since timestamp (local changes only), ordered by ourPhysicalClock ascending
-  Future<List<DocumentWithIri>> getDocumentsChangedByUsSince(int timestamp,
+  /// Get documents of a specific type changed by us since cursor, ordered by ourPhysicalClock ascending
+  Future<List<DocumentWithIri>> getDocumentsChangedByUsSince(
+      String typeIri, String? cursor,
       {required int limit}) async {
+    final typeIriId = await _getExistingIriId(typeIri);
+    if (typeIriId == null) return [];
+
+    final timestamp = cursor != null ? int.parse(cursor) : 0;
+
     final documents = await (select(syncDocuments)
-          ..where((d) => d.ourPhysicalClock.isBiggerThanValue(timestamp))
+          ..where((d) =>
+              d.typeIriId.equals(typeIriId) &
+              d.ourPhysicalClock.isBiggerThanValue(timestamp))
           ..orderBy([(d) => OrderingTerm(expression: d.ourPhysicalClock)])
           ..limit(limit))
         .get();
 
     return _convertDocumentsWithIris(documents);
+  }
+
+  /// Get the highest updatedAt timestamp for a specific type (for cursor management)
+  Future<int?> getMaxUpdatedAtForType(String typeIri) async {
+    final typeIriId = await _getExistingIriId(typeIri);
+    if (typeIriId == null) return null;
+
+    final result = await (selectOnly(syncDocuments)
+          ..where(syncDocuments.typeIriId.equals(typeIriId))
+          ..addColumns([syncDocuments.updatedAt.max()]))
+        .getSingleOrNull();
+
+    return result?.read(syncDocuments.updatedAt.max());
   }
 
   /// Convert documents with IRI resolution using batching
@@ -365,7 +407,7 @@ class SyncDatabase extends _$SyncDatabase {
   SyncDatabase.forExecutor(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -378,9 +420,10 @@ class SyncDatabase extends _$SyncDatabase {
         ON sync_documents(document_iri_id);
       ''');
 
+          // Composite index for type-specific cursor queries
           await m.database.customStatement('''
-        CREATE INDEX IF NOT EXISTS idx_sync_documents_updated
-        ON sync_documents(updated_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_sync_documents_type_updated
+        ON sync_documents(type_iri_id, updated_at);
       ''');
 
           await m.database.customStatement('''
@@ -392,6 +435,20 @@ class SyncDatabase extends _$SyncDatabase {
         CREATE INDEX IF NOT EXISTS idx_property_changes_document
         ON sync_property_changes(document_id);
       ''');
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            // Add typeIriId column to existing documents table
+            await m.database.customStatement('''
+              ALTER TABLE sync_documents ADD COLUMN type_iri_id INTEGER REFERENCES sync_iris(id);
+            ''');
+
+            // Create the composite index
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_sync_documents_type_updated
+              ON sync_documents(type_iri_id, updated_at);
+            ''');
+          }
         },
       );
 }

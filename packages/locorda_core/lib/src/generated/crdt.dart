@@ -110,7 +110,7 @@ class Crdt {
   ///
   /// Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.
   ///
-  /// Can be used on all classes in this vocabulary
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
   static const createdAt = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',

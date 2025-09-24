@@ -21,14 +21,6 @@ class CrdtUniversalProperties {
   // Private constructor prevents instantiation
   const CrdtUniversalProperties._();
 
-  /// createdAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
-  ///
-  /// Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.
-  ///
-  static const createdAt = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
-  );
-
   /// deletedAt [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
   ///
   /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.

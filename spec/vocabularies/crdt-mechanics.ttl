@@ -70,7 +70,7 @@ crdt:applicationId a rdf:Property;
 crdt:createdAt a rdf:Property;
     rdfs:label "created at";
     rdfs:comment "Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.";
-    rdfs:domain [ a owl:Class; owl:unionOf (crdt:ClientInstallation rdfs:Resource rdf:Statement) ];
+    rdfs:domain rdfs:Resource;
     rdfs:range xsd:dateTime .
 
 crdt:lastActiveAt a rdf:Property;

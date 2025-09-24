@@ -36,10 +36,13 @@ void main() {
         );
 
         // Act
-        await storage.saveDocument(documentIri, graph, metadata, []);
+        final typeIri = const IriTerm('https://example.com/TestType');
+        final result = await storage.saveDocument(documentIri, typeIri, graph, metadata, []);
         final retrieved = await storage.getDocument(documentIri);
 
         // Assert
+        expect(result.currentCursor, equals('2000'));
+        expect(result.previousCursor, isNull); // First document of this type
         expect(retrieved, isNotNull);
         expect(retrieved!.documentIri, equals(documentIri));
         expect(retrieved.metadata.ourPhysicalClock, equals(1000));
@@ -53,14 +56,19 @@ void main() {
         final graph2 = RdfGraph();
 
         // Act
-        await storage.saveDocument(documentIri, graph1,
+        final typeIri = const IriTerm('https://example.com/TestType');
+        final result1 = await storage.saveDocument(documentIri, typeIri, graph1,
             DocumentMetadata(ourPhysicalClock: 1000, updatedAt: 2000), []);
-        await storage.saveDocument(documentIri, graph2,
+        final result2 = await storage.saveDocument(documentIri, typeIri, graph2,
             DocumentMetadata(ourPhysicalClock: 1500, updatedAt: 2500), []);
 
         final retrieved = await storage.getDocument(documentIri);
 
         // Assert
+        expect(result1.previousCursor, isNull); // First save
+        expect(result1.currentCursor, equals('2000'));
+        expect(result2.previousCursor, equals('2000')); // Previous cursor from first save
+        expect(result2.currentCursor, equals('2500'));
         expect(retrieved, isNotNull);
         expect(retrieved!.metadata.ourPhysicalClock, equals(1500));
         expect(retrieved.metadata.updatedAt, equals(2500));
@@ -97,8 +105,10 @@ void main() {
         ];
 
         // Act
+        final typeIri = const IriTerm('https://example.com/TestType');
         await storage.saveDocument(
           documentIri,
+          typeIri,
           graph,
           DocumentMetadata(ourPhysicalClock: 1000, updatedAt: 2000),
           changes,
@@ -137,8 +147,10 @@ void main() {
           ),
         ];
 
+        final typeIri = const IriTerm('https://example.com/TestType');
         await storage.saveDocument(
           documentIri,
+          typeIri,
           graph,
           DocumentMetadata(ourPhysicalClock: 1000, updatedAt: 2000),
           changes,
@@ -175,8 +187,10 @@ void main() {
           ),
         ];
 
+        final typeIri = const IriTerm('https://example.com/TestType');
         await storage.saveDocument(
           documentIri,
+          typeIri,
           graph,
           DocumentMetadata(ourPhysicalClock: 1000, updatedAt: 2000),
           changes,
@@ -212,26 +226,27 @@ void main() {
         final doc3Iri = const IriTerm('https://example.com/doc3');
         final graph = RdfGraph();
 
-        await storage.saveDocument(doc1Iri, graph,
+        final typeIri = const IriTerm('https://example.com/TestType');
+        await storage.saveDocument(doc1Iri, typeIri, graph,
             DocumentMetadata(ourPhysicalClock: 1000, updatedAt: 2000), []);
-        await storage.saveDocument(doc2Iri, graph,
+        await storage.saveDocument(doc2Iri, typeIri, graph,
             DocumentMetadata(ourPhysicalClock: 1100, updatedAt: 2500), []);
-        await storage.saveDocument(doc3Iri, graph,
+        await storage.saveDocument(doc3Iri, typeIri, graph,
             DocumentMetadata(ourPhysicalClock: 1200, updatedAt: 3000), []);
 
         // Act
-        final docs = await storage.getDocumentsModifiedSince(2200, limit: 10);
+        final docsResult = await storage.getDocumentsModifiedSince(typeIri, '2200', limit: 10);
 
         // Assert
-        expect(docs, hasLength(2));
+        expect(docsResult.documents, hasLength(2));
         expect(
-            docs.map((d) => d.documentIri.value),
+            docsResult.documents.map((d) => d.documentIri.value),
             containsAll(
                 ['https://example.com/doc2', 'https://example.com/doc3']));
 
         // Should be ordered by updatedAt ascending
         expect(
-            docs[0].metadata.updatedAt, lessThan(docs[1].metadata.updatedAt));
+            docsResult.documents[0].metadata.updatedAt, lessThan(docsResult.documents[1].metadata.updatedAt));
       });
 
       testWidgets('gets documents changed by us since timestamp',
@@ -242,35 +257,38 @@ void main() {
         final doc3Iri = const IriTerm('https://example.com/doc3');
         final graph = RdfGraph();
 
-        await storage.saveDocument(doc1Iri, graph,
+        final typeIri = const IriTerm('https://example.com/TestType');
+        await storage.saveDocument(doc1Iri, typeIri, graph,
             DocumentMetadata(ourPhysicalClock: 1000, updatedAt: 2000), []);
-        await storage.saveDocument(doc2Iri, graph,
+        await storage.saveDocument(doc2Iri, typeIri, graph,
             DocumentMetadata(ourPhysicalClock: 1500, updatedAt: 2500), []);
-        await storage.saveDocument(doc3Iri, graph,
+        await storage.saveDocument(doc3Iri, typeIri, graph,
             DocumentMetadata(ourPhysicalClock: 2000, updatedAt: 3000), []);
 
         // Act
-        final docs =
-            await storage.getDocumentsChangedByUsSince(1200, limit: 10);
+        final docsResult =
+            await storage.getDocumentsChangedByUsSince(typeIri, '1200', limit: 10);
 
         // Assert
-        expect(docs, hasLength(2));
+        expect(docsResult.documents, hasLength(2));
         expect(
-            docs.map((d) => d.documentIri.value),
+            docsResult.documents.map((d) => d.documentIri.value),
             containsAll(
                 ['https://example.com/doc2', 'https://example.com/doc3']));
 
         // Should be ordered by ourPhysicalClock ascending
-        expect(docs[0].metadata.ourPhysicalClock,
-            lessThan(docs[1].metadata.ourPhysicalClock));
+        expect(docsResult.documents[0].metadata.ourPhysicalClock,
+            lessThan(docsResult.documents[1].metadata.ourPhysicalClock));
       });
 
       testWidgets('respects limit parameter', (tester) async {
         // Arrange
         final graph = RdfGraph();
+        final typeIri = const IriTerm('https://example.com/TestType');
         for (int i = 0; i < 5; i++) {
           await storage.saveDocument(
             IriTerm.validated('https://example.com/doc$i'),
+            typeIri,
             graph,
             DocumentMetadata(ourPhysicalClock: 1000 + i, updatedAt: 2000 + i),
             [],
@@ -278,10 +296,10 @@ void main() {
         }
 
         // Act
-        final docs = await storage.getDocumentsModifiedSince(1500, limit: 2);
+        final docsResult = await storage.getDocumentsModifiedSince(typeIri, '1500', limit: 2);
 
         // Assert
-        expect(docs, hasLength(2));
+        expect(docsResult.documents, hasLength(2));
       });
     });
 

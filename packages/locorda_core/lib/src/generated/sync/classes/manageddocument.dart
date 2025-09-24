@@ -14,6 +14,7 @@ import 'package:rdf_core/rdf_core.dart';
 /// Inherits from:
 /// - Document (http://xmlns.com/foaf/0.1/Document)
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
+/// - Thing (http://www.w3.org/2002/07/owl#Thing)
 ///
 /// This class provides access to all properties that can be used with ManagedDocument.
 /// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/sync#ManagedDocument)
@@ -67,6 +68,16 @@ class SyncManagedDocument {
   ///
   static const crdtClockHash = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
+  );
+
+  /// createdAt from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  ///
+  /// Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const crdtCreatedAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
   );
 
   /// documentTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
@@ -129,6 +140,26 @@ class SyncManagedDocument {
     'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
   );
 
+  /// type from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
+  ///
+  /// The subject is an instance of a class.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfType = const IriTerm(
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+  );
+
+  /// value from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Idiomatic property used for structured values.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfValue = const IriTerm(
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#value',
+  );
+
   /// comment from rdfs vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
   ///
   /// A description of the subject resource.
@@ -179,23 +210,100 @@ class SyncManagedDocument {
     'http://www.w3.org/2000/01/rdf-schema#member',
   );
 
-  /// type from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
+  /// sha1 from foaf vocabulary
   ///
-  /// The subject is an instance of a class.
+  /// A sha1sum hash, in hex.
   ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  /// Can be used on: http://xmlns.com/foaf/0.1/Document
   ///
-  static const rdfType = const IriTerm(
-    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+  static const foafSha1 = const IriTerm('http://xmlns.com/foaf/0.1/sha1');
+
+  /// name from foaf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// A name for some thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const foafName = const IriTerm('http://xmlns.com/foaf/0.1/name');
+
+  /// homepage from foaf vocabulary [Expects: http://xmlns.com/foaf/0.1/Document]
+  ///
+  /// A homepage for some thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const foafHomepage = const IriTerm(
+    'http://xmlns.com/foaf/0.1/homepage',
   );
 
-  /// value from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// maker from foaf vocabulary [Expects: http://xmlns.com/foaf/0.1/Agent]
   ///
-  /// Idiomatic property used for structured values.
+  /// An agent that
+  /// made this thing.
   ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const rdfValue = const IriTerm(
-    'http://www.w3.org/1999/02/22-rdf-syntax-ns#value',
+  static const foafMaker = const IriTerm('http://xmlns.com/foaf/0.1/maker');
+
+  /// depiction from foaf vocabulary [Expects: http://xmlns.com/foaf/0.1/Image]
+  ///
+  /// A depiction of some thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const foafDepiction = const IriTerm(
+    'http://xmlns.com/foaf/0.1/depiction',
   );
+
+  /// fundedBy from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// An organization funding a project or person.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const foafFundedBy = const IriTerm(
+    'http://xmlns.com/foaf/0.1/fundedBy',
+  );
+
+  /// logo from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// A logo representing some thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const foafLogo = const IriTerm('http://xmlns.com/foaf/0.1/logo');
+
+  /// topic from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// A topic of some page or document.
+  ///
+  /// Can be used on: http://xmlns.com/foaf/0.1/Document
+  ///
+  static const foafTopic = const IriTerm('http://xmlns.com/foaf/0.1/topic');
+
+  /// primaryTopic from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The primary topic of some page or document.
+  ///
+  /// Can be used on: http://xmlns.com/foaf/0.1/Document
+  ///
+  static const foafPrimaryTopic = const IriTerm(
+    'http://xmlns.com/foaf/0.1/primaryTopic',
+  );
+
+  /// page from foaf vocabulary [Expects: http://xmlns.com/foaf/0.1/Document]
+  ///
+  /// A page or document about this thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const foafPage = const IriTerm('http://xmlns.com/foaf/0.1/page');
+
+  /// theme from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// A theme.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const foafTheme = const IriTerm('http://xmlns.com/foaf/0.1/theme');
 }

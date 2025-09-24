@@ -118,6 +118,16 @@ class IdxIndexedProperty {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
   );
 
+  /// createdAt from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  ///
+  /// Framework-managed timestamp marking when a document or installation was created/recreated. Uses OR-Set semantics to support recreation scenarios and solve zombie deletion problems. Combined with crdt:deletedAt using temporal ordering: document is deleted if max(deletedAt) > max(createdAt). Framework automatically adds creation timestamps during document creation.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const crdtCreatedAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
+  );
+
   /// documentTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration to retain document tombstones (complete deleted documents) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P2Y' for 2 years). Applied to storage backend configuration documents. Longer retention recommended due to high impact of zombie deletions affecting recreated documents.
@@ -168,6 +178,26 @@ class IdxIndexedProperty {
     'https://w3id.org/solid-crdt-sync/vocab/sync#isGovernedBy',
   );
 
+  /// type from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
+  ///
+  /// The subject is an instance of a class.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfType = const IriTerm(
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+  );
+
+  /// value from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Idiomatic property used for structured values.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const rdfValue = const IriTerm(
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#value',
+  );
+
   /// comment from rdfs vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
   ///
   /// A description of the subject resource.
@@ -216,25 +246,5 @@ class IdxIndexedProperty {
   ///
   static const rdfsMember = const IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#member',
-  );
-
-  /// type from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
-  ///
-  /// The subject is an instance of a class.
-  ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
-  ///
-  static const rdfType = const IriTerm(
-    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
-  );
-
-  /// value from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// Idiomatic property used for structured values.
-  ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
-  ///
-  static const rdfValue = const IriTerm(
-    'http://www.w3.org/1999/02/22-rdf-syntax-ns#value',
   );
 }

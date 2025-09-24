@@ -11,13 +11,7 @@
 library locorda_core;
 
 // Main API facade
-export 'src/locorda_graph_sync.dart'
-    show
-        LocordaGraphSync,
-        IdentifiedGraph,
-        PhysicalTimestampFactory,
-        LogicalClockFactory,
-        InstallationIdFactory;
+export 'src/locorda_graph_sync.dart' show LocordaGraphSync, IdentifiedGraph;
 
 export 'src/hydration_result.dart' show HydrationResult, HydrationSubscription;
 
@@ -25,7 +19,13 @@ export 'src/hydration_result.dart' show HydrationResult, HydrationSubscription;
 export 'src/auth/auth_interface.dart' show Auth;
 
 export 'src/storage/storage_interface.dart'
-    show Storage, StoredDocument, DocumentMetadata, PropertyChange;
+    show
+        Storage,
+        StoredDocument,
+        DocumentMetadata,
+        PropertyChange,
+        SaveDocumentResult,
+        DocumentsResult;
 
 export 'src/backend/backend.dart' show Backend;
 

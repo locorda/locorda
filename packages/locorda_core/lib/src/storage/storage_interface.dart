@@ -10,8 +10,10 @@ abstract interface class Storage {
   /// Save a document with content, metadata, and property changes atomically.
   ///
   /// Storage handles RDF serialization and persists all data in a single transaction.
-  Future<void> saveDocument(
+  /// Returns cursor information including the previous cursor for gap detection.
+  Future<SaveDocumentResult> saveDocument(
     IriTerm documentIri,
+    IriTerm typeIri,
     RdfGraph document,
     DocumentMetadata metadata,
     List<PropertyChange> changes
@@ -29,21 +31,23 @@ abstract interface class Storage {
     {int? sinceLogicalClock}
   );
 
-  /// Get documents modified since timestamp (local OR remote changes), ordered by updatedAt ascending.
+  /// Get documents of a specific type modified since cursor (local OR remote changes), ordered by updatedAt ascending.
   ///
   /// Used for hydration - loading changes in chronological order with pagination.
   /// Returns documents modified by any source (local changes, remote merges).
-  Future<List<StoredDocument>> getDocumentsModifiedSince(
-    int timestamp,
+  Future<DocumentsResult> getDocumentsModifiedSince(
+    IriTerm typeIri,
+    String? cursor,  // null = from beginning
     {required int limit}
   );
 
-  /// Get documents changed by us since timestamp (local changes only), ordered by ourPhysicalClock ascending.
+  /// Get documents of a specific type changed by us since cursor (local changes only), ordered by ourPhysicalClock ascending.
   ///
   /// Used for sync to remote - uploading our changes with pagination.
-  /// Returns only documents with ourPhysicalClock > timestamp.
-  Future<List<StoredDocument>> getDocumentsChangedByUsSince(
-    int timestamp,
+  /// Returns only documents with ourPhysicalClock > cursor.
+  Future<DocumentsResult> getDocumentsChangedByUsSince(
+    IriTerm typeIri,
+    String? cursor,  // null = from beginning
     {required int limit}
   );
 
@@ -64,6 +68,28 @@ class StoredDocument {
     required this.documentIri,
     required this.document,
     required this.metadata
+  });
+}
+
+/// Result of saving a document, including cursor information for gap detection.
+class SaveDocumentResult {
+  final String? previousCursor;  // The highest cursor for this type before this save (null if first)
+  final String currentCursor;   // The cursor for this save operation
+
+  SaveDocumentResult({
+    required this.previousCursor,
+    required this.currentCursor,
+  });
+}
+
+/// Result of querying documents with pagination support.
+class DocumentsResult {
+  final List<StoredDocument> documents;
+  final String? nextCursor;  // null = no more data
+
+  DocumentsResult({
+    required this.documents,
+    required this.nextCursor,
   });
 }
 

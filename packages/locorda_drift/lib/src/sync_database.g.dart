@@ -216,6 +216,15 @@ class $SyncDocumentsTable extends SyncDocuments
       requiredDuringInsert: true,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'UNIQUE REFERENCES sync_iris (id)'));
+  static const VerificationMeta _typeIriIdMeta =
+      const VerificationMeta('typeIriId');
+  @override
+  late final GeneratedColumn<int> typeIriId = GeneratedColumn<int>(
+      'type_iri_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
   static const VerificationMeta _documentContentMeta =
       const VerificationMeta('documentContent');
   @override
@@ -235,8 +244,14 @@ class $SyncDocumentsTable extends SyncDocuments
       'updated_at', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, documentIriId, documentContent, ourPhysicalClock, updatedAt];
+  List<GeneratedColumn> get $columns => [
+        id,
+        documentIriId,
+        typeIriId,
+        documentContent,
+        ourPhysicalClock,
+        updatedAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -257,6 +272,14 @@ class $SyncDocumentsTable extends SyncDocuments
               data['document_iri_id']!, _documentIriIdMeta));
     } else if (isInserting) {
       context.missing(_documentIriIdMeta);
+    }
+    if (data.containsKey('type_iri_id')) {
+      context.handle(
+          _typeIriIdMeta,
+          typeIriId.isAcceptableOrUnknown(
+              data['type_iri_id']!, _typeIriIdMeta));
+    } else if (isInserting) {
+      context.missing(_typeIriIdMeta);
     }
     if (data.containsKey('document_content')) {
       context.handle(
@@ -293,6 +316,8 @@ class $SyncDocumentsTable extends SyncDocuments
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       documentIriId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}document_iri_id'])!,
+      typeIriId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}type_iri_id'])!,
       documentContent: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}document_content'])!,
       ourPhysicalClock: attachedDatabase.typeMapping.read(
@@ -311,12 +336,14 @@ class $SyncDocumentsTable extends SyncDocuments
 class SyncDocument extends DataClass implements Insertable<SyncDocument> {
   final int id;
   final int documentIriId;
+  final int typeIriId;
   final String documentContent;
   final int ourPhysicalClock;
   final int updatedAt;
   const SyncDocument(
       {required this.id,
       required this.documentIriId,
+      required this.typeIriId,
       required this.documentContent,
       required this.ourPhysicalClock,
       required this.updatedAt});
@@ -325,6 +352,7 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['document_iri_id'] = Variable<int>(documentIriId);
+    map['type_iri_id'] = Variable<int>(typeIriId);
     map['document_content'] = Variable<String>(documentContent);
     map['our_physical_clock'] = Variable<int>(ourPhysicalClock);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -335,6 +363,7 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
     return SyncDocumentsCompanion(
       id: Value(id),
       documentIriId: Value(documentIriId),
+      typeIriId: Value(typeIriId),
       documentContent: Value(documentContent),
       ourPhysicalClock: Value(ourPhysicalClock),
       updatedAt: Value(updatedAt),
@@ -347,6 +376,7 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
     return SyncDocument(
       id: serializer.fromJson<int>(json['id']),
       documentIriId: serializer.fromJson<int>(json['documentIriId']),
+      typeIriId: serializer.fromJson<int>(json['typeIriId']),
       documentContent: serializer.fromJson<String>(json['documentContent']),
       ourPhysicalClock: serializer.fromJson<int>(json['ourPhysicalClock']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -358,6 +388,7 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'documentIriId': serializer.toJson<int>(documentIriId),
+      'typeIriId': serializer.toJson<int>(typeIriId),
       'documentContent': serializer.toJson<String>(documentContent),
       'ourPhysicalClock': serializer.toJson<int>(ourPhysicalClock),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -367,12 +398,14 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
   SyncDocument copyWith(
           {int? id,
           int? documentIriId,
+          int? typeIriId,
           String? documentContent,
           int? ourPhysicalClock,
           int? updatedAt}) =>
       SyncDocument(
         id: id ?? this.id,
         documentIriId: documentIriId ?? this.documentIriId,
+        typeIriId: typeIriId ?? this.typeIriId,
         documentContent: documentContent ?? this.documentContent,
         ourPhysicalClock: ourPhysicalClock ?? this.ourPhysicalClock,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -383,6 +416,7 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
       documentIriId: data.documentIriId.present
           ? data.documentIriId.value
           : this.documentIriId,
+      typeIriId: data.typeIriId.present ? data.typeIriId.value : this.typeIriId,
       documentContent: data.documentContent.present
           ? data.documentContent.value
           : this.documentContent,
@@ -398,6 +432,7 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
     return (StringBuffer('SyncDocument(')
           ..write('id: $id, ')
           ..write('documentIriId: $documentIriId, ')
+          ..write('typeIriId: $typeIriId, ')
           ..write('documentContent: $documentContent, ')
           ..write('ourPhysicalClock: $ourPhysicalClock, ')
           ..write('updatedAt: $updatedAt')
@@ -406,14 +441,15 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, documentIriId, documentContent, ourPhysicalClock, updatedAt);
+  int get hashCode => Object.hash(id, documentIriId, typeIriId, documentContent,
+      ourPhysicalClock, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncDocument &&
           other.id == this.id &&
           other.documentIriId == this.documentIriId &&
+          other.typeIriId == this.typeIriId &&
           other.documentContent == this.documentContent &&
           other.ourPhysicalClock == this.ourPhysicalClock &&
           other.updatedAt == this.updatedAt);
@@ -422,12 +458,14 @@ class SyncDocument extends DataClass implements Insertable<SyncDocument> {
 class SyncDocumentsCompanion extends UpdateCompanion<SyncDocument> {
   final Value<int> id;
   final Value<int> documentIriId;
+  final Value<int> typeIriId;
   final Value<String> documentContent;
   final Value<int> ourPhysicalClock;
   final Value<int> updatedAt;
   const SyncDocumentsCompanion({
     this.id = const Value.absent(),
     this.documentIriId = const Value.absent(),
+    this.typeIriId = const Value.absent(),
     this.documentContent = const Value.absent(),
     this.ourPhysicalClock = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -435,16 +473,19 @@ class SyncDocumentsCompanion extends UpdateCompanion<SyncDocument> {
   SyncDocumentsCompanion.insert({
     this.id = const Value.absent(),
     required int documentIriId,
+    required int typeIriId,
     required String documentContent,
     required int ourPhysicalClock,
     required int updatedAt,
   })  : documentIriId = Value(documentIriId),
+        typeIriId = Value(typeIriId),
         documentContent = Value(documentContent),
         ourPhysicalClock = Value(ourPhysicalClock),
         updatedAt = Value(updatedAt);
   static Insertable<SyncDocument> custom({
     Expression<int>? id,
     Expression<int>? documentIriId,
+    Expression<int>? typeIriId,
     Expression<String>? documentContent,
     Expression<int>? ourPhysicalClock,
     Expression<int>? updatedAt,
@@ -452,6 +493,7 @@ class SyncDocumentsCompanion extends UpdateCompanion<SyncDocument> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (documentIriId != null) 'document_iri_id': documentIriId,
+      if (typeIriId != null) 'type_iri_id': typeIriId,
       if (documentContent != null) 'document_content': documentContent,
       if (ourPhysicalClock != null) 'our_physical_clock': ourPhysicalClock,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -461,12 +503,14 @@ class SyncDocumentsCompanion extends UpdateCompanion<SyncDocument> {
   SyncDocumentsCompanion copyWith(
       {Value<int>? id,
       Value<int>? documentIriId,
+      Value<int>? typeIriId,
       Value<String>? documentContent,
       Value<int>? ourPhysicalClock,
       Value<int>? updatedAt}) {
     return SyncDocumentsCompanion(
       id: id ?? this.id,
       documentIriId: documentIriId ?? this.documentIriId,
+      typeIriId: typeIriId ?? this.typeIriId,
       documentContent: documentContent ?? this.documentContent,
       ourPhysicalClock: ourPhysicalClock ?? this.ourPhysicalClock,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -481,6 +525,9 @@ class SyncDocumentsCompanion extends UpdateCompanion<SyncDocument> {
     }
     if (documentIriId.present) {
       map['document_iri_id'] = Variable<int>(documentIriId.value);
+    }
+    if (typeIriId.present) {
+      map['type_iri_id'] = Variable<int>(typeIriId.value);
     }
     if (documentContent.present) {
       map['document_content'] = Variable<String>(documentContent.value);
@@ -499,6 +546,7 @@ class SyncDocumentsCompanion extends UpdateCompanion<SyncDocument> {
     return (StringBuffer('SyncDocumentsCompanion(')
           ..write('id: $id, ')
           ..write('documentIriId: $documentIriId, ')
+          ..write('typeIriId: $typeIriId, ')
           ..write('documentContent: $documentContent, ')
           ..write('ourPhysicalClock: $ourPhysicalClock, ')
           ..write('updatedAt: $updatedAt')
@@ -901,6 +949,21 @@ final class $$SyncIrisTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$SyncDocumentsTable, List<SyncDocument>>
+      _typeIriTable(_$SyncDatabase db) => MultiTypedResultKey.fromTable(
+          db.syncDocuments,
+          aliasName:
+              $_aliasNameGenerator(db.syncIris.id, db.syncDocuments.typeIriId));
+
+  $$SyncDocumentsTableProcessedTableManager get typeIri {
+    final manager = $$SyncDocumentsTableTableManager($_db, $_db.syncDocuments)
+        .filter((f) => f.typeIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_typeIriTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$SyncPropertyChangesTable,
       List<SyncPropertyChange>> _resourceIriTable(
           _$SyncDatabase db) =>
@@ -958,6 +1021,27 @@ class $$SyncIrisTableFilterComposer
         getCurrentColumn: (t) => t.id,
         referencedTable: $db.syncDocuments,
         getReferencedColumn: (t) => t.documentIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncDocumentsTableFilterComposer(
+              $db: $db,
+              $table: $db.syncDocuments,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> typeIri(
+      Expression<bool> Function($$SyncDocumentsTableFilterComposer f) f) {
+    final $$SyncDocumentsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.syncDocuments,
+        getReferencedColumn: (t) => t.typeIriId,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -1067,6 +1151,27 @@ class $$SyncIrisTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> typeIri<T extends Object>(
+      Expression<T> Function($$SyncDocumentsTableAnnotationComposer a) f) {
+    final $$SyncDocumentsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.syncDocuments,
+        getReferencedColumn: (t) => t.typeIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncDocumentsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncDocuments,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> resourceIri<T extends Object>(
       Expression<T> Function($$SyncPropertyChangesTableAnnotationComposer a)
           f) {
@@ -1126,7 +1231,10 @@ class $$SyncIrisTableTableManager extends RootTableManager<
     (SyncIri, $$SyncIrisTableReferences),
     SyncIri,
     PrefetchHooks Function(
-        {bool syncDocumentsRefs, bool resourceIri, bool propertyIri})> {
+        {bool syncDocumentsRefs,
+        bool typeIri,
+        bool resourceIri,
+        bool propertyIri})> {
   $$SyncIrisTableTableManager(_$SyncDatabase db, $SyncIrisTable table)
       : super(TableManagerState(
           db: db,
@@ -1159,12 +1267,14 @@ class $$SyncIrisTableTableManager extends RootTableManager<
               .toList(),
           prefetchHooksCallback: (
               {syncDocumentsRefs = false,
+              typeIri = false,
               resourceIri = false,
               propertyIri = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (syncDocumentsRefs) db.syncDocuments,
+                if (typeIri) db.syncDocuments,
                 if (resourceIri) db.syncPropertyChanges,
                 if (propertyIri) db.syncPropertyChanges
               ],
@@ -1183,6 +1293,18 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.documentIriId == item.id),
+                        typedResults: items),
+                  if (typeIri)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            SyncDocument>(
+                        currentTable: table,
+                        referencedTable:
+                            $$SyncIrisTableReferences._typeIriTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0).typeIri,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.typeIriId == item.id),
                         typedResults: items),
                   if (resourceIri)
                     await $_getPrefetchedData<SyncIri, $SyncIrisTable,
@@ -1229,11 +1351,15 @@ typedef $$SyncIrisTableProcessedTableManager = ProcessedTableManager<
     (SyncIri, $$SyncIrisTableReferences),
     SyncIri,
     PrefetchHooks Function(
-        {bool syncDocumentsRefs, bool resourceIri, bool propertyIri})>;
+        {bool syncDocumentsRefs,
+        bool typeIri,
+        bool resourceIri,
+        bool propertyIri})>;
 typedef $$SyncDocumentsTableCreateCompanionBuilder = SyncDocumentsCompanion
     Function({
   Value<int> id,
   required int documentIriId,
+  required int typeIriId,
   required String documentContent,
   required int ourPhysicalClock,
   required int updatedAt,
@@ -1242,6 +1368,7 @@ typedef $$SyncDocumentsTableUpdateCompanionBuilder = SyncDocumentsCompanion
     Function({
   Value<int> id,
   Value<int> documentIriId,
+  Value<int> typeIriId,
   Value<String> documentContent,
   Value<int> ourPhysicalClock,
   Value<int> updatedAt,
@@ -1262,6 +1389,21 @@ final class $$SyncDocumentsTableReferences
     final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
         .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_documentIriIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SyncIrisTable _typeIriIdTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias(
+          $_aliasNameGenerator(db.syncDocuments.typeIriId, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get typeIriId {
+    final $_column = $_itemColumn<int>('type_iri_id')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_typeIriIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -1313,6 +1455,26 @@ class $$SyncDocumentsTableFilterComposer
     final $$SyncIrisTableFilterComposer composer = $composerBuilder(
         composer: this,
         getCurrentColumn: (t) => t.documentIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableFilterComposer get typeIriId {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.typeIriId,
         referencedTable: $db.syncIris,
         getReferencedColumn: (t) => t.id,
         builder: (joinBuilder,
@@ -1393,6 +1555,26 @@ class $$SyncDocumentsTableOrderingComposer
             ));
     return composer;
   }
+
+  $$SyncIrisTableOrderingComposer get typeIriId {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.typeIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$SyncDocumentsTableAnnotationComposer
@@ -1420,6 +1602,26 @@ class $$SyncDocumentsTableAnnotationComposer
     final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
         composer: this,
         getCurrentColumn: (t) => t.documentIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableAnnotationComposer get typeIriId {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.typeIriId,
         referencedTable: $db.syncIris,
         getReferencedColumn: (t) => t.id,
         builder: (joinBuilder,
@@ -1472,7 +1674,7 @@ class $$SyncDocumentsTableTableManager extends RootTableManager<
     (SyncDocument, $$SyncDocumentsTableReferences),
     SyncDocument,
     PrefetchHooks Function(
-        {bool documentIriId, bool syncPropertyChangesRefs})> {
+        {bool documentIriId, bool typeIriId, bool syncPropertyChangesRefs})> {
   $$SyncDocumentsTableTableManager(_$SyncDatabase db, $SyncDocumentsTable table)
       : super(TableManagerState(
           db: db,
@@ -1486,6 +1688,7 @@ class $$SyncDocumentsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<int> documentIriId = const Value.absent(),
+            Value<int> typeIriId = const Value.absent(),
             Value<String> documentContent = const Value.absent(),
             Value<int> ourPhysicalClock = const Value.absent(),
             Value<int> updatedAt = const Value.absent(),
@@ -1493,6 +1696,7 @@ class $$SyncDocumentsTableTableManager extends RootTableManager<
               SyncDocumentsCompanion(
             id: id,
             documentIriId: documentIriId,
+            typeIriId: typeIriId,
             documentContent: documentContent,
             ourPhysicalClock: ourPhysicalClock,
             updatedAt: updatedAt,
@@ -1500,6 +1704,7 @@ class $$SyncDocumentsTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required int documentIriId,
+            required int typeIriId,
             required String documentContent,
             required int ourPhysicalClock,
             required int updatedAt,
@@ -1507,6 +1712,7 @@ class $$SyncDocumentsTableTableManager extends RootTableManager<
               SyncDocumentsCompanion.insert(
             id: id,
             documentIriId: documentIriId,
+            typeIriId: typeIriId,
             documentContent: documentContent,
             ourPhysicalClock: ourPhysicalClock,
             updatedAt: updatedAt,
@@ -1518,7 +1724,9 @@ class $$SyncDocumentsTableTableManager extends RootTableManager<
                   ))
               .toList(),
           prefetchHooksCallback: (
-              {documentIriId = false, syncPropertyChangesRefs = false}) {
+              {documentIriId = false,
+              typeIriId = false,
+              syncPropertyChangesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -1546,6 +1754,16 @@ class $$SyncDocumentsTableTableManager extends RootTableManager<
                     referencedColumn: $$SyncDocumentsTableReferences
                         ._documentIriIdTable(db)
                         .id,
+                  ) as T;
+                }
+                if (typeIriId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.typeIriId,
+                    referencedTable:
+                        $$SyncDocumentsTableReferences._typeIriIdTable(db),
+                    referencedColumn:
+                        $$SyncDocumentsTableReferences._typeIriIdTable(db).id,
                   ) as T;
                 }
 
@@ -1584,7 +1802,8 @@ typedef $$SyncDocumentsTableProcessedTableManager = ProcessedTableManager<
     $$SyncDocumentsTableUpdateCompanionBuilder,
     (SyncDocument, $$SyncDocumentsTableReferences),
     SyncDocument,
-    PrefetchHooks Function({bool documentIriId, bool syncPropertyChangesRefs})>;
+    PrefetchHooks Function(
+        {bool documentIriId, bool typeIriId, bool syncPropertyChangesRefs})>;
 typedef $$SyncPropertyChangesTableCreateCompanionBuilder
     = SyncPropertyChangesCompanion Function({
   required int documentId,
