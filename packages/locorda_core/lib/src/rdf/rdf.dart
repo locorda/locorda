@@ -1,6 +1,6 @@
 import 'package:rdf_core/rdf_core.dart';
 
-typedef Node = (RdfObject node, RdfGraph triples);
+typedef Node = (RdfSubject node, RdfGraph triples);
 
 class Rdf {
   static const String namespace = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
