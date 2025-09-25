@@ -128,6 +128,16 @@ class IdxIndexedProperty {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
   );
 
+  /// deletedAt from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  ///
+  /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const crdtDeletedAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
+  );
+
   /// documentTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]
   ///
   /// Duration to retain document tombstones (complete deleted documents) before garbage collection. Expressed as ISO 8601 duration (e.g., 'P2Y' for 2 years). Applied to storage backend configuration documents. Longer retention recommended due to high impact of zombie deletions affecting recreated documents.

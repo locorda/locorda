@@ -2,6 +2,7 @@
 library;
 
 import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/rdf/rdf.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 /// Factory function for generating physical timestamps (wall-clock time)
@@ -23,7 +24,6 @@ int _defaultLogicalClockFactory() => ++_logicalClockCounter;
 IriTerm _defaultInstallationIdFactory() =>
     const IriTerm('https://example.org/installations/default-installation');
 
-typedef Node = (RdfObject node, RdfGraph triples);
 typedef CrdtClock = List<Node>;
 typedef CurrentCrdtClock = ({
   IriTerm installationId,

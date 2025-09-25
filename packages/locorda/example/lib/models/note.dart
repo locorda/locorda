@@ -1,6 +1,7 @@
 /// Simple Note model with CRDT annotations for offline-first sync.
 library;
 
+import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
 import 'package:locorda_annotations/locorda_annotations.dart';
@@ -59,6 +60,12 @@ class Note {
   @CrdtLwwRegister()
   DateTime modifiedAt;
 
+  /// FIXME: This needs to be persisted in the app DB as well!
+  /// catch all triples that are added by other apps/extensions/different app versions
+  /// so we don't lose data when round-tripping through our app.
+  @RdfUnmappedTriples(globalUnmapped: true)
+  RdfGraph? other;
+
   Note({
     required this.id,
     required this.title,
@@ -67,6 +74,7 @@ class Note {
     this.categoryId,
     DateTime? createdAt,
     DateTime? modifiedAt,
+    this.other,
   })  : tags = tags ?? <String>{},
         createdAt = createdAt ?? DateTime.now(),
         modifiedAt = modifiedAt ?? DateTime.now();

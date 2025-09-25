@@ -16,16 +16,32 @@ sync:ManagedDocument a rdfs:Class;
     rdfs:comment "A document that is managed by the locorda sync framework, containing framework metadata and a primary resource topic.";
     rdfs:subClassOf <http://xmlns.com/foaf/0.1/Document> .
 
+sync:ResourceStatement a rdfs:Class;
+    rdfs:label "Resource Statement";
+    rdfs:comment "A statement containing framework metadata about a specific resource within a managed document. Used for resource-level concerns like deletion tombstones while maintaining clean separation from application data." .
+
 # --- Property Definitions ---
 
 sync:isGovernedBy a rdf:Property;
     rdfs:label "is governed by";
-    rdfs:comment "Links a data or index resource to the public rules file that defines its merge behavior.";
+    rdfs:comment "Links a data or index resource to an ordered list (rdf:List) of public mapping files that define its merge behavior. Documents are merged in list order with 'first wins' semantics - implementations should append only, not prepend, to avoid overriding existing definitions.";
     rdfs:domain rdfs:Resource;
-    rdfs:range rdfs:Resource . # The IRI of the mapping file
+    rdfs:range rdf:List . # Ordered list of mapping file IRIs
 
 sync:managedResourceType a rdf:Property;
     rdfs:label "managed resource type";
     rdfs:comment "Identifies the semantic RDF class of the resources being managed (e.g., schema:Recipe). Used in two contexts: (1) Within solid:TypeRegistration entries where solid:forClass is sync:ManagedDocument, enabling framework-aware applications to discover containers holding specific semantic types. (2) Directly on sync:ManagedDocument instances to enable efficient garbage collection and retention policies without requiring document content fetching.";
     rdfs:domain [ a owl:Class; owl:unionOf ( <http://www.w3.org/ns/solid/terms#TypeRegistration> sync:ManagedDocument ) ];
     rdfs:range rdfs:Class .
+
+sync:hasStatement a rdf:Property;
+    rdfs:label "has statement";
+    rdfs:comment "Links a managed document to RDF reification statements that contain framework metadata such as property tombstones. This ensures all framework metadata remains connected to the document for proper framework/app data separation during graph traversal.";
+    rdfs:domain sync:ManagedDocument;
+    rdfs:range rdf:Statement .
+
+sync:resource a rdf:Property;
+    rdfs:label "resource";
+    rdfs:comment "Points to the resource that this framework statement is about. Used in resource statements to identify which resource the metadata applies to.";
+    rdfs:domain sync:ResourceStatement;
+    rdfs:range rdfs:Resource .

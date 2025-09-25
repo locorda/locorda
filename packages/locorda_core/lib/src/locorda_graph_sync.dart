@@ -8,6 +8,7 @@ import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
+import 'package:locorda_core/src/rdf/foaf.dart';
 import 'package:locorda_core/src/rdf/rdf.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -168,6 +169,17 @@ void _validateResourceGraph(
   }
 }
 
+final defaultManagedPredicates = <IriTerm>{
+  Rdf.type,
+  SyncManagedDocument.managedResourceType,
+  SyncManagedDocument.foafPrimaryTopic,
+  SyncManagedDocument.isGovernedBy,
+  SyncManagedDocument.crdtHasClockEntry,
+  SyncManagedDocument.crdtClockHash,
+  SyncManagedDocument.crdtCreatedAt,
+  SyncManagedDocument.crdtDeletedAt,
+};
+
 /// Constructs a complete CRDT-managed document with framework metadata.
 ///
 /// Takes the resource graph and wraps it with all required CRDT framework metadata:
@@ -181,51 +193,49 @@ void _validateResourceGraph(
 /// all the framework metadata needed for CRDT synchronization.
 RdfGraph _constructCrdtDocument(
   IriTerm documentIri,
+  RdfGraph? oldFrameworkGraph,
+  List<RdfObject> governedByFiles,
   IriTerm primaryResourceIri,
   IriTerm resourceType,
   RdfGraph resourceGraph,
   CurrentCrdtClock clock,
-  SyncGraphConfig config,
 ) {
   final allTriples = <Triple>[];
 
-  // 1. Add all original resource triples
-  allTriples.addAll(resourceGraph.triples);
-
-  // 2. Add sync:ManagedDocument type declaration
+  // 1. Add sync:ManagedDocument type declaration
   allTriples.add(Triple(
     documentIri,
     Rdf.type,
     SyncManagedDocument.classIri,
   ));
 
-  // 3. Add managed resource type
+  // 2. Add managed resource type
   allTriples.add(Triple(
     documentIri,
     SyncManagedDocument.managedResourceType,
     resourceType,
   ));
 
-  // 4. Add primary topic reference (the main resource this document describes)
+  // 3. Add primary topic reference (the main resource this document describes)
   allTriples.add(Triple(
     documentIri,
     SyncManagedDocument.foafPrimaryTopic,
     primaryResourceIri,
   ));
 
-  // 5. Add merge contract reference from config
-  // TODO: Add merge contract property to ResourceGraphConfig or get from another source
-  // Skip merge contract for now until property is available
+  // 4. make sure the merge contracts are included
+  addList(allTriples, documentIri, SyncManagedDocument.isGovernedBy,
+      governedByFiles);
 
-  // 6. Add HLC clock entry
-  _addNodes(allTriples, documentIri, SyncManagedDocument.crdtHasClockEntry,
+  // 5. Add HLC clock entry
+  addNodes(allTriples, documentIri, SyncManagedDocument.crdtHasClockEntry,
       clock.fullClock);
 
-  // 7. Generate and add clock hash
+  // 6. Generate and add clock hash
   allTriples.add(Triple(
       documentIri, SyncManagedDocument.crdtClockHash, LiteralTerm(clock.hash)));
 
-  // 8. Add creation timestamp (OR-Set semantics for document lifecycle)
+  // 7. Add creation timestamp (OR-Set semantics for document lifecycle)
   final creationTime =
       DateTime.fromMillisecondsSinceEpoch(clock.physicalTime).toIso8601String();
   allTriples.add(Triple(
@@ -234,59 +244,64 @@ RdfGraph _constructCrdtDocument(
     LiteralTerm(creationTime),
   ));
 
+  // 8. add old/foreign framework triples
+  final allManagedPredicates = {
+    ...defaultManagedPredicates,
+    ...allTriples.where((t) => t.subject == documentIri).map((t) => t.predicate)
+  };
+  final additionalGraph = oldFrameworkGraph?.subgraph(documentIri,
+      filter: (t, depth) => allManagedPredicates.contains(t)
+          ? TraversalDecision.skip
+          : TraversalDecision.include);
+  if (additionalGraph != null) {
+    allTriples.addAll(additionalGraph.triples);
+  }
+
+  // 9. Add all original resource triples
+  allTriples.addAll(resourceGraph.triples);
+
   return RdfGraph.fromTriples(allTriples);
 }
 
-void _addNodes(List<Triple> triples, RdfSubject subject, RdfPredicate predicate,
-    List<Node> nodes) {
-  for (final node in nodes) {
-    {
-      final (objectTerm, graph) = node;
-      triples.add(Triple(
-        subject,
-        predicate,
-        objectTerm,
-      ));
-      triples.addAll(graph.triples);
-    }
-  }
+List<RdfObject> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
+    IriTerm documentIri, SyncGraphConfig config, IriTerm resourceType) {
+  final oldIsGovernedBy = oldFrameworkGraph?.findSingleObject(
+      documentIri, SyncManagedDocument.isGovernedBy);
+  final oldIsGovernedByFiles = (oldIsGovernedBy is RdfSubject
+          ? oldFrameworkGraph?.getListObjects(oldIsGovernedBy)
+          : null) ??
+      const <RdfObject>[];
+  final ourGovernedByFile = IriTerm.validated(
+      config.getResourceConfig(resourceType).crdtMapping.toString());
+  final governedByFiles = oldIsGovernedByFiles.contains(ourGovernedByFile)
+      ? oldIsGovernedByFiles
+      : oldIsGovernedByFiles.toList()
+    ..add(ourGovernedByFile);
+  return governedByFiles;
 }
 
-Iterable<Triple> _getSubgraphTriples(RdfGraph subgraph, RdfSubject subject,
-    [Set<RdfSubject>? visited]) sync* {
-  visited ??= <RdfSubject>{};
-  if (visited.contains(subject)) {
-    return;
-  }
-  visited.add(subject);
-  for (final triple in subgraph.findTriples(subject: subject)) {
-    yield triple;
-    final obj = triple.object;
-    if (obj is RdfSubject) {
-      yield* _getSubgraphTriples(subgraph, obj, visited);
-    }
-  }
-}
+final stopTraversalPredicates = <IriTerm>{
+  Foaf.primaryTopic,
+  Rdf.subject,
+  Rdf.predicate,
+  Rdf.object,
+};
 
-({RdfGraph appGraph, List<Triple> documentTriples}) _splitDocument(
+({RdfGraph appGraph, RdfGraph frameworkGraph}) _splitDocument(
     RdfGraph document, IriTerm documentIri) {
   // We have to split the document into application data and framework metadata.
-  // FIXME: use graph.subgraph() when available
-  // FIXME: we have to exclude the primary topic!
-  // hmm, it is difficult to define what is application data and what is
-  // (potentially foreign) framework metadata.
-  final allDocumentTriples =
-      _getSubgraphTriples(document, documentIri).toList();
+
+  // FIXME: read the stopTraversalPredicates from the governing documents
+  final frameworkGraph = document.subgraph(documentIri,
+      filter: (triple, depth) =>
+          stopTraversalPredicates.contains(triple.predicate)
+              ? TraversalDecision.includeButDontDescend
+              : TraversalDecision.include);
 
   return (
-    appGraph: document.withoutTriples(allDocumentTriples),
-    documentTriples: allDocumentTriples
+    appGraph: document.without(frameworkGraph),
+    frameworkGraph: frameworkGraph
   );
-}
-
-class DataMergeConfig {
-  // TODO: is this flag useful? Should we implement standard CRDT merge semantics instead?
-  bool get preserveUnmanagedDocumentTriples => true;
 }
 
 /// Main facade for the locorda system.
@@ -299,7 +314,6 @@ class LocordaGraphSync {
   // ignore: unused_field
   final Backend? _backend; // TODO: Use for Remote synchronization
   final SyncGraphConfig _config;
-  final DataMergeConfig _dataMergeConfig = DataMergeConfig();
 
   late final HydrationStreamManager _streamManager;
   late final HydrationEmitter _emitter;
@@ -457,7 +471,7 @@ class LocordaGraphSync {
       late final IriTerm documentIri;
 
       try {
-        resourceIri = Rdf.getIdentifier(graph, type);
+        resourceIri = graph.getIdentifier(type);
         documentIri = _extractDocumentIri(resourceIri);
       } on ArgumentError catch (e) {
         _log.severe('Invalid resource configuration for type $type: $e');
@@ -483,15 +497,19 @@ class LocordaGraphSync {
         // Continue with save - treat as new document
       }
       final oldDocument = existingStoredDocument?.document;
-      final oldClock = oldDocument == null
-          ? null
-          : _extractCrdtClock(oldDocument, documentIri);
-      final (appGraph: oldGraph, documentTriples: oldDocumentTriples) =
+      final governedByFiles =
+          _computeIsGovernedBy(oldDocument, documentIri, _config, type);
+      // TODO: load the governing documents / merge contracts for correct document splitting
+
+      final (appGraph: oldAppGraph, frameworkGraph: oldFrameworkGraph) =
           oldDocument == null
-              ? (appGraph: null, documentTriples: const <Triple>[])
+              ? (appGraph: null, frameworkGraph: null)
               : _splitDocument(oldDocument, documentIri);
 
       // 3. Generate latest clock
+      final oldClock = oldDocument == null
+          ? null
+          : _extractCrdtClock(oldDocument, documentIri);
       final clock = oldClock == null
           ? _hlcService.newClock()
           : _hlcService.incrementClock(oldClock);
@@ -501,7 +519,7 @@ class LocordaGraphSync {
       // FIXME: this is not only about property changes - we also need to
       // detect added/removed resources or property values so we can add tombstones.
       final propertyChanges = _detectPropertyChanges(
-        oldGraph,
+        oldAppGraph,
         graph,
         clock.physicalTime,
         clock.logicalTime,
@@ -513,16 +531,15 @@ class LocordaGraphSync {
       }
 
       // 5. Construct complete CRDT document with framework metadata
-      final pureCrdtDocument = _constructCrdtDocument(
+      final crdtDocument = _constructCrdtDocument(
         documentIri,
+        oldFrameworkGraph,
+        governedByFiles,
         resourceIri,
         type,
         graph,
         clock,
-        _config,
       );
-      RdfGraph crdtDocument = _addUnmanagedDocumentTriples(
-          oldDocumentTriples, pureCrdtDocument, documentIri);
 
       final updatedAtTimestamp = physicalTimestamp;
       // 6. Create document metadata for storage
@@ -571,34 +588,6 @@ class LocordaGraphSync {
       _log.severe('Save operation failed for type $type', e, stackTrace);
       rethrow;
     }
-  }
-
-  RdfGraph _addUnmanagedDocumentTriples(List<Triple> oldDocumentTriples,
-      RdfGraph pureCrdtDocument, IriTerm documentIri) {
-    if (_dataMergeConfig.preserveUnmanagedDocumentTriples &&
-        oldDocumentTriples.isNotEmpty) {
-      final managedPredicates = pureCrdtDocument
-          .findTriples(subject: documentIri)
-          .map((t) => t.predicate)
-          .toSet();
-      final oldDocumentGraph = RdfGraph.fromTriples(oldDocumentTriples);
-      final oldManagedTriples = oldDocumentTriples
-          .where((t) => managedPredicates.contains(t.predicate))
-          .toSet();
-      final oldManagedSubjectObjects = oldManagedTriples
-          .map((t) => t.object)
-          .whereType<RdfSubject>()
-          .toList();
-      final oldManagedTriplesSubgraph = oldManagedSubjectObjects
-          .expand((subj) => _getSubgraphTriples(oldDocumentGraph, subj));
-      final triplesToDelete = {
-        ...oldManagedTriples,
-        ...oldManagedTriplesSubgraph
-      };
-      final toKeep = oldDocumentGraph.withoutTriples(triplesToDelete);
-      return pureCrdtDocument.merge(toKeep);
-    }
-    return pureCrdtDocument;
   }
 
   /// Ensures a resource is available locally, fetching it from the remote source if necessary.

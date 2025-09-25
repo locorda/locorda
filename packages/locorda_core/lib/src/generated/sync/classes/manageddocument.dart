@@ -50,6 +50,16 @@ class SyncManagedDocument {
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
 
+  /// hasStatement [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement]
+  ///
+  /// Links a managed document to RDF reification statements that contain framework metadata such as property tombstones. This ensures all framework metadata remains connected to the document for proper framework/app data separation during graph traversal.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ManagedDocument
+  ///
+  static const hasStatement = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#hasStatement',
+  );
+
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
   /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
@@ -78,6 +88,16 @@ class SyncManagedDocument {
   ///
   static const crdtCreatedAt = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
+  );
+
+  /// deletedAt from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  ///
+  /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const crdtDeletedAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
   );
 
   /// documentTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]

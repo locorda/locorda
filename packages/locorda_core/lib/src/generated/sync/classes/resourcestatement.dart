@@ -7,125 +7,55 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// GroupingRuleProperty class from Idx vocabulary
+/// ResourceStatement class from Sync vocabulary
 ///
-/// An individual property specification within a GroupingRule that defines how to extract and format values from a source property for group assignment.
+/// A statement containing framework metadata about a specific resource within a managed document. Used for resource-level concerns like deletion tombstones while maintaining clean separation from application data.
 ///
 /// Inherits from:
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
 ///
-/// This class provides access to all properties that can be used with GroupingRuleProperty.
-/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty)
+/// This class provides access to all properties that can be used with ResourceStatement.
+/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement)
 ///
-/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/idx#)
-class IdxGroupingRuleProperty {
+/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/sync#)
+class SyncResourceStatement {
   // Private constructor prevents instantiation
-  const IdxGroupingRuleProperty._();
+  const SyncResourceStatement._();
 
-  /// IRI term for the GroupingRuleProperty class
+  /// IRI term for the ResourceStatement class
   /// Use this to specify that a resource is of this type.
   static const classIri = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty',
+    'https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement',
   );
 
-  /// belongsToIndexShard [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// isGovernedBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
-  /// Links a data resource to the specific index shard it is a member of.
+  /// Links a data or index resource to the public rules file that defines its merge behavior.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const belongsToIndexShard = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
+  static const isGovernedBy = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#isGovernedBy',
   );
 
-  /// indexesClass [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
+  /// managedResourceType [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
   ///
-  /// Specifies which class of resource this index tracks (e.g., schema:Recipe, idx:Shard, sync:ManagedDocument). Index entries contain resource-level properties for querying, while sync operations depend on resource type: if resources are documents themselves (e.g., idx:FullIndex), all operations are document-level; if resources use fragment identifiers (e.g., schema:Recipe), sync operations are on the containing document while resource operations are on the specific resource.
+  /// Identifies the semantic RDF class of the resources being managed (e.g., schema:Recipe). Used in two contexts: (1) Within solid:TypeRegistration entries where solid:forClass is sync:ManagedDocument, enabling framework-aware applications to discover containers holding specific semantic types. (2) Directly on sync:ManagedDocument instances to enable efficient garbage collection and retention policies without requiring document content fetching.
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const indexesClass = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#indexesClass',
+  static const managedResourceType = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
 
-  /// indexedProperty [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty]
+  /// resource [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
-  /// Links an index to an IndexedProperty configuration object that specifies which property should be indexed and tracks which installations read from it.
+  /// Points to the resource that this framework statement is about. Used in resource statements to identify which resource the metadata applies to.
   ///
-  /// Can be used on all classes in this vocabulary
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement
   ///
-  static const indexedProperty = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#indexedProperty',
-  );
-
-  /// shardingAlgorithm [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// Defines the algorithm used to place new items into shards.
-  ///
-  /// Can be used on all classes in this vocabulary
-  ///
-  static const shardingAlgorithm = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#shardingAlgorithm',
-  );
-
-  /// isShardOf [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
-  ///
-  /// A back-link from a shard to the root index or partition it belongs to.
-  ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
-  ///
-  static const isShardOf = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
-  );
-
-  /// sourceProperty [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
-  ///
-  /// The property in the data resource to extract grouping values from.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
-  ///
-  static const sourceProperty = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#sourceProperty',
-  );
-
-  /// transform [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
-  ///
-  /// Ordered list of regex transform rules to apply to the sourceProperty's value for group key generation. Transforms are tried in order, first match wins.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
-  ///
-  static const transform = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#transform',
-  );
-
-  /// hierarchyLevel [Expects: http://www.w3.org/2001/XMLSchema#integer]
-  ///
-  /// Optional hierarchy level for multi-property grouping (default: 1). Properties with explicit levels create nested directory structures sorted by level. Properties without levels are joined with '-' separator after lexicographic IRI ordering.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
-  ///
-  static const hierarchyLevel = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#hierarchyLevel',
-  );
-
-  /// missingValue [Expects: http://www.w3.org/2001/XMLSchema#string]
-  ///
-  /// Optional default value to use when the sourceProperty is absent. If not specified, resources without this property create no groups.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
-  ///
-  static const missingValue = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#missingValue',
-  );
-
-  /// readBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// An OR-Set of installation IRIs that actively read from this index or specific indexed property. Used for collaborative lifecycle management and property cleanup when readers are tombstoned.
-  ///
-  /// Can be used on all classes in this vocabulary
-  ///
-  static const readBy = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#readBy',
+  static const resource = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#resource',
   );
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
@@ -208,14 +138,24 @@ class IdxGroupingRuleProperty {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
   );
 
-  /// isGovernedBy from sync vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// belongsToIndexShard from idx vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
-  /// Links a data or index resource to the public rules file that defines its merge behavior.
+  /// Links a data resource to the specific index shard it is a member of.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const syncIsGovernedBy = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/sync#isGovernedBy',
+  static const idxBelongsToIndexShard = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
+  );
+
+  /// isShardOf from idx vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
+  ///
+  /// A back-link from a shard to the root index or partition it belongs to.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const idxIsShardOf = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
   );
 
   /// type from rdf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Class]

@@ -84,3 +84,9 @@ mc:isIdentifying a rdf:Property;
     rdfs:comment "A boolean flag used within mc:Rule to declare whether a specific predicate can be used to identify blank nodes within contexts. This enables context-based blank node identification for CRDT operations that require object identity (e.g., OR-Set, 2P-Set tombstone matching). When true, the predicate serves as part of a compound identification key along with other identifying predicates from any applicable mapping scope.";
     rdfs:domain mc:Rule;
     rdfs:range xsd:boolean .
+
+mc:stopTraversal a rdf:Property;
+    rdfs:label "stop traversal";
+    rdfs:comment "A boolean flag used within mc:Rule to mark a predicate as a boundary for framework/app data separation during graph traversal. When true, the predicate creates a traversal boundary - the framework will not follow edges with this predicate when separating framework data from application data.";
+    rdfs:domain mc:Rule;
+    rdfs:range xsd:boolean .

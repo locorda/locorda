@@ -8,7 +8,7 @@
 # Placeholders: {INSTALLATION_URI}
 
 <> a idx:FullIndex;
-   sync:isGovernedBy mappings:index-v1;
+   sync:isGovernedBy ( mappings:index-v1 );
    # Minimal clock ensures template participates in CRDT merging but loses tie-breaking
    crdt:hasClockEntry [
      crdt:installationId <{INSTALLATION_URI}>;

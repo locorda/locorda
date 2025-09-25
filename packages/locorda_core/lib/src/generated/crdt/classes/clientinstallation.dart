@@ -102,7 +102,7 @@ class CrdtClientInstallation {
   ///
   /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.
   ///
-  /// Can be used on all classes in this vocabulary
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
   static const deletedAt = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',

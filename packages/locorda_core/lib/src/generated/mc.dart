@@ -139,4 +139,14 @@ class Mc {
   static const isIdentifying = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#isIdentifying',
   );
+
+  /// IRI for mc:stopTraversal [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  ///
+  /// A boolean flag used within mc:Rule to mark a predicate as a boundary for framework/app data separation during graph traversal. When true, the predicate creates a traversal boundary - the framework will not follow edges with this predicate when separating framework data from application data.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
+  ///
+  static const stopTraversal = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#stopTraversal',
+  );
 }

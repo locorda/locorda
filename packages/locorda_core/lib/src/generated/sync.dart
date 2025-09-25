@@ -28,6 +28,14 @@ class Sync {
     'https://w3id.org/solid-crdt-sync/vocab/sync#ManagedDocument',
   );
 
+  /// IRI for sync:ResourceStatement
+  ///
+  /// A statement containing framework metadata about a specific resource within a managed document. Used for resource-level concerns like deletion tombstones while maintaining clean separation from application data.
+  ///
+  static const ResourceStatement = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement',
+  );
+
   /// IRI for sync:isGovernedBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
   /// Links a data or index resource to the public rules file that defines its merge behavior.
@@ -46,5 +54,25 @@ class Sync {
   ///
   static const managedResourceType = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
+  );
+
+  /// IRI for sync:hasStatement [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement]
+  ///
+  /// Links a managed document to RDF reification statements that contain framework metadata such as property tombstones. This ensures all framework metadata remains connected to the document for proper framework/app data separation during graph traversal.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ManagedDocument
+  ///
+  static const hasStatement = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#hasStatement',
+  );
+
+  /// IRI for sync:resource [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Points to the resource that this framework statement is about. Used in resource statements to identify which resource the metadata applies to.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement
+  ///
+  static const resource = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#resource',
   );
 }

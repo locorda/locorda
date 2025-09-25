@@ -48,6 +48,16 @@ class McRule {
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#isIdentifying',
   );
 
+  /// stopTraversal [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  ///
+  /// A boolean flag used within mc:Rule to mark a predicate as a boundary for framework/app data separation during graph traversal. When true, the predicate creates a traversal boundary - the framework will not follow edges with this predicate when separating framework data from application data.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
+  ///
+  static const stopTraversal = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#stopTraversal',
+  );
+
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
   /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
@@ -76,6 +86,16 @@ class McRule {
   ///
   static const crdtCreatedAt = const IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
+  );
+
+  /// deletedAt from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#dateTime]
+  ///
+  /// Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const crdtDeletedAt = const IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
   );
 
   /// documentTombstoneRetentionPeriod from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#duration]

@@ -5,10 +5,12 @@
 ### Priority 1: Document Persistence (Core Foundation)
 - [x] Storage Layer: save documents
 - [x] LocordaGraphSync: save base implementation
+- [ ] mapping documents: We need those in the app, right? How do we ensure we have mapping documents available locally, and in an efficient form? Read in (e.g. pre-cache, download, update etc) the mappings documents and make them usable to the framework implementation
+- [ ] Use data from mapping documents to build the stop-word list to correctly separate appGraph from framework data in processing of the old stored document
+- [ ] Implement context-identification for blank nodes and use that as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
+
 - [ ] rdf canonicalization 
 - [ ] fix w3id.org redirects
-- [ ] mapping documents: We need those in the app, right? How do we ensure we have mapping documents available locally, and in an efficient form?
-- [ ] Implement context-identification for blank nodes and use that as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
 - [ ] Storage Layer: save locorda indices
 - [ ] Implement locorda index files in db and fill/update them on save
 - [ ] Create tombstones on save where needed (e.g. change detection)

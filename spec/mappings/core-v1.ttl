@@ -12,16 +12,16 @@
 
 <> a mc:DocumentMapping;
    # Define class mappings for framework components
-   mc:classMapping ( <#managed-document> <#statement> ) ;
+   mc:classMapping ( <#managed-document> <#statement> <#resource-statement> ) ;
    # Define predicate mappings for framework components (ordered list)
-   mc:predicateMapping ( <#clock-mappings> <#lifecycle-mappings> ) .
+   mc:predicateMapping ( <#clock-mappings> <#lifecycle-mappings> <#traversal-boundaries> ) .
 
 # ManagedDocument is the wrapper for all CRDT-managed resources
 <#managed-document> a mc:ClassMapping;
    mc:appliesToClass sync:ManagedDocument;
    mc:rule
      [ mc:predicate foaf:primaryTopic; algo:mergeWith algo:Immutable ],  # The resource being managed
-     [ mc:predicate sync:isGovernedBy; algo:mergeWith algo:Immutable ],  # Merge contract reference
+     [ mc:predicate sync:isGovernedBy; algo:mergeWith algo:OR_Set ],  # Merge contract list (append-only)
      [ mc:predicate sync:managedResourceType; algo:mergeWith algo:Immutable ],  # Resource type for discovery
      [ mc:predicate idx:belongsToIndexShard; algo:mergeWith algo:OR_Set ] .  # Index shard memberships
 
@@ -41,6 +41,13 @@
      [ mc:predicate crdt:logicalTime; algo:mergeWith algo:LWW_Register ],
      [ mc:predicate crdt:physicalTime; algo:mergeWith algo:LWW_Register ] .
 
+# Merge contract for ResourceStatement used for resource-level framework metadata
+<#resource-statement> a mc:ClassMapping;
+   mc:appliesToClass sync:ResourceStatement;
+   mc:rule
+     # The resource identifier is the immutable identity of this statement
+     [ mc:predicate sync:resource; algo:mergeWith algo:LWW_Register; mc:isIdentifying true ] .
+
 # Standard mapping for lifecycle semantics across all CRDT contexts
 <#lifecycle-mappings> a mc:PredicateMapping;
    mc:rule
@@ -49,3 +56,13 @@
      # Solves zombie deletion problems during document recreation scenarios
      [ mc:predicate crdt:createdAt; algo:mergeWith algo:OR_Set ],  # Creation/recreation timestamps
      [ mc:predicate crdt:deletedAt; algo:mergeWith algo:OR_Set ] . # Deletion timestamps
+
+# Framework/app data separation boundaries
+<#traversal-boundaries> a mc:PredicateMapping;
+   mc:rule
+     # Standard semantic web predicate for document primary topic
+     [ mc:predicate foaf:primaryTopic; mc:stopTraversal true ],
+     # Standard RDF reification predicates create traversal boundaries
+     [ mc:predicate rdf:subject; mc:stopTraversal true ],
+     [ mc:predicate rdf:predicate; mc:stopTraversal true ],
+     [ mc:predicate rdf:object; mc:stopTraversal true ] .

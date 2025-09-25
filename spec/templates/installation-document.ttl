@@ -11,7 +11,7 @@
 
 <> a sync:ManagedDocument;
    foaf:primaryTopic <#installation>;
-   sync:isGovernedBy mappings:client-installation-v1;
+   sync:isGovernedBy ( mappings:client-installation-v1 );
    # Minimal clock ensures template participates in CRDT merging but loses tie-breaking
    crdt:hasClockEntry [
      crdt:installationId <{INSTALLATION_URI}>;

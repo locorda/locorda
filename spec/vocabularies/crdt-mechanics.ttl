@@ -90,7 +90,7 @@ crdt:maxInactivityPeriod a rdf:Property;
 crdt:deletedAt a rdf:Property;
     rdfs:label "deleted at";
     rdfs:comment "Framework-managed timestamp marking when a document or property value was deleted. For documents: uses OR-Set semantics combined with crdt:createdAt for temporal lifecycle management (document deleted if max(deletedAt) > max(createdAt)), solving zombie deletion problems during recreation scenarios. For property values: simple tombstone semantics using RDF reification (value deleted if reification statement with crdt:deletedAt exists). Framework automatically manages this property by detecting deletions through state comparison - developers simply provide updated resource state and the library implementation handles tombstone creation automatically.";
-    rdfs:domain [ a owl:Class; owl:unionOf (rdfs:Resource rdf:Statement) ];
+    rdfs:domain rdfs:Resource;
     rdfs:range xsd:dateTime .
 
 # --- Retention Policy Configuration ---
