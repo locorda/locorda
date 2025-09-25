@@ -241,13 +241,13 @@ void _addNodes(List<Triple> triples, RdfSubject subject, RdfPredicate predicate,
     List<Node> nodes) {
   for (final node in nodes) {
     {
-      final (objectTerm, triples) = node;
+      final (objectTerm, graph) = node;
       triples.add(Triple(
         subject,
         predicate,
         objectTerm,
       ));
-      triples.addAll(triples);
+      triples.addAll(graph.triples);
     }
   }
 }
@@ -271,7 +271,10 @@ Iterable<Triple> _getSubgraphTriples(RdfGraph subgraph, RdfSubject subject,
 ({RdfGraph appGraph, List<Triple> documentTriples}) _splitDocument(
     RdfGraph document, IriTerm documentIri) {
   // We have to split the document into application data and framework metadata.
+  // FIXME: use graph.subgraph() when available
   // FIXME: we have to exclude the primary topic!
+  // hmm, it is difficult to define what is application data and what is
+  // (potentially foreign) framework metadata.
   final allDocumentTriples =
       _getSubgraphTriples(document, documentIri).toList();
 
@@ -874,8 +877,8 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
             predicate: SyncManagedDocument.crdtHasClockEntry)
         .map((t) => t.object as RdfSubject);
     return clockEntries.map((clockEntrySubject) {
-      final triples = oldGraph.findTriples(subject: clockEntrySubject).toList();
-      return (clockEntrySubject, triples);
+      final graph = oldGraph.matching(subject: clockEntrySubject);
+      return (clockEntrySubject, graph);
     }).toList();
   }
 }

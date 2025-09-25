@@ -23,7 +23,7 @@ int _defaultLogicalClockFactory() => ++_logicalClockCounter;
 IriTerm _defaultInstallationIdFactory() =>
     const IriTerm('https://example.org/installations/default-installation');
 
-typedef Node = (RdfObject node, List<Triple> triples);
+typedef Node = (RdfObject node, RdfGraph triples);
 typedef CrdtClock = List<Node>;
 typedef CurrentCrdtClock = ({
   IriTerm installationId,
@@ -71,7 +71,7 @@ class HlcService {
       CrdtClockEntry.physicalTime,
       LiteralTerm(physicalTime.toString()),
     ));
-    return (clockEntryNode, triples);
+    return (clockEntryNode, RdfGraph.fromTriples(triples));
   }
 
   CurrentCrdtClock newClock() {
@@ -97,9 +97,8 @@ class HlcService {
     final (ours: ours, theirs: theirs) =
         clock.fold((ours: <Node>[], theirs: <Node>[]), (acc, entry) {
       final (node, triples) = entry;
-      final idTriple = triples.singleWhere(
-          (t) => t.predicate == CrdtClockEntry.installationId,
-          orElse: () => throw StateError('Clock entry missing installationId'));
+      final idTriple =
+          triples.findTriples(predicate: CrdtClockEntry.installationId).single;
       final id = idTriple.object;
       if (id == installationId) {
         acc.ours.add(entry);
@@ -110,9 +109,9 @@ class HlcService {
     });
 
     final ourClockEntry = ours.single;
-    final oldLogicalTimeTriple = ourClockEntry.$2.singleWhere(
-        (t) => t.predicate == CrdtClockEntry.logicalTime,
-        orElse: () => throw StateError('Our clock entry missing logicalTime'));
+    final oldLogicalTimeTriple = ourClockEntry.$2
+        .findTriples(predicate: CrdtClockEntry.logicalTime)
+        .single;
     final oldLogicalTimeTerm = oldLogicalTimeTriple.object as LiteralTerm;
     final oldLogicalTime = int.parse(oldLogicalTimeTerm.value);
     final logicalTime = oldLogicalTime + 1;
