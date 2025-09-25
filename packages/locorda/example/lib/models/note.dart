@@ -28,43 +28,43 @@ class NoteCategoryProperty extends RdfProperty {
 class Note {
   /// Unique identifier for this note
   @RdfIriPart()
-  String id;
+  final String id;
 
   /// Note title - last writer wins on conflicts
   @RdfProperty(SchemaNoteDigitalDocument.name)
   @CrdtLwwRegister()
-  String title;
+  final String title;
 
   /// Note content - last writer wins on conflicts
   @RdfProperty(SchemaNoteDigitalDocument.text)
   @CrdtLwwRegister()
-  String content;
+  final String content;
 
   /// Tags that can be added/removed independently
   @RdfProperty(SchemaNoteDigitalDocument.keywords)
   @CrdtOrSet()
-  Set<String> tags;
+  final Set<String> tags;
 
   /// Category this note belongs to - last writer wins on conflicts
   @NoteCategoryProperty()
   @CrdtLwwRegister()
-  String? categoryId;
+  final String? categoryId;
 
   /// When this note was created
   @RdfProperty(SchemaNoteDigitalDocument.dateCreated)
   @CrdtImmutable()
-  DateTime createdAt;
+  final DateTime createdAt;
 
   /// When this note was last modified
   @RdfProperty(SchemaNoteDigitalDocument.dateModified)
   @CrdtLwwRegister()
-  DateTime modifiedAt;
+  final DateTime modifiedAt;
 
   /// FIXME: This needs to be persisted in the app DB as well!
   /// catch all triples that are added by other apps/extensions/different app versions
   /// so we don't lose data when round-tripping through our app.
   @RdfUnmappedTriples(globalUnmapped: true)
-  RdfGraph? other;
+  final RdfGraph? other;
 
   Note({
     required this.id,
@@ -97,6 +97,7 @@ class Note {
       categoryId: categoryId != null ? categoryId.value : this.categoryId,
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? DateTime.now(),
+      other: other,
     );
   }
 

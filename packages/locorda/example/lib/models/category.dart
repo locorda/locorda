@@ -1,6 +1,7 @@
 /// Category model for organizing notes with CRDT annotations.
 library;
 
+import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
 import 'package:locorda_annotations/locorda_annotations.dart';
@@ -19,42 +20,45 @@ import '../vocabulary/personal_notes_vocab.dart';
 class Category {
   /// Unique identifier for this category
   @RdfIriPart()
-  String id;
+  final String id;
 
   /// Category name - last writer wins on conflicts
   @RdfProperty(SchemaCreativeWork.name)
   @CrdtLwwRegister()
-  String name;
+  final String name;
 
   /// Optional description - last writer wins on conflicts
   @RdfProperty(SchemaCreativeWork.description)
   @CrdtLwwRegister()
-  String? description;
+  final String? description;
 
   /// Color for UI display (hex code, CSS color name, etc.)
   @RdfProperty(PersonalNotesVocab.categoryColor)
   @CrdtLwwRegister()
-  String? color;
+  final String? color;
 
   /// Icon for UI display (emoji, icon name, etc.)
   @RdfProperty(PersonalNotesVocab.categoryIcon)
   @CrdtLwwRegister()
-  String? icon;
+  final String? icon;
 
   /// When this category was created
   @RdfProperty(SchemaCreativeWork.dateCreated)
   @CrdtImmutable()
-  DateTime createdAt;
+  final DateTime createdAt;
 
   /// When this category was last modified
   @RdfProperty(SchemaCreativeWork.dateModified)
   @CrdtLwwRegister()
-  DateTime modifiedAt;
+  final DateTime modifiedAt;
 
   /// Whether this category is archived (soft deleted)
   @RdfProperty(PersonalNotesVocab.archived)
   @CrdtLwwRegister()
-  bool archived;
+  final bool archived;
+
+  @RdfUnmappedTriples(globalUnmapped: true)
+  final RdfGraph? other;
 
   Category({
     required this.id,
@@ -65,6 +69,7 @@ class Category {
     DateTime? createdAt,
     DateTime? modifiedAt,
     this.archived = false,
+    this.other,
   })  : createdAt = createdAt ?? DateTime.now(),
         modifiedAt = modifiedAt ?? DateTime.now();
 
@@ -88,6 +93,7 @@ class Category {
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? this.modifiedAt,
       archived: archived ?? this.archived,
+      other: other,
     );
   }
 
