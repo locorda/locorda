@@ -48,6 +48,9 @@ class CategoryMapper implements GlobalResourceMapper<category.Category> {
     final DateTime modifiedAt = reader.require(SchemaCreativeWork.dateModified);
     final bool archived = reader.require(PersonalNotesVocab.archived);
 
+    // Get unmapped triples as the last reader operation for lossless mapping
+    final RdfGraph other = reader.getUnmapped<RdfGraph>(globalUnmapped: true);
+
     return category.Category(
       id: id,
       name: name,
@@ -57,6 +60,7 @@ class CategoryMapper implements GlobalResourceMapper<category.Category> {
       createdAt: createdAt,
       modifiedAt: modifiedAt,
       archived: archived,
+      other: other,
     );
   }
 
@@ -87,6 +91,7 @@ class CategoryMapper implements GlobalResourceMapper<category.Category> {
         .addValue(SchemaCreativeWork.dateCreated, resource.createdAt)
         .addValue(SchemaCreativeWork.dateModified, resource.modifiedAt)
         .addValue(PersonalNotesVocab.archived, resource.archived)
+        .addUnmapped(resource.other)
         .build();
   }
 }

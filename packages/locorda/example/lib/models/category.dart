@@ -58,7 +58,7 @@ class Category {
   final bool archived;
 
   @RdfUnmappedTriples(globalUnmapped: true)
-  final RdfGraph? other;
+  final RdfGraph other;
 
   Category({
     required this.id,
@@ -69,9 +69,10 @@ class Category {
     DateTime? createdAt,
     DateTime? modifiedAt,
     this.archived = false,
-    this.other,
+    RdfGraph? other,
   })  : createdAt = createdAt ?? DateTime.now(),
-        modifiedAt = modifiedAt ?? DateTime.now();
+        modifiedAt = modifiedAt ?? DateTime.now(),
+        other = other ?? RdfGraph();
 
   /// Create a copy of this category with updated fields
   Category copyWith({

@@ -64,7 +64,7 @@ class Note {
   /// catch all triples that are added by other apps/extensions/different app versions
   /// so we don't lose data when round-tripping through our app.
   @RdfUnmappedTriples(globalUnmapped: true)
-  final RdfGraph? other;
+  final RdfGraph other;
 
   Note({
     required this.id,
@@ -74,10 +74,11 @@ class Note {
     this.categoryId,
     DateTime? createdAt,
     DateTime? modifiedAt,
-    this.other,
+    RdfGraph? other,
   })  : tags = tags ?? <String>{},
         createdAt = createdAt ?? DateTime.now(),
-        modifiedAt = modifiedAt ?? DateTime.now();
+        modifiedAt = modifiedAt ?? DateTime.now(),
+        other = other ?? RdfGraph();
 
   /// Create a copy of this note with updated fields
   Note copyWith({

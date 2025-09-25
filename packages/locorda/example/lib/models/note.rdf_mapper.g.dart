@@ -59,6 +59,9 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
       SchemaNoteDigitalDocument.dateModified,
     );
 
+    // Get unmapped triples as the last reader operation for lossless mapping
+    final RdfGraph other = reader.getUnmapped<RdfGraph>(globalUnmapped: true);
+
     return note.Note(
       id: id,
       title: title,
@@ -67,6 +70,7 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
       categoryId: categoryId,
       createdAt: createdAt,
       modifiedAt: modifiedAt,
+      other: other,
     );
   }
 
@@ -97,6 +101,7 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
         )
         .addValue(SchemaNoteDigitalDocument.dateCreated, resource.createdAt)
         .addValue(SchemaNoteDigitalDocument.dateModified, resource.modifiedAt)
+        .addUnmapped(resource.other)
         .build();
   }
 }
