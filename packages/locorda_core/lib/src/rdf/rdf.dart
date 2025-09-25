@@ -42,42 +42,47 @@ extension RdfGraphExtensions on RdfGraph {
   }
 }
 
-void addList(List<Triple> triples, RdfSubject subject, RdfPredicate predicate,
-    List<RdfObject> items) {
-  if (items.isEmpty) {
-    triples.add(Triple(subject, predicate, Rdf.nil));
-    return;
-  }
-
-  // Create blank nodes for each list item
-  final blankNodes = List.generate(items.length, (index) => BlankNodeTerm());
-
-  for (var i = 0; i < items.length; i++) {
-    final currentNode = blankNodes[i];
-    final nextNode = (i < items.length - 1) ? blankNodes[i + 1] : Rdf.nil;
-
-    // Add rdf:first triple
-    triples.add(Triple(currentNode, Rdf.first, items[i]));
-
-    // Add rdf:rest triple
-    triples.add(Triple(currentNode, Rdf.rest, nextNode));
-  }
-
-  // Link the head of the list to the subject via the predicate
-  triples.add(Triple(subject, predicate, blankNodes.first));
-}
-
-void addNodes(List<Triple> triples, RdfSubject subject, RdfPredicate predicate,
-    List<Node> nodes) {
-  for (final node in nodes) {
-    {
-      final (objectTerm, graph) = node;
-      triples.add(Triple(
-        subject,
-        predicate,
-        objectTerm,
-      ));
-      triples.addAll(graph.triples);
+extension TripleListExtensions on List<Triple> {
+  void addRdfList(
+      RdfSubject subject, RdfPredicate predicate, List<RdfObject> items) {
+    if (items.isEmpty) {
+      add(Triple(subject, predicate, Rdf.nil));
+      return;
     }
+
+    // Create blank nodes for each list item
+    final blankNodes = List.generate(items.length, (index) => BlankNodeTerm());
+
+    for (var i = 0; i < items.length; i++) {
+      final currentNode = blankNodes[i];
+      final nextNode = (i < items.length - 1) ? blankNodes[i + 1] : Rdf.nil;
+
+      // Add rdf:first triple
+      add(Triple(currentNode, Rdf.first, items[i]));
+
+      // Add rdf:rest triple
+      add(Triple(currentNode, Rdf.rest, nextNode));
+    }
+
+    // Link the head of the list to the subject via the predicate
+    add(Triple(subject, predicate, blankNodes.first));
+  }
+
+  void addNodes(RdfSubject subject, RdfPredicate predicate, List<Node> nodes) {
+    for (final node in nodes) {
+      {
+        final (objectTerm, graph) = node;
+        add(Triple(
+          subject,
+          predicate,
+          objectTerm,
+        ));
+        addAll(graph.triples);
+      }
+    }
+  }
+
+  RdfGraph toRdfGraph() {
+    return RdfGraph.fromTriples(this);
   }
 }

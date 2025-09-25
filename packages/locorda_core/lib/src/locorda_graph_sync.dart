@@ -224,12 +224,12 @@ RdfGraph _constructCrdtDocument(
   ));
 
   // 4. make sure the merge contracts are included
-  addList(allTriples, documentIri, SyncManagedDocument.isGovernedBy,
-      governedByFiles);
+  allTriples.addRdfList(
+      documentIri, SyncManagedDocument.isGovernedBy, governedByFiles);
 
   // 5. Add HLC clock entry
-  addNodes(allTriples, documentIri, SyncManagedDocument.crdtHasClockEntry,
-      clock.fullClock);
+  allTriples.addNodes(
+      documentIri, SyncManagedDocument.crdtHasClockEntry, clock.fullClock);
 
   // 6. Generate and add clock hash
   allTriples.add(Triple(
@@ -260,7 +260,7 @@ RdfGraph _constructCrdtDocument(
   // 9. Add all original resource triples
   allTriples.addAll(resourceGraph.triples);
 
-  return RdfGraph.fromTriples(allTriples);
+  return allTriples.toRdfGraph();
 }
 
 List<RdfObject> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
