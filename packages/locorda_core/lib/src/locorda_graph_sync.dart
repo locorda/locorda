@@ -68,10 +68,7 @@ List<PropertyChange> _detectPropertyChanges(
   final changes = <PropertyChange>[];
 
   // Get all resource IRIs from the new graph
-  final newResourceIris = newGraph.triples
-      .map((triple) => triple.subject)
-      .whereType<IriTerm>()
-      .toSet();
+  final newResourceIris = newGraph.subjects.whereType<IriTerm>().toSet();
 
   // Check each resource for property changes
   for (final resourceIri in newResourceIris) {
@@ -160,8 +157,7 @@ void _validateResourceGraph(
   final documentIriValue = documentIri.value;
 
   // Validate all resource IRIs are a proper fragment of the document IRI
-  final iriSubjects =
-      resourceGraph.triples.map((t) => t.subject).whereType<IriTerm>().toSet();
+  final iriSubjects = resourceGraph.subjects.whereType<IriTerm>().toSet();
   for (final iriSubject in iriSubjects) {
     final iriSubjectValue = iriSubject.value;
     if (!iriSubjectValue.startsWith('$documentIriValue#')) {
@@ -275,6 +271,7 @@ Iterable<Triple> _getSubgraphTriples(RdfGraph subgraph, RdfSubject subject,
 ({RdfGraph appGraph, List<Triple> documentTriples}) _splitDocument(
     RdfGraph document, IriTerm documentIri) {
   // We have to split the document into application data and framework metadata.
+  // FIXME: we have to exclude the primary topic!
   final allDocumentTriples =
       _getSubgraphTriples(document, documentIri).toList();
 
@@ -446,7 +443,7 @@ class LocordaGraphSync {
   Future<void> save(IriTerm type, RdfGraph graph) async {
     try {
       // Validate input parameters
-      if (graph.triples.isEmpty) {
+      if (graph.isEmpty) {
         throw ArgumentError('Cannot save empty graph');
       }
 
@@ -875,7 +872,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         .findTriples(
             subject: documentIri,
             predicate: SyncManagedDocument.crdtHasClockEntry)
-        .map((t) => t.subject);
+        .map((t) => t.object as RdfSubject);
     return clockEntries.map((clockEntrySubject) {
       final triples = oldGraph.findTriples(subject: clockEntrySubject).toList();
       return (clockEntrySubject, triples);
