@@ -351,7 +351,7 @@ packages:
       path: "../../../rdf_core"
       relative: true
     source: path
-    version: "0.9.18-dev"
+    version: "0.9.19-dev"
   rdf_vocabulary_to_dart:
     dependency: "direct dev"
     description:

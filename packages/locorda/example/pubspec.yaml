@@ -41,7 +41,7 @@ dependencies:
     path: ../../locorda_drift
     
   # RDF mapping
-  rdf_core: ^0.9.17
+  rdf_core: ^0.9.18
   rdf_mapper: ^0.10.2
   rdf_vocabularies_schema: ^0.4.4
   rdf_vocabularies_core: ^0.4.4
