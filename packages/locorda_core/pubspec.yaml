@@ -23,7 +23,7 @@ dependencies:
   crypto: ^3.0.3
 
   # RDF 
-  rdf_core: ^0.9.18
+  rdf_core: ^0.9.20
   
 
 dev_dependencies:

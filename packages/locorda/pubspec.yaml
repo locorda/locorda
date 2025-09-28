@@ -23,7 +23,7 @@ dependencies:
     path: ../locorda_solid_ui
 
   # RDF mapping
-  rdf_core: ^0.9.18
+  rdf_core: ^0.9.20
   rdf_mapper: ^0.10.2
 
 dev_dependencies:
