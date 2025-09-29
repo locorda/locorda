@@ -56,6 +56,18 @@ class MergeContract {
   final Map<IriTerm, PredicateRule> _predicateRules;
 
   MergeContract(this._classMappings, this._predicateRules);
+
+  PredicateRule? getPredicateRule(IriTerm? typeIri, IriTerm propertyIri) {
+    if (typeIri != null) {
+      final classMapping = getClassMapping(typeIri);
+      final rule = classMapping?.getPropertyRule(propertyIri);
+      if (rule != null) {
+        return rule;
+      }
+    }
+    return _predicateRules[propertyIri];
+  }
+
   ClassMapping? getClassMapping(IriTerm classIri) => _classMappings[classIri];
   PredicateRule? getPredicateMapping(IriTerm predicateIri) =>
       _predicateRules[predicateIri];

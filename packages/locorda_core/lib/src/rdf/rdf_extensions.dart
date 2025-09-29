@@ -1,17 +1,8 @@
+import 'package:locorda_core/src/generated/rdf.dart';
+import 'package:locorda_core/src/rdf/xsd.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 typedef Node = (RdfSubject node, RdfGraph triples);
-
-class Rdf {
-  static const String namespace = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-  static const IriTerm type = IriTerm('$namespace#type');
-  static const IriTerm subject = IriTerm('$namespace#subject');
-  static const IriTerm predicate = IriTerm('$namespace#predicate');
-  static const IriTerm object = IriTerm('$namespace#object');
-  static const IriTerm first = IriTerm('$namespace#first');
-  static const IriTerm nil = IriTerm('$namespace#nil');
-  static const IriTerm rest = IriTerm('$namespace#rest');
-}
 
 extension RdfGraphExtensions on RdfGraph {
   IriTerm getIdentifier(IriTerm type) {
@@ -21,9 +12,11 @@ extension RdfGraphExtensions on RdfGraph {
 
   T? findSingleObject<T extends RdfObject>(
       RdfSubject subject, IriTerm predicate) {
-    final triple =
-        findTriples(subject: subject, predicate: predicate).singleOrNull;
-    final obj = triple?.object;
+    final triples = findTriples(subject: subject, predicate: predicate);
+    if (triples.isEmpty) {
+      return null;
+    }
+    final obj = triples.single.object;
     if (obj is T) {
       return obj;
     }
@@ -75,11 +68,11 @@ extension RdfGraphExtensions on RdfGraph {
 extension IriTermExtensions on IriTerm {
   String get localName {
     final hashIndex = value.lastIndexOf('#');
-    if (hashIndex != -1 && hashIndex < value.length - 1) {
+    if (hashIndex != -1 && hashIndex <= value.length - 1) {
       return value.substring(hashIndex + 1);
     }
     final slashIndex = value.lastIndexOf('/');
-    if (slashIndex != -1 && slashIndex < value.length - 1) {
+    if (slashIndex != -1 && slashIndex <= value.length - 1) {
       return value.substring(slashIndex + 1);
     }
     return value; // Fallback to full IRI if no separator found
@@ -90,81 +83,73 @@ extension IriTermExtensions on IriTerm {
     if (hashIndex != -1) {
       return iriFactory(value.substring(0, hashIndex));
     }
-    final slashIndex = value.lastIndexOf('/');
-    if (slashIndex != -1) {
-      return iriFactory(value.substring(0, slashIndex));
-    }
     return this; // Fallback to self if no separator found
   }
 }
 
 extension LiteralTermExtensions on LiteralTerm {
   bool get isBoolean {
-    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#boolean');
+    return datatype == Xsd.boolean;
   }
 
   bool get booleanValue {
     if (!isBoolean) {
-      throw StateError('Literal is not a boolean');
+      throw StateError('Literal of type $datatype is not a boolean');
     }
     return value == 'true' || value == '1';
   }
 
   bool get isInteger {
-    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#integer') ||
-        datatype == IriTerm('http://www.w3.org/2001/XMLSchema#int');
+    return datatype == Xsd.integer || datatype == Xsd.int;
   }
 
   int get integerValue {
     if (!isInteger) {
-      throw StateError('Literal is not an integer');
+      throw StateError('Literal of type $datatype is not an integer');
     }
     return int.parse(value);
   }
 
   bool get isString {
-    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#string') ||
-        datatype ==
-            IriTerm('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+    return datatype == Xsd.string || datatype == Rdf.langString;
   }
 
   String get stringValue {
     if (!isString) {
-      throw StateError('Literal is not a string');
+      throw StateError('Literal of type $datatype is not a string');
     }
     return value;
   }
 
   double get doubleValue {
     if (!isDouble) {
-      throw StateError('Literal is not a double or float');
+      throw StateError('Literal of type $datatype is not a double or float');
     }
     return double.parse(value);
   }
 
   bool get isDouble {
-    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#double') ||
-        datatype == IriTerm('http://www.w3.org/2001/XMLSchema#float');
+    return datatype == Xsd.double || datatype == Xsd.float;
   }
 
   bool get isDateTime {
-    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#dateTime');
+    return datatype == Xsd.dateTime;
   }
 
   DateTime get dateTimeValue {
     if (!isDateTime) {
-      throw StateError('Literal is not a dateTime');
+      throw StateError('Literal of type $datatype is not a dateTime');
     }
     return DateTime.parse(value);
   }
 
   bool get isDate {
-    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#date');
+    return datatype == Xsd.date;
   }
 
   DateTime get dateValue {
     if (!isDate) {
-      throw StateError('Literal is not a date');
+      throw StateError('Literal of type $datatype is not a date');
     }
     return DateTime.parse(value);
   }

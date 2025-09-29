@@ -7,26 +7,147 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// n2P_Set class from Algo vocabulary
+/// LabelProperty class from Foaf vocabulary
 ///
-/// A Two-Phase Set CRDT, for multi-value properties where removal is permanent.
+/// A foaf:LabelProperty is any RDF property with texual values that serve as labels.
 ///
 /// Inherits from:
-/// - Algorithm (https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#Algorithm)
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
+/// - Thing (http://www.w3.org/2002/07/owl#Thing)
 ///
-/// This class provides access to all properties that can be used with n2P_Set.
-/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#2P_Set)
+/// This class provides access to all properties that can be used with LabelProperty.
+/// [Class Reference](http://xmlns.com/foaf/0.1/LabelProperty)
 ///
-/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#)
-class Algon2P_Set {
+/// [Vocabulary Reference](http://xmlns.com/foaf/0.1/)
+class FoafLabelProperty {
   // Private constructor prevents instantiation
-  const Algon2P_Set._();
+  const FoafLabelProperty._();
 
-  /// IRI term for the n2P_Set class
+  /// IRI term for the LabelProperty class
   /// Use this to specify that a resource is of this type.
-  static const classIri = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#2P_Set',
+  static const classIri = IriTerm('http://xmlns.com/foaf/0.1/LabelProperty');
+
+  /// dnaChecksum [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// A checksum for the DNA of some thing. Joke.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const dnaChecksum = IriTerm('http://xmlns.com/foaf/0.1/dnaChecksum');
+
+  /// title
+  ///
+  /// Title (Mr, Mrs, Ms, Dr. etc)
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const title = IriTerm('http://xmlns.com/foaf/0.1/title');
+
+  /// nick
+  ///
+  /// A short informal nickname characterising an agent (includes login identifiers, IRC and other chat nicknames).
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const nick = IriTerm('http://xmlns.com/foaf/0.1/nick');
+
+  /// name [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// A name for some thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const name = IriTerm('http://xmlns.com/foaf/0.1/name');
+
+  /// givenName
+  ///
+  /// The given name of some person.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const givenName = IriTerm('http://xmlns.com/foaf/0.1/givenName');
+
+  /// givenname
+  ///
+  /// The given name of some person.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const givenname = IriTerm('http://xmlns.com/foaf/0.1/givenname');
+
+  /// phone
+  ///
+  /// A phone,  specified using fully qualified tel: URI scheme (refs: http://www.w3.org/Addressing/schemes.html#tel).
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const phone = IriTerm('http://xmlns.com/foaf/0.1/phone');
+
+  /// homepage [Expects: http://xmlns.com/foaf/0.1/Document]
+  ///
+  /// A homepage for some thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const homepage = IriTerm('http://xmlns.com/foaf/0.1/homepage');
+
+  /// maker [Expects: http://xmlns.com/foaf/0.1/Agent]
+  ///
+  /// An agent that
+  /// made this thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const maker = IriTerm('http://xmlns.com/foaf/0.1/maker');
+
+  /// depiction [Expects: http://xmlns.com/foaf/0.1/Image]
+  ///
+  /// A depiction of some thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const depiction = IriTerm('http://xmlns.com/foaf/0.1/depiction');
+
+  /// fundedBy [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// An organization funding a project or person.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const fundedBy = IriTerm('http://xmlns.com/foaf/0.1/fundedBy');
+
+  /// logo [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// A logo representing some thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const logo = IriTerm('http://xmlns.com/foaf/0.1/logo');
+
+  /// page [Expects: http://xmlns.com/foaf/0.1/Document]
+  ///
+  /// A page or document about this thing.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const page = IriTerm('http://xmlns.com/foaf/0.1/page');
+
+  /// theme [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// A theme.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const theme = IriTerm('http://xmlns.com/foaf/0.1/theme');
+
+  /// membershipClass
+  ///
+  /// Indicates the class of individuals that are a member of a Group
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const membershipClass = IriTerm(
+    'http://xmlns.com/foaf/0.1/membershipClass',
   );
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
@@ -239,6 +360,26 @@ class Algon2P_Set {
     'http://www.w3.org/2002/07/owl#annotatedTarget',
   );
 
+  /// bottomDataProperty from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// The data property that does not relate any individual to any data value.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlBottomDataProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#bottomDataProperty',
+  );
+
+  /// bottomObjectProperty from owl vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The object property that does not relate any two individuals.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlBottomObjectProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#bottomObjectProperty',
+  );
+
   /// deprecated from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
   /// The annotation property that indicates that a given entity has been deprecated.
@@ -249,6 +390,16 @@ class Algon2P_Set {
     'http://www.w3.org/2002/07/owl#deprecated',
   );
 
+  /// differentFrom from owl vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The property that determines that two given individuals are different.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlDifferentFrom = IriTerm(
+    'http://www.w3.org/2002/07/owl#differentFrom',
+  );
+
   /// members from owl vocabulary [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
   ///
   /// The property that determines the collection of members in either a owl:AllDifferent, owl:AllDisjointClasses or owl:AllDisjointProperties axiom.
@@ -256,6 +407,34 @@ class Algon2P_Set {
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
   static const owlMembers = IriTerm('http://www.w3.org/2002/07/owl#members');
+
+  /// sameAs from owl vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The property that determines that two given individuals are equal.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlSameAs = IriTerm('http://www.w3.org/2002/07/owl#sameAs');
+
+  /// topDataProperty from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// The data property that relates every individual to every data value.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlTopDataProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#topDataProperty',
+  );
+
+  /// topObjectProperty from owl vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The object property that relates every two individuals.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlTopObjectProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#topObjectProperty',
+  );
 
   /// versionInfo from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
