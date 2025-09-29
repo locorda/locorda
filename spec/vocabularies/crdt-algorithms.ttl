@@ -34,7 +34,7 @@ algo:OR_Set a rdfs:Class;
     rdfs:comment "An Observed-Remove Set CRDT, for multi-value properties that allows items to be re-added after deletion.";
     rdfs:subClassOf algo:Algorithm .
 
-algo:2P_Set a rdfs:Class;
+<https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#2P_Set> a rdfs:Class;
     rdfs:label "2P-Set";
     rdfs:comment "A Two-Phase Set CRDT, for multi-value properties where removal is permanent.";
     rdfs:subClassOf algo:Algorithm .

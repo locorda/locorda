@@ -24,7 +24,7 @@ class Crdt {
   ///
   /// A single entry in a Hybrid Logical Clock (HLC), mapping an installation ID to both its logical time (causality counter) and physical time (wall-clock timestamp for tie-breaking).
   ///
-  static const ClockEntry = const IriTerm(
+  static const ClockEntry = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry',
   );
 
@@ -32,7 +32,7 @@ class Crdt {
   ///
   /// A unique installation of a CRDT-enabled application, providing traceability and identity for Hybrid Logical Clock entries across the distributed system.
   ///
-  static const ClientInstallation = const IriTerm(
+  static const ClientInstallation = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation',
   );
 
@@ -42,7 +42,7 @@ class Crdt {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const hasClockEntry = const IriTerm(
+  static const hasClockEntry = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#hasClockEntry',
   );
 
@@ -52,7 +52,7 @@ class Crdt {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
   ///
-  static const installationId = const IriTerm(
+  static const installationId = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#installationId',
   );
 
@@ -62,7 +62,7 @@ class Crdt {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
   ///
-  static const logicalTime = const IriTerm(
+  static const logicalTime = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#logicalTime',
   );
 
@@ -72,7 +72,7 @@ class Crdt {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
   ///
-  static const physicalTime = const IriTerm(
+  static const physicalTime = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#physicalTime',
   );
 
@@ -82,7 +82,7 @@ class Crdt {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const clockHash = const IriTerm(
+  static const clockHash = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
   );
 
@@ -92,7 +92,7 @@ class Crdt {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const belongsToUser = const IriTerm(
+  static const belongsToUser = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#belongsToUser',
   );
 
@@ -102,7 +102,7 @@ class Crdt {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const applicationId = const IriTerm(
+  static const applicationId = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#applicationId',
   );
 
@@ -112,7 +112,7 @@ class Crdt {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const createdAt = const IriTerm(
+  static const createdAt = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
   );
 
@@ -122,7 +122,7 @@ class Crdt {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const lastActiveAt = const IriTerm(
+  static const lastActiveAt = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#lastActiveAt',
   );
 
@@ -132,7 +132,7 @@ class Crdt {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const maxInactivityPeriod = const IriTerm(
+  static const maxInactivityPeriod = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#maxInactivityPeriod',
   );
 
@@ -142,7 +142,7 @@ class Crdt {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const deletedAt = const IriTerm(
+  static const deletedAt = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
   );
 
@@ -152,7 +152,7 @@ class Crdt {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const documentTombstoneRetentionPeriod = const IriTerm(
+  static const documentTombstoneRetentionPeriod = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#documentTombstoneRetentionPeriod',
   );
 
@@ -162,7 +162,7 @@ class Crdt {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const enableDocumentTombstoneCleanup = const IriTerm(
+  static const enableDocumentTombstoneCleanup = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enableDocumentTombstoneCleanup',
   );
 
@@ -172,7 +172,7 @@ class Crdt {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const propertyTombstoneRetentionPeriod = const IriTerm(
+  static const propertyTombstoneRetentionPeriod = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#propertyTombstoneRetentionPeriod',
   );
 
@@ -182,7 +182,7 @@ class Crdt {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const enablePropertyTombstoneCleanup = const IriTerm(
+  static const enablePropertyTombstoneCleanup = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
   );
 }

@@ -23,7 +23,7 @@ class Idx {
   ///
   /// An abstract base class for any sharded index that directly contains entries pointing to data resources.
   ///
-  static const Index = const IriTerm(
+  static const Index = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#Index',
   );
 
@@ -31,7 +31,7 @@ class Idx {
   ///
   /// A concrete index for a FullSync or OnDemandSync strategy. It represents a single, self-contained index for a whole class of data.
   ///
-  static const FullIndex = const IriTerm(
+  static const FullIndex = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex',
   );
 
@@ -39,7 +39,7 @@ class Idx {
   ///
   /// A 'rulebook' resource that defines how a data type is grouped. It does not contain data entries itself, but points to the GroupIndex instances that do.
   ///
-  static const GroupIndexTemplate = const IriTerm(
+  static const GroupIndexTemplate = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate',
   );
 
@@ -47,7 +47,7 @@ class Idx {
   ///
   /// A concrete index representing a single, logical subset of data (e.g., 'August 2025'). It functions like a FullIndex but for a group.
   ///
-  static const GroupIndex = const IriTerm(
+  static const GroupIndex = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex',
   );
 
@@ -55,7 +55,7 @@ class Idx {
   ///
   /// A declarative rule that describes how a data resource should be assigned to a specific group based on its properties. Contains multiple GroupingRuleProperty instances. Group paths are generated deterministically from the properties.
   ///
-  static const GroupingRule = const IriTerm(
+  static const GroupingRule = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRule',
   );
 
@@ -63,7 +63,7 @@ class Idx {
   ///
   /// An individual property specification within a GroupingRule that defines how to extract and format values from a source property for group assignment.
   ///
-  static const GroupingRuleProperty = const IriTerm(
+  static const GroupingRuleProperty = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty',
   );
 
@@ -71,7 +71,7 @@ class Idx {
   ///
   /// A sharding strategy that calculates a hash of a resource's IRI and then uses the modulo operator to assign it to a shard.
   ///
-  static const ModuloHashSharding = const IriTerm(
+  static const ModuloHashSharding = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding',
   );
 
@@ -79,7 +79,7 @@ class Idx {
   ///
   /// A document that contains a list of entries, each pointing to a data resource and its associated metadata (e.g., Hybrid Logical Clock hash).
   ///
-  static const Shard = const IriTerm(
+  static const Shard = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#Shard',
   );
 
@@ -87,7 +87,7 @@ class Idx {
   ///
   /// A structured entry within a shard that contains a reference to a data resource plus optional header properties and required clock hash metadata.
   ///
-  static const ShardEntry = const IriTerm(
+  static const ShardEntry = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#ShardEntry',
   );
 
@@ -95,7 +95,7 @@ class Idx {
   ///
   /// A configuration object that specifies which property should be indexed and tracks which installations actively read from it. Used within idx:indexedProperty to enable property-level reader management.
   ///
-  static const IndexedProperty = const IriTerm(
+  static const IndexedProperty = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty',
   );
 
@@ -103,7 +103,7 @@ class Idx {
   ///
   /// A transform rule that applies regex pattern matching and replacement to RDF literal values for group key generation. Uses cross-platform compatible regex subset.
   ///
-  static const RegexTransform = const IriTerm(
+  static const RegexTransform = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform',
   );
 
@@ -113,7 +113,7 @@ class Idx {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const belongsToIndexShard = const IriTerm(
+  static const belongsToIndexShard = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
   );
 
@@ -123,7 +123,7 @@ class Idx {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const indexesClass = const IriTerm(
+  static const indexesClass = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#indexesClass',
   );
 
@@ -133,7 +133,7 @@ class Idx {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const indexedProperty = const IriTerm(
+  static const indexedProperty = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#indexedProperty',
   );
 
@@ -143,7 +143,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#Index
   ///
-  static const hasShard = const IriTerm(
+  static const hasShard = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#hasShard',
   );
 
@@ -153,7 +153,7 @@ class Idx {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const shardingAlgorithm = const IriTerm(
+  static const shardingAlgorithm = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#shardingAlgorithm',
   );
 
@@ -163,7 +163,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding
   ///
-  static const hashAlgorithm = const IriTerm(
+  static const hashAlgorithm = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#hashAlgorithm',
   );
 
@@ -173,7 +173,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding
   ///
-  static const numberOfShards = const IriTerm(
+  static const numberOfShards = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#numberOfShards',
   );
 
@@ -183,7 +183,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding
   ///
-  static const configVersion = const IriTerm(
+  static const configVersion = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#configVersion',
   );
 
@@ -193,7 +193,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ModuloHashSharding
   ///
-  static const autoScaleThreshold = const IriTerm(
+  static const autoScaleThreshold = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#autoScaleThreshold',
   );
 
@@ -203,7 +203,7 @@ class Idx {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const isShardOf = const IriTerm(
+  static const isShardOf = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
   );
 
@@ -213,7 +213,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate
   ///
-  static const groupedBy = const IriTerm(
+  static const groupedBy = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#groupedBy',
   );
 
@@ -223,7 +223,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRule
   ///
-  static const property = const IriTerm(
+  static const property = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#property',
   );
 
@@ -233,7 +233,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
   ///
-  static const sourceProperty = const IriTerm(
+  static const sourceProperty = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#sourceProperty',
   );
 
@@ -243,7 +243,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
   ///
-  static const transform = const IriTerm(
+  static const transform = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#transform',
   );
 
@@ -253,7 +253,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
   ///
-  static const hierarchyLevel = const IriTerm(
+  static const hierarchyLevel = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#hierarchyLevel',
   );
 
@@ -263,7 +263,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
   ///
-  static const missingValue = const IriTerm(
+  static const missingValue = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#missingValue',
   );
 
@@ -273,7 +273,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex
   ///
-  static const basedOn = const IriTerm(
+  static const basedOn = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#basedOn',
   );
 
@@ -283,7 +283,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#Shard
   ///
-  static const containsEntry = const IriTerm(
+  static const containsEntry = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#containsEntry',
   );
 
@@ -293,7 +293,7 @@ class Idx {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const readBy = const IriTerm(
+  static const readBy = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#readBy',
   );
 
@@ -303,7 +303,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#Index
   ///
-  static const populationState = const IriTerm(
+  static const populationState = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#populationState',
   );
 
@@ -313,7 +313,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#Index
   ///
-  static const hasPopulatingShard = const IriTerm(
+  static const hasPopulatingShard = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#hasPopulatingShard',
   );
 
@@ -323,7 +323,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#ShardEntry
   ///
-  static const resource = const IriTerm(
+  static const resource = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#resource',
   );
 
@@ -333,7 +333,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty
   ///
-  static const trackedProperty = const IriTerm(
+  static const trackedProperty = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#trackedProperty',
   );
 
@@ -343,7 +343,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform
   ///
-  static const pattern = const IriTerm(
+  static const pattern = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#pattern',
   );
 
@@ -353,7 +353,7 @@ class Idx {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform
   ///
-  static const replacement = const IriTerm(
+  static const replacement = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#replacement',
   );
 }

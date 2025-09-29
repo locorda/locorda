@@ -24,7 +24,7 @@ class Mc {
   ///
   /// An abstract base class for a resource that defines a set of merge rules.
   ///
-  static const Mapping = const IriTerm(
+  static const Mapping = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#Mapping',
   );
 
@@ -32,7 +32,7 @@ class Mc {
   ///
   /// A resource that defines the merge behavior for a specific class of data (e.g., schema:Recipe).
   ///
-  static const ClassMapping = const IriTerm(
+  static const ClassMapping = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#ClassMapping',
   );
 
@@ -40,7 +40,7 @@ class Mc {
   ///
   /// A resource that defines the complete merge behavior for all resources within a document, by importing other DocumentMappings and defining local ClassMappings and PredicateMappings.
   ///
-  static const DocumentMapping = const IriTerm(
+  static const DocumentMapping = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#DocumentMapping',
   );
 
@@ -48,7 +48,7 @@ class Mc {
   ///
   /// A resource that defines merge behavior for resources based on the predicates they appear with, useful for typeless blank nodes and predicate-based identification patterns.
   ///
-  static const PredicateMapping = const IriTerm(
+  static const PredicateMapping = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#PredicateMapping',
   );
 
@@ -56,7 +56,7 @@ class Mc {
   ///
   /// A declarative rule that links a specific predicate/property to a CRDT merge algorithm.
   ///
-  static const Rule = const IriTerm(
+  static const Rule = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule',
   );
 
@@ -66,18 +66,8 @@ class Mc {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Mapping
   ///
-  static const appliesToClass = const IriTerm(
+  static const appliesToClass = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#appliesToClass',
-  );
-
-  /// IRI for mc:appliesToPredicate [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
-  ///
-  /// Links a Mapping to a specific predicate, allowing mapping of resources that appear as objects of this predicate regardless of their type. Useful for typeless blank nodes.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Mapping
-  ///
-  static const appliesToPredicate = const IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#appliesToPredicate',
   );
 
   /// IRI for mc:imports [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
@@ -86,7 +76,7 @@ class Mc {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#DocumentMapping
   ///
-  static const imports = const IriTerm(
+  static const imports = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#imports',
   );
 
@@ -96,7 +86,7 @@ class Mc {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#DocumentMapping
   ///
-  static const classMapping = const IriTerm(
+  static const classMapping = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#classMapping',
   );
 
@@ -106,7 +96,7 @@ class Mc {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#DocumentMapping
   ///
-  static const predicateMapping = const IriTerm(
+  static const predicateMapping = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#predicateMapping',
   );
 
@@ -116,7 +106,7 @@ class Mc {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#PredicateMapping, https://w3id.org/solid-crdt-sync/vocab/merge-contract#ClassMapping
   ///
-  static const rule = const IriTerm(
+  static const rule = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#rule',
   );
 
@@ -126,7 +116,7 @@ class Mc {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
   ///
-  static const predicate = const IriTerm(
+  static const predicate = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#predicate',
   );
 
@@ -136,7 +126,7 @@ class Mc {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
   ///
-  static const isIdentifying = const IriTerm(
+  static const isIdentifying = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#isIdentifying',
   );
 
@@ -146,7 +136,7 @@ class Mc {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
   ///
-  static const stopTraversal = const IriTerm(
+  static const stopTraversal = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#stopTraversal',
   );
 }

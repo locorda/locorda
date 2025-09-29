@@ -25,7 +25,7 @@ class SyncUniversalProperties {
   ///
   /// Identifies the semantic RDF class of the resources being managed (e.g., schema:Recipe). Used in two contexts: (1) Within solid:TypeRegistration entries where solid:forClass is sync:ManagedDocument, enabling framework-aware applications to discover containers holding specific semantic types. (2) Directly on sync:ManagedDocument instances to enable efficient garbage collection and retention policies without requiring document content fetching.
   ///
-  static const managedResourceType = const IriTerm(
+  static const managedResourceType = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
 }

@@ -24,17 +24,17 @@ class SyncResourceStatement {
 
   /// IRI term for the ResourceStatement class
   /// Use this to specify that a resource is of this type.
-  static const classIri = const IriTerm(
+  static const classIri = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement',
   );
 
-  /// isGovernedBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// isGovernedBy [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
   ///
-  /// Links a data or index resource to the public rules file that defines its merge behavior.
+  /// Links a data or index resource to an ordered list (rdf:List) of public mapping files that define its merge behavior. Documents are merged in list order with 'first wins' semantics - implementations should append only, not prepend, to avoid overriding existing definitions.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const isGovernedBy = const IriTerm(
+  static const isGovernedBy = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#isGovernedBy',
   );
 
@@ -44,7 +44,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const managedResourceType = const IriTerm(
+  static const managedResourceType = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
 
@@ -54,7 +54,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement
   ///
-  static const resource = const IriTerm(
+  static const resource = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#resource',
   );
 
@@ -64,7 +64,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtHasClockEntry = const IriTerm(
+  static const crdtHasClockEntry = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#hasClockEntry',
   );
 
@@ -74,7 +74,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtClockHash = const IriTerm(
+  static const crdtClockHash = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
   );
 
@@ -84,7 +84,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtCreatedAt = const IriTerm(
+  static const crdtCreatedAt = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
   );
 
@@ -94,7 +94,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtDeletedAt = const IriTerm(
+  static const crdtDeletedAt = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
   );
 
@@ -104,7 +104,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtDocumentTombstoneRetentionPeriod = const IriTerm(
+  static const crdtDocumentTombstoneRetentionPeriod = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#documentTombstoneRetentionPeriod',
   );
 
@@ -114,7 +114,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtEnableDocumentTombstoneCleanup = const IriTerm(
+  static const crdtEnableDocumentTombstoneCleanup = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enableDocumentTombstoneCleanup',
   );
 
@@ -124,7 +124,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtPropertyTombstoneRetentionPeriod = const IriTerm(
+  static const crdtPropertyTombstoneRetentionPeriod = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#propertyTombstoneRetentionPeriod',
   );
 
@@ -134,7 +134,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtEnablePropertyTombstoneCleanup = const IriTerm(
+  static const crdtEnablePropertyTombstoneCleanup = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
   );
 
@@ -144,7 +144,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const idxBelongsToIndexShard = const IriTerm(
+  static const idxBelongsToIndexShard = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
   );
 
@@ -154,7 +154,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const idxIsShardOf = const IriTerm(
+  static const idxIsShardOf = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
   );
 
@@ -164,7 +164,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfType = const IriTerm(
+  static const rdfType = IriTerm(
     'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
   );
 
@@ -174,7 +174,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfValue = const IriTerm(
+  static const rdfValue = IriTerm(
     'http://www.w3.org/1999/02/22-rdf-syntax-ns#value',
   );
 
@@ -184,7 +184,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsComment = const IriTerm(
+  static const rdfsComment = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#comment',
   );
 
@@ -194,7 +194,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsLabel = const IriTerm(
+  static const rdfsLabel = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#label',
   );
 
@@ -204,7 +204,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsSeeAlso = const IriTerm(
+  static const rdfsSeeAlso = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#seeAlso',
   );
 
@@ -214,7 +214,7 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsIsDefinedBy = const IriTerm(
+  static const rdfsIsDefinedBy = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#isDefinedBy',
   );
 
@@ -224,7 +224,75 @@ class SyncResourceStatement {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsMember = const IriTerm(
+  static const rdfsMember = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#member',
+  );
+
+  /// annotatedProperty from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The property that determines the predicate of an annotated axiom or annotated annotation.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlAnnotatedProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#annotatedProperty',
+  );
+
+  /// annotatedSource from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The property that determines the subject of an annotated axiom or annotated annotation.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlAnnotatedSource = IriTerm(
+    'http://www.w3.org/2002/07/owl#annotatedSource',
+  );
+
+  /// annotatedTarget from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The property that determines the object of an annotated axiom or annotated annotation.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlAnnotatedTarget = IriTerm(
+    'http://www.w3.org/2002/07/owl#annotatedTarget',
+  );
+
+  /// deprecated from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The annotation property that indicates that a given entity has been deprecated.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlDeprecated = IriTerm(
+    'http://www.w3.org/2002/07/owl#deprecated',
+  );
+
+  /// members from owl vocabulary [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
+  ///
+  /// The property that determines the collection of members in either a owl:AllDifferent, owl:AllDisjointClasses or owl:AllDisjointProperties axiom.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlMembers = IriTerm('http://www.w3.org/2002/07/owl#members');
+
+  /// versionInfo from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The annotation property that provides version information for an ontology or another OWL construct.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlVersionInfo = IriTerm(
+    'http://www.w3.org/2002/07/owl#versionInfo',
+  );
+
+  /// abstract_ from bibo vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// A summary of the resource.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const biboAbstract_ = IriTerm(
+    'http://purl.org/ontology/bibo/abstract',
   );
 }

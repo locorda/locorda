@@ -25,7 +25,7 @@ class IdxUniversalProperties {
   ///
   /// Specifies which class of resource this index tracks (e.g., schema:Recipe, idx:Shard, sync:ManagedDocument). Index entries contain resource-level properties for querying, while sync operations depend on resource type: if resources are documents themselves (e.g., idx:FullIndex), all operations are document-level; if resources use fragment identifiers (e.g., schema:Recipe), sync operations are on the containing document while resource operations are on the specific resource.
   ///
-  static const indexesClass = const IriTerm(
+  static const indexesClass = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#indexesClass',
   );
 
@@ -33,7 +33,7 @@ class IdxUniversalProperties {
   ///
   /// Links an index to an IndexedProperty configuration object that specifies which property should be indexed and tracks which installations read from it.
   ///
-  static const indexedProperty = const IriTerm(
+  static const indexedProperty = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#indexedProperty',
   );
 
@@ -41,7 +41,7 @@ class IdxUniversalProperties {
   ///
   /// Defines the algorithm used to place new items into shards.
   ///
-  static const shardingAlgorithm = const IriTerm(
+  static const shardingAlgorithm = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#shardingAlgorithm',
   );
 
@@ -49,7 +49,7 @@ class IdxUniversalProperties {
   ///
   /// An OR-Set of installation IRIs that actively read from this index or specific indexed property. Used for collaborative lifecycle management and property cleanup when readers are tombstoned.
   ///
-  static const readBy = const IriTerm(
+  static const readBy = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#readBy',
   );
 }

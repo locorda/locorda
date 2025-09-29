@@ -24,7 +24,7 @@ class Sync {
   ///
   /// A document that is managed by the locorda sync framework, containing framework metadata and a primary resource topic.
   ///
-  static const ManagedDocument = const IriTerm(
+  static const ManagedDocument = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#ManagedDocument',
   );
 
@@ -32,17 +32,17 @@ class Sync {
   ///
   /// A statement containing framework metadata about a specific resource within a managed document. Used for resource-level concerns like deletion tombstones while maintaining clean separation from application data.
   ///
-  static const ResourceStatement = const IriTerm(
+  static const ResourceStatement = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement',
   );
 
-  /// IRI for sync:isGovernedBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// IRI for sync:isGovernedBy [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
   ///
-  /// Links a data or index resource to the public rules file that defines its merge behavior.
+  /// Links a data or index resource to an ordered list (rdf:List) of public mapping files that define its merge behavior. Documents are merged in list order with 'first wins' semantics - implementations should append only, not prepend, to avoid overriding existing definitions.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const isGovernedBy = const IriTerm(
+  static const isGovernedBy = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#isGovernedBy',
   );
 
@@ -52,7 +52,7 @@ class Sync {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const managedResourceType = const IriTerm(
+  static const managedResourceType = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
 
@@ -62,7 +62,7 @@ class Sync {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ManagedDocument
   ///
-  static const hasStatement = const IriTerm(
+  static const hasStatement = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#hasStatement',
   );
 
@@ -72,7 +72,7 @@ class Sync {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement
   ///
-  static const resource = const IriTerm(
+  static const resource = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#resource',
   );
 }

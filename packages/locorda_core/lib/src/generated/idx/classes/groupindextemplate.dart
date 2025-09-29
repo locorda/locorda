@@ -15,6 +15,7 @@ import 'package:rdf_core/rdf_core.dart';
 /// - Document (http://xmlns.com/foaf/0.1/Document)
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
 /// - Thing (http://www.w3.org/2002/07/owl#Thing)
+/// - Thing (http://schema.org/Thing)
 ///
 /// This class provides access to all properties that can be used with GroupIndexTemplate.
 /// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate)
@@ -26,7 +27,7 @@ class IdxGroupIndexTemplate {
 
   /// IRI term for the GroupIndexTemplate class
   /// Use this to specify that a resource is of this type.
-  static const classIri = const IriTerm(
+  static const classIri = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate',
   );
 
@@ -36,7 +37,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const belongsToIndexShard = const IriTerm(
+  static const belongsToIndexShard = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
   );
 
@@ -46,7 +47,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const indexesClass = const IriTerm(
+  static const indexesClass = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#indexesClass',
   );
 
@@ -56,7 +57,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const indexedProperty = const IriTerm(
+  static const indexedProperty = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#indexedProperty',
   );
 
@@ -66,7 +67,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const shardingAlgorithm = const IriTerm(
+  static const shardingAlgorithm = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#shardingAlgorithm',
   );
 
@@ -76,7 +77,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const isShardOf = const IriTerm(
+  static const isShardOf = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
   );
 
@@ -86,7 +87,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate
   ///
-  static const groupedBy = const IriTerm(
+  static const groupedBy = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#groupedBy',
   );
 
@@ -96,7 +97,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on all classes in this vocabulary
   ///
-  static const readBy = const IriTerm(
+  static const readBy = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/idx#readBy',
   );
 
@@ -106,7 +107,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtHasClockEntry = const IriTerm(
+  static const crdtHasClockEntry = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#hasClockEntry',
   );
 
@@ -116,7 +117,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtClockHash = const IriTerm(
+  static const crdtClockHash = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#clockHash',
   );
 
@@ -126,7 +127,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtCreatedAt = const IriTerm(
+  static const crdtCreatedAt = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#createdAt',
   );
 
@@ -136,7 +137,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtDeletedAt = const IriTerm(
+  static const crdtDeletedAt = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#deletedAt',
   );
 
@@ -146,7 +147,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtDocumentTombstoneRetentionPeriod = const IriTerm(
+  static const crdtDocumentTombstoneRetentionPeriod = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#documentTombstoneRetentionPeriod',
   );
 
@@ -156,7 +157,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtEnableDocumentTombstoneCleanup = const IriTerm(
+  static const crdtEnableDocumentTombstoneCleanup = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enableDocumentTombstoneCleanup',
   );
 
@@ -166,7 +167,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtPropertyTombstoneRetentionPeriod = const IriTerm(
+  static const crdtPropertyTombstoneRetentionPeriod = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#propertyTombstoneRetentionPeriod',
   );
 
@@ -176,17 +177,17 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const crdtEnablePropertyTombstoneCleanup = const IriTerm(
+  static const crdtEnablePropertyTombstoneCleanup = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
   );
 
-  /// isGovernedBy from sync vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// isGovernedBy from sync vocabulary [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
   ///
-  /// Links a data or index resource to the public rules file that defines its merge behavior.
+  /// Links a data or index resource to an ordered list (rdf:List) of public mapping files that define its merge behavior. Documents are merged in list order with 'first wins' semantics - implementations should append only, not prepend, to avoid overriding existing definitions.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const syncIsGovernedBy = const IriTerm(
+  static const syncIsGovernedBy = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#isGovernedBy',
   );
 
@@ -196,7 +197,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfType = const IriTerm(
+  static const rdfType = IriTerm(
     'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
   );
 
@@ -206,7 +207,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfValue = const IriTerm(
+  static const rdfValue = IriTerm(
     'http://www.w3.org/1999/02/22-rdf-syntax-ns#value',
   );
 
@@ -216,7 +217,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsComment = const IriTerm(
+  static const rdfsComment = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#comment',
   );
 
@@ -226,7 +227,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsLabel = const IriTerm(
+  static const rdfsLabel = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#label',
   );
 
@@ -236,7 +237,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsSeeAlso = const IriTerm(
+  static const rdfsSeeAlso = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#seeAlso',
   );
 
@@ -246,7 +247,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsIsDefinedBy = const IriTerm(
+  static const rdfsIsDefinedBy = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#isDefinedBy',
   );
 
@@ -256,8 +257,124 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
-  static const rdfsMember = const IriTerm(
+  static const rdfsMember = IriTerm(
     'http://www.w3.org/2000/01/rdf-schema#member',
+  );
+
+  /// annotatedProperty from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The property that determines the predicate of an annotated axiom or annotated annotation.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlAnnotatedProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#annotatedProperty',
+  );
+
+  /// annotatedSource from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The property that determines the subject of an annotated axiom or annotated annotation.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlAnnotatedSource = IriTerm(
+    'http://www.w3.org/2002/07/owl#annotatedSource',
+  );
+
+  /// annotatedTarget from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The property that determines the object of an annotated axiom or annotated annotation.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlAnnotatedTarget = IriTerm(
+    'http://www.w3.org/2002/07/owl#annotatedTarget',
+  );
+
+  /// bottomDataProperty from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// The data property that does not relate any individual to any data value.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlBottomDataProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#bottomDataProperty',
+  );
+
+  /// bottomObjectProperty from owl vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The object property that does not relate any two individuals.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlBottomObjectProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#bottomObjectProperty',
+  );
+
+  /// deprecated from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The annotation property that indicates that a given entity has been deprecated.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlDeprecated = IriTerm(
+    'http://www.w3.org/2002/07/owl#deprecated',
+  );
+
+  /// differentFrom from owl vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The property that determines that two given individuals are different.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlDifferentFrom = IriTerm(
+    'http://www.w3.org/2002/07/owl#differentFrom',
+  );
+
+  /// members from owl vocabulary [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
+  ///
+  /// The property that determines the collection of members in either a owl:AllDifferent, owl:AllDisjointClasses or owl:AllDisjointProperties axiom.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlMembers = IriTerm('http://www.w3.org/2002/07/owl#members');
+
+  /// sameAs from owl vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The property that determines that two given individuals are equal.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlSameAs = IriTerm('http://www.w3.org/2002/07/owl#sameAs');
+
+  /// topDataProperty from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// The data property that relates every individual to every data value.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlTopDataProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#topDataProperty',
+  );
+
+  /// topObjectProperty from owl vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
+  ///
+  /// The object property that relates every two individuals.
+  ///
+  /// Can be used on: http://www.w3.org/2002/07/owl#Thing
+  ///
+  static const owlTopObjectProperty = IriTerm(
+    'http://www.w3.org/2002/07/owl#topObjectProperty',
+  );
+
+  /// versionInfo from owl vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// The annotation property that provides version information for an ontology or another OWL construct.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const owlVersionInfo = IriTerm(
+    'http://www.w3.org/2002/07/owl#versionInfo',
   );
 
   /// sha1 from foaf vocabulary
@@ -266,7 +383,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://xmlns.com/foaf/0.1/Document
   ///
-  static const foafSha1 = const IriTerm('http://xmlns.com/foaf/0.1/sha1');
+  static const foafSha1 = IriTerm('http://xmlns.com/foaf/0.1/sha1');
 
   /// name from foaf vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
   ///
@@ -274,7 +391,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const foafName = const IriTerm('http://xmlns.com/foaf/0.1/name');
+  static const foafName = IriTerm('http://xmlns.com/foaf/0.1/name');
 
   /// homepage from foaf vocabulary [Expects: http://xmlns.com/foaf/0.1/Document]
   ///
@@ -282,9 +399,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const foafHomepage = const IriTerm(
-    'http://xmlns.com/foaf/0.1/homepage',
-  );
+  static const foafHomepage = IriTerm('http://xmlns.com/foaf/0.1/homepage');
 
   /// maker from foaf vocabulary [Expects: http://xmlns.com/foaf/0.1/Agent]
   ///
@@ -293,7 +408,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const foafMaker = const IriTerm('http://xmlns.com/foaf/0.1/maker');
+  static const foafMaker = IriTerm('http://xmlns.com/foaf/0.1/maker');
 
   /// depiction from foaf vocabulary [Expects: http://xmlns.com/foaf/0.1/Image]
   ///
@@ -301,9 +416,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const foafDepiction = const IriTerm(
-    'http://xmlns.com/foaf/0.1/depiction',
-  );
+  static const foafDepiction = IriTerm('http://xmlns.com/foaf/0.1/depiction');
 
   /// fundedBy from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
   ///
@@ -311,9 +424,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const foafFundedBy = const IriTerm(
-    'http://xmlns.com/foaf/0.1/fundedBy',
-  );
+  static const foafFundedBy = IriTerm('http://xmlns.com/foaf/0.1/fundedBy');
 
   /// logo from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
   ///
@@ -321,7 +432,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const foafLogo = const IriTerm('http://xmlns.com/foaf/0.1/logo');
+  static const foafLogo = IriTerm('http://xmlns.com/foaf/0.1/logo');
 
   /// topic from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
   ///
@@ -329,7 +440,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://xmlns.com/foaf/0.1/Document
   ///
-  static const foafTopic = const IriTerm('http://xmlns.com/foaf/0.1/topic');
+  static const foafTopic = IriTerm('http://xmlns.com/foaf/0.1/topic');
 
   /// primaryTopic from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
   ///
@@ -337,7 +448,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://xmlns.com/foaf/0.1/Document
   ///
-  static const foafPrimaryTopic = const IriTerm(
+  static const foafPrimaryTopic = IriTerm(
     'http://xmlns.com/foaf/0.1/primaryTopic',
   );
 
@@ -347,7 +458,7 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const foafPage = const IriTerm('http://xmlns.com/foaf/0.1/page');
+  static const foafPage = IriTerm('http://xmlns.com/foaf/0.1/page');
 
   /// theme from foaf vocabulary [Expects: http://www.w3.org/2002/07/owl#Thing]
   ///
@@ -355,5 +466,123 @@ class IdxGroupIndexTemplate {
   ///
   /// Can be used on: http://www.w3.org/2002/07/owl#Thing
   ///
-  static const foafTheme = const IriTerm('http://xmlns.com/foaf/0.1/theme');
+  static const foafTheme = IriTerm('http://xmlns.com/foaf/0.1/theme');
+
+  /// additionalType from schemahttp vocabulary [Expects: http://schema.org/Text, http://schema.org/URL]
+  ///
+  /// An additional type for the item, typically used for adding more specific types from external vocabularies in microdata syntax. This is a relationship between something and a class that the thing is in. Typically the value is a URI-identified RDF class, and in this case corresponds to the
+  /// use of rdf:type in RDF. Text values can be used sparingly, for cases where useful information can be added without their being an appropriate schema to reference. In the case of text values, the class label should follow the schema.org <a href="http://schema.org/docs/styleguide.html">style guide</a>.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpAdditionalType = IriTerm(
+    'http://schema.org/additionalType',
+  );
+
+  /// disambiguatingDescription from schemahttp vocabulary [Expects: http://schema.org/Text]
+  ///
+  /// A sub property of description. A short description of the item used to disambiguate from other, similar items. Information from other properties (in particular, name) may be necessary for the description to be useful for disambiguation.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpDisambiguatingDescription = IriTerm(
+    'http://schema.org/disambiguatingDescription',
+  );
+
+  /// name from schemahttp vocabulary [Expects: http://schema.org/Text]
+  ///
+  /// The name of the item.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpName = IriTerm('http://schema.org/name');
+
+  /// potentialAction from schemahttp vocabulary [Expects: http://schema.org/Action]
+  ///
+  /// Indicates a potential Action, which describes an idealized action in which this thing would play an 'object' role.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpPotentialAction = IriTerm(
+    'http://schema.org/potentialAction',
+  );
+
+  /// sameAs from schemahttp vocabulary [Expects: http://schema.org/URL]
+  ///
+  /// URL of a reference Web page that unambiguously indicates the item's identity. E.g. the URL of the item's Wikipedia page, Wikidata entry, or official website.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpSameAs = IriTerm('http://schema.org/sameAs');
+
+  /// url from schemahttp vocabulary [Expects: http://schema.org/URL]
+  ///
+  /// URL of the item.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpUrl = IriTerm('http://schema.org/url');
+
+  /// alternateName from schemahttp vocabulary [Expects: http://schema.org/Text]
+  ///
+  /// An alias for the item.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpAlternateName = IriTerm(
+    'http://schema.org/alternateName',
+  );
+
+  /// mainEntityOfPage from schemahttp vocabulary [Expects: http://schema.org/CreativeWork, http://schema.org/URL]
+  ///
+  /// Indicates a page (or other CreativeWork) for which this thing is the main entity being described. See [background notes](/docs/datamodel.html#mainEntityBackground) for details.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpMainEntityOfPage = IriTerm(
+    'http://schema.org/mainEntityOfPage',
+  );
+
+  /// subjectOf from schemahttp vocabulary [Expects: http://schema.org/CreativeWork, http://schema.org/Event]
+  ///
+  /// A CreativeWork or Event about this Thing.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpSubjectOf = IriTerm('http://schema.org/subjectOf');
+
+  /// description from schemahttp vocabulary [Expects: http://schema.org/Text, http://schema.org/TextObject]
+  ///
+  /// A description of the item.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpDescription = IriTerm('http://schema.org/description');
+
+  /// image from schemahttp vocabulary [Expects: http://schema.org/ImageObject, http://schema.org/URL]
+  ///
+  /// An image of the item. This can be a {[URL]} or a fully described {[ImageObject]}.
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpImage = IriTerm('http://schema.org/image');
+
+  /// identifier from schemahttp vocabulary [Expects: http://schema.org/PropertyValue, http://schema.org/Text, http://schema.org/URL]
+  ///
+  /// The identifier property represents any kind of identifier for any kind of {[Thing]}, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated properties for representing many of these, either as textual strings or as URL (URI) links. See [background notes](/docs/datamodel.html#identifierBg) for more details.
+  ///
+  ///
+  /// Can be used on: http://schema.org/Thing
+  ///
+  static const schemahttpIdentifier = IriTerm('http://schema.org/identifier');
+
+  /// abstract_ from bibo vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Literal]
+  ///
+  /// A summary of the resource.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const biboAbstract_ = IriTerm(
+    'http://purl.org/ontology/bibo/abstract',
+  );
 }

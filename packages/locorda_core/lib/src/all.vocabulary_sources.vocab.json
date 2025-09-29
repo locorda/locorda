@@ -68,8 +68,6 @@
       "type": "url",
       "namespace": "http://www.w3.org/2002/07/owl#",
       "source": "https://www.w3.org/2002/07/owl.ttl",
-      "skipDownload": true,
-      "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
       "generate": false
     },
     "dc": {
@@ -92,16 +90,12 @@
       "namespace": "http://purl.org/NET/c4dm/event.owl#",
       "source": "https://motools.sf.net/event/event.n3",
       "contentType": "text/turtle",
-      "skipDownload": true,
-      "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
       "generate": false
     },
     "dcterms": {
       "type": "url",
       "namespace": "http://purl.org/dc/terms/",
       "source": "https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.ttl",
-      "skipDownload": true,
-      "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
       "generate": false
     },
     "foaf": {
@@ -114,8 +108,6 @@
       "type": "url",
       "namespace": "http://www.w3.org/2003/01/geo/wgs84_pos#",
       "source": "https://www.w3.org/2003/01/geo/wgs84_pos.rdf",
-      "skipDownload": true,
-      "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
       "generate": false
     },
     "contact": {
@@ -123,8 +115,6 @@
       "namespace": "http://www.w3.org/2000/10/swap/pim/contact#",
       "source": "https://www.w3.org/2000/10/swap/pim/contact#",
       "contentType": "application/rdf+xml",
-      "skipDownload": true,
-      "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
       "generate": false
     },
     "vs": {
@@ -140,16 +130,12 @@
       "type": "url",
       "namespace": "http://purl.org/dc/dcmitype/",
       "source": "https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_type.ttl",
-      "skipDownload": true,
-      "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
       "generate": false
     },
     "skos": {
       "type": "url",
       "namespace": "http://www.w3.org/2004/02/skos/core#",
       "source": "https://www.w3.org/2009/08/skos-reference/skos.rdf",
-      "skipDownload": true,
-      "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
       "generate": false
     },
     "vcard": {
@@ -194,8 +180,6 @@
       "parsingFlags": [
         "allowDigitInLocalName"
       ],
-      "skipDownload": true,
-      "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
       "generate": false
     },
     "solid": {
@@ -208,6 +192,18 @@
       ],
       "skipDownload": true,
       "skipDownloadReason": "This is just an example config, remove skipDownload when you actually need to reference or to generate this namespace.",
+      "generate": false
+    },
+    "bibo": {
+      "type": "url",
+      "namespace": "http://purl.org/ontology/bibo/",
+      "source": "https://www.dublincore.org/specifications/bibo/bibo/bibo.ttl",
+      "generate": false
+    },
+    "dcat": {
+      "type": "url",
+      "namespace": "http://www.w3.org/ns/dcat#",
+      "source": "https://www.w3.org/ns/dcat",
       "generate": false
     }
   }

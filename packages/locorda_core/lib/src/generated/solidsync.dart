@@ -26,7 +26,7 @@ class Solidsync {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const belongsToWebID = const IriTerm(
+  static const belongsToWebID = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/solid#belongsToWebID',
   );
 
@@ -36,7 +36,7 @@ class Solidsync {
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation
   ///
-  static const solidOidcClientId = const IriTerm(
+  static const solidOidcClientId = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/solid#solidOidcClientId',
   );
 }

@@ -43,12 +43,6 @@ mc:appliesToClass a rdf:Property;
     rdfs:domain mc:Mapping;
     rdfs:range rdfs:Class .
 
-mc:appliesToPredicate a rdf:Property;
-    rdfs:label "applies to predicate";
-    rdfs:comment "Links a Mapping to a specific predicate, allowing mapping of resources that appear as objects of this predicate regardless of their type. Useful for typeless blank nodes.";
-    rdfs:domain mc:Mapping;
-    rdfs:range rdf:Property .
-
 mc:imports a rdf:Property;
     rdfs:label "imports";
     rdfs:comment "An ordered list (rdf:List) of DocumentMapping libraries to import, inheriting all their class and predicate mappings. Precedence: Local ClassMapping > Local PredicateMapping > Imported DocumentMapping (list order). Used for importing standard mapping libraries like CRDT or RDF vocabularies.";

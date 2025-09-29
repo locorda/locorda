@@ -7,95 +7,26 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// IndexedProperty class from Idx vocabulary
+/// LWW_Register class from Algo vocabulary
 ///
-/// A configuration object that specifies which property should be indexed and tracks which installations actively read from it. Used within idx:indexedProperty to enable property-level reader management.
+/// A Last-Writer-Wins Register CRDT, for single-value properties. When applied to multi-value properties, treats the complete value set atomically - the most recent complete value set wins, replacing all previous values entirely.
 ///
 /// Inherits from:
+/// - Algorithm (https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#Algorithm)
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
 ///
-/// This class provides access to all properties that can be used with IndexedProperty.
-/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty)
+/// This class provides access to all properties that can be used with LWW_Register.
+/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#LWW_Register)
 ///
-/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/idx#)
-class IdxIndexedProperty {
+/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#)
+class AlgoLWW_Register {
   // Private constructor prevents instantiation
-  const IdxIndexedProperty._();
+  const AlgoLWW_Register._();
 
-  /// IRI term for the IndexedProperty class
+  /// IRI term for the LWW_Register class
   /// Use this to specify that a resource is of this type.
   static const classIri = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty',
-  );
-
-  /// belongsToIndexShard [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// Links a data resource to the specific index shard it is a member of.
-  ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
-  ///
-  static const belongsToIndexShard = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
-  );
-
-  /// indexesClass [Expects: http://www.w3.org/2000/01/rdf-schema#Class]
-  ///
-  /// Specifies which class of resource this index tracks (e.g., schema:Recipe, idx:Shard, sync:ManagedDocument). Index entries contain resource-level properties for querying, while sync operations depend on resource type: if resources are documents themselves (e.g., idx:FullIndex), all operations are document-level; if resources use fragment identifiers (e.g., schema:Recipe), sync operations are on the containing document while resource operations are on the specific resource.
-  ///
-  /// Can be used on all classes in this vocabulary
-  ///
-  static const indexesClass = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#indexesClass',
-  );
-
-  /// indexedProperty [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty]
-  ///
-  /// Links an index to an IndexedProperty configuration object that specifies which property should be indexed and tracks which installations read from it.
-  ///
-  /// Can be used on all classes in this vocabulary
-  ///
-  static const indexedProperty = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#indexedProperty',
-  );
-
-  /// shardingAlgorithm [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// Defines the algorithm used to place new items into shards.
-  ///
-  /// Can be used on all classes in this vocabulary
-  ///
-  static const shardingAlgorithm = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#shardingAlgorithm',
-  );
-
-  /// isShardOf [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
-  ///
-  /// A back-link from a shard to the root index or partition it belongs to.
-  ///
-  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
-  ///
-  static const isShardOf = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
-  );
-
-  /// readBy [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
-  ///
-  /// An OR-Set of installation IRIs that actively read from this index or specific indexed property. Used for collaborative lifecycle management and property cleanup when readers are tombstoned.
-  ///
-  /// Can be used on all classes in this vocabulary
-  ///
-  static const readBy = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#readBy',
-  );
-
-  /// trackedProperty [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
-  ///
-  /// Specifies which RDF property is being tracked in an indexed property configuration object.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#IndexedProperty
-  ///
-  static const trackedProperty = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/idx#trackedProperty',
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#LWW_Register',
   );
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
@@ -176,6 +107,26 @@ class IdxIndexedProperty {
   ///
   static const crdtEnablePropertyTombstoneCleanup = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#enablePropertyTombstoneCleanup',
+  );
+
+  /// belongsToIndexShard from idx vocabulary [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  ///
+  /// Links a data resource to the specific index shard it is a member of.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const idxBelongsToIndexShard = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#belongsToIndexShard',
+  );
+
+  /// isShardOf from idx vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/idx#Index]
+  ///
+  /// A back-link from a shard to the root index or partition it belongs to.
+  ///
+  /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
+  ///
+  static const idxIsShardOf = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/idx#isShardOf',
   );
 
   /// isGovernedBy from sync vocabulary [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
