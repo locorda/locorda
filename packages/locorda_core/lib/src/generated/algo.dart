@@ -52,12 +52,12 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#OR_Set',
   );
 
-  /// IRI for algo:n2P_Set
+  /// IRI for algo:TwoPSet
   ///
   /// A Two-Phase Set CRDT, for multi-value properties where removal is permanent.
   ///
-  static const n2P_Set = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#2P_Set',
+  static const TwoPSet = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#TwoPSet',
   );
 
   /// IRI for algo:Immutable
@@ -70,9 +70,9 @@ class Algo {
 
   /// IRI for algo:mergeWith [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#Algorithm]
   ///
-  /// Links a sync:Rule to the specific CRDT Algorithm to be used for merging.
+  /// Links a mc:Rule to the specific CRDT Algorithm to be used for merging.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#Rule
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
   ///
   static const mergeWith = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#mergeWith',

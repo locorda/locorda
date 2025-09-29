@@ -263,14 +263,11 @@ RdfGraph _constructCrdtDocument(
   return allTriples.toRdfGraph();
 }
 
-List<RdfObject> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
+List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
     IriTerm documentIri, SyncGraphConfig config, IriTerm resourceType) {
-  final oldIsGovernedBy = oldFrameworkGraph?.findSingleObject(
-      documentIri, SyncManagedDocument.isGovernedBy);
-  final oldIsGovernedByFiles = (oldIsGovernedBy is RdfSubject
-          ? oldFrameworkGraph?.getListObjects(oldIsGovernedBy)
-          : null) ??
-      const <RdfObject>[];
+  final oldIsGovernedByFiles = oldFrameworkGraph?.getListObjects<IriTerm>(
+          documentIri, SyncManagedDocument.isGovernedBy) ??
+      const <IriTerm>[];
   final ourGovernedByFile = IriTerm.validated(
       config.getResourceConfig(resourceType).crdtMapping.toString());
   final governedByFiles = oldIsGovernedByFiles.contains(ourGovernedByFile)

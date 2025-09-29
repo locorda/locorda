@@ -352,7 +352,7 @@ Result: #crdt-tombstone-a1b2c3d4
 
 **Implementation Notes:**
 - **Pod Migration Limitation:** When documents are copied between pods, base URIs change, resulting in different tombstone identifiers for semantically equivalent tombstones. This is acceptable as equivalent tombstones merge correctly.
-- **Blank Node Support:** Identifiable blank nodes (those with `sync:isIdentifying` declarations) can serve as tombstone subjects using their stable identity pattern. Non-identifiable blank nodes cannot be tombstoned as they lack stable identity across documents. See ARCHITECTURE.md section 3.3-3.4 for identification patterns.
+- **Blank Node Support:** Identifiable blank nodes (those with `mc:isIdentifying` declarations) can serve as tombstone subjects using their stable identity pattern. Non-identifiable blank nodes cannot be tombstoned as they lack stable identity across documents. See ARCHITECTURE.md section 3.3-3.4 for identification patterns.
 - **Collision Resistance:** XXH64 provides sufficient collision resistance for practical use cases while maintaining compact identifiers.
 
 #### 3.3.1. Tombstone Cleanup with Timestamps
@@ -427,10 +427,10 @@ Since Hybrid Logical Clock entries are typically typeless blank nodes, we use pr
 ```turtle
 # Standard mapping for Hybrid Logical Clock entries (typeless blank nodes)  
 <#clock-mappings> a sync:PredicateMapping;
-   sync:rule
-     [ sync:predicate crdt:installationId; crdt:mergeWith crdt:LWW_Register; sync:isIdentifying true ],
-     [ sync:predicate crdt:logicalTime; crdt:mergeWith crdt:LWW_Register ],
-     [ sync:predicate crdt:physicalTime; crdt:mergeWith crdt:LWW_Register ] .
+   mc:rule
+     [ mc:predicate crdt:installationId; algo:mergeWith crdt:LWW_Register; mc:isIdentifying true ],
+     [ mc:predicate crdt:logicalTime; algo:mergeWith crdt:LWW_Register ],
+     [ mc:predicate crdt:physicalTime; algo:mergeWith crdt:LWW_Register ] .
 ```
 
 #### Compound Key Example
@@ -439,10 +439,10 @@ Since Hybrid Logical Clock entries are typically typeless blank nodes, we use pr
 ```turtle
 # Example with compound identification key for nutrition info
 mappings:nutrition-mappings-v1 a sync:PredicateMapping;
-   sync:rule
-     [ sync:predicate schema:calories; crdt:mergeWith crdt:LWW_Register; sync:isIdentifying true ],
-     [ sync:predicate schema:servingSize; crdt:mergeWith crdt:LWW_Register; sync:isIdentifying true ],
-     [ sync:predicate schema:protein; crdt:mergeWith crdt:LWW_Register ] .  # Not identifying
+   mc:rule
+     [ mc:predicate schema:calories; algo:mergeWith crdt:LWW_Register; mc:isIdentifying true ],
+     [ mc:predicate schema:servingSize; algo:mergeWith crdt:LWW_Register; mc:isIdentifying true ],
+     [ mc:predicate schema:protein; algo:mergeWith crdt:LWW_Register ] .  # Not identifying
 ```
 
 #### Multi-Subject Reference Example
@@ -494,13 +494,13 @@ In this case, both paths result in equivalent identification since they have the
 
 **Why Not Structural Equality?** A tempting solution would be to declare two blank nodes equal if and only if all their properties are identical. However, this creates a subtle trap: if a blank node has naturally identifying properties (like `rdfs:label`) mixed with mutable properties (like `custom:priority`), then editing the mutable properties silently breaks tombstone matching. The deletion operation fails without error, creating hard-to-debug data inconsistencies. Therefore, this specification explicitly prohibits structural equality comparison and requires explicit identification patterns.
 
-**Solution Path:** This particular example could potentially be made identifiable by declaring `rdfs:label` as an identifying property using `sync:isIdentifying` in the mapping contract for `schema:keywords` properties. However, this only works when blank nodes have stable identifying properties that don't conflict across documents.
+**Solution Path:** This particular example could potentially be made identifiable by declaring `rdfs:label` as an identifying property using `mc:isIdentifying` in the mapping contract for `schema:keywords` properties. However, this only works when blank nodes have stable identifying properties that don't conflict across documents.
 
 ### 4.1. Identifiable vs Non-Identifiable Resources
 
 **Identifiable Resources** (safe for all CRDT types):
 - **IRI-identified resources:** Have globally unique, stable identifiers
-- **Context-identified blank nodes:** Blank nodes with identifying properties declared via `sync:isIdentifying` within specific subject-predicate contexts
+- **Context-identified blank nodes:** Blank nodes with identifying properties declared via `mc:isIdentifying` within specific subject-predicate contexts
 
 **Non-Identifiable Resources** (cause merge failures in identity-dependent CRDTs):
 - **Standard blank nodes:** Document-scoped identifiers that cannot be matched across documents without explicit identification patterns
@@ -528,16 +528,16 @@ validateMapping(property, crdtType, objectTypes):
 
 ### 4.4. Identifying Property Patterns and Precedence Rules
 
-**Context-Identified Blank Nodes:** Blank nodes can become identifiable when mapping documents declare identifying properties using `sync:isIdentifying true` flags within rules.
+**Context-Identified Blank Nodes:** Blank nodes can become identifiable when mapping documents declare identifying properties using `mc:isIdentifying true` flags within rules.
 
 **Example - Hybrid Logical Clock Mapping:**
 ```turtle
 # Predicate-based mapping for Hybrid Logical Clock entries (typeless blank nodes)
 mappings:clock-mappings-v1 a sync:PredicateMapping;
-   sync:rule
-     [ sync:predicate crdt:installationId; crdt:mergeWith crdt:LWW_Register; sync:isIdentifying true ],
-     [ sync:predicate crdt:logicalTime; crdt:mergeWith crdt:LWW_Register ],
-     [ sync:predicate crdt:physicalTime; crdt:mergeWith crdt:LWW_Register ] .
+   mc:rule
+     [ mc:predicate crdt:installationId; algo:mergeWith crdt:LWW_Register; mc:isIdentifying true ],
+     [ mc:predicate crdt:logicalTime; algo:mergeWith crdt:LWW_Register ],
+     [ mc:predicate crdt:physicalTime; algo:mergeWith crdt:LWW_Register ] .
 ```
 
 **Usage in Data:**
@@ -554,7 +554,7 @@ mappings:clock-mappings-v1 a sync:PredicateMapping;
 
 1. **Scope Priority:** Local ClassMapping > Local PredicateMapping > Imported DocumentMapping  
 2. **List Order Priority:** Within same scope, first mapping in rdf:List wins for conflicting rules
-3. **Property-Level Override:** Each rule property (`crdt:mergeWith`, `sync:isIdentifying`) resolves independently
+3. **Property-Level Override:** Each rule property (`algo:mergeWith`, `mc:isIdentifying`) resolves independently
 4. **Inheritance Model:** Missing properties inherit from lower-priority scopes
 
 **Conflict Resolution Strategy:** When multiple mappings define conflicting rules for the same predicate:
@@ -565,34 +565,34 @@ mappings:clock-mappings-v1 a sync:PredicateMapping;
 **Override Examples:**
 ```turtle
 # Complete precedence example
-<> sync:imports ( 
+<> mc:imports ( 
     <https://standard-crdt.org/mappings/v1>   # Lowest priority (imported)
     <https://app-framework.org/mappings/v1>   
   ) ;
-  sync:classMapping ( <#recipe-rules> ) ;     # Medium priority (local class)
-  sync:predicateMapping ( <#app-predicates> ) . # Highest priority (local predicate)
+  mc:classMapping ( <#recipe-rules> ) ;     # Medium priority (local class)
+  mc:predicateMapping ( <#app-predicates> ) . # Highest priority (local predicate)
 
 # Local predicate mapping overrides everything
 <#app-predicates> a sync:PredicateMapping;
-   sync:rule [ sync:predicate my:customProp; crdt:mergeWith crdt:OR_Set; sync:isIdentifying true ] .
+   mc:rule [ mc:predicate my:customProp; algo:mergeWith algo:OR_Set; mc:isIdentifying true ] .
 
 # Local class mapping overrides imported libraries  
 <#recipe-rules> a sync:ClassMapping;
    sync:appliesToClass schema:Recipe;
-   sync:rule [ sync:predicate schema:name; crdt:mergeWith crdt:OR_Set ] .
+   mc:rule [ mc:predicate schema:name; algo:mergeWith algo:OR_Set ] .
    # Result: schema:name uses OR_Set here, even if imports say LWW_Register
 
 # Property-level inheritance example
 <#partial-override> a sync:ClassMapping;
    sync:appliesToClass my:SpecialClass;
-   sync:rule [ sync:predicate crdt:installationId; sync:isIdentifying false ] .
-   # Result: keeps crdt:mergeWith from imported mappings, only changes identification
+   mc:rule [ mc:predicate crdt:installationId; mc:isIdentifying false ] .
+   # Result: keeps algo:mergeWith from imported mappings, only changes identification
 ```
 
 **Implementation Guidance:**
 - **Conflict Detection:** Compare rules across all imported mappings during contract loading
 - **Warning Messages:** Log specific conflicts with mapping URLs and predicate names for debugging
-- **Validation Rule:** Recognize blank node patterns as identifiable when the effective rule (after precedence resolution) declares `sync:isIdentifying true`
+- **Validation Rule:** Recognize blank node patterns as identifiable when the effective rule (after precedence resolution) declares `mc:isIdentifying true`
 
 ### 4.5. Error Handling
 

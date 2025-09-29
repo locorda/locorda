@@ -7,65 +7,26 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// Rule class from Mc vocabulary
+/// TwoPSet class from Algo vocabulary
 ///
-/// A declarative rule that links a specific predicate/property to a CRDT merge algorithm.
+/// A Two-Phase Set CRDT, for multi-value properties where removal is permanent.
 ///
 /// Inherits from:
+/// - Algorithm (https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#Algorithm)
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
 ///
-/// This class provides access to all properties that can be used with Rule.
-/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule)
+/// This class provides access to all properties that can be used with TwoPSet.
+/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#TwoPSet)
 ///
-/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/merge-contract#)
-class McRule {
+/// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#)
+class AlgoTwoPSet {
   // Private constructor prevents instantiation
-  const McRule._();
+  const AlgoTwoPSet._();
 
-  /// IRI term for the Rule class
+  /// IRI term for the TwoPSet class
   /// Use this to specify that a resource is of this type.
   static const classIri = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule',
-  );
-
-  /// predicate [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
-  ///
-  /// Specifies the RDF predicate that a PropertyMapping applies to.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
-  ///
-  static const predicate = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#predicate',
-  );
-
-  /// isIdentifying [Expects: http://www.w3.org/2001/XMLSchema#boolean]
-  ///
-  /// A boolean flag used within mc:Rule to declare whether a specific predicate can be used to identify blank nodes within contexts. This enables context-based blank node identification for CRDT operations that require object identity (e.g., OR-Set, 2P-Set tombstone matching). When true, the predicate serves as part of a compound identification key along with other identifying predicates from any applicable mapping scope.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
-  ///
-  static const isIdentifying = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#isIdentifying',
-  );
-
-  /// stopTraversal [Expects: http://www.w3.org/2001/XMLSchema#boolean]
-  ///
-  /// A boolean flag used within mc:Rule to mark a predicate as a boundary for framework/app data separation during graph traversal. When true, the predicate creates a traversal boundary - the framework will not follow edges with this predicate when separating framework data from application data.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
-  ///
-  static const stopTraversal = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#stopTraversal',
-  );
-
-  /// mergeWith from algo vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#Algorithm]
-  ///
-  /// Links a mc:Rule to the specific CRDT Algorithm to be used for merging.
-  ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
-  ///
-  static const algoMergeWith = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#mergeWith',
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#TwoPSet',
   );
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]

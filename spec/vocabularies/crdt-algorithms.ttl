@@ -4,6 +4,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix algo: <https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#> .
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
+@prefix mc: <https://w3id.org/solid-crdt-sync/vocab/merge-contract#> .
 
 # --- Ontology Definition ---
 
@@ -34,7 +35,7 @@ algo:OR_Set a rdfs:Class;
     rdfs:comment "An Observed-Remove Set CRDT, for multi-value properties that allows items to be re-added after deletion.";
     rdfs:subClassOf algo:Algorithm .
 
-<https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#2P_Set> a rdfs:Class;
+algo:TwoPSet a rdfs:Class;
     rdfs:label "2P-Set";
     rdfs:comment "A Two-Phase Set CRDT, for multi-value properties where removal is permanent.";
     rdfs:subClassOf algo:Algorithm .
@@ -48,6 +49,6 @@ algo:Immutable a rdfs:Class;
 
 algo:mergeWith a rdf:Property;
     rdfs:label "merge with";
-    rdfs:comment "Links a sync:Rule to the specific CRDT Algorithm to be used for merging.";
-    rdfs:domain sync:Rule;
+    rdfs:comment "Links a mc:Rule to the specific CRDT Algorithm to be used for merging.";
+    rdfs:domain mc:Rule;
     rdfs:range algo:Algorithm .

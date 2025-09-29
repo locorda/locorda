@@ -19,13 +19,43 @@ extension RdfGraphExtensions on RdfGraph {
     return localIdTriple.subject as IriTerm;
   }
 
-  RdfObject? findSingleObject(RdfSubject subject, IriTerm predicate) {
+  T? findSingleObject<T extends RdfObject>(
+      RdfSubject subject, IriTerm predicate) {
     final triple =
         findTriples(subject: subject, predicate: predicate).singleOrNull;
-    return triple?.object;
+    final obj = triple?.object;
+    if (obj is T) {
+      return obj;
+    }
+    return null;
   }
 
-  List<RdfObject> getListObjects(RdfSubject listRoot) {
+  /**
+   * Gets a list of RdfObjects from a rdf:List structure (e.g. rdf:first, rdf:rest, rdf:nil)
+   */
+  List<T> getListObjects<T extends RdfObject>(
+      RdfSubject subject, IriTerm predicate) {
+    final obj = findSingleObject(subject, predicate);
+    if (!(obj is RdfSubject)) {
+      return [];
+    }
+    return traverseListObjects<T>(obj);
+  }
+
+/*
+* Gets a list of RdfObjects from a multi-valued property (i.e. multiple triples with the same predicate)
+*/
+  List<T> getMultiValueObjects<T extends RdfObject>(
+      RdfSubject subject, IriTerm predicate) {
+    final obj = findTriples(subject: subject, predicate: predicate);
+    if (obj.isEmpty) {
+      return [];
+    }
+    return obj.map((t) => t.object).whereType<T>().toList();
+  }
+
+  List<T> traverseListObjects<T extends RdfObject>(RdfSubject listRoot) {
+    if (listRoot == Rdf.nil) return [];
     return subgraph(listRoot, filter: (t, depth) {
       if (t.predicate == Rdf.rest) {
         if (t.object == Rdf.nil) {
@@ -38,7 +68,105 @@ extension RdfGraphExtensions on RdfGraph {
         return TraversalDecision.includeButDontDescend;
       }
       return TraversalDecision.skip;
-    }).triples.map((t) => t.object).toList();
+    }).triples.map((t) => t.object).whereType<T>().toList();
+  }
+}
+
+extension IriTermExtensions on IriTerm {
+  String get localName {
+    final hashIndex = value.lastIndexOf('#');
+    if (hashIndex != -1 && hashIndex < value.length - 1) {
+      return value.substring(hashIndex + 1);
+    }
+    final slashIndex = value.lastIndexOf('/');
+    if (slashIndex != -1 && slashIndex < value.length - 1) {
+      return value.substring(slashIndex + 1);
+    }
+    return value; // Fallback to full IRI if no separator found
+  }
+
+  IriTerm getDocumentIri([IriTermFactory iriFactory = IriTerm.validated]) {
+    final hashIndex = value.lastIndexOf('#');
+    if (hashIndex != -1) {
+      return iriFactory(value.substring(0, hashIndex));
+    }
+    final slashIndex = value.lastIndexOf('/');
+    if (slashIndex != -1) {
+      return iriFactory(value.substring(0, slashIndex));
+    }
+    return this; // Fallback to self if no separator found
+  }
+}
+
+extension LiteralTermExtensions on LiteralTerm {
+  bool get isBoolean {
+    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#boolean');
+  }
+
+  bool get booleanValue {
+    if (!isBoolean) {
+      throw StateError('Literal is not a boolean');
+    }
+    return value == 'true' || value == '1';
+  }
+
+  bool get isInteger {
+    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#integer') ||
+        datatype == IriTerm('http://www.w3.org/2001/XMLSchema#int');
+  }
+
+  int get integerValue {
+    if (!isInteger) {
+      throw StateError('Literal is not an integer');
+    }
+    return int.parse(value);
+  }
+
+  bool get isString {
+    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#string') ||
+        datatype ==
+            IriTerm('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+  }
+
+  String get stringValue {
+    if (!isString) {
+      throw StateError('Literal is not a string');
+    }
+    return value;
+  }
+
+  double get doubleValue {
+    if (!isDouble) {
+      throw StateError('Literal is not a double or float');
+    }
+    return double.parse(value);
+  }
+
+  bool get isDouble {
+    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#double') ||
+        datatype == IriTerm('http://www.w3.org/2001/XMLSchema#float');
+  }
+
+  bool get isDateTime {
+    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#dateTime');
+  }
+
+  DateTime get dateTimeValue {
+    if (!isDateTime) {
+      throw StateError('Literal is not a dateTime');
+    }
+    return DateTime.parse(value);
+  }
+
+  bool get isDate {
+    return datatype == IriTerm('http://www.w3.org/2001/XMLSchema#date');
+  }
+
+  DateTime get dateValue {
+    if (!isDate) {
+      throw StateError('Literal is not a date');
+    }
+    return DateTime.parse(value);
   }
 }
 

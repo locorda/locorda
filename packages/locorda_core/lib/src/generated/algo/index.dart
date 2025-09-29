@@ -10,4 +10,4 @@ export 'classes/fww_register.dart';
 export 'classes/immutable.dart';
 export 'classes/lww_register.dart';
 export 'classes/or_set.dart';
-export 'classes/n2p_set.dart';
+export 'classes/twopset.dart';
