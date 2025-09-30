@@ -1,8 +1,6 @@
-// TODO: generalize to a generic fetcher that also does etag caching etc?
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
-import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -89,13 +87,11 @@ class MergeContractLoader {
     final mergeWithIri =
         graph.findSingleObject<IriTerm>(ref, McRule.algoMergeWith);
     final stopTraversal = graph
-            .findSingleObject<LiteralTerm>(ref, McRule.stopTraversal)
-            ?.booleanValue ??
-        false;
+        .findSingleObject<LiteralTerm>(ref, McRule.stopTraversal)
+        ?.booleanValue;
     final isIdentifying = graph
-            .findSingleObject<LiteralTerm>(ref, McRule.isIdentifying)
-            ?.booleanValue ??
-        false;
+        .findSingleObject<LiteralTerm>(ref, McRule.isIdentifying)
+        ?.booleanValue;
 
     return PredicateRule(
       predicateIri: predicateIri,

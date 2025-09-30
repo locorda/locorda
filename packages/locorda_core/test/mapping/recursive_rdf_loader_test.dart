@@ -6,7 +6,7 @@ import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
-class MockRdfGraphFetcher extends RdfGraphFetcher {
+class MockRdfGraphFetcher implements RdfGraphFetcher {
   final Map<IriTerm, Future<RdfGraph>> _mockData = {};
   final Set<IriTerm> _fetchedUris = {};
   int fetchCount = 0;
@@ -362,16 +362,20 @@ void main() {
         final dep2Uri = const IriTerm('https://example.com/dep2');
 
         final rootGraph = RdfGraph.fromTriples([
-          Triple(rootUri, Rdf.type, const IriTerm('https://example.com/TestType')),
+          Triple(
+              rootUri, Rdf.type, const IriTerm('https://example.com/TestType')),
         ]);
         final sharedGraph = RdfGraph.fromTriples([
-          Triple(sharedDepUri, Rdf.type, const IriTerm('https://example.com/TestType')),
+          Triple(sharedDepUri, Rdf.type,
+              const IriTerm('https://example.com/TestType')),
         ]);
         final dep1Graph = RdfGraph.fromTriples([
-          Triple(dep1Uri, Rdf.type, const IriTerm('https://example.com/TestType')),
+          Triple(
+              dep1Uri, Rdf.type, const IriTerm('https://example.com/TestType')),
         ]);
         final dep2Graph = RdfGraph.fromTriples([
-          Triple(dep2Uri, Rdf.type, const IriTerm('https://example.com/TestType')),
+          Triple(
+              dep2Uri, Rdf.type, const IriTerm('https://example.com/TestType')),
         ]);
 
         final Completer<RdfGraph> sharedCompleter = Completer<RdfGraph>();
@@ -405,10 +409,12 @@ void main() {
         final result = await loadFuture;
 
         expect(result, hasLength(4));
-        expect(result.keys, containsAll([rootUri, dep1Uri, dep2Uri, sharedDepUri]));
+        expect(result.keys,
+            containsAll([rootUri, dep1Uri, dep2Uri, sharedDepUri]));
 
         // Shared dependency should only be fetched once despite being referenced twice
-        expect(mockFetcher.fetchCount, equals(4)); // root + dep1 + dep2 + shared (only once)
+        expect(mockFetcher.fetchCount,
+            equals(4)); // root + dep1 + dep2 + shared (only once)
       });
 
       test('handles concurrent dependency loading', () async {

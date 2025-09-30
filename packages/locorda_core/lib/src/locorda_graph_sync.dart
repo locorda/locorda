@@ -3,13 +3,14 @@ library;
 
 import 'dart:async';
 
+import 'package:http/http.dart' as http;
 import 'package:locorda_core/locorda_core.dart';
-
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
-import 'package:locorda_core/src/generated/foaf.dart';
-import 'package:locorda_core/src/generated/rdf.dart';
+import 'package:locorda_core/src/mapping/merge_contract.dart';
+import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
+import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -278,18 +279,11 @@ List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
   return governedByFiles;
 }
 
-final stopTraversalPredicates = <IriTerm>{
-  Foaf.primaryTopic,
-  Rdf.subject,
-  Rdf.predicate,
-  Rdf.object,
-};
-
 ({RdfGraph appGraph, RdfGraph frameworkGraph}) _splitDocument(
-    RdfGraph document, IriTerm documentIri) {
+    RdfGraph document, IriTerm documentIri, MergeContract mergeContract) {
   // We have to split the document into application data and framework metadata.
+  final stopTraversalPredicates = mergeContract.globalStopTraversalPredicates;
 
-  // FIXME: read the stopTraversalPredicates from the governing documents
   final frameworkGraph = document.subgraph(documentIri,
       filter: (triple, depth) =>
           stopTraversalPredicates.contains(triple.predicate)
@@ -312,7 +306,7 @@ class LocordaGraphSync {
   // ignore: unused_field
   final Backend? _backend; // TODO: Use for Remote synchronization
   final SyncGraphConfig _config;
-
+  final MergeContractLoader _mergeContractLoader;
   late final HydrationStreamManager _streamManager;
   late final HydrationEmitter _emitter;
   late final GroupIndexGraphSubscriptionManager _groupIndexManager;
@@ -324,11 +318,13 @@ class LocordaGraphSync {
     required Storage storage,
     required Backend backend,
     required SyncGraphConfig config,
+    required MergeContractLoader mergeContractLoader,
     PhysicalTimestampFactory? physicalTimestampFactory,
     HlcService? hlcService,
   })  : _storage = storage,
         _backend = backend,
         _config = config,
+        _mergeContractLoader = mergeContractLoader,
         _hlcService = hlcService ??
             HlcService(
               physicalTimestampFactory:
@@ -358,7 +354,14 @@ class LocordaGraphSync {
     required SyncGraphConfig config,
     PhysicalTimestampFactory? physicalTimestampFactory,
     HlcService? hlcService,
+    IriTermFactory? iriFactory,
+    RdfCore? rdfCore,
+    http.Client? httpClient,
   }) async {
+    rdfCore ??= RdfCore.withStandardCodecs();
+    httpClient ??= http.Client();
+    iriFactory ??= IriTerm.validated;
+
     // Validate configuration before proceeding
     final configValidationResult = SyncGraphConfigValidator().validate(config);
 
@@ -367,10 +370,17 @@ class LocordaGraphSync {
 
     // Initialize storage
     await storage.initialize();
+
+    // TODO: the HttpRdfGraphFetcher should be db-cached (ideally with initialization from deployment and etag)
+    final mergeContractLoader = MergeContractLoader(RecursiveRdfLoader(
+        fetcher: HttpRdfGraphFetcher(httpClient: httpClient, rdfCore: rdfCore),
+        iriFactory: iriFactory));
+
     return LocordaGraphSync._(
         storage: storage,
         backend: backend,
         config: config,
+        mergeContractLoader: mergeContractLoader,
         physicalTimestampFactory: physicalTimestampFactory,
         hlcService: hlcService);
   }
@@ -497,12 +507,14 @@ class LocordaGraphSync {
       final oldDocument = existingStoredDocument?.document;
       final governedByFiles =
           _computeIsGovernedBy(oldDocument, documentIri, _config, type);
-      // TODO: load the governing documents / merge contracts for correct document splitting
+
+      // load the governing documents / merge contracts for correct document splitting
+      final mergeContract = await _mergeContractLoader.load(governedByFiles);
 
       final (appGraph: oldAppGraph, frameworkGraph: oldFrameworkGraph) =
           oldDocument == null
               ? (appGraph: null, frameworkGraph: null)
-              : _splitDocument(oldDocument, documentIri);
+              : _splitDocument(oldDocument, documentIri, mergeContract);
 
       // 3. Generate latest clock
       final oldClock = oldDocument == null

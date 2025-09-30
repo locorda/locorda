@@ -13,6 +13,7 @@ import 'package:locorda/src/mapping/solid_mapping_context.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
+import 'package:http/http.dart' as http;
 
 /// Type alias for mapper initializer functions.
 ///
@@ -66,16 +67,21 @@ class LocordaSync {
     required SyncConfig config,
     required MapperInitializerFunction mapperInitializer,
     IriTermFactory? iriTermFactory,
+    RdfCore? rdfCore,
+    http.Client? httpClient,
   }) async {
     iriTermFactory ??= IriTerm.validated;
+    rdfCore ??= RdfCore.withStandardCodecs();
     final localReferenceConverter =
         LocalReferenceConverter(iriTermFactory: iriTermFactory);
     final iriService = LocalResourceIriService(localReferenceConverter);
     final mappingContext = SolidMappingContext(
       resourceIriFactory: iriService.createResourceIriMapper,
       resourceRefFactory: iriService.createResourceRefMapper,
-      baseRdfMapper:
-          RdfMapper.withDefaultRegistry(iriTermFactory: iriTermFactory),
+      baseRdfMapper: RdfMapper(
+          registry: RdfMapperRegistry(),
+          iriTermFactory: iriTermFactory,
+          rdfCore: rdfCore),
     );
     final mapper = mapperInitializer(mappingContext);
 
@@ -102,6 +108,9 @@ class LocordaSync {
       backend: backend,
       storage: storage,
       config: syncGraphConfig,
+      iriFactory: iriTermFactory,
+      rdfCore: rdfCore,
+      httpClient: httpClient,
     );
 
     return LocordaSync._(

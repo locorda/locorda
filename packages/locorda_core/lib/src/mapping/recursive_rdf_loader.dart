@@ -2,12 +2,30 @@
 import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
+import 'package:http/http.dart' as http;
 
-class RdfGraphFetcher {
+class HttpRdfGraphFetcher implements RdfGraphFetcher {
+  final http.Client httpClient;
+  final RdfCore rdfCore;
+  HttpRdfGraphFetcher({
+    required this.httpClient,
+    required this.rdfCore,
+  });
+  @override
   Future<RdfGraph> fetch(IriTerm iri) async {
-    // Implement fetching logic here
-    throw UnimplementedError();
+    final response = await httpClient.get(Uri.parse(iri.value));
+    if (response.statusCode == 200) {
+      // Parse the RDF graph from the response body
+      return rdfCore.decode(response.body,
+          contentType: "text/turtle", documentUrl: iri.value);
+    } else {
+      throw Exception('Failed to load RDF graph: ${response.statusCode}');
+    }
   }
+}
+
+abstract interface class RdfGraphFetcher {
+  Future<RdfGraph> fetch(IriTerm iri);
 }
 
 abstract interface class DependencyExtractor {
