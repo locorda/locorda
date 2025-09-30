@@ -86,8 +86,13 @@ void _validateResourceGraph(
     final iriSubjectValue = iriSubject.value;
     if (!iriSubjectValue.startsWith('$documentIriValue#')) {
       throw ArgumentError(
-          'Primary resource IRI ($iriSubjectValue) must be a fragment of the '
+          'Resource IRI ($iriSubjectValue) must be a fragment of the '
           'document IRI ($documentIriValue). Expected format: ${documentIriValue}#fragmentId');
+    }
+    if (iriSubjectValue.startsWith('$documentIriValue#lcrd-')) {
+      throw ArgumentError(
+          'Resource IRI ($iriSubjectValue) must not start with reserved prefix #lcrd- in fragment identifier. '
+          'This prefix is reserved for CRDT framework metadata.');
     }
   }
 }

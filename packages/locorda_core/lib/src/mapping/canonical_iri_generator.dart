@@ -40,6 +40,7 @@ IriTerm generateCanonicalIri(IdentifiedBlankNode identifiedBlankNode) {
 
   // Step 4: Hash and generate IRI
   final hash = md5.convert(utf8.encode(nquads)).toString();
+  // FIXME: Use the document Iri as base, and create a fragment IRI with #lcrd-ibn-{hash}
   return IriTerm('locorda:md5:$hash');
 }
 

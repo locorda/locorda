@@ -6,9 +6,11 @@
 - [x] Storage Layer: save documents
 - [x] LocordaGraphSync: save base implementation
 - [x] merge-contract: Implement loading and merging the mappings documents and make them usable via dart classes
-- [ ] merge-contract: In-memory caching of loaded merge contracts (LRU cache to avoid repeated expensive loading on every save)
+- [x] merge-contract: In-memory caching of loaded merge contracts (LRU cache to avoid repeated expensive loading on every save)
 - [x] Use data from mapping documents to build the stop-word list to correctly separate appGraph from framework data in processing of the old stored document
 - [x] Implement context-identification for blank nodes 
+- [ ] Create a unique identifier IRI for identified blank nodes
+- [ ] Do not use blank nodes for framework metadata, use fragments with #lcrd- prefix instead. Fix the corresponding FIXMEs to create predictable, hash based fragments
 - [ ] Use context-identification as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
 - [x] rdf canonicalization 
 - [x] fix w3id.org redirects

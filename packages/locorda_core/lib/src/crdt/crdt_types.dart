@@ -174,6 +174,7 @@ RdfGraph createPropertyValueMetadata(
     throw ArgumentError(
         'Property value metadata cannot be created for blank node values.');
   }
+  // FIXME: use the document Iri as base, and create a fragment IRI with #lcrd-stmt-{hash}
   final metadataSubject = BlankNodeTerm();
   return RdfGraph.fromTriples([
     Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
@@ -193,6 +194,7 @@ RdfGraph createPropertyMetadata(
   if (subject is BlankNodeTerm) {
     throw ArgumentError('Property metadata cannot be created for blank nodes.');
   }
+  // FIXME: use the document Iri as base, and create a fragment IRI with #lcrd-stmt-{hash}
   final metadataSubject = BlankNodeTerm();
   return RdfGraph.fromTriples([
     Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
@@ -208,6 +210,7 @@ RdfGraph createResourceMetadata(IriTerm documentIri, RdfSubject subject,
   if (subject is BlankNodeTerm) {
     throw ArgumentError('Resource metadata cannot be created for blank nodes.');
   }
+  // FIXME: use the document Iri as base, and create a fragment IRI with #lcrd-stmt-{hash}
   final metadataSubject = BlankNodeTerm();
   return RdfGraph.fromTriples([
     Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
