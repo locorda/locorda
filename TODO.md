@@ -6,7 +6,7 @@
 - [x] Storage Layer: save documents
 - [x] LocordaGraphSync: save base implementation
 - [x] merge-contract: Implement loading and merging the mappings documents and make them usable via dart classes
-- [ ] merge-contract: Pre-Cache (e.g during build/deliver with the software), cache (e.g. after fetching) and refresh shared library and application documents like the mappings.ttl, so that the app can run fully offline, but is updated when online.
+- [ ] merge-contract: In-memory caching of loaded merge contracts (LRU cache to avoid repeated expensive loading on every save)
 - [x] Use data from mapping documents to build the stop-word list to correctly separate appGraph from framework data in processing of the old stored document
 - [x] Implement context-identification for blank nodes 
 - [ ] Use context-identification as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
@@ -43,6 +43,13 @@
   - Most complex but enables the full vision
   - Requires Pod operations, authentication integration
   - Can reuse patterns from in-memory backend
+
+### Priority 5: Ensure full Offline-First Support
+- [ ] merge-contract: Build-time asset bundling (essential for offline-first: bundle all referenced merge contracts as assets so apps work offline from first launch)
+
+### Priority 6: Performance & Efficiency Optimizations
+- [ ] merge-contract: RdfGraphFetcher caching with etag support (HTTP best practices, benefits all RDF loading)
+- [ ] merge-contract: Local database caching (persistence across app restarts)
 
 ## Later
 - [ ] Final check if the spec in ARCHITECTURE.md is fully implemented

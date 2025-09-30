@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
@@ -24,11 +26,57 @@ class DocumentMappingDependencyExtractor implements DependencyExtractor {
   }
 }
 
-class MergeContractLoader {
+class CachingMergeContractLoader implements MergeContractLoader {
+  final MergeContractLoader _inner;
+  final LinkedHashMap<IriTerm, Future<MergeContract>> _cache = LinkedHashMap();
+  final int maxCacheSize;
+
+  CachingMergeContractLoader(this._inner, {this.maxCacheSize = 50});
+
+  @override
+  Future<MergeContract> load(List<IriTerm> isGovernedBy) {
+    if (isGovernedBy.length != 1) {
+      // Caching only works for single-document contracts
+      return _inner.load(isGovernedBy);
+    }
+    final iri = isGovernedBy.first;
+
+    // Check if already in cache (and move to end for LRU)
+    if (_cache.containsKey(iri)) {
+      final future = _cache.remove(iri)!;
+      _cache[iri] = future;
+      return future;
+    }
+
+    // Load and cache the result
+    final future = _inner.load(isGovernedBy).catchError((error) {
+      // Remove from cache on error to allow retry
+      _cache.remove(iri);
+      return Future<MergeContract>.error(error);
+    });
+
+    _cache[iri] = future;
+
+    // Evict oldest entry if cache is full
+    if (_cache.length > maxCacheSize) {
+      final oldestKey = _cache.keys.first;
+      _cache.remove(oldestKey);
+    }
+
+    return future;
+  }
+}
+
+abstract interface class MergeContractLoader {
+  Future<MergeContract> load(List<IriTerm> isGovernedBy);
+}
+
+class StandardMergeContractLoader implements MergeContractLoader {
   final RecursiveRdfLoader fetcher;
 
-  MergeContractLoader(this.fetcher);
+  StandardMergeContractLoader(this.fetcher);
 
+  @override
   Future<MergeContract> load(List<IriTerm> isGovernedBy) async {
     final loadedContractDocuments = await fetcher.loadRdfDocumentsRecursively(
         isGovernedBy,

@@ -372,7 +372,7 @@ class LocordaGraphSync {
     await storage.initialize();
 
     // TODO: the HttpRdfGraphFetcher should be db-cached (ideally with initialization from deployment and etag)
-    final mergeContractLoader = MergeContractLoader(RecursiveRdfLoader(
+    final mergeContractLoader = StandardMergeContractLoader(RecursiveRdfLoader(
         fetcher: HttpRdfGraphFetcher(httpClient: httpClient, rdfCore: rdfCore),
         iriFactory: iriFactory));
 
@@ -380,7 +380,7 @@ class LocordaGraphSync {
         storage: storage,
         backend: backend,
         config: config,
-        mergeContractLoader: mergeContractLoader,
+        mergeContractLoader: CachingMergeContractLoader(mergeContractLoader),
         physicalTimestampFactory: physicalTimestampFactory,
         hlcService: hlcService);
   }
