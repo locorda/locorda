@@ -9,7 +9,7 @@ void main() {
     group('constructor and getters', () {
       test('creates parent from IRI', () {
         final iri = const IriTerm('https://example.com/resource');
-        final parent = BlankNodeParent.forIri(iri);
+        final parent = IdentifiedRdfSubject.forIri(iri);
 
         expect(parent.iriTerm, equals(iri));
         expect(parent.blankNode, isNull);
@@ -19,12 +19,13 @@ void main() {
         final iri = const IriTerm('https://example.com/resource');
         final identifiedNode = IdentifiedBlankNode(
           BlankNodeTerm(),
-          BlankNodeParent.forIri(iri),
+          IdentifiedRdfSubject.forIri(iri),
           {
             const IriTerm('https://example.com/prop'): [LiteralTerm('value')]
           },
         );
-        final parent = BlankNodeParent.forIdentifiedBlankNode(identifiedNode);
+        final parent =
+            IdentifiedRdfSubject.forIdentifiedBlankNode(identifiedNode);
 
         expect(parent.iriTerm, isNull);
         expect(parent.blankNode, equals(identifiedNode));
@@ -34,17 +35,17 @@ void main() {
     group('equality and hashCode', () {
       test('equal IRI parents are equal', () {
         final iri = const IriTerm('https://example.com/resource');
-        final parent1 = BlankNodeParent.forIri(iri);
-        final parent2 = BlankNodeParent.forIri(iri);
+        final parent1 = IdentifiedRdfSubject.forIri(iri);
+        final parent2 = IdentifiedRdfSubject.forIri(iri);
 
         expect(parent1, equals(parent2));
         expect(parent1.hashCode, equals(parent2.hashCode));
       });
 
       test('different IRI parents are not equal', () {
-        final parent1 = BlankNodeParent.forIri(
+        final parent1 = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource1'));
-        final parent2 = BlankNodeParent.forIri(
+        final parent2 = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource2'));
 
         expect(parent1, isNot(equals(parent2)));
@@ -54,13 +55,15 @@ void main() {
         final iri = const IriTerm('https://example.com/resource');
         final identifiedNode = IdentifiedBlankNode(
           BlankNodeTerm(),
-          BlankNodeParent.forIri(iri),
+          IdentifiedRdfSubject.forIri(iri),
           {
             const IriTerm('https://example.com/prop'): [LiteralTerm('value')]
           },
         );
-        final parent1 = BlankNodeParent.forIdentifiedBlankNode(identifiedNode);
-        final parent2 = BlankNodeParent.forIdentifiedBlankNode(identifiedNode);
+        final parent1 =
+            IdentifiedRdfSubject.forIdentifiedBlankNode(identifiedNode);
+        final parent2 =
+            IdentifiedRdfSubject.forIdentifiedBlankNode(identifiedNode);
 
         expect(parent1, equals(parent2));
         expect(parent1.hashCode, equals(parent2.hashCode));
@@ -70,20 +73,21 @@ void main() {
         final iri = const IriTerm('https://example.com/resource');
         final identifiedNode = IdentifiedBlankNode(
           BlankNodeTerm(),
-          BlankNodeParent.forIri(iri),
+          IdentifiedRdfSubject.forIri(iri),
           {
             const IriTerm('https://example.com/prop'): [LiteralTerm('value')]
           },
         );
-        final parent1 = BlankNodeParent.forIri(iri);
-        final parent2 = BlankNodeParent.forIdentifiedBlankNode(identifiedNode);
+        final parent1 = IdentifiedRdfSubject.forIri(iri);
+        final parent2 =
+            IdentifiedRdfSubject.forIdentifiedBlankNode(identifiedNode);
 
         expect(parent1, isNot(equals(parent2)));
       });
 
       test('identity check works', () {
         final iri = const IriTerm('https://example.com/resource');
-        final parent = BlankNodeParent.forIri(iri);
+        final parent = IdentifiedRdfSubject.forIri(iri);
 
         expect(parent, equals(parent));
       });
@@ -94,7 +98,7 @@ void main() {
     group('constructor and getters', () {
       test('creates IdentifiedBlankNode with IRI parent', () {
         final iri = const IriTerm('https://example.com/resource');
-        final parent = BlankNodeParent.forIri(iri);
+        final parent = IdentifiedRdfSubject.forIri(iri);
         final properties = {
           const IriTerm('https://example.com/prop1'): [LiteralTerm('value1')],
           const IriTerm('https://example.com/prop2'): [
@@ -118,7 +122,7 @@ void main() {
       });
 
       test('throws assertion error when properties are empty', () {
-        final parent = BlankNodeParent.forIri(
+        final parent = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource'));
 
         expect(
@@ -131,7 +135,7 @@ void main() {
 
     group('equality and hashCode', () {
       test('equal IdentifiedBlankNodes are equal', () {
-        final parent = BlankNodeParent.forIri(
+        final parent = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource'));
         final properties = {
           const IriTerm('https://example.com/prop'): [LiteralTerm('value')],
@@ -145,9 +149,9 @@ void main() {
       });
 
       test('IdentifiedBlankNodes with different parents are not equal', () {
-        final parent1 = BlankNodeParent.forIri(
+        final parent1 = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource1'));
-        final parent2 = BlankNodeParent.forIri(
+        final parent2 = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource2'));
         final properties = {
           const IriTerm('https://example.com/prop'): [LiteralTerm('value')],
@@ -160,7 +164,7 @@ void main() {
       });
 
       test('IdentifiedBlankNodes with different properties are not equal', () {
-        final parent = BlankNodeParent.forIri(
+        final parent = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource'));
         final properties1 = {
           const IriTerm('https://example.com/prop'): [LiteralTerm('value1')],
@@ -178,7 +182,7 @@ void main() {
       test(
           'IdentifiedBlankNodes with same properties in different order are equal',
           () {
-        final parent = BlankNodeParent.forIri(
+        final parent = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource'));
         final properties1 = {
           const IriTerm('https://example.com/prop1'): [LiteralTerm('value1')],
@@ -198,7 +202,7 @@ void main() {
       test(
           'IdentifiedBlankNodes with multi-value properties are handled correctly',
           () {
-        final parent = BlankNodeParent.forIri(
+        final parent = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource'));
         final properties1 = {
           const IriTerm('https://example.com/prop'): [
@@ -220,7 +224,7 @@ void main() {
       });
 
       test('identity check works', () {
-        final parent = BlankNodeParent.forIri(
+        final parent = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource'));
         final properties = {
           const IriTerm('https://example.com/prop'): [LiteralTerm('value')],
@@ -233,7 +237,7 @@ void main() {
 
     group('toString', () {
       test('provides readable string representation', () {
-        final parent = BlankNodeParent.forIri(
+        final parent = IdentifiedRdfSubject.forIri(
             const IriTerm('https://example.com/resource'));
         final properties = {
           const IriTerm('https://example.com/prop'): [LiteralTerm('value')],
@@ -263,8 +267,10 @@ void main() {
       };
 
       for (final classIri in allClassIris) {
-        final identifyingPreds = classIdentifyingPredicates[classIri] ?? const {};
-        final nonIdentifyingPreds = classNonIdentifyingPredicates[classIri] ?? const {};
+        final identifyingPreds =
+            classIdentifyingPredicates[classIri] ?? const {};
+        final nonIdentifyingPreds =
+            classNonIdentifyingPredicates[classIri] ?? const {};
 
         final rules = <IriTerm, PredicateRule>{
           // Add identifying predicates (isIdentifying: true)
@@ -551,7 +557,8 @@ void main() {
             equals([LiteralTerm('global-123')]));
       });
 
-      test('explicit exclusion of global predicates via isIdentifying: false', () {
+      test('explicit exclusion of global predicates via isIdentifying: false',
+          () {
         final blankNode = BlankNodeTerm();
         final classIri = const IriTerm('https://example.com/PersonClass');
         final globalProp = const IriTerm('https://example.com/email');
@@ -559,7 +566,8 @@ void main() {
         final parentIri = const IriTerm('https://example.com/resource');
 
         final graph = RdfGraph.fromTriples([
-          Triple(parentIri, const IriTerm('https://example.com/hasPerson'), blankNode),
+          Triple(parentIri, const IriTerm('https://example.com/hasPerson'),
+              blankNode),
           Triple(blankNode, Rdf.type, classIri),
           Triple(blankNode, classProp, LiteralTerm('John Doe')),
           Triple(blankNode, globalProp, LiteralTerm('john@example.com')),
@@ -571,7 +579,9 @@ void main() {
             classIri: {classProp}
           },
           classNonIdentifyingPredicates: {
-            classIri: {globalProp} // Explicitly exclude global email predicate for this class
+            classIri: {
+              globalProp
+            } // Explicitly exclude global email predicate for this class
           },
         );
 
@@ -580,8 +590,10 @@ void main() {
         final identifiedNode = result.identifiedMap[blankNode]!.first;
         // Only class predicate should be used, global predicate explicitly excluded
         expect(identifiedNode.identifyingProperties, hasLength(1));
-        expect(identifiedNode.identifyingProperties[classProp], equals([LiteralTerm('John Doe')]));
-        expect(identifiedNode.identifyingProperties.containsKey(globalProp), isFalse);
+        expect(identifiedNode.identifyingProperties[classProp],
+            equals([LiteralTerm('John Doe')]));
+        expect(identifiedNode.identifyingProperties.containsKey(globalProp),
+            isFalse);
       });
 
       test('mixed mandatory class and opportunistic global predicates', () {
@@ -593,10 +605,12 @@ void main() {
         final parentIri = const IriTerm('https://example.com/resource');
 
         final graph = RdfGraph.fromTriples([
-          Triple(parentIri, const IriTerm('https://example.com/hasPerson'), blankNode),
+          Triple(parentIri, const IriTerm('https://example.com/hasPerson'),
+              blankNode),
           Triple(blankNode, Rdf.type, classIri),
           Triple(blankNode, classProp, LiteralTerm('John Doe')),
-          Triple(blankNode, globalProp1, LiteralTerm('john@example.com')), // Present
+          Triple(blankNode, globalProp1,
+              LiteralTerm('john@example.com')), // Present
           // globalProp2 (phone) is not present
         ]);
 
@@ -612,12 +626,17 @@ void main() {
         final identifiedNode = result.identifiedMap[blankNode]!.first;
         // Should include: required class predicate + present global predicate
         expect(identifiedNode.identifyingProperties, hasLength(2));
-        expect(identifiedNode.identifyingProperties[classProp], equals([LiteralTerm('John Doe')]));
-        expect(identifiedNode.identifyingProperties[globalProp1], equals([LiteralTerm('john@example.com')]));
-        expect(identifiedNode.identifyingProperties.containsKey(globalProp2), isFalse);
+        expect(identifiedNode.identifyingProperties[classProp],
+            equals([LiteralTerm('John Doe')]));
+        expect(identifiedNode.identifyingProperties[globalProp1],
+            equals([LiteralTerm('john@example.com')]));
+        expect(identifiedNode.identifyingProperties.containsKey(globalProp2),
+            isFalse);
       });
 
-      test('missing required class predicate prevents identification despite global predicates', () {
+      test(
+          'missing required class predicate prevents identification despite global predicates',
+          () {
         final blankNode = BlankNodeTerm();
         final classIri = const IriTerm('https://example.com/PersonClass');
         final globalProp = const IriTerm('https://example.com/email');
@@ -625,9 +644,11 @@ void main() {
         final parentIri = const IriTerm('https://example.com/resource');
 
         final graph = RdfGraph.fromTriples([
-          Triple(parentIri, const IriTerm('https://example.com/hasPerson'), blankNode),
+          Triple(parentIri, const IriTerm('https://example.com/hasPerson'),
+              blankNode),
           Triple(blankNode, Rdf.type, classIri),
-          Triple(blankNode, globalProp, LiteralTerm('john@example.com')), // Global present
+          Triple(blankNode, globalProp,
+              LiteralTerm('john@example.com')), // Global present
           // classProp (name) is missing!
         ]);
 
@@ -654,7 +675,8 @@ void main() {
         final parentIri = const IriTerm('https://example.com/resource');
 
         final graph = RdfGraph.fromTriples([
-          Triple(parentIri, const IriTerm('https://example.com/hasPerson'), blankNode),
+          Triple(parentIri, const IriTerm('https://example.com/hasPerson'),
+              blankNode),
           Triple(blankNode, Rdf.type, classIri),
           Triple(blankNode, classProp, LiteralTerm('John Doe')),
           Triple(blankNode, globalProp1, LiteralTerm('john@example.com')),
@@ -678,10 +700,14 @@ void main() {
         final identifiedNode = result.identifiedMap[blankNode]!.first;
         // Should include: name (required) + email + phone (opportunistic) - ssn (excluded)
         expect(identifiedNode.identifyingProperties, hasLength(3));
-        expect(identifiedNode.identifyingProperties[classProp], equals([LiteralTerm('John Doe')]));
-        expect(identifiedNode.identifyingProperties[globalProp1], equals([LiteralTerm('john@example.com')]));
-        expect(identifiedNode.identifyingProperties[globalProp2], equals([LiteralTerm('555-1234')]));
-        expect(identifiedNode.identifyingProperties.containsKey(globalProp3), isFalse);
+        expect(identifiedNode.identifyingProperties[classProp],
+            equals([LiteralTerm('John Doe')]));
+        expect(identifiedNode.identifyingProperties[globalProp1],
+            equals([LiteralTerm('john@example.com')]));
+        expect(identifiedNode.identifyingProperties[globalProp2],
+            equals([LiteralTerm('555-1234')]));
+        expect(identifiedNode.identifyingProperties.containsKey(globalProp3),
+            isFalse);
       });
 
       test('all global predicates excluded by class rules', () {
@@ -693,7 +719,8 @@ void main() {
         final parentIri = const IriTerm('https://example.com/resource');
 
         final graph = RdfGraph.fromTriples([
-          Triple(parentIri, const IriTerm('https://example.com/hasPerson'), blankNode),
+          Triple(parentIri, const IriTerm('https://example.com/hasPerson'),
+              blankNode),
           Triple(blankNode, Rdf.type, classIri),
           Triple(blankNode, classProp, LiteralTerm('John Doe')),
           Triple(blankNode, globalProp1, LiteralTerm('john@example.com')),
@@ -706,7 +733,10 @@ void main() {
             classIri: {classProp}
           },
           classNonIdentifyingPredicates: {
-            classIri: {globalProp1, globalProp2} // Exclude all global predicates
+            classIri: {
+              globalProp1,
+              globalProp2
+            } // Exclude all global predicates
           },
         );
 
@@ -715,9 +745,12 @@ void main() {
         final identifiedNode = result.identifiedMap[blankNode]!.first;
         // Only class predicate should be used
         expect(identifiedNode.identifyingProperties, hasLength(1));
-        expect(identifiedNode.identifyingProperties[classProp], equals([LiteralTerm('John Doe')]));
-        expect(identifiedNode.identifyingProperties.containsKey(globalProp1), isFalse);
-        expect(identifiedNode.identifyingProperties.containsKey(globalProp2), isFalse);
+        expect(identifiedNode.identifyingProperties[classProp],
+            equals([LiteralTerm('John Doe')]));
+        expect(identifiedNode.identifyingProperties.containsKey(globalProp1),
+            isFalse);
+        expect(identifiedNode.identifyingProperties.containsKey(globalProp2),
+            isFalse);
       });
 
       test('class with no rules uses only applicable global predicates', () {
@@ -728,7 +761,8 @@ void main() {
         final parentIri = const IriTerm('https://example.com/resource');
 
         final graph = RdfGraph.fromTriples([
-          Triple(parentIri, const IriTerm('https://example.com/hasPerson'), blankNode),
+          Triple(parentIri, const IriTerm('https://example.com/hasPerson'),
+              blankNode),
           Triple(blankNode, Rdf.type, classIri),
           Triple(blankNode, globalProp1, LiteralTerm('john@example.com')),
           // globalProp2 not present
@@ -746,8 +780,10 @@ void main() {
         final identifiedNode = result.identifiedMap[blankNode]!.first;
         // Only present global predicates should be used
         expect(identifiedNode.identifyingProperties, hasLength(1));
-        expect(identifiedNode.identifyingProperties[globalProp1], equals([LiteralTerm('john@example.com')]));
-        expect(identifiedNode.identifyingProperties.containsKey(globalProp2), isFalse);
+        expect(identifiedNode.identifyingProperties[globalProp1],
+            equals([LiteralTerm('john@example.com')]));
+        expect(identifiedNode.identifyingProperties.containsKey(globalProp2),
+            isFalse);
       });
     });
 
