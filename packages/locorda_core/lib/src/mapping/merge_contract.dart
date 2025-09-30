@@ -8,7 +8,7 @@ import 'create_merge_contract.dart';
 final _log = Logger('merge_contract');
 
 class PredicateRule {
-  final IriTerm predicateIri;
+  final RdfPredicate predicateIri;
   final IriTerm? mergeWith;
   final bool? stopTraversal;
   final bool? isIdentifying;
@@ -33,51 +33,51 @@ class DocumentMapping {
 }
 
 class PredicateMapping {
-  final Map<IriTerm, PredicateRule> _predicateRules;
+  final Map<RdfPredicate, PredicateRule> _predicateRules;
   PredicateMapping(this._predicateRules);
 
-  PredicateRule? getPredicateRule(IriTerm propertyIri) =>
+  PredicateRule? getPredicateRule(RdfPredicate propertyIri) =>
       _predicateRules[propertyIri];
 
   /// Provides read-only access to all predicate rules for merging operations
-  Map<IriTerm, PredicateRule> get predicateRules =>
+  Map<RdfPredicate, PredicateRule> get predicateRules =>
       Map.unmodifiable(_predicateRules);
 }
 
 class ClassMapping {
   final IriTerm classIri;
-  final Map<IriTerm, PredicateRule> _propertyRules;
+  final Map<RdfPredicate, PredicateRule> _propertyRules;
   ClassMapping(this.classIri, this._propertyRules);
 
-  PredicateRule? getPropertyRule(IriTerm propertyIri) =>
+  PredicateRule? getPropertyRule(RdfPredicate propertyIri) =>
       _propertyRules[propertyIri];
 
   /// Provides read-only access to all property rules for merging operations
-  Map<IriTerm, PredicateRule> get propertyRules =>
+  Map<RdfPredicate, PredicateRule> get propertyRules =>
       Map.unmodifiable(_propertyRules);
 
-  late final Set<IriTerm> identifyingPredicates =
+  late final Set<RdfPredicate> identifyingPredicates =
       _computeIdentifyingPredicates();
 
-  Set<IriTerm> _computeIdentifyingPredicates() => _propertyRules.values
+  Set<RdfPredicate> _computeIdentifyingPredicates() => _propertyRules.values
       .where((r) => r.isIdentifying ?? false)
       .map((r) => r.predicateIri)
       .toSet();
 
   /// Predicates that are explicitly marked as non-identifying, this is useful to
   /// override global identifying predicates in certain class contexts.
-  late final Set<IriTerm> nonIdentifyingPredicates =
+  late final Set<RdfPredicate> nonIdentifyingPredicates =
       _computeNonIdentifyingPredicates();
 
-  Set<IriTerm> _computeNonIdentifyingPredicates() => _propertyRules.values
+  Set<RdfPredicate> _computeNonIdentifyingPredicates() => _propertyRules.values
       .where((r) => r.isIdentifying == false)
       .map((r) => r.predicateIri)
       .toSet();
 
-  late final Set<IriTerm> stopTraversalPredicates =
+  late final Set<RdfPredicate> stopTraversalPredicates =
       _computeStopTraversalPredicates();
 
-  Set<IriTerm> _computeStopTraversalPredicates() => _propertyRules.values
+  Set<RdfPredicate> _computeStopTraversalPredicates() => _propertyRules.values
       .where((r) => r.stopTraversal ?? false)
       .map((r) => r.predicateIri)
       .toSet();
@@ -85,11 +85,11 @@ class ClassMapping {
 
 class MergeContract {
   final Map<IriTerm, ClassMapping> _classMappings;
-  final Map<IriTerm, PredicateRule> _predicateRules;
+  final Map<RdfPredicate, PredicateRule> _predicateRules;
 
   MergeContract(this._classMappings, this._predicateRules);
 
-  PredicateRule? getPredicateRule(IriTerm? typeIri, IriTerm propertyIri) {
+  PredicateRule? getPredicateRule(IriTerm? typeIri, RdfPredicate propertyIri) {
     if (typeIri != null) {
       final classMapping = getClassMapping(typeIri);
       final rule = classMapping?.getPropertyRule(propertyIri);
@@ -100,23 +100,23 @@ class MergeContract {
     return _predicateRules[propertyIri];
   }
 
-  late final Set<IriTerm> globalIdentifyingPredicates =
+  late final Set<RdfPredicate> globalIdentifyingPredicates =
       _computeIdentifyingPredicates();
 
-  Set<IriTerm> _computeIdentifyingPredicates() => _predicateRules.values
+  Set<RdfPredicate> _computeIdentifyingPredicates() => _predicateRules.values
       .where((r) => r.isIdentifying ?? false)
       .map((r) => r.predicateIri)
       .toSet();
 
-  late final Set<IriTerm> globalStopTraversalPredicates =
+  late final Set<RdfPredicate> globalStopTraversalPredicates =
       _computeStopTraversalPredicates();
 
-  Set<IriTerm> _computeStopTraversalPredicates() => _predicateRules.values
+  Set<RdfPredicate> _computeStopTraversalPredicates() => _predicateRules.values
       .where((r) => r.stopTraversal ?? false)
       .map((r) => r.predicateIri)
       .toSet();
 
-  Set<IriTerm> getIdentifyingPredicates(
+  Set<RdfPredicate> getIdentifyingPredicates(
       RdfGraph graph, BlankNodeTerm blankNode) {
     final predicates = graph.matching(subject: blankNode).predicates;
     final type = graph.findSingleObject(blankNode, Rdf.type);
@@ -129,7 +129,7 @@ class MergeContract {
           classMapping?.identifyingPredicates ?? const <IriTerm>{};
       final nonIdentifyingPredicates =
           classMapping?.nonIdentifyingPredicates ?? const {};
-      final effectiveIdentifyingPredicates = <IriTerm>{
+      final effectiveIdentifyingPredicates = <RdfPredicate>{
         ...global,
         ...identifyingPredicates
       }..removeAll(nonIdentifyingPredicates);
@@ -156,7 +156,7 @@ class MergeContract {
 
   ClassMapping? getClassMapping(IriTerm classIri) => _classMappings[classIri];
 
-  PredicateRule? getPredicateMapping(IriTerm predicateIri) =>
+  PredicateRule? getPredicateMapping(RdfPredicate predicateIri) =>
       _predicateRules[predicateIri];
 
   static MergeContract fromDocumentMappings(List<DocumentMapping> documents) {

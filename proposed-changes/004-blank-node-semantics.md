@@ -1,0 +1,1 @@
+* We have to add a new rule: Blank Nodes that are not referenced, are considered non-existent and will be effectively removed. This is necessary since we cannot identify them across documents and thus cannot merge them properly.

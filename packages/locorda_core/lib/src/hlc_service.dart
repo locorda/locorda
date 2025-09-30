@@ -6,7 +6,7 @@ import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 /// Factory function for generating physical timestamps (wall-clock time)
-typedef PhysicalTimestampFactory = int Function();
+typedef PhysicalTimestampFactory = DateTime Function();
 
 /// Factory function for generating logical clock values
 typedef LogicalClockFactory = int Function();
@@ -15,7 +15,7 @@ typedef LogicalClockFactory = int Function();
 typedef InstallationIdFactory = IriTerm Function();
 
 // Default factory functions for time and clock generation
-int defaultPhysicalTimestampFactory() => DateTime.now().millisecondsSinceEpoch;
+DateTime defaultPhysicalTimestampFactory() => DateTime.now();
 
 int _logicalClockCounter = 0;
 int _defaultLogicalClockFactory() => ++_logicalClockCounter;
@@ -80,12 +80,13 @@ class HlcService {
     final logicalTime = _logicalClockFactory();
 
     var fullClock = [
-      _buildClockEntryNode(installationId, physicalTime, logicalTime)
+      _buildClockEntryNode(
+          installationId, physicalTime.millisecondsSinceEpoch, logicalTime)
     ];
     return (
       installationId: installationId,
       logicalTime: logicalTime,
-      physicalTime: physicalTime,
+      physicalTime: physicalTime.millisecondsSinceEpoch,
       fullClock: fullClock,
       hash: _hashClock(fullClock)
     );
@@ -115,15 +116,15 @@ class HlcService {
     final oldLogicalTimeTerm = oldLogicalTimeTriple.object as LiteralTerm;
     final oldLogicalTime = int.parse(oldLogicalTimeTerm.value);
     final logicalTime = oldLogicalTime + 1;
-    final ourNewEntry =
-        _buildClockEntryNode(installationId, physicalTime, logicalTime);
+    final ourNewEntry = _buildClockEntryNode(
+        installationId, physicalTime.millisecondsSinceEpoch, logicalTime);
 
     var fullClock = [ourNewEntry, ...theirs];
 
     return (
       installationId: installationId,
       logicalTime: logicalTime,
-      physicalTime: physicalTime,
+      physicalTime: physicalTime.millisecondsSinceEpoch,
       fullClock: fullClock,
       hash: _hashClock(fullClock)
     );

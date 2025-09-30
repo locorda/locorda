@@ -1,106 +1,237 @@
+import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/hlc_service.dart';
+import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:rdf_core/rdf_core.dart';
+
 /// CRDT type definitions from the architecture specification.
 ///
 /// Defines the state-based CRDT algorithms used for property-level
 /// merge strategies as outlined in the crdt-algorithms vocabulary.
 
 /// Base interface for all CRDT types.
-abstract interface class CrdtType<T> {
-  /// Merge this CRDT with another CRDT of the same type.
-  T merge(T other);
+abstract interface class CrdtType {
+  const CrdtType();
 
-  /// Get the current value of this CRDT.
-  dynamic get value;
+  IriTerm get iri;
+
+  /// Creates the initial metadata triples for a property value addition.
+  /// The returned graph may be empty if no metadata is needed.
+  ///
+  /// Note that you should not simply duplicate the property triples here,
+  /// as they are added separately by the merge logic.
+  /// Only add true metadata triples needed for the CRDT algorithm like tombstones, counter increments etc.
+  RdfGraph initialValue(
+      {required IriTerm documentIri,
+      required RdfGraph appData,
+      required RdfSubject subject,
+      required RdfPredicate predicate,
+      required List<RdfObject> values});
+
+  /// Creates the metadata triples for a local property value change.
+  /// The returned graph may be empty if no metadata is needed.
+  RdfGraph localValueChange({
+    required IriTerm documentIri,
+    required RdfGraph oldAppData,
+    required RdfSubject oldSubject,
+    required RdfGraph newAppData,
+    required RdfSubject newSubject,
+    required RdfPredicate predicate,
+    required List<RdfObject> oldValues,
+    required List<RdfObject> newValues,
+  });
 }
 
 /// Last-Writer-Wins Register for single-value properties.
 /// Uses Hybrid Logical Clock for conflict resolution.
-class LwwRegister<T> implements CrdtType<LwwRegister<T>> {
-  final T _value;
-  final DateTime _timestamp;
-  final String _installationId;
-
-  const LwwRegister(this._value, this._timestamp, this._installationId);
+class LwwRegister implements CrdtType {
+  const LwwRegister();
 
   @override
-  T get value => _value;
-
-  DateTime get timestamp => _timestamp;
-  String get installationId => _installationId;
+  IriTerm get iri => AlgoLWW_Register.classIri;
 
   @override
-  LwwRegister<T> merge(LwwRegister<T> other) {
-    // Compare timestamps, use installation ID as tiebreaker
-    if (_timestamp.isAfter(other._timestamp)) {
-      return this;
-    } else if (other._timestamp.isAfter(_timestamp)) {
-      return other;
-    } else {
-      // Timestamp tie - use installation ID lexicographic comparison
-      return _installationId.compareTo(other._installationId) > 0
-          ? this
-          : other;
-    }
+  RdfGraph initialValue(
+      {required IriTerm documentIri,
+      required RdfGraph appData,
+      required RdfSubject subject,
+      required RdfPredicate predicate,
+      required List<RdfObject> values}) {
+    // No metadata needed for adding a LWW Register value
+    return RdfGraphExtensions.empty;
+  }
+
+  @override
+  RdfGraph localValueChange(
+      {required IriTerm documentIri,
+      required RdfGraph oldAppData,
+      required RdfSubject oldSubject,
+      required RdfGraph newAppData,
+      required RdfSubject newSubject,
+      required RdfPredicate predicate,
+      required List<RdfObject> oldValues,
+      required List<RdfObject> newValues}) {
+    // No metadata needed for changing a LWW Register value - one will win based on the clock during merge, that is all
+    return RdfGraphExtensions.empty;
   }
 }
 
 /// First-Writer-Wins Register for immutable properties.
-class FwwRegister<T> implements CrdtType<FwwRegister<T>> {
-  final T _value;
-  final DateTime _timestamp;
-  final String _installationId;
-
-  const FwwRegister(this._value, this._timestamp, this._installationId);
+class FwwRegister implements CrdtType {
+  const FwwRegister();
 
   @override
-  T get value => _value;
-
-  DateTime get timestamp => _timestamp;
-  String get installationId => _installationId;
+  IriTerm get iri => AlgoFWW_Register.classIri;
 
   @override
-  FwwRegister<T> merge(FwwRegister<T> other) {
-    // Always keep the earlier timestamp (first writer wins)
-    if (_timestamp.isBefore(other._timestamp)) {
-      return this;
-    } else if (other._timestamp.isBefore(_timestamp)) {
-      return other;
-    } else {
-      // Timestamp tie - use installation ID lexicographic comparison (smaller wins)
-      return _installationId.compareTo(other._installationId) < 0
-          ? this
-          : other;
-    }
+  RdfGraph initialValue(
+      {required IriTerm documentIri,
+      required RdfGraph appData,
+      required RdfSubject subject,
+      required RdfPredicate predicate,
+      required List<RdfObject> values}) {
+    // No metadata needed for adding a FWW Register value
+    return RdfGraphExtensions.empty;
+  }
+
+  @override
+  RdfGraph localValueChange(
+      {required IriTerm documentIri,
+      required RdfGraph oldAppData,
+      required RdfSubject oldSubject,
+      required RdfGraph newAppData,
+      required RdfSubject newSubject,
+      required RdfPredicate predicate,
+      required List<RdfObject> oldValues,
+      required List<RdfObject> newValues}) {
+    // No metadata needed for changing a FWW Register value - one will win based on the clock during merge, that is all
+    return RdfGraphExtensions.empty;
   }
 }
 
 /// Observed-Remove Set for multi-value properties.
-class OrSet<T> implements CrdtType<OrSet<T>> {
-  final Set<T> _elements;
-  final Set<String> _tombstones;
+class OrSet implements CrdtType {
+  final PhysicalTimestampFactory timestampFactory;
 
-  const OrSet(this._elements, this._tombstones);
-
-  @override
-  Set<T> get value => _elements.difference(_tombstones.cast<T>());
-
-  Set<T> get elements => Set.from(_elements);
-  Set<String> get tombstones => Set.from(_tombstones);
+  const OrSet(this.timestampFactory);
 
   @override
-  OrSet<T> merge(OrSet<T> other) {
-    return OrSet<T>(
-      _elements.union(other._elements),
-      _tombstones.union(other._tombstones),
-    );
+  IriTerm get iri => AlgoOR_Set.classIri;
+
+  @override
+  RdfGraph initialValue(
+      {required IriTerm documentIri,
+      required RdfGraph appData,
+      required RdfSubject subject,
+      required RdfPredicate predicate,
+      required List<RdfObject> values}) {
+    // No metadata needed for adding a OR Set value
+    return RdfGraphExtensions.empty;
   }
 
-  /// Add an element to the set.
-  OrSet<T> add(T element) {
-    return OrSet<T>(_elements.union({element}), _tombstones);
+  @override
+  RdfGraph localValueChange(
+      {required IriTerm documentIri,
+      required RdfGraph oldAppData,
+      required RdfSubject oldSubject,
+      required RdfGraph newAppData,
+      required RdfSubject newSubject,
+      required RdfPredicate predicate,
+      required List<RdfObject> oldValues,
+      required List<RdfObject> newValues}) {
+    // for an OR set, we need to add tombstones for removed values
+    final removedValues = oldValues.toSet();
+    removedValues.removeAll(newValues);
+    if (removedValues.isEmpty) {
+      return RdfGraphExtensions.empty;
+    }
+    final deletionDate = timestampFactory();
+    final deletionDateTerm = LiteralTermExtensions.dateTime(deletionDate);
+    return removedValues
+        .map((value) => createPropertyValueMetadata(
+            documentIri,
+            newSubject,
+            predicate,
+            value,
+            (metadataSubject) => removedValues
+                .map((rv) => Triple(metadataSubject, RdfStatement.crdtDeletedAt,
+                    deletionDateTerm))
+                .toList()))
+        .mergeGraphs();
   }
+}
 
-  /// Remove an element from the set (adds to tombstones).
-  OrSet<T> remove(T element) {
-    return OrSet<T>(_elements, _tombstones.union({element.toString()}));
+RdfGraph createPropertyValueMetadata(
+    IriTerm documentIri,
+    RdfSubject subject,
+    RdfPredicate predicate,
+    RdfObject value,
+    List<Triple> Function(RdfSubject) createMetadataTriples) {
+  if (subject is BlankNodeTerm) {
+    throw ArgumentError(
+        'Property value metadata cannot be created for blank nodes.');
   }
+  if (value is BlankNodeTerm) {
+    throw ArgumentError(
+        'Property value metadata cannot be created for blank node values.');
+  }
+  final metadataSubject = BlankNodeTerm();
+  return RdfGraph.fromTriples([
+    Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
+    Triple(metadataSubject, RdfStatement.subject, subject),
+    Triple(metadataSubject, RdfStatement.predicate,
+        switch (predicate) { IriTerm iri => iri }),
+    Triple(metadataSubject, RdfStatement.object, value),
+    ...createMetadataTriples(metadataSubject),
+  ]);
+}
+
+RdfGraph createPropertyMetadata(
+    IriTerm documentIri,
+    RdfSubject subject,
+    RdfPredicate predicate,
+    List<Triple> Function(RdfSubject) createMetadataTriples) {
+  if (subject is BlankNodeTerm) {
+    throw ArgumentError('Property metadata cannot be created for blank nodes.');
+  }
+  final metadataSubject = BlankNodeTerm();
+  return RdfGraph.fromTriples([
+    Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
+    Triple(metadataSubject, RdfStatement.subject, subject),
+    Triple(metadataSubject, RdfStatement.predicate,
+        switch (predicate) { IriTerm iri => iri }),
+    ...createMetadataTriples(metadataSubject),
+  ]);
+}
+
+RdfGraph createResourceMetadata(IriTerm documentIri, RdfSubject subject,
+    List<Triple> Function(RdfSubject) createMetadataTriples) {
+  if (subject is BlankNodeTerm) {
+    throw ArgumentError('Resource metadata cannot be created for blank nodes.');
+  }
+  final metadataSubject = BlankNodeTerm();
+  return RdfGraph.fromTriples([
+    Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
+    Triple(metadataSubject, RdfStatement.subject, subject),
+    ...createMetadataTriples(metadataSubject),
+  ]);
+}
+
+class CrdtTypeRegistry {
+  final Map<IriTerm, CrdtType> _typesByIri;
+  static const CrdtType fallback = LwwRegister();
+  CrdtTypeRegistry._(List<CrdtType> types)
+      : _typesByIri = {for (var type in types) type.iri: type};
+
+  CrdtTypeRegistry.forStandardTypes(
+      {required PhysicalTimestampFactory physicalTimestampFactory})
+      : this._([
+          LwwRegister(),
+          FwwRegister(),
+          OrSet(physicalTimestampFactory),
+        ]);
+
+  /// Get the CRDT type instance for the given IRI - fallbacks to LWW Register.
+  CrdtType getType(IriTerm? typeIri,
+          {CrdtType fallback = CrdtTypeRegistry.fallback}) =>
+      typeIri == null ? fallback : _typesByIri[typeIri] ?? fallback;
 }

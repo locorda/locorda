@@ -81,8 +81,7 @@ class StandardMergeContractLoader implements MergeContractLoader {
     final loadedContractDocuments = await fetcher.loadRdfDocumentsRecursively(
         isGovernedBy,
         extractors: const [DocumentMappingDependencyExtractor()]);
-    final all = RdfGraph.fromTriples(
-        loadedContractDocuments.values.expand((g) => g.triples));
+    final all = loadedContractDocuments.values.mergeGraphs();
 
     // Parse loaded RDF graphs and extract mappings
     final documents =

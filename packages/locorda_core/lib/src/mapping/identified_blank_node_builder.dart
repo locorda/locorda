@@ -5,21 +5,21 @@ import 'package:rdf_core/rdf_core.dart';
 
 final _log = Logger('IdentifiedBlankNodeBuilder');
 
-class IdentifiedRdfSubject {
+class IdentifiedBlankNodeParent {
   final IriTerm? _iriTerm;
   final IdentifiedBlankNode? _blankNode;
   final Set<BlankNodeTerm>? _circuitCheck;
 
-  const IdentifiedRdfSubject._circuitBreaker(this._circuitCheck)
+  const IdentifiedBlankNodeParent._circuitBreaker(this._circuitCheck)
       : _iriTerm = null,
         _blankNode = null;
 
-  const IdentifiedRdfSubject.forIri(IriTerm iri)
+  const IdentifiedBlankNodeParent.forIri(IriTerm iri)
       : _iriTerm = iri,
         _blankNode = null,
         _circuitCheck = null;
 
-  const IdentifiedRdfSubject.forIdentifiedBlankNode(
+  const IdentifiedBlankNodeParent.forIdentifiedBlankNode(
       IdentifiedBlankNode blankNode)
       : _iriTerm = null,
         _blankNode = blankNode,
@@ -45,7 +45,7 @@ class IdentifiedRdfSubject {
     if (identical(this, other)) {
       return true;
     }
-    if (other is! IdentifiedRdfSubject) {
+    if (other is! IdentifiedBlankNodeParent) {
       return false;
     }
     return _iriTerm == other._iriTerm && _blankNode == other._blankNode;
@@ -53,16 +53,14 @@ class IdentifiedRdfSubject {
 }
 
 class IdentifiedBlankNode {
-  final BlankNodeTerm _blankNode;
-  final IdentifiedRdfSubject _parent;
-  final Map<IriTerm, List<RdfObject>> _identifyingProperties;
+  final IdentifiedBlankNodeParent _parent;
+  final Map<RdfPredicate, List<RdfObject>> _identifyingProperties;
 
-  IdentifiedBlankNode(
-      this._blankNode, this._parent, this._identifyingProperties)
+  IdentifiedBlankNode(this._parent, this._identifyingProperties)
       : assert(_identifyingProperties.isNotEmpty);
 
-  IdentifiedRdfSubject get parent => _parent;
-  Map<IriTerm, List<RdfObject>> get identifyingProperties =>
+  IdentifiedBlankNodeParent get parent => _parent;
+  Map<RdfPredicate, List<RdfObject>> get identifyingProperties =>
       Map.unmodifiable(_identifyingProperties);
 
   Set<BlankNodeTerm> get _circuitCheck =>
@@ -99,11 +97,10 @@ class IdentifiedBlankNode {
     return 'IdentifiedBlankNode(parent: $_parent, properties: $_identifyingProperties)';
   }
 
-  Iterable<BlankNodeTerm> blankNodeChain() sync* {
-    yield _blankNode;
-    if (_parent.isBlankNode) {
-      final parentBlankNode = _parent.blankNode!;
-      yield* parentBlankNode.blankNodeChain();
+  Iterable<IdentifiedBlankNode> blankNodeChain() sync* {
+    yield this;
+    if (_parent.blankNode != null) {
+      yield* _parent.blankNode!.blankNodeChain();
     }
   }
 }
@@ -111,7 +108,10 @@ class IdentifiedBlankNode {
 class IdentifiedBlankNodes {
   final Map<BlankNodeTerm, List<IdentifiedBlankNode>> _identifiedMap;
 
-  IdentifiedBlankNodes(
+  static const IdentifiedBlankNodes empty =
+      IdentifiedBlankNodes(identifiedMap: {});
+
+  const IdentifiedBlankNodes(
       {required Map<BlankNodeTerm, List<IdentifiedBlankNode>> identifiedMap})
       : _identifiedMap = identifiedMap;
 
@@ -164,14 +164,26 @@ IdentifiedBlankNodes computeIdentifiedBlankNodes(
   final Set<BlankNodeTerm> circularReferences = identifiedBlankNodes.values
       .expand((l) => l.expand((i) => i._circuitCheck))
       .toSet();
+  final reversedIdentifiedMap = <IdentifiedBlankNode, BlankNodeTerm>{};
+  for (final entry in identifiedBlankNodes.entries) {
+    for (final ibn in entry.value) {
+      if (reversedIdentifiedMap.containsKey(ibn)) {
+        _log.warning(
+            "Detected that IdentifiedBlankNode $ibn is associated with multiple blank nodes (${reversedIdentifiedMap[ibn]} and ${entry.key}). This should not happen and indicates a bug in the identification algorithm.");
+      }
+      reversedIdentifiedMap[ibn] = entry.key;
+    }
+  }
   if (!circularReferences.isEmpty) {
     _log.warning(
         "Detected ${circularReferences.length} circular references in identified blank nodes. These blank nodes will be removed from identification, so they will be handled as non-identified nodes.");
     final realIdentifedBlankNodeEntries =
         identifiedBlankNodes.entries.map((entry) {
       final filtered = entry.value
-          .where((i) =>
-              !i.blankNodeChain().any((bn) => circularReferences.contains(bn)))
+          .where((i) => !i
+              .blankNodeChain()
+              .map((ibn) => reversedIdentifiedMap[ibn]!)
+              .any((bn) => circularReferences.contains(bn)))
           .toList();
       if (filtered.isEmpty) {
         _log.info(
@@ -211,7 +223,7 @@ List<BlankNodeTerm> _sortByDependencies(List<BlankNodeTerm> blankNodes,
 List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
     RdfGraph graph,
     BlankNodeTerm blankNode,
-    Map<BlankNodeTerm, Set<IriTerm>> identifyingPredicates,
+    Map<BlankNodeTerm, Set<RdfPredicate>> identifyingPredicates,
     Map<BlankNodeTerm, List<RdfSubject>> parents,
     Map<BlankNodeTerm, List<IdentifiedBlankNode>> identifiedBlankNodes,
     {Set<BlankNodeTerm>? circuit}) {
@@ -231,6 +243,15 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
     for (final pred in identifyingPreds)
       pred: graph.getMultiValueObjects(blankNode, pred)
   };
+  // verify the objects of the identifying properties - we currently do not
+  // supprort identifying properties that are blank nodes themselves
+  for (final entry in identifyingProps.entries) {
+    final hasBlankNodeObject = entry.value.any((o) => o is BlankNodeTerm);
+    if (hasBlankNodeObject) {
+      throw Exception(
+          "Found identifiable Blank node ${blankNode} that cannot be identified because one of its identifying properties (${entry.key}) has a blank node as object.");
+    }
+  }
   if (parentSubjects == null || parentSubjects.isEmpty) {
     _log.warning(
         "Found identifiable Blank node ${blankNode} that cannot be identified because it has no parent.");
@@ -242,7 +263,7 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
       case IriTerm iriTerm:
         return [
           IdentifiedBlankNode(
-              blankNode, IdentifiedRdfSubject.forIri(iriTerm), identifyingProps)
+              IdentifiedBlankNodeParent.forIri(iriTerm), identifyingProps)
         ];
       case BlankNodeTerm blankNodeParent:
         if (circuitCheck.contains(blankNodeParent)) {
@@ -250,8 +271,7 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
               "Detected circular reference while identifying Blank node ${blankNode}. Skipping further processing of this branch.");
           return [
             IdentifiedBlankNode(
-                blankNode,
-                IdentifiedRdfSubject._circuitBreaker(circuitCheck),
+                IdentifiedBlankNodeParent._circuitBreaker(circuitCheck),
                 identifyingProps)
           ];
         }
@@ -265,8 +285,7 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
             circuit: circuitCheck);
         return identifiedParents
             .map((ip) => IdentifiedBlankNode(
-                blankNode,
-                IdentifiedRdfSubject.forIdentifiedBlankNode(ip),
+                IdentifiedBlankNodeParent.forIdentifiedBlankNode(ip),
                 identifyingProps))
             .toList();
     }

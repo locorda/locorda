@@ -45,3 +45,7 @@ sync:resource a rdf:Property;
     rdfs:comment "Points to the resource that this framework statement is about. Used in resource statements to identify which resource the metadata applies to.";
     rdfs:domain sync:ResourceStatement;
     rdfs:range rdfs:Resource .
+
+sync:parent a rdf:Property;
+    rdfs:label "parent";
+    rdfs:comment "Internal predicate for linking identified blank nodes to their parent in identification graphs. Used only during canonical IRI generation, not in application data." .

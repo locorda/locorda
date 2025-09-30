@@ -5,9 +5,11 @@ import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
+import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
@@ -50,87 +52,6 @@ IriTerm _extractDocumentIri(IriTerm resourceIri) {
 
   final documentIriValue = iriValue.substring(0, fragmentIndex);
   return IriTerm(documentIriValue);
-}
-
-/// Detects property-level changes between old and new RDF graphs.
-///
-/// Compares the triples for each resource IRI and generates PropertyChange objects
-/// for any properties that have different values between the graphs.
-///
-/// Returns a list of PropertyChange objects representing the detected changes.
-/// Each change includes the resource IRI, property IRI, and timing information.
-///
-/// Only handles IriTerm resources currently.
-/// TODO: Add support for blank node resources using context-based identification
-List<PropertyChange> _detectPropertyChanges(
-  RdfGraph? oldGraph,
-  RdfGraph newGraph,
-  int physicalTimestamp,
-  int logicalClock,
-) {
-  final changes = <PropertyChange>[];
-
-  // Get all resource IRIs from the new graph
-  final newResourceIris = newGraph.subjects.whereType<IriTerm>().toSet();
-
-  // Check each resource for property changes
-  for (final resourceIri in newResourceIris) {
-    final oldTriples =
-        oldGraph?.findTriples(subject: resourceIri) ?? <Triple>[];
-    final newTriples = newGraph.findTriples(subject: resourceIri);
-
-    // Create maps of property -> values for comparison
-    final oldProperties = _groupTriplesByPredicate(oldTriples);
-    final newProperties = _groupTriplesByPredicate(newTriples);
-
-    // Check for added or modified properties
-    for (final propertyIri in newProperties.keys) {
-      final oldValues = oldProperties[propertyIri]?.toSet() ?? <RdfTerm>{};
-      final newValues = newProperties[propertyIri]!.toSet();
-
-      // If the sets of values are different, this property has changed
-      if (!_setEquals(oldValues, newValues)) {
-        changes.add(PropertyChange(
-          resourceIri: resourceIri,
-          propertyIri: propertyIri,
-          changedAtMs: physicalTimestamp,
-          changeLogicalClock: logicalClock,
-        ));
-      }
-    }
-
-    // Check for removed properties (exist in old but not in new)
-    for (final propertyIri in oldProperties.keys) {
-      if (!newProperties.containsKey(propertyIri)) {
-        changes.add(PropertyChange(
-          resourceIri: resourceIri,
-          propertyIri: propertyIri,
-          changedAtMs: physicalTimestamp,
-          changeLogicalClock: logicalClock,
-        ));
-      }
-    }
-  }
-
-  return changes;
-}
-
-/// Groups triples by their predicate, returning a map of property IRI -> list of values
-Map<IriTerm, List<RdfTerm>> _groupTriplesByPredicate(Iterable<Triple> triples) {
-  final result = <IriTerm, List<RdfTerm>>{};
-
-  for (final triple in triples) {
-    final predicate = triple.predicate as IriTerm;
-    result.putIfAbsent(predicate, () => <RdfTerm>[]).add(triple.object);
-  }
-
-  return result;
-}
-
-/// Compares two sets for equality (since Set.equals is not available in all versions)
-bool _setEquals<T>(Set<T> set1, Set<T> set2) {
-  if (set1.length != set2.length) return false;
-  return set1.every(set2.contains);
 }
 
 void _validateResourceGraph(
@@ -190,12 +111,14 @@ final defaultManagedPredicates = <IriTerm>{
 /// - sync:isGovernedBy linking to merge contract
 /// - CRDT clock entries with logical and physical times
 /// - Clock hash for efficient change detection
+/// - CRDT metadata (tombstones, etc.) from change detection
 ///
 /// The resulting document contains both the original resource triples and
 /// all the framework metadata needed for CRDT synchronization.
 RdfGraph _constructCrdtDocument(
   IriTerm documentIri,
   RdfGraph? oldFrameworkGraph,
+  RdfGraph crdtMetadata,
   List<RdfObject> governedByFiles,
   IriTerm primaryResourceIri,
   IriTerm resourceType,
@@ -259,7 +182,10 @@ RdfGraph _constructCrdtDocument(
     allTriples.addAll(additionalGraph.triples);
   }
 
-  // 9. Add all original resource triples
+  // 9. Add CRDT metadata (tombstones, counters, etc.)
+  allTriples.addAll(crdtMetadata.triples);
+
+  // 10. Add all original resource triples
   allTriples.addAll(resourceGraph.triples);
 
   return allTriples.toRdfGraph();
@@ -307,9 +233,11 @@ class LocordaGraphSync {
   final Backend? _backend; // TODO: Use for Remote synchronization
   final SyncGraphConfig _config;
   final MergeContractLoader _mergeContractLoader;
-  late final HydrationStreamManager _streamManager;
+  final CrdtTypeRegistry _crdtTypeRegistry;
+
+  final HydrationStreamManager _streamManager;
+  final GroupIndexGraphSubscriptionManager _groupIndexManager;
   late final HydrationEmitter _emitter;
-  late final GroupIndexGraphSubscriptionManager _groupIndexManager;
 
   // Factory functions for configurable time and clock generation
   final HlcService _hlcService;
@@ -325,15 +253,18 @@ class LocordaGraphSync {
         _backend = backend,
         _config = config,
         _mergeContractLoader = mergeContractLoader,
+        _crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
+            physicalTimestampFactory:
+                physicalTimestampFactory ?? defaultPhysicalTimestampFactory),
         _hlcService = hlcService ??
             HlcService(
               physicalTimestampFactory:
                   physicalTimestampFactory ?? defaultPhysicalTimestampFactory,
-            ) {
-    _streamManager = HydrationStreamManager();
-    _groupIndexManager = GroupIndexGraphSubscriptionManager(
-      config: _config,
-    );
+            ),
+        _streamManager = HydrationStreamManager(),
+        _groupIndexManager = GroupIndexGraphSubscriptionManager(
+          config: config,
+        ) {
     _emitter = HydrationEmitter(
       streamManager: _streamManager,
     );
@@ -465,10 +396,10 @@ class LocordaGraphSync {
   /// 2. Store locally in sync system
   /// 3. Hydration stream automatically emits update
   /// 4. Schedule async Pod sync
-  Future<void> save(IriTerm type, RdfGraph graph) async {
+  Future<void> save(IriTerm type, RdfGraph appData) async {
     try {
       // Validate input parameters
-      if (graph.isEmpty) {
+      if (appData.isEmpty) {
         throw ArgumentError('Cannot save empty graph');
       }
 
@@ -479,7 +410,7 @@ class LocordaGraphSync {
       late final IriTerm documentIri;
 
       try {
-        resourceIri = graph.getIdentifier(type);
+        resourceIri = appData.getIdentifier(type);
         documentIri = _extractDocumentIri(resourceIri);
       } on ArgumentError catch (e) {
         _log.severe('Invalid resource configuration for type $type: $e');
@@ -492,7 +423,7 @@ class LocordaGraphSync {
       }
 
       // Validate resource graph structure
-      _validateResourceGraph(documentIri, resourceIri, type, graph);
+      _validateResourceGraph(documentIri, resourceIri, type, appData);
 
       _log.fine('Saving resource $resourceIri to document $documentIri');
 
@@ -511,7 +442,7 @@ class LocordaGraphSync {
       // load the governing documents / merge contracts for correct document splitting
       final mergeContract = await _mergeContractLoader.load(governedByFiles);
 
-      final (appGraph: oldAppGraph, frameworkGraph: oldFrameworkGraph) =
+      final (appGraph: oldAppData, frameworkGraph: oldFrameworkGraph) =
           oldDocument == null
               ? (appGraph: null, frameworkGraph: null)
               : _splitDocument(oldDocument, documentIri, mergeContract);
@@ -525,15 +456,21 @@ class LocordaGraphSync {
           : _hlcService.incrementClock(oldClock);
       final physicalTimestamp = clock.physicalTime;
 
-      // 4. Detect property changes between old and new graphs
-      // FIXME: this is not only about property changes - we also need to
-      // detect added/removed resources or property values so we can add tombstones.
-      final propertyChanges = _detectPropertyChanges(
-        oldAppGraph,
-        graph,
-        clock.physicalTime,
-        clock.logicalTime,
+      // 4. Detect property changes between old and new graphs and generate CRDT metadata
+      final appBlankNodes = computeIdentifiedBlankNodes(appData, mergeContract);
+      final oldAppBlankNodes = oldAppData == null
+          ? IdentifiedBlankNodes.empty
+          : computeIdentifiedBlankNodes(oldAppData, mergeContract);
+      final crdtMetadata = _generateCrdtMetadataForChanges(
+        documentIri,
+        appData,
+        appBlankNodes,
+        oldAppData,
+        oldAppBlankNodes,
+        mergeContract,
+        clock,
       );
+      final propertyChanges = crdtMetadata.propertyChanges;
       if (propertyChanges.isEmpty) {
         _log.info(
             'No property changes detected for $resourceIri, skipping save');
@@ -544,10 +481,12 @@ class LocordaGraphSync {
       final crdtDocument = _constructCrdtDocument(
         documentIri,
         oldFrameworkGraph,
+        // FIXME: what about the metadata from the old document? Don't we need to merge that too?
+        crdtMetadata.metadataGraph,
         governedByFiles,
         resourceIri,
         type,
-        graph,
+        appData,
         clock,
       );
 
@@ -579,7 +518,7 @@ class LocordaGraphSync {
         // but this must be done here and each index has its own cursor
         _emitter.emit(
           HydrationResult<IdentifiedGraph>(
-            items: [(resourceIri, graph)],
+            items: [(resourceIri, appData)],
             deletedItems: [],
             originalCursor: saveResult.previousCursor,
             nextCursor: saveResult.currentCursor,
@@ -880,6 +819,331 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
       return (clockEntrySubject, graph);
     }).toList();
   }
+
+  Iterable<_IdentifiedRdfSubject> _getIdentifiedSubjects(
+          RdfGraph graph, IdentifiedBlankNodes blankNodes) =>
+      graph.subjects.map((subject) {
+        if (subject is IriTerm) {
+          return _IdentifiedIriSubject(subject);
+        } else if (subject is BlankNodeTerm) {
+          final identifier = blankNodes.getIdentifiedNodes(subject);
+          if (identifier != null) {
+            return _IdentifiedBlankNodeSubject(subject, identifier);
+          }
+        }
+        return null; // Unidentified blank node
+      }).whereType<_IdentifiedRdfSubject>();
+
+  _CrdtMetadataResult _generateCrdtMetadataForChanges(
+      IriTerm documentIri,
+      RdfGraph appData,
+      IdentifiedBlankNodes appBlankNodes,
+      RdfGraph? oldAppGraph,
+      IdentifiedBlankNodes oldAppBlankNodes,
+      MergeContract mergeContract,
+      CurrentCrdtClock clock) {
+    final metadataGraphs = <RdfGraph>[];
+    final propertyChanges = <PropertyChange>[];
+
+    // Get all identifiable subjects from both graphs
+    final identifiedSubjects =
+        _getIdentifiedSubjects(appData, appBlankNodes).toSet();
+    final oldIdentifiedSubjects = oldAppGraph == null
+        ? const <_IdentifiedRdfSubject>{}
+        : _getIdentifiedSubjects(oldAppGraph, oldAppBlankNodes).toSet();
+
+    // Partition subjects into added, deleted, and common
+    final addedSubjects = identifiedSubjects.difference(oldIdentifiedSubjects);
+    final deletedSubjects =
+        oldIdentifiedSubjects.difference(identifiedSubjects);
+    final commonSubjects = {
+      for (final subject in identifiedSubjects)
+        if (oldIdentifiedSubjects.contains(subject))
+          subject: oldIdentifiedSubjects.lookup(subject)!
+    };
+
+    // Process deleted subjects - add resource tombstones
+    for (final deletedSubject in deletedSubjects) {
+      _log.fine('Deleted subject detected: ${deletedSubject.subject} ');
+      metadataGraphs.add(createResourceMetadata(
+          documentIri,
+          // FIXME: oh - problem for blank nodes
+          deletedSubject.subject,
+          (metadataSubject) => [
+                Triple(
+                    metadataSubject,
+                    SyncManagedDocument.crdtDeletedAt,
+                    LiteralTermExtensions.dateTimeFromMillisecondsSinceEpoch(
+                        clock.physicalTime))
+              ]));
+    }
+
+    // Process added subjects - generate initial value metadata
+    for (final addedSubject in addedSubjects) {
+      final subjectTerm = addedSubject.subject;
+      var subjectTriples = appData.matching(subject: subjectTerm);
+      final predicates = subjectTriples.predicates;
+      final resourceType =
+          appData.findSingleObject<IriTerm>(subjectTerm, Rdf.type);
+
+      for (final predicate in predicates) {
+        final values =
+            subjectTriples.getMultiValueObjects(subjectTerm, predicate);
+
+        // Get CRDT algorithm for this property
+        final crdtType =
+            _getCrdtAlgorithm(mergeContract, resourceType, predicate);
+
+        // Generate initial value metadata
+        final metadataGraph = crdtType.initialValue(
+          documentIri: documentIri,
+          appData: appData,
+          subject: subjectTerm,
+          predicate: predicate,
+          values: values.cast<RdfObject>(),
+        );
+
+        if (metadataGraph.isNotEmpty) {
+          metadataGraphs.add(metadataGraph);
+        }
+
+        // Record property change
+        if (subjectTerm is IriTerm) {
+          //FIXME: restriction to IriTerm is wrong
+          propertyChanges.add(PropertyChange(
+            resourceIri: subjectTerm,
+            propertyIri: predicate,
+            changedAtMs: clock.physicalTime,
+            changeLogicalClock: clock.logicalTime,
+          ));
+        }
+      }
+    }
+
+    // Process common subjects - detect changes and generate change metadata
+    for (final entry in commonSubjects.entries) {
+      final subjectTerm = entry.key.subject;
+      final oldSubjectTerm = entry.value.subject;
+
+      final newTriples = appData.matching(subject: subjectTerm);
+      final oldTriples = oldAppGraph!.matching(subject: oldSubjectTerm);
+
+      final newPropertiesByPredicate = newTriples.predicates;
+      final oldPropertiesByPredicate = oldTriples.predicates;
+
+      final resourceType =
+          appData.findSingleObject<IriTerm>(subjectTerm, Rdf.type);
+
+      // Get all predicates from both old and new
+      final allPredicates = {
+        ...newPropertiesByPredicate,
+        ...oldPropertiesByPredicate
+      };
+
+      for (final predicate in allPredicates) {
+        final newValues =
+            newTriples.getMultiValueObjects(subjectTerm, predicate);
+        final oldValues =
+            oldTriples.getMultiValueObjects(oldSubjectTerm, predicate);
+
+        // Check if values changed (considering blank node deep equality)
+        if (_valuesEqual(oldValues, newValues, oldAppGraph, appData,
+            oldAppBlankNodes, appBlankNodes)) {
+          continue; // No change
+        }
+
+        // Get CRDT algorithm for this property
+        final crdtType =
+            _getCrdtAlgorithm(mergeContract, resourceType, predicate);
+
+        // Generate change metadata
+        final metadataGraph = crdtType.localValueChange(
+          documentIri: documentIri,
+          oldAppData: oldAppGraph,
+          oldSubject: oldSubjectTerm,
+          newAppData: appData,
+          newSubject: subjectTerm,
+          predicate: predicate,
+          oldValues: oldValues,
+          newValues: newValues,
+        );
+
+        if (metadataGraph.isNotEmpty) {
+          metadataGraphs.add(metadataGraph);
+        }
+
+        // Record property change (only for IRI subjects - blank nodes don't get tracked in storage)
+        if (subjectTerm is IriTerm) {
+          // FIXME: restriction to IriTerm is wrong
+          propertyChanges.add(PropertyChange(
+            resourceIri: subjectTerm,
+            propertyIri: predicate,
+            changedAtMs: clock.physicalTime,
+            changeLogicalClock: clock.logicalTime,
+          ));
+        }
+      }
+    }
+
+    return _CrdtMetadataResult(
+      metadataGraph: metadataGraphs.mergeGraphs(),
+      propertyChanges: propertyChanges,
+    );
+  }
+
+  CrdtType _getCrdtAlgorithm(MergeContract mergeContract, IriTerm? resourceType,
+      RdfPredicate predicate) {
+    // Get CRDT algorithm for this property
+    final rule = mergeContract.getPredicateRule(resourceType, predicate);
+    final algorithmIri = rule?.mergeWith;
+    if (algorithmIri == null) {
+      if (rule == null) {
+        _log.warning(
+            'No predicate rule found for $predicate on $resourceType, using ${CrdtTypeRegistry.fallback.iri.value}.');
+      } else {
+        _log.fine(
+            'No merge algorithm found in rule for $predicate on $resourceType, using ${CrdtTypeRegistry.fallback.iri.value}.');
+      }
+    }
+    return _crdtTypeRegistry.getType(algorithmIri);
+  }
+
+  /// Check if two value lists are equal, considering deep equality for blank nodes
+  bool _valuesEqual(
+      List<RdfTerm> oldValues,
+      List<RdfTerm> newValues,
+      RdfGraph oldGraph,
+      RdfGraph newGraph,
+      IdentifiedBlankNodes oldBlankNodes,
+      IdentifiedBlankNodes newBlankNodes) {
+    if (oldValues.length != newValues.length) {
+      return false;
+    }
+
+    // For each old value, try to find a matching new value
+    final matchedNewValues = <RdfTerm>{};
+
+    for (final oldValue in oldValues) {
+      bool found = false;
+
+      for (final newValue in newValues) {
+        if (matchedNewValues.contains(newValue)) {
+          continue; // Already matched to another old value
+        }
+
+        if (_valueEquals(oldValue, newValue, oldGraph, newGraph, oldBlankNodes,
+            newBlankNodes)) {
+          matchedNewValues.add(newValue);
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        return false; // Old value has no match in new values
+      }
+    }
+
+    return true;
+  }
+
+  /// Check if two RDF values are equal, considering deep equality for blank nodes
+  bool _valueEquals(
+      RdfTerm oldValue,
+      RdfTerm newValue,
+      RdfGraph oldGraph,
+      RdfGraph newGraph,
+      IdentifiedBlankNodes oldBlankNodes,
+      IdentifiedBlankNodes newBlankNodes) {
+    // Simple case: same term
+    if (oldValue == newValue) {
+      return true;
+    }
+
+    // For blank nodes, check if they're identified and equal
+    if (oldValue is BlankNodeTerm && newValue is BlankNodeTerm) {
+      final oldIdentifiers = oldBlankNodes.getIdentifiedNodes(oldValue);
+      final newIdentifiers = newBlankNodes.getIdentifiedNodes(newValue);
+
+      // If both are identified, check if they share any identifier
+      if (oldIdentifiers != null && newIdentifiers != null) {
+        if (oldIdentifiers.any((oldId) => newIdentifiers.contains(oldId))) {
+          return true; // Identified as the same blank node
+        }
+      }
+
+      // For non-identified blank nodes, do deep structural comparison
+      return _deepBlankNodeEquals(
+          oldValue, newValue, oldGraph, newGraph, oldBlankNodes, newBlankNodes);
+    }
+
+    return false;
+  }
+
+  /// Perform deep structural comparison of blank nodes
+  bool _deepBlankNodeEquals(
+      BlankNodeTerm oldBlankNode,
+      BlankNodeTerm newBlankNode,
+      RdfGraph oldGraph,
+      RdfGraph newGraph,
+      IdentifiedBlankNodes oldBlankNodes,
+      IdentifiedBlankNodes newBlankNodes,
+      [Set<BlankNodeTerm>? visited]) {
+    visited ??= {};
+
+    // Prevent infinite recursion
+    if (visited.contains(oldBlankNode)) {
+      return true; // Assume equal if we're in a cycle
+    }
+    visited.add(oldBlankNode);
+
+    final oldTriples = oldGraph.matching(subject: oldBlankNode);
+    final newTriples = newGraph.matching(subject: newBlankNode);
+
+    final oldProps = oldTriples.predicates;
+    final newProps = newTriples.predicates;
+
+    // Must have same predicates
+    if (!_isEqualSet(oldProps, newProps)) {
+      return false;
+    }
+
+    // Check each predicate's values
+    for (final predicate in oldProps) {
+      final oldValues = oldGraph.getMultiValueObjects(oldBlankNode, predicate);
+      final newValues = newGraph.getMultiValueObjects(newBlankNode, predicate);
+
+      if (!_valuesEqual(oldValues, newValues, oldGraph, newGraph, oldBlankNodes,
+          newBlankNodes)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+}
+
+bool _isEqualSet<T>(Set<T> set, Set<T> set2) {
+  if (set.length != set2.length) {
+    return false;
+  }
+  for (final item in set) {
+    if (!set2.contains(item)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// Result of CRDT metadata generation containing metadata triples and property changes
+class _CrdtMetadataResult {
+  final RdfGraph metadataGraph;
+  final List<PropertyChange> propertyChanges;
+
+  _CrdtMetadataResult({
+    required this.metadataGraph,
+    required this.propertyChanges,
+  });
 }
 
 class _HydrationStreamSubscription implements HydrationSubscription {
@@ -892,4 +1156,55 @@ class _HydrationStreamSubscription implements HydrationSubscription {
 
   @override
   bool get isActive => _subscription.isPaused == false;
+}
+
+sealed class _IdentifiedRdfSubject {
+  RdfSubject get subject;
+}
+
+class _IdentifiedIriSubject extends _IdentifiedRdfSubject {
+  final IriTerm iri;
+
+  _IdentifiedIriSubject(this.iri);
+
+  @override
+  RdfSubject get subject => iri;
+
+  @override
+  int get hashCode => iri.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _IdentifiedIriSubject && other.iri == iri;
+}
+
+class _IdentifiedBlankNodeSubject extends _IdentifiedRdfSubject {
+  final BlankNodeTerm blankNode;
+  final List<IdentifiedBlankNode> identifiers;
+
+  _IdentifiedBlankNodeSubject(this.blankNode, this.identifiers);
+
+  @override
+  RdfSubject get subject => blankNode;
+
+  // Two identified blank nodes are considered equal if they share at least one identifier,
+  // so we cannot implement hashCode properly since we cannot know here which
+  // of the identifiers will match. So the only way to get a consistent behaviour
+  // is to return a constant hashCode and do a full comparison in operator==.
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! _IdentifiedBlankNodeSubject) {
+      return false;
+    }
+    // Actually, we consider two identified blank nodes equal if they share at least one identifier
+
+    if (identifiers.any((id) => other.identifiers.contains(id))) {
+      return true;
+    }
+
+    return false;
+  }
 }

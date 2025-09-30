@@ -28,4 +28,12 @@ class SyncUniversalProperties {
   static const managedResourceType = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
+
+  /// parent
+  ///
+  /// Internal predicate for linking identified blank nodes to their parent in identification graphs. Used only during canonical IRI generation, not in application data.
+  ///
+  static const parent = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#parent',
+  );
 }

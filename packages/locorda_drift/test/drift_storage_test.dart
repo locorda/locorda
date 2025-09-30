@@ -37,7 +37,8 @@ void main() {
 
         // Act
         final typeIri = const IriTerm('https://example.com/TestType');
-        final result = await storage.saveDocument(documentIri, typeIri, graph, metadata, []);
+        final result = await storage
+            .saveDocument(documentIri, typeIri, graph, metadata, []);
         final retrieved = await storage.getDocument(documentIri);
 
         // Assert
@@ -67,7 +68,8 @@ void main() {
         // Assert
         expect(result1.previousCursor, isNull); // First save
         expect(result1.currentCursor, equals('2000'));
-        expect(result2.previousCursor, equals('2000')); // Previous cursor from first save
+        expect(result2.previousCursor,
+            equals('2000')); // Previous cursor from first save
         expect(result2.currentCursor, equals('2500'));
         expect(retrieved, isNotNull);
         expect(retrieved!.metadata.ourPhysicalClock, equals(1500));
@@ -119,7 +121,7 @@ void main() {
         expect(retrievedChanges, hasLength(2));
 
         final nameChange = retrievedChanges.firstWhere(
-          (c) => c.propertyIri.value == 'https://schema.org/name',
+          (c) => c.propertyIri == const IriTerm('https://schema.org/name'),
         );
         expect(nameChange.changedAtMs, equals(1500));
         expect(nameChange.changeLogicalClock, equals(10));
@@ -162,7 +164,7 @@ void main() {
         // Assert
         expect(retrievedChanges, hasLength(2));
         expect(
-            retrievedChanges.map((c) => c.propertyIri.value),
+            retrievedChanges.map((c) => (c.propertyIri as IriTerm).value),
             containsAll(
                 ['https://schema.org/name', 'https://schema.org/description']));
       });
@@ -202,7 +204,7 @@ void main() {
 
         // Assert
         expect(filteredChanges, hasLength(1));
-        expect(filteredChanges.first.propertyIri.value,
+        expect((filteredChanges.first.propertyIri as IriTerm).value,
             equals('https://schema.org/description'));
         expect(filteredChanges.first.changeLogicalClock, equals(15));
       });
@@ -235,7 +237,8 @@ void main() {
             DocumentMetadata(ourPhysicalClock: 1200, updatedAt: 3000), []);
 
         // Act
-        final docsResult = await storage.getDocumentsModifiedSince(typeIri, '2200', limit: 10);
+        final docsResult =
+            await storage.getDocumentsModifiedSince(typeIri, '2200', limit: 10);
 
         // Assert
         expect(docsResult.documents, hasLength(2));
@@ -245,8 +248,8 @@ void main() {
                 ['https://example.com/doc2', 'https://example.com/doc3']));
 
         // Should be ordered by updatedAt ascending
-        expect(
-            docsResult.documents[0].metadata.updatedAt, lessThan(docsResult.documents[1].metadata.updatedAt));
+        expect(docsResult.documents[0].metadata.updatedAt,
+            lessThan(docsResult.documents[1].metadata.updatedAt));
       });
 
       testWidgets('gets documents changed by us since timestamp',
@@ -266,8 +269,8 @@ void main() {
             DocumentMetadata(ourPhysicalClock: 2000, updatedAt: 3000), []);
 
         // Act
-        final docsResult =
-            await storage.getDocumentsChangedByUsSince(typeIri, '1200', limit: 10);
+        final docsResult = await storage
+            .getDocumentsChangedByUsSince(typeIri, '1200', limit: 10);
 
         // Assert
         expect(docsResult.documents, hasLength(2));
@@ -296,7 +299,8 @@ void main() {
         }
 
         // Act
-        final docsResult = await storage.getDocumentsModifiedSince(typeIri, '1500', limit: 2);
+        final docsResult =
+            await storage.getDocumentsModifiedSince(typeIri, '1500', limit: 2);
 
         // Assert
         expect(docsResult.documents, hasLength(2));

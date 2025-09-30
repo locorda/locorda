@@ -109,10 +109,10 @@ Iterable<PredicateMapping> mergePredicateMappingGroups(
 
 /// Merges multiple collections of predicate rules with first-wins semantics
 /// When the same predicate IRI appears in multiple collections, the first rule wins
-Map<IriTerm, PredicateRule> mergePredicateRuleGroups(
-  Iterable<Map<IriTerm, PredicateRule>> predicateRuleGroups,
+Map<RdfPredicate, PredicateRule> mergePredicateRuleGroups(
+  Iterable<Map<RdfPredicate, PredicateRule>> predicateRuleGroups,
 ) {
-  final mergedRules = <IriTerm, PredicateRule>{};
+  final mergedRules = <RdfPredicate, PredicateRule>{};
 
   for (final rules in predicateRuleGroups) {
     for (final entry in rules.entries) {

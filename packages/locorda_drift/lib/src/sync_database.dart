@@ -5,7 +5,7 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:locorda_core/locorda_core.dart';
-
+import 'package:rdf_core/rdf_core.dart';
 part 'sync_database.g.dart';
 
 /// IRI lookup table for normalized storage
@@ -310,7 +310,7 @@ class SyncPropertyChangeDao extends DatabaseAccessor<SyncDatabase>
     final allIris = changes
         .expand((change) => [
               change.resourceIri.value,
-              change.propertyIri.value,
+              predicateValue(change.propertyIri),
             ])
         .toSet();
 
@@ -322,7 +322,8 @@ class SyncPropertyChangeDao extends DatabaseAccessor<SyncDatabase>
         .map((change) => SyncPropertyChangesCompanion(
               documentId: Value(documentId),
               resourceIriId: Value(iriToIdMap[change.resourceIri.value]!),
-              propertyIriId: Value(iriToIdMap[change.propertyIri.value]!),
+              propertyIriId:
+                  Value(iriToIdMap[predicateValue(change.propertyIri)]!),
               changedAtMs: Value(change.changedAtMs),
               changeLogicalClock: Value(change.changeLogicalClock),
             ))
@@ -332,6 +333,9 @@ class SyncPropertyChangeDao extends DatabaseAccessor<SyncDatabase>
       batch.insertAll(syncPropertyChanges, companions);
     });
   }
+
+  String predicateValue(RdfPredicate predicate) =>
+      switch (predicate) { IriTerm iri => iri.value };
 
   /// Get property changes for a document, optionally filtered by logical clock
   Future<List<PropertyChangeInfo>> getPropertyChanges(int documentId,

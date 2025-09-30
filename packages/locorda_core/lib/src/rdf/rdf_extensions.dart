@@ -5,13 +5,15 @@ import 'package:rdf_core/rdf_core.dart';
 typedef Node = (RdfSubject node, RdfGraph triples);
 
 extension RdfGraphExtensions on RdfGraph {
+  static final empty = RdfGraph.fromTriples(const []);
+
   IriTerm getIdentifier(IriTerm type) {
     final localIdTriple = findTriples(predicate: Rdf.type, object: type).single;
     return localIdTriple.subject as IriTerm;
   }
 
   T? findSingleObject<T extends RdfObject>(
-      RdfSubject subject, IriTerm predicate) {
+      RdfSubject subject, RdfPredicate predicate) {
     final triples = findTriples(subject: subject, predicate: predicate);
     if (triples.isEmpty) {
       return null;
@@ -27,7 +29,7 @@ extension RdfGraphExtensions on RdfGraph {
    * Gets a list of RdfObjects from a rdf:List structure (e.g. rdf:first, rdf:rest, rdf:nil)
    */
   List<T> getListObjects<T extends RdfObject>(
-      RdfSubject subject, IriTerm predicate) {
+      RdfSubject subject, RdfPredicate predicate) {
     final obj = findSingleObject(subject, predicate);
     if (!(obj is RdfSubject)) {
       return [];
@@ -39,7 +41,7 @@ extension RdfGraphExtensions on RdfGraph {
 * Gets a list of RdfObjects from a multi-valued property (i.e. multiple triples with the same predicate)
 */
   List<T> getMultiValueObjects<T extends RdfObject>(
-      RdfSubject subject, IriTerm predicate) {
+      RdfSubject subject, RdfPredicate predicate) {
     final obj = findTriples(subject: subject, predicate: predicate);
     if (obj.isEmpty) {
       return [];
@@ -87,7 +89,25 @@ extension IriTermExtensions on IriTerm {
   }
 }
 
+extension RdfGraphIterableExtensions on Iterable<RdfGraph> {
+  RdfGraph mergeGraphs() {
+    return RdfGraph.fromTriples(expand((g) => g.triples));
+  }
+}
+
 extension LiteralTermExtensions on LiteralTerm {
+  static LiteralTerm dateTime(DateTime dateTime) {
+    return LiteralTerm(dateTime.toIso8601String(), datatype: Xsd.dateTime);
+  }
+
+  static LiteralTerm dateTimeFromMillisecondsSinceEpoch(
+      int millisecondsSinceEpoch) {
+    return LiteralTerm(
+        DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch)
+            .toIso8601String(),
+        datatype: Xsd.dateTime);
+  }
+
   bool get isBoolean {
     return datatype == Xsd.boolean;
   }

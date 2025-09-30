@@ -61,6 +61,16 @@ class SyncManagedDocument {
     'https://w3id.org/solid-crdt-sync/vocab/sync#hasStatement',
   );
 
+  /// parent
+  ///
+  /// Internal predicate for linking identified blank nodes to their parent in identification graphs. Used only during canonical IRI generation, not in application data.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const parent = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#parent',
+  );
+
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
   /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.

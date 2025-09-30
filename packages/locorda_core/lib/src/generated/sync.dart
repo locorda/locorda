@@ -75,4 +75,14 @@ class Sync {
   static const resource = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#resource',
   );
+
+  /// IRI for sync:parent
+  ///
+  /// Internal predicate for linking identified blank nodes to their parent in identification graphs. Used only during canonical IRI generation, not in application data.
+  ///
+  /// Can be used on all classes in this vocabulary
+  ///
+  static const parent = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#parent',
+  );
 }
