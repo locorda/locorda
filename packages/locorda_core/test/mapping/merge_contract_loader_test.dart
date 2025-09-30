@@ -88,7 +88,7 @@ void main() {
 
   setUp(() {
     mockLoader = MockRecursiveRdfLoader();
-    contractLoader = MergeContractLoader(mockLoader);
+    contractLoader = StandardMergeContractLoader(mockLoader);
   });
 
   tearDown(() {

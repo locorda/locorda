@@ -28,34 +28,34 @@ class DocumentMappingDependencyExtractor implements DependencyExtractor {
 
 class CachingMergeContractLoader implements MergeContractLoader {
   final MergeContractLoader _inner;
-  final LinkedHashMap<IriTerm, Future<MergeContract>> _cache = LinkedHashMap();
+  final LinkedHashMap<String, Future<MergeContract>> _cache = LinkedHashMap();
   final int maxCacheSize;
 
   CachingMergeContractLoader(this._inner, {this.maxCacheSize = 50});
 
+  String _cacheKey(List<IriTerm> iris) => iris.length == 1
+      ? iris.first.value
+      : iris.map((iri) => iri.value).join('|');
+
   @override
   Future<MergeContract> load(List<IriTerm> isGovernedBy) {
-    if (isGovernedBy.length != 1) {
-      // Caching only works for single-document contracts
-      return _inner.load(isGovernedBy);
-    }
-    final iri = isGovernedBy.first;
+    final key = _cacheKey(isGovernedBy);
 
     // Check if already in cache (and move to end for LRU)
-    if (_cache.containsKey(iri)) {
-      final future = _cache.remove(iri)!;
-      _cache[iri] = future;
+    if (_cache.containsKey(key)) {
+      final future = _cache.remove(key)!;
+      _cache[key] = future;
       return future;
     }
 
     // Load and cache the result
     final future = _inner.load(isGovernedBy).catchError((error) {
       // Remove from cache on error to allow retry
-      _cache.remove(iri);
+      _cache.remove(key);
       return Future<MergeContract>.error(error);
     });
 
-    _cache[iri] = future;
+    _cache[key] = future;
 
     // Evict oldest entry if cache is full
     if (_cache.length > maxCacheSize) {
