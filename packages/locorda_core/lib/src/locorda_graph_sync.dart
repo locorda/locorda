@@ -213,13 +213,19 @@ List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
 ({RdfGraph appGraph, RdfGraph frameworkGraph}) _splitDocument(
     RdfGraph document, IriTerm documentIri, MergeContract mergeContract) {
   // We have to split the document into application data and framework metadata.
-  final stopTraversalPredicates = mergeContract.globalStopTraversalPredicates;
 
-  final frameworkGraph = document.subgraph(documentIri,
-      filter: (triple, depth) =>
-          stopTraversalPredicates.contains(triple.predicate)
-              ? TraversalDecision.includeButDontDescend
-              : TraversalDecision.include);
+  final types = <RdfSubject, IriTerm?>{};
+  final frameworkGraph =
+      document.subgraph(documentIri, filter: (triple, depth) {
+    final type = types.putIfAbsent(triple.subject,
+        () => document.findSingleObject<IriTerm>(triple.subject, Rdf.type));
+
+    final isStopTraversal =
+        mergeContract.isStopTraversalPredicate(type, triple.predicate);
+    return isStopTraversal
+        ? TraversalDecision.includeButDontDescend
+        : TraversalDecision.include;
+  });
 
   return (
     appGraph: document.without(frameworkGraph),
@@ -999,7 +1005,8 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   CrdtType _getCrdtAlgorithm(MergeContract mergeContract, IriTerm? resourceType,
       RdfPredicate predicate) {
     // Get CRDT algorithm for this property
-    final rule = mergeContract.getPredicateRule(resourceType, predicate);
+    final rule =
+        mergeContract.getEffectivePredicateRule(resourceType, predicate);
     final algorithmIri = rule?.mergeWith;
     if (algorithmIri == null) {
       if (rule == null) {
