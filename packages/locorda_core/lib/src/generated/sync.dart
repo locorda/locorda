@@ -36,6 +36,22 @@ class Sync {
     'https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement',
   );
 
+  /// IRI for sync:BlankNodeMapping
+  ///
+  /// Represents a mapping between a canonical fragment identifier and a blank node in the document. Used for stable references to identified blank nodes across serialization boundaries.
+  ///
+  static const BlankNodeMapping = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#BlankNodeMapping',
+  );
+
+  /// IRI for sync:IdentificationGraph
+  ///
+  /// Internal temporary graph structure used during canonical fragment generation for identified blank nodes. Contains only identifying properties and parent relationships. Never persisted in documents.
+  ///
+  static const IdentificationGraph = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#IdentificationGraph',
+  );
+
   /// IRI for sync:isGovernedBy [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
   ///
   /// Links a data or index resource to an ordered list (rdf:List) of public mapping files that define its merge behavior. Documents are merged in list order with 'first wins' semantics - implementations should append only, not prepend, to avoid overriding existing definitions.
@@ -76,11 +92,31 @@ class Sync {
     'https://w3id.org/solid-crdt-sync/vocab/sync#resource',
   );
 
+  /// IRI for sync:hasBlankNodeMapping [Expects: https://w3id.org/solid-crdt-sync/vocab/sync#BlankNodeMapping]
+  ///
+  /// Links the managed document to framework-reserved fragment identifiers for identified blank nodes.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ManagedDocument
+  ///
+  static const hasBlankNodeMapping = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#hasBlankNodeMapping',
+  );
+
+  /// IRI for sync:blankNode
+  ///
+  /// Links a framework-reserved fragment identifier to the actual blank node in the document.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#BlankNodeMapping
+  ///
+  static const blankNode = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#blankNode',
+  );
+
   /// IRI for sync:parent
   ///
-  /// Internal predicate for linking identified blank nodes to their parent in identification graphs. Used only during canonical IRI generation, not in application data.
+  /// Links an identified blank node to its parent resource within an identification graph during canonical fragment computation.
   ///
-  /// Can be used on all classes in this vocabulary
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#IdentificationGraph
   ///
   static const parent = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#parent',

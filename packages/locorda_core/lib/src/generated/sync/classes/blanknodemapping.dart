@@ -7,25 +7,25 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// ResourceStatement class from Sync vocabulary
+/// BlankNodeMapping class from Sync vocabulary
 ///
-/// A statement containing framework metadata about a specific resource within a managed document. Used for resource-level concerns like deletion tombstones while maintaining clean separation from application data.
+/// Represents a mapping between a canonical fragment identifier and a blank node in the document. Used for stable references to identified blank nodes across serialization boundaries.
 ///
 /// Inherits from:
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
 ///
-/// This class provides access to all properties that can be used with ResourceStatement.
-/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement)
+/// This class provides access to all properties that can be used with BlankNodeMapping.
+/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/sync#BlankNodeMapping)
 ///
 /// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/sync#)
-class SyncResourceStatement {
+class SyncBlankNodeMapping {
   // Private constructor prevents instantiation
-  const SyncResourceStatement._();
+  const SyncBlankNodeMapping._();
 
-  /// IRI term for the ResourceStatement class
+  /// IRI term for the BlankNodeMapping class
   /// Use this to specify that a resource is of this type.
   static const classIri = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement',
+    'https://w3id.org/solid-crdt-sync/vocab/sync#BlankNodeMapping',
   );
 
   /// isGovernedBy [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
@@ -48,14 +48,14 @@ class SyncResourceStatement {
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
 
-  /// resource [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// blankNode
   ///
-  /// Points to the resource that this framework statement is about. Used in resource statements to identify which resource the metadata applies to.
+  /// Links a framework-reserved fragment identifier to the actual blank node in the document.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#BlankNodeMapping
   ///
-  static const resource = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/sync#resource',
+  static const blankNode = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#blankNode',
   );
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]

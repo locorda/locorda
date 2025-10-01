@@ -35,17 +35,66 @@ These topics must be completed for v1 release. They represent essential function
 
 ## 2. Framework Version Compatibility Strategy
 
-**Priority**: Critical for v1 Release  
+**Priority**: Critical for v1 Release
 **Core Issue**: What happens when different versions of the framework try to collaborate in the same Pod?
 
 **Key Decisions Needed**:
 - **Installation Version Declaration**: How installations declare their framework version for compatibility checking
-- **Version Mismatch Handling**: Graceful fallbacks when incompatible versions encounter each other  
+- **Version Mismatch Handling**: Graceful fallbacks when incompatible versions encounter each other
 - **Migration Path**: Basic strategy for evolving formats (RDF reification, index structures, merge contracts) without breaking existing collaborations
 
 **v1 Scope**: Define minimum viable compatibility strategy - not full migration automation, but clear policies for version conflicts and a path forward for format evolution.
 
 **Implementation Strategy**: Build on existing installation document infrastructure to add version metadata and basic compatibility checks.
+
+### Identified Blank Node Hash Algorithm Evolution
+
+**Specific Compatibility Case**: Evolution from MD5 to alternative hash algorithms for identified blank node canonical fragments.
+
+**Current Design** (see `proposed-changes/005-identified-blank-node-canonical-iri.md`):
+- Fragment format: `#lcrd-ibn-md5-{hash}`
+- Algorithm identifier explicitly included for self-describing documents
+- MD5 sufficient for collision resistance in current domain
+
+**Future Evolution Scenario**:
+If SHA-256 or other algorithms become necessary (stronger cryptographic properties, regulatory requirements, etc.):
+
+**Multi-Algorithm Coexistence Strategy**:
+1. **Single blank node, multiple mappings**: Same blank node can have fragment mappings for multiple hash algorithms
+   ```turtle
+   <doc> sync:hasBlankNodeMapping <doc#lcrd-ibn-md5-abc123...> ,
+                                   <doc#lcrd-ibn-sha256-def456...> .
+
+   <doc#lcrd-ibn-md5-abc123...> sync:blankNode _:ingredient1 .
+   <doc#lcrd-ibn-sha256-def456...> sync:blankNode _:ingredient1 .
+   ```
+
+2. **Matching semantics**: During merge, if *any* fragment identifier matches, blank nodes are considered identical
+   - Old installation recognizes only MD5, matches via `#lcrd-ibn-md5-abc123...`
+   - New installation recognizes both, can match via either fragment
+   - OR-Set semantics for `sync:hasBlankNodeMapping` preserves all mappings
+
+3. **Transition phases**:
+   - **Phase 1**: All installations use MD5 only
+   - **Phase 2**: New installations generate both MD5 + SHA-256, old installations continue working (match via MD5)
+   - **Phase 3**: When all active installations upgraded, can deprecate MD5 generation
+   - **Phase 4**: Eventually remove MD5 support entirely
+
+**Benefits**:
+- ✅ No coordination required between installations during transition
+- ✅ Graceful forward/backward compatibility
+- ✅ No special migration logic needed
+- ✅ Documents remain self-describing throughout evolution
+
+**Trade-offs**:
+- ⚠️ Storage overhead: duplicate mappings during transition period
+- ⚠️ Computation overhead: new installations must compute multiple hashes during compatibility mode
+
+**Implementation Decisions Deferred to v2+**:
+- Specific triggers for algorithm migration (security requirements, performance needs)
+- Compatibility mode detection and configuration
+- Deprecation timeline for old algorithms
+- Multiple algorithm generation policies
 
 ---
 

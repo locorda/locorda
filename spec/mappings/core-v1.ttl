@@ -12,7 +12,7 @@
 
 <> a mc:DocumentMapping;
    # Define class mappings for framework components
-   mc:classMapping ( <#managed-document> <#statement> <#resource-statement> ) ;
+   mc:classMapping ( <#managed-document> <#statement> <#resource-statement> <#blank-node-mapping> ) ;
    # Define predicate mappings for framework components (ordered list)
    mc:predicateMapping ( <#clock-mappings> <#lifecycle-mappings> <#traversal-boundaries> ) .
 
@@ -23,7 +23,8 @@
      [ mc:predicate foaf:primaryTopic; algo:mergeWith algo:Immutable ],  # The resource being managed
      [ mc:predicate sync:isGovernedBy; algo:mergeWith algo:OR_Set ],  # Merge contract list (append-only)
      [ mc:predicate sync:managedResourceType; algo:mergeWith algo:Immutable ],  # Resource type for discovery
-     [ mc:predicate idx:belongsToIndexShard; algo:mergeWith algo:OR_Set ] .  # Index shard memberships
+     [ mc:predicate idx:belongsToIndexShard; algo:mergeWith algo:OR_Set ],  # Index shard memberships
+     [ mc:predicate sync:hasBlankNodeMapping; algo:mergeWith algo:OR_Set ] .  # Blank node canonical mappings
 
 # Merge contract for RDF reified statements used as tombstones in CRDT sets
 <#statement> a mc:ClassMapping;
@@ -47,6 +48,13 @@
    mc:rule
      # The resource identifier is the immutable identity of this statement
      [ mc:predicate sync:resource; algo:mergeWith algo:LWW_Register; mc:isIdentifying true ] .
+
+# Merge contract for BlankNodeMapping - framework-reserved fragments for identified blank nodes
+<#blank-node-mapping> a mc:ClassMapping;
+   mc:appliesToClass sync:BlankNodeMapping;
+   mc:rule
+     # The blank node reference itself uses LWW and stops traversal into app data
+     [ mc:predicate sync:blankNode; algo:mergeWith algo:LWW_Register; mc:stopTraversal true ] .
 
 # Standard mapping for lifecycle semantics across all CRDT contexts
 <#lifecycle-mappings> a mc:PredicateMapping;

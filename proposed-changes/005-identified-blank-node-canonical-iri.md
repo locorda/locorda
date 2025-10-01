@@ -1,7 +1,5 @@
 # Canonical IRI Generation for Identified Blank Nodes
 
-**IMPORTANT CHANGE:** objects of identifying predicates **must not** be blank nodes!
-
 ## Problem Statement
 
 Identified blank nodes need stable, persistent references that survive RDF serialization/deserialization for:
@@ -12,17 +10,17 @@ Identified blank nodes need stable, persistent references that survive RDF seria
 
 The challenge: `BlankNodeTerm` instances are recreated on each parse, so direct blank node references are unstable across serialization boundaries.
 
-## Solution: Canonical IRI with Persistent Mapping
+## Solution: Fragment Identifier with Persistent Mapping
 
 ### Overview
 
-Generate a canonical IRI for each identified blank node using:
+Generate a canonical fragment identifier for each identified blank node using:
 1. Deterministic RDF graph construction from identification pattern
 2. Optimized canonicalization with stable blank node labels
-3. Hash-based IRI generation
-4. Persistent mapping storage in framework metadata
+3. Hash-based fragment generation
+4. Persistent mapping storage using fragment identifiers in the document
 
-### Canonical IRI Generation Algorithm
+### Canonical Fragment Generation Algorithm
 
 #### Step 1: Build Identification Graph
 
@@ -91,36 +89,37 @@ _:ibn0 <http://schema.org/unit> "cup" .
 - Full IRI expansion (no prefixes)
 - Deterministic serialization - use canonical nquads serialization as specified in RDF Canonicalization
 
-#### Step 4: Hash and Generate IRI
+#### Step 4: Hash and Generate Fragment Identifier
 
 ```
 hash = MD5(nquads_string)
-canonical_iri = "locorda:md5:{hash}"
+fragment_id = "#lcrd-ibn-md5-{hash}"
 ```
 
-**Example:** `locorda:md5:a3f9e2d1c4b5e6f7a8b9c0d1e2f3a4b5`
+**Example:** `<doc#lcrd-ibn-md5-a3f9e2d1c4b5e6f7a8b9c0d1e2f3a4b5>`
+
+**Namespace reservation:** The `#lcrd-` prefix (derived from "locorda") is reserved for framework use. Application data must not use fragments starting with `#lcrd-`.
+
+**Fragment format:** The fragment explicitly includes the hash algorithm identifier (`md5`) to make documents self-describing and support future algorithm evolution without format ambiguity.
 
 **Hash algorithm choice:**
 - **MD5**: Fast, 128-bit, sufficient for collision resistance in this domain
 - Consistent with existing framework usage (shard naming)
-- Alternative: SHA-256 for cryptographic strength (slower, longer IRIs)
+- Alternative algorithms (SHA-256) are not currently used but could be added in future versions (see FUTURE-TOPICS.md)
 
 ### Persistent Mapping Storage
 
-Store canonical IRI ↔ blank node mapping in framework metadata:
+Store fragment ↔ blank node mapping using framework-reserved fragments:
 
 ```turtle
 <doc> a sync:ManagedDocument ;
   # ... other framework metadata ...
+  sync:hasBlankNodeMapping <doc#lcrd-ibn-md5-a3f9e2d1c4b5e6f7> ,
+                            <doc#lcrd-ibn-md5-f4e2c1a39b8d7c6a> .
 
-  # Blank node mapping
-  sync:hasBlankNodeMapping [
-    sync:canonicalIri locorda:md5:a3f9e2d1... ;
-    sync:blankNode _:ingredient1  # Direct RDF reference
-  ] , [
-    sync:canonicalIri locorda:md5:f4e2c1a3... ;
-    sync:blankNode _:ingredient2
-  ] .
+# Blank node mappings using framework-reserved fragments
+<doc#lcrd-ibn-md5-a3f9e2d1c4b5e6f7> sync:blankNode _:ingredient1 .
+<doc#lcrd-ibn-md5-f4e2c1a39b8d7c6a> sync:blankNode _:ingredient2 .
 
 # Application data
 <doc#it> schema:ingredients _:ingredient1, _:ingredient2 .
@@ -134,7 +133,11 @@ _:ingredient2 schema:name "Basil" ;
               schema:amount "1" .
 ```
 
-**RDF parser behavior:** When parsing this document, the parser creates one `BlankNodeTerm` instance per unique blank node label (`_:ingredient1`, `_:ingredient2`), and reuses that instance everywhere the label appears. This allows the framework metadata to successfully reference app data blank nodes.
+**Key benefits:**
+- Fragment identifiers are standard IRIs - standard CRDT merge handling applies
+- No nested blank node structures requiring special merge logic
+- Clear namespace separation between framework (`#lcrd-*`) and application data
+- RDF parser behavior unchanged: one `BlankNodeTerm` per label, reused throughout document
 
 ### Usage in Framework Metadata
 
@@ -144,16 +147,7 @@ _:ingredient2 schema:name "Basil" ;
 <doc> sync:hasStatement [
   rdf:subject <doc#it> ;
   rdf:predicate schema:ingredients ;
-  rdf:object locorda:md5:a3f9e2d1... ;  # Canonical IRI instead of blank node
-  crdt:deletedAt "2025-01-15T10:30:00Z"^^xsd:dateTime
-] .
-```
-
-#### Resource Deletion Tombstones
-
-```turtle
-<doc> sync:hasStatement [
-  rdf:subject locorda:md5:f4e2c1a3... ;  # Deleted identified blank node
+  rdf:object <doc#lcrd-ibn-md5-a3f9e2d1c4b5e6f7> ;  # Fragment identifier instead of blank node
   crdt:deletedAt "2025-01-15T10:30:00Z"^^xsd:dateTime
 ] .
 ```
@@ -164,51 +158,59 @@ _:ingredient2 schema:name "Basil" ;
 -- PropertyChange table
 INSERT INTO property_changes (
   document_iri,
-  resource_iri,  -- Can be IRI or canonical IRI for blank nodes
+  resource_iri,  -- Can be IRI or fragment identifier for blank nodes
   property_iri,
   changed_at_ms,
   change_logical_clock
 ) VALUES (
   'https://example.org/recipe-123',
-  'locorda:md5:a3f9e2d1...',  -- Identified blank node
+  'https://example.org/recipe-123#lcrd-ibn-md5-a3f9e2d1c4b5e6f7',  -- Fragment identifier
   'http://schema.org/amount',
   1705318200000,
   15
 );
 ```
 
+**Note:** Deletion handling is left open for implementation decisions.
+
 ### Vocabulary Extensions
 
-New predicates needed in `sync:` vocabulary:
+New class and predicates needed in `sync:` vocabulary (in `sync.ttl`):
 
 ```turtle
+sync:BlankNodeMapping a rdfs:Class;
+  rdfs:label "Blank Node Mapping";
+  rdfs:comment "Represents a mapping between a canonical IRI and a blank node in the document. Used for stable references to identified blank nodes across serialization boundaries." .
+
 sync:hasBlankNodeMapping a rdf:Property ;
   rdfs:domain sync:ManagedDocument ;
   rdfs:range sync:BlankNodeMapping ;
-  rdfs:comment "Links a managed document to blank node canonical IRI mappings." .
-
-sync:BlankNodeMapping a rdfs:Class ;
-  rdfs:comment "Represents a mapping between a canonical IRI and a blank node in the document." .
-
-sync:canonicalIri a rdf:Property ;
-  rdfs:domain sync:BlankNodeMapping ;
-  rdfs:range xsd:anyURI ;
-  rdfs:comment "The canonical IRI for an identified blank node." .
+  rdfs:comment "Links the managed document to framework-reserved fragment identifiers for identified blank nodes." .
 
 sync:blankNode a rdf:Property ;
   rdfs:domain sync:BlankNodeMapping ;
-  rdfs:comment "Reference to the actual blank node in the document." .
-```
+  rdfs:comment "Links a framework-reserved fragment identifier to the actual blank node in the document." .
 
-New predicate for identification graphs (internal use only):
-
-```turtle
 sync:parent a rdf:Property ;
   rdfs:comment "Internal predicate for linking identified blank nodes to their parent in identification graphs. Not used in application data." .
 ```
 
-Note: sync:canonicalIri must be marked as identifying in core-v1.ttl mapping document, sync:blankNode will
-be removed when the blank node is tombstoned, leaving a blank node with only sync:canonicalIri. Both sync:canonicalIri and sync:blankNode must be marked with stopTraversal in the mapping document
+**Merge contract mappings** needed in `core-v1.ttl`:
+
+```turtle
+# Add to mc:classMapping list in the DocumentMapping:
+<#blank-node-mapping>
+
+# New ClassMapping for BlankNodeMapping:
+<#blank-node-mapping> a mc:ClassMapping;
+  mc:appliesToClass sync:BlankNodeMapping;
+  mc:rule
+    [ mc:predicate sync:blankNode; algo:mergeWith algo:LWW_Register; mc:stopTraversal true ] .
+
+# Add to <#managed-document> ClassMapping rules:
+[ mc:predicate sync:hasBlankNodeMapping; algo:mergeWith algo:OR_Set ]
+
+```
 
 ## Performance Characteristics
 
@@ -252,15 +254,15 @@ be removed when the blank node is tombstoned, leaving a blank node with only syn
 
 If identifying properties change:
 ```turtle
-# Old: locorda:md5:abc123... (name="Tomato")
-# New: locorda:md5:def456... (name="Roma Tomato")
+# Old: <doc#lcrd-ibn-md5-abc123...> (name="Tomato")
+# New: <doc#lcrd-ibn-md5-def456...> (name="Roma Tomato")
 ```
 
 **Handling:**
-1. Detect canonical IRI mismatch during save
+1. Detect fragment identifier mismatch during save
 2. Treat as deletion of old + creation of new (semantically correct)
-3. Generate deletion tombstone for old canonical IRI
-4. Store new mapping for new canonical IRI
+3. Handle deletion according to chosen strategy (implementation decision)
+4. Store new mapping for new fragment identifier
 
 ### Non-Identified Blank Nodes
 
@@ -287,10 +289,13 @@ Blank nodes without identifying properties:
 The approach uses standard RDF:
 - ✅ Valid RDF triples
 - ✅ Parseable by any RDF parser
-- ✅ Framework metadata clearly separated via `sync:` namespace
-- ✅ Canonical IRIs use custom scheme but are valid IRIs
+- ✅ Framework metadata clearly separated via `sync:` namespace and `#lcrd-` fragment prefix
+- ✅ Fragment identifiers are standard IRIs with full CRDT merge support
 
-**Limitation:** `locorda:md5:...` IRIs are not resolvable, but this is acceptable for internal framework references.
+**Benefits over custom IRI schemes:**
+- Standard fragment identifiers avoid custom URI scheme issues
+- Clear namespace separation via reserved prefix
+- Simplified merge logic - fragments are just IRIs
 
 ## Integration with Existing Architecture
 
@@ -303,15 +308,20 @@ The approach uses standard RDF:
   sync:isGovernedBy ( <mapping-v1.ttl> ) ;
   crdt:hasClockEntry [...] ;
   crdt:clockHash "..." ;
+  sync:hasBlankNodeMapping <doc#lcrd-ibn-md5-a3f9e2d1c4b5e6f7> ,
+                            <doc#lcrd-ibn-md5-f4e2c1a39b8d7c6a> .
 
-  # Canonical IRI mapping (new)
-  sync:hasBlankNodeMapping [ ... ] ;
+# Blank node mappings using framework-reserved fragments
+<doc#lcrd-ibn-md5-a3f9e2d1c4b5e6f7> sync:blankNode _:ing1 .
+<doc#lcrd-ibn-md5-f4e2c1a39b8d7c6a> sync:blankNode _:ing2 .
 
-  # Framework metadata referencing blank nodes via canonical IRIs
-  sync:hasStatement [
-    rdf:subject locorda:md5:... ;  # Uses canonical IRI
-    crdt:deletedAt "..."
-  ] .
+# Framework metadata referencing blank nodes via fragment identifiers
+<doc> sync:hasStatement [
+  rdf:subject <doc#it> ;
+  rdf:predicate schema:ingredients ;
+  rdf:object <doc#lcrd-ibn-md5-a3f9e2d1c4b5e6f7> ;
+  crdt:deletedAt "..."
+] .
 
 # Application data layer (unchanged)
 <doc#it> a schema:Recipe ;
@@ -325,31 +335,34 @@ _:ing2 schema:name "Basil" ; schema:amount "1" .
 ### CRDT Metadata Generation
 
 When generating CRDT metadata (`_generateCrdtMetadataForChanges`):
-1. Compute canonical IRIs for identified blank nodes
-2. Use canonical IRIs in all framework metadata
-3. Store PropertyChanges with canonical IRIs
-4. Store mapping in framework metadata
+1. Compute fragment identifiers for identified blank nodes
+2. Use fragment identifiers in all framework metadata
+3. Store PropertyChanges with fragment identifiers
+4. Store mappings using framework-reserved fragments with `sync:blankNode` predicate
 
 ## Benefits Summary
 
-1. **Stable references**: Canonical IRIs survive serialization/deserialization
+1. **Stable references**: Fragment identifiers survive serialization/deserialization
 2. **Performance**: Persistent mapping eliminates repeated canonicalization
-3. **Correctness**: Standards-based RDF approach
-4. **Simplicity**: Uniform handling (canonical IRI is just an IRI)
-5. **Compatibility**: Works with standard RDF tools
-6. **Scalability**: Efficient even with many identified blank nodes
+3. **Correctness**: Standards-based RDF approach using standard fragment identifiers
+4. **Simplicity**: Fragments are standard IRIs - uniform CRDT handling applies
+5. **Merge-friendly**: No special handling needed for blank node mapping structures
+6. **Clear separation**: `#lcrd-` prefix convention clearly distinguishes framework from app data
+7. **Compatibility**: Works with standard RDF tools
+8. **Scalability**: Efficient even with many identified blank nodes
 
 ## Future Considerations
 
 ### Alternative Hash Algorithms
 
 Current: MD5 (128-bit, fast)
-- **SHA-256**: 256-bit, cryptographic strength, slower
+- **SHA-256**: 256-bit, cryptographic strength, slower, longer fragment identifiers
 - **BLAKE3**: Fast, modern, 256-bit (if needed later)
 
-### IRI Scheme Evolution
+### Fragment Convention Evolution
 
-Current: `locorda:md5:...`
-- Could evolve to resolvable: `https://w3id.org/locorda/ibn/md5/...`
-- Documentation at IRI location
-- Backward compatibility maintained
+Current: `#lcrd-ibn-md5-{hash}`
+- Algorithm identifier explicitly included in fragment format
+- Future algorithms use same pattern: `#lcrd-ibn-sha256-{hash}`, `#lcrd-ibn-blake3-{hash}`, etc.
+- Multiple hash algorithms can coexist: same blank node may have mappings for multiple algorithms
+- Cross-version compatibility through algorithm-specific matching (see FUTURE-TOPICS.md)

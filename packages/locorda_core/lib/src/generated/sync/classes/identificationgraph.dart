@@ -7,25 +7,25 @@
 
 import 'package:rdf_core/rdf_core.dart';
 
-/// ResourceStatement class from Sync vocabulary
+/// IdentificationGraph class from Sync vocabulary
 ///
-/// A statement containing framework metadata about a specific resource within a managed document. Used for resource-level concerns like deletion tombstones while maintaining clean separation from application data.
+/// Internal temporary graph structure used during canonical fragment generation for identified blank nodes. Contains only identifying properties and parent relationships. Never persisted in documents.
 ///
 /// Inherits from:
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
 ///
-/// This class provides access to all properties that can be used with ResourceStatement.
-/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement)
+/// This class provides access to all properties that can be used with IdentificationGraph.
+/// [Class Reference](https://w3id.org/solid-crdt-sync/vocab/sync#IdentificationGraph)
 ///
 /// [Vocabulary Reference](https://w3id.org/solid-crdt-sync/vocab/sync#)
-class SyncResourceStatement {
+class SyncIdentificationGraph {
   // Private constructor prevents instantiation
-  const SyncResourceStatement._();
+  const SyncIdentificationGraph._();
 
-  /// IRI term for the ResourceStatement class
+  /// IRI term for the IdentificationGraph class
   /// Use this to specify that a resource is of this type.
   static const classIri = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement',
+    'https://w3id.org/solid-crdt-sync/vocab/sync#IdentificationGraph',
   );
 
   /// isGovernedBy [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#List]
@@ -48,14 +48,14 @@ class SyncResourceStatement {
     'https://w3id.org/solid-crdt-sync/vocab/sync#managedResourceType',
   );
 
-  /// resource [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// parent
   ///
-  /// Points to the resource that this framework statement is about. Used in resource statements to identify which resource the metadata applies to.
+  /// Links an identified blank node to its parent resource within an identification graph during canonical fragment computation.
   ///
-  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ResourceStatement
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#IdentificationGraph
   ///
-  static const resource = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/sync#resource',
+  static const parent = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#parent',
   );
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]

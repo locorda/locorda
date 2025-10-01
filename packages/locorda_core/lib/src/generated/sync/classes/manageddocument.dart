@@ -61,14 +61,14 @@ class SyncManagedDocument {
     'https://w3id.org/solid-crdt-sync/vocab/sync#hasStatement',
   );
 
-  /// parent
+  /// hasBlankNodeMapping [Expects: https://w3id.org/solid-crdt-sync/vocab/sync#BlankNodeMapping]
   ///
-  /// Internal predicate for linking identified blank nodes to their parent in identification graphs. Used only during canonical IRI generation, not in application data.
+  /// Links the managed document to framework-reserved fragment identifiers for identified blank nodes.
   ///
-  /// Can be used on all classes in this vocabulary
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#ManagedDocument
   ///
-  static const parent = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/sync#parent',
+  static const hasBlankNodeMapping = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#hasBlankNodeMapping',
   );
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]

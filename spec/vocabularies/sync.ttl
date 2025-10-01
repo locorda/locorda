@@ -1,6 +1,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
 
 # --- Ontology Definition ---
@@ -19,6 +20,14 @@ sync:ManagedDocument a rdfs:Class;
 sync:ResourceStatement a rdfs:Class;
     rdfs:label "Resource Statement";
     rdfs:comment "A statement containing framework metadata about a specific resource within a managed document. Used for resource-level concerns like deletion tombstones while maintaining clean separation from application data." .
+
+sync:BlankNodeMapping a rdfs:Class;
+    rdfs:label "Blank Node Mapping";
+    rdfs:comment "Represents a mapping between a canonical fragment identifier and a blank node in the document. Used for stable references to identified blank nodes across serialization boundaries." .
+
+sync:IdentificationGraph a rdfs:Class;
+    rdfs:label "Identification Graph";
+    rdfs:comment "Internal temporary graph structure used during canonical fragment generation for identified blank nodes. Contains only identifying properties and parent relationships. Never persisted in documents." .
 
 # --- Property Definitions ---
 
@@ -46,6 +55,18 @@ sync:resource a rdf:Property;
     rdfs:domain sync:ResourceStatement;
     rdfs:range rdfs:Resource .
 
+sync:hasBlankNodeMapping a rdf:Property;
+    rdfs:label "has blank node mapping";
+    rdfs:comment "Links the managed document to framework-reserved fragment identifiers for identified blank nodes.";
+    rdfs:domain sync:ManagedDocument;
+    rdfs:range sync:BlankNodeMapping .
+
+sync:blankNode a rdf:Property;
+    rdfs:label "blank node";
+    rdfs:comment "Links a framework-reserved fragment identifier to the actual blank node in the document.";
+    rdfs:domain sync:BlankNodeMapping .
+
 sync:parent a rdf:Property;
     rdfs:label "parent";
-    rdfs:comment "Internal predicate for linking identified blank nodes to their parent in identification graphs. Used only during canonical IRI generation, not in application data." .
+    rdfs:comment "Links an identified blank node to its parent resource within an identification graph during canonical fragment computation.";
+    rdfs:domain sync:IdentificationGraph .
