@@ -5,11 +5,10 @@
 /// to provide consistent IRI mapping across the application.
 library;
 
-import 'package:locorda/locorda.dart';
 import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
-import 'package:locorda_core/locorda_core.dart';
 
 /// Offline-first IRI mapping service for offline and pre-pod-connection usage.
 ///
@@ -249,11 +248,13 @@ class LocalReferenceConverter implements ReferenceConverter {
 
   String fromIri(Type targetType, IriTerm term) {
     final typeIri = _resourceTypeCache.getIri(targetType);
-    return _resourceLocator.fromIri(typeIri, term);
+    final result = _resourceLocator.fromIri(typeIri, term);
+    return result.localId;
   }
 
   IriTerm toIri(Type targetType, String value) {
     final typeIri = _resourceTypeCache.getIri(targetType);
-    return _resourceLocator.toIri(typeIri, value);
+    final result = _resourceLocator.toIri(typeIri, value, null);
+    return result.resourceIri;
   }
 }

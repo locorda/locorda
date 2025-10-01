@@ -9,6 +9,8 @@ import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
+import 'package:locorda_core/src/installation_service.dart'
+    show InstallationService, InstallationIdFactory;
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
@@ -267,8 +269,8 @@ class LocordaGraphSync {
     required Backend backend,
     required SyncGraphConfig config,
     required MergeContractLoader mergeContractLoader,
+    required HlcService hlcService,
     PhysicalTimestampFactory? physicalTimestampFactory,
-    HlcService? hlcService,
     IriTermFactory? iriTermFactory,
   })  : _storage = storage,
         _backend = backend,
@@ -277,11 +279,7 @@ class LocordaGraphSync {
         _crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
             physicalTimestampFactory:
                 physicalTimestampFactory ?? defaultPhysicalTimestampFactory),
-        _hlcService = hlcService ??
-            HlcService(
-              physicalTimestampFactory:
-                  physicalTimestampFactory ?? defaultPhysicalTimestampFactory,
-            ),
+        _hlcService = hlcService,
         _streamManager = HydrationStreamManager(),
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
           config: config,
@@ -302,7 +300,7 @@ class LocordaGraphSync {
     required Storage storage,
     required SyncGraphConfig config,
     PhysicalTimestampFactory? physicalTimestampFactory,
-    HlcService? hlcService,
+    InstallationIdFactory? installationIdFactory,
     IriTermFactory? iriFactory,
     RdfCore? rdfCore,
     http.Client? httpClient,
@@ -312,9 +310,25 @@ class LocordaGraphSync {
     httpClient ??= http.Client();
     fetcher ??= HttpFetcher(httpClient: httpClient);
     iriFactory ??= IriTerm.validated;
+    physicalTimestampFactory ??= defaultPhysicalTimestampFactory;
+
+    // Automatically add configuration for Framework-Owned resources
+    final effectiveConfig = config.withResourcesAdded([
+      ResourceGraphConfig(
+        typeIri: CrdtClientInstallation.classIri,
+        crdtMapping: Uri.parse(
+            'https://w3id.org/solid-crdt-sync/mappings/client-installation-v1'),
+        indices: [
+          FullIndexGraphConfig(
+              localName: 'lcrd-installation-index',
+              itemFetchPolicy: ItemFetchPolicy.onRequest)
+        ],
+      )
+    ]);
 
     // Validate configuration before proceeding
-    final configValidationResult = SyncGraphConfigValidator().validate(config);
+    final configValidationResult =
+        SyncGraphConfigValidator().validate(effectiveConfig);
 
     // Throw if any validation failed
     configValidationResult.throwIfInvalid();
@@ -322,18 +336,66 @@ class LocordaGraphSync {
     // Initialize storage
     await storage.initialize();
 
+    final localResourceLocator =
+        LocalResourceLocator(iriTermFactory: iriFactory);
+    // Initialize installation service
+    final installationService = await InstallationService.initialize(
+      storage: storage,
+      resourceLocator: localResourceLocator,
+      installationIdFactory: installationIdFactory,
+      iriTermFactory: iriFactory,
+    );
+
+    // Create HlcService with installation IRI
+    final hlcService = HlcService(
+      installationId: installationService.installationIri,
+      physicalTimestampFactory: physicalTimestampFactory,
+    );
+
     // TODO: the HttpRdfGraphFetcher should be db-cached (ideally with initialization from deployment and etag)
     final mergeContractLoader = StandardMergeContractLoader(RecursiveRdfLoader(
         fetcher: StandardRdfGraphFetcher(fetcher: fetcher, rdfCore: rdfCore),
         iriFactory: iriFactory));
 
-    return LocordaGraphSync._(
+    final sync = LocordaGraphSync._(
         storage: storage,
         backend: backend,
-        config: config,
+        config: effectiveConfig,
         mergeContractLoader: CachingMergeContractLoader(mergeContractLoader),
         physicalTimestampFactory: physicalTimestampFactory,
         hlcService: hlcService);
+
+    if (!installationService.installationDocumentSaved) {
+      final iri = installationService.installationIri;
+      final now = physicalTimestampFactory();
+      final installationDocument = RdfGraph.fromTriples([
+        Triple(iri, Rdf.type, CrdtClientInstallation.classIri),
+        // Created timestamp
+        Triple(
+          iri,
+          CrdtClientInstallation.createdAt,
+          LiteralTermExtensions.dateTime(now),
+        ),
+        // Last active timestamp
+        Triple(
+          iri,
+          CrdtClientInstallation.lastActiveAt,
+          LiteralTermExtensions.dateTime(now),
+        ),
+        // Default max inactivity period (6 months)
+        Triple(
+          iri,
+          CrdtClientInstallation.maxInactivityPeriod,
+          LiteralTerm(
+            'P6M',
+            datatype: iriFactory('http://www.w3.org/2001/XMLSchema#duration'),
+          ),
+        ),
+      ]);
+      await sync.save(CrdtClientInstallation.classIri, installationDocument);
+      await installationService.markInstallationDocumentSaved();
+    }
+    return sync;
   }
 
   /// Configure subscription to a group index with the given group key.

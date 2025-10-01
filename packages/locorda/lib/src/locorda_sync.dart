@@ -268,11 +268,13 @@ class LocordaSync {
     IriTerm typeIri = _getTypeIri(T);
 
     // If not found locally, ensure it from the sync system
-    final localIri = _localResourceLocator.toIri(typeIri, id);
+    final (resourceIri: localIri, documentIri: _) =
+        _localResourceLocator.toIri(typeIri, id, null);
 
     final graph = await _syncSystem.ensure(typeIri, localIri,
         skipInitialFetch: true, loadFromLocal: (IriTerm iri) async {
-      final id = _localResourceLocator.fromIri(typeIri, iri);
+      final (localId: id, fragment: _) =
+          _localResourceLocator.fromIri(typeIri, iri);
       final obj = await loadFromLocal(id);
       return obj == null ? null : _mapper.graph.encodeObject(obj);
     }, timeout: timeout);
@@ -295,7 +297,8 @@ class LocordaSync {
   /// 5. Schedule async Pod sync
   Future<void> deleteDocument<T>(String id) async {
     IriTerm typeIri = _getTypeIri(T);
-    final localIri = _localResourceLocator.toIri(typeIri, id);
+    final (resourceIri: localIri, documentIri: _) =
+        _localResourceLocator.toIri(typeIri, id, null);
     return _syncSystem.deleteDocument(typeIri, localIri);
   }
 

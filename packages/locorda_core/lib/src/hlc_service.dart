@@ -11,18 +11,11 @@ typedef PhysicalTimestampFactory = DateTime Function();
 /// Factory function for generating logical clock values
 typedef LogicalClockFactory = int Function();
 
-/// Factory function for getting the current installation ID
-typedef InstallationIdFactory = IriTerm Function();
-
 // Default factory functions for time and clock generation
 DateTime defaultPhysicalTimestampFactory() => DateTime.now();
 
 int _logicalClockCounter = 0;
 int _defaultLogicalClockFactory() => ++_logicalClockCounter;
-
-// TODO: Get actual installation ID from config or storage - for now using placeholder
-IriTerm _defaultInstallationIdFactory() =>
-    const IriTerm('https://example.org/installations/default-installation');
 
 typedef CrdtClock = List<Node>;
 typedef CurrentCrdtClock = ({
@@ -34,17 +27,16 @@ typedef CurrentCrdtClock = ({
 });
 
 class HlcService {
-  final InstallationIdFactory _installationIdFactory;
+  final IriTerm _installationId;
   final PhysicalTimestampFactory _physicalTimestampFactory;
   final LogicalClockFactory _logicalClockFactory;
 
-  HlcService(
-      {InstallationIdFactory installationIdFactory =
-          _defaultInstallationIdFactory,
-      PhysicalTimestampFactory physicalTimestampFactory =
-          defaultPhysicalTimestampFactory,
-      LogicalClockFactory logicalClockFactory = _defaultLogicalClockFactory})
-      : _installationIdFactory = installationIdFactory,
+  HlcService({
+    required IriTerm installationId,
+    PhysicalTimestampFactory physicalTimestampFactory =
+        defaultPhysicalTimestampFactory,
+    LogicalClockFactory logicalClockFactory = _defaultLogicalClockFactory,
+  })  : _installationId = installationId,
         _physicalTimestampFactory = physicalTimestampFactory,
         _logicalClockFactory = logicalClockFactory;
 
@@ -63,28 +55,27 @@ class HlcService {
     triples.add(Triple(
       clockEntryNode,
       CrdtClockEntry.logicalTime,
-      LiteralTerm(logicalTime.toString()),
+      LiteralTerm.integer(logicalTime),
     ));
 
     triples.add(Triple(
       clockEntryNode,
       CrdtClockEntry.physicalTime,
-      LiteralTerm(physicalTime.toString()),
+      LiteralTerm.integer(physicalTime),
     ));
     return (clockEntryNode, RdfGraph.fromTriples(triples));
   }
 
   CurrentCrdtClock newClock() {
-    final installationId = _installationIdFactory();
     final physicalTime = _physicalTimestampFactory();
     final logicalTime = _logicalClockFactory();
 
     var fullClock = [
       _buildClockEntryNode(
-          installationId, physicalTime.millisecondsSinceEpoch, logicalTime)
+          _installationId, physicalTime.millisecondsSinceEpoch, logicalTime)
     ];
     return (
-      installationId: installationId,
+      installationId: _installationId,
       logicalTime: logicalTime,
       physicalTime: physicalTime.millisecondsSinceEpoch,
       fullClock: fullClock,
@@ -93,7 +84,6 @@ class HlcService {
   }
 
   CurrentCrdtClock incrementClock(CrdtClock clock) {
-    final installationId = _installationIdFactory();
     final physicalTime = _physicalTimestampFactory();
     final (ours: ours, theirs: theirs) =
         clock.fold((ours: <Node>[], theirs: <Node>[]), (acc, entry) {
@@ -101,7 +91,7 @@ class HlcService {
       final idTriple =
           triples.findTriples(predicate: CrdtClockEntry.installationId).single;
       final id = idTriple.object;
-      if (id == installationId) {
+      if (id == _installationId) {
         acc.ours.add(entry);
       } else {
         acc.theirs.add(entry);
@@ -117,12 +107,12 @@ class HlcService {
     final oldLogicalTime = int.parse(oldLogicalTimeTerm.value);
     final logicalTime = oldLogicalTime + 1;
     final ourNewEntry = _buildClockEntryNode(
-        installationId, physicalTime.millisecondsSinceEpoch, logicalTime);
+        _installationId, physicalTime.millisecondsSinceEpoch, logicalTime);
 
     var fullClock = [ourNewEntry, ...theirs];
 
     return (
-      installationId: installationId,
+      installationId: _installationId,
       logicalTime: logicalTime,
       physicalTime: physicalTime.millisecondsSinceEpoch,
       fullClock: fullClock,

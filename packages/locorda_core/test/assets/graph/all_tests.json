@@ -1,9 +1,13 @@
 {
   "version": "1.0",
-  "baseTimestamp": "2024-01-01T00:00:00Z",
+  "base": {
+    "timestamp": "2024-01-01T00:00:00Z",
+    "installation_id": "test-installation"
+  },
   "urlToPathMap": {
     "https://example.org/test/mappings/recipe-v1": "shared/mappings/recipe-v1.ttl",
-    "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl"
+    "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl",
+    "https://w3id.org/solid-crdt-sync/mappings/client-installation-v1": "../../../../../spec/mappings/client-installation-v1.ttl"
   },
   "test_suites": [
     {
@@ -17,7 +21,10 @@
           "config": "shared/configs/basic_config.json",
           "typeIri": "https://schema.org/Recipe",
           "input_resource": "test_cases/save/01_first_save/input_resource.ttl",
-          "expected_stored_graph": "test_cases/save/01_first_save/expected_stored_graph.ttl"
+          "expected_stored_graph": "test_cases/save/01_first_save/expected_stored_graph.ttl",
+          "action_ts": {
+            "save": "2024-01-01T00:00:00Z"
+          }
         }
       ]
     }

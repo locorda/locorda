@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_canonicalization/rdf_canonicalization.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -22,8 +21,12 @@ void main() {
 
   final urlToPathMapJson = allTestsJson['urlToPathMap'] as Map<String, dynamic>;
   final urlToPathMap = urlToPathMapJson.map((k, v) => MapEntry(k, v as String));
-  final baseTimestampStr = allTestsJson['baseTimestamp'] as String;
-  final baseTimestamp = DateTime.parse(baseTimestampStr);
+
+  // Parse base configuration
+  final baseJson = allTestsJson['base'] as Map<String, dynamic>;
+  final baseTimestamp = DateTime.parse(baseJson['timestamp'] as String);
+  final baseInstallationId = baseJson['installation_id'] as String?;
+
   final testSuites = allTestsJson['test_suites'] as List<dynamic>;
 
   // Group tests by suite
@@ -48,8 +51,8 @@ void main() {
           // Execute test based on suite type
           switch (suiteName) {
             case 'save':
-              await _executeSaveTest(
-                  testJson, testAssetsDir, urlToPathMap, testBaseTimestamp);
+              await _executeSaveTest(testJson, testAssetsDir, urlToPathMap,
+                  testBaseTimestamp, baseInstallationId);
               break;
             default:
               fail('Unknown test suite: $suiteName');
@@ -61,8 +64,9 @@ void main() {
   group('Generate Iri', () {
     test('Recipe Iri Generation', () {
       final loc = LocalResourceLocator(iriTermFactory: IriTerm.validated);
-      final iri = loc.toIri(IriTerm('https://schema.org/Recipe'), 'recipe123');
-      print(iri);
+      final result =
+          loc.toIri(IriTerm('https://schema.org/Recipe'), 'recipe123', null);
+      print(result.resourceIri);
     });
   });
 }
@@ -77,7 +81,8 @@ Future<void> _executeSaveTest(
     Map<String, dynamic> testJson,
     Directory testAssetsDir,
     Map<String, String> urlToPathMap,
-    DateTime baseTimestamp) async {
+    DateTime baseTimestamp,
+    String? baseInstallationId) async {
   // Load configuration
   final config = _loadConfig(testAssetsDir, testJson['config'] as String);
 
@@ -92,8 +97,12 @@ Future<void> _executeSaveTest(
 
   final expectedStoredGraph = _readGraphFromPath(
       testAssetsDir, testJson['expected_stored_graph'] as String)!;
-  final PhysicalTimestampFactory physicalTimestampFactory =
+  final timestampFactory =
       TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
+
+  // Load action timestamps if provided
+  final actionTs = testJson['action_ts'] as Map<String, dynamic>?;
+
   // Extract document IRI from input resource
   final documentIri = inputResource.subjects
       .whereType<IriTerm>()
@@ -101,13 +110,16 @@ Future<void> _executeSaveTest(
       .single;
   final storage = TestStorage();
   if (storedGraphBefore != null) {
+    // Set timestamp for prepare.save if specified
+    setTime(actionTs?['prepare']?['save'], timestampFactory);
+    final now = timestampFactory();
     storage.saveDocument(
         documentIri,
         typeIri,
         storedGraphBefore,
         DocumentMetadata(
-          ourPhysicalClock: physicalTimestampFactory().millisecondsSinceEpoch,
-          updatedAt: physicalTimestampFactory().millisecondsSinceEpoch,
+          ourPhysicalClock: now.millisecondsSinceEpoch,
+          updatedAt: now.millisecondsSinceEpoch,
         ),
         []);
   }
@@ -117,12 +129,21 @@ Future<void> _executeSaveTest(
     urlToPathMap: urlToPathMap,
   );
 
+  // Create installation ID factory if base installation ID provided
+  final installationIdFactory = baseInstallationId != null
+      ? () => baseInstallationId
+      : null;
+
   final sync = await LocordaGraphSync.setup(
       backend: TestBackend(),
       storage: storage,
       config: config,
       fetcher: fetcher,
-      physicalTimestampFactory: physicalTimestampFactory);
+      physicalTimestampFactory: timestampFactory,
+      installationIdFactory: installationIdFactory);
+
+  // Set timestamp for save action if specified
+  setTime(actionTs?['save'], timestampFactory);
 
   await sync.save(typeIri, inputResource);
 
@@ -131,13 +152,29 @@ Future<void> _executeSaveTest(
   if (stored == null) {
     fail('No document stored for $documentIri');
   }
-  /*
-  print('*' * 80);
-  print(turtle.encode(stored.document));
-  print('*' * 80);
-  */
-  final canonicalized = canonicalizeGraph(stored.document);
-  expect(canonicalized, equals(canonicalizeGraph(expectedStoredGraph)));
+  _expectEqualGraphs(stored.document, expectedStoredGraph);
+}
+
+void _expectEqualGraphs(RdfGraph actual, RdfGraph expected) {
+  var actualCanonical = canonicalizeGraph(actual);
+  var expectedCanonical = canonicalizeGraph(expected);
+  if (actualCanonical != expectedCanonical) {
+    // For easier debugging, print the actual and expected graphs in Turtle
+    var actualTurtle = turtle.encode(actual);
+    var expectedTurtle = turtle.encode(expected);
+    print('-' * 80);
+    print(actualTurtle);
+    print('-' * 80);
+    expect(actualTurtle, equals(expectedTurtle));
+    // This should have failed by now, but just in case:
+    expect(actualCanonical, equals(expectedCanonical));
+  }
+}
+
+void setTime(String? ts, TestPhysicalTimestampFactory timestampFactory) {
+  if (ts != null) {
+    timestampFactory.setTimestamp(DateTime.parse(ts));
+  }
 }
 
 SyncGraphConfig _loadConfig(Directory testAssetsDir, String configPath) {

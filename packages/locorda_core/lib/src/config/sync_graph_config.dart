@@ -127,6 +127,14 @@ class SyncGraphConfig extends SyncConfigBase {
   }
 
   ResourceGraphConfig getResourceConfig(IriTerm type) {
-    return resources.firstWhere((r) => r.typeIri == type);
+    return resources.firstWhere((r) => r.typeIri == type,
+        orElse: () =>
+            throw ArgumentError('No resource config found for type: $type'));
+  }
+
+  SyncGraphConfig withResourcesAdded(List<ResourceGraphConfig> newResources) {
+    final updatedResources = List<ResourceGraphConfig>.from(resources)
+      ..addAll(newResources);
+    return SyncGraphConfig(resources: updatedResources);
   }
 }

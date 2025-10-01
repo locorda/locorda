@@ -1,7 +1,6 @@
 import 'package:locorda/src/config/sync_config.dart';
 import 'package:locorda/src/config/sync_config_util.dart';
 import 'package:locorda_core/locorda_core.dart';
-import 'package:rdf_core/rdf_core.dart';
 
 IndexItemGraphConfig? _toIndexItemGraphConfig(IndexItem? item) {
   if (item == null) return null;

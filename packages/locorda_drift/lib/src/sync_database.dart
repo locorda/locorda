@@ -45,6 +45,15 @@ class SyncPropertyChanges extends Table {
       {documentId, resourceIriId, propertyIriId, changeLogicalClock};
 }
 
+/// Settings storage table for framework configuration
+class SyncSettings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
 /// Mixin for efficient IRI batch loading and creation
 ///
 /// TODO: can we optimize this further by caching recently used IRIs in memory?
@@ -400,7 +409,7 @@ class DocumentWithIri {
 
 /// Main sync database class
 @DriftDatabase(
-  tables: [SyncIris, SyncDocuments, SyncPropertyChanges],
+  tables: [SyncIris, SyncDocuments, SyncPropertyChanges, SyncSettings],
   daos: [SyncDocumentDao, SyncPropertyChangeDao],
 )
 class SyncDatabase extends _$SyncDatabase {
@@ -411,7 +420,7 @@ class SyncDatabase extends _$SyncDatabase {
   SyncDatabase.forExecutor(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -452,6 +461,10 @@ class SyncDatabase extends _$SyncDatabase {
               CREATE INDEX IF NOT EXISTS idx_sync_documents_type_updated
               ON sync_documents(type_iri_id, updated_at);
             ''');
+          }
+          if (from < 3) {
+            // Create settings table
+            await m.createTable(syncSettings);
           }
         },
       );

@@ -49,6 +49,18 @@ abstract interface class Storage {
 
   /// Close the storage backend and free resources.
   Future<void> close();
+
+  /// Get multiple settings by keys in a single database request.
+  ///
+  /// Returns a map of key-value pairs. Missing keys are omitted from the result.
+  /// Used during startup to efficiently load multiple settings together.
+  Future<Map<String, String>> getSettings(Iterable<String> keys);
+
+  /// Set a single setting value.
+  ///
+  /// Creates or updates the setting. Used to persist configuration values
+  /// like installation IRI and flags.
+  Future<void> setSetting(String key, String value);
 }
 
 /// Document with content and metadata retrieved from storage.

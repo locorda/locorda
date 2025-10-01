@@ -6,6 +6,7 @@ class TestStorage implements Storage {
   final Map<IriTerm, StoredDocument> _documents = {};
   final Map<IriTerm, IriTerm> _documentTypes = {}; // documentIri -> typeIri
   final Map<IriTerm, List<PropertyChange>> _propertyChanges = {};
+  final Map<String, String> _settings = {};
 
   @override
   Future<void> initialize() async {
@@ -111,5 +112,18 @@ class TestStorage implements Storage {
         : null;
 
     return DocumentsResult(documents: page, nextCursor: nextCursor);
+  }
+
+  @override
+  Future<Map<String, String>> getSettings(Iterable<String> keys) async {
+    return {
+      for (final key in keys)
+        if (_settings.containsKey(key)) key: _settings[key]!
+    };
+  }
+
+  @override
+  Future<void> setSetting(String key, String value) async {
+    _settings[key] = value;
   }
 }

@@ -186,6 +186,27 @@ class DriftStorage implements Storage {
     );
   }
 
+  @override
+  Future<Map<String, String>> getSettings(Iterable<String> keys) async {
+    if (keys.isEmpty) return {};
+
+    final results = await (_database.select(_database.syncSettings)
+          ..where((s) => s.key.isIn(keys.toList())))
+        .get();
+
+    return {for (final setting in results) setting.key: setting.value};
+  }
+
+  @override
+  Future<void> setSetting(String key, String value) async {
+    await _database
+        .into(_database.syncSettings)
+        .insertOnConflictUpdate(SyncSettingsCompanion.insert(
+          key: key,
+          value: value,
+        ));
+  }
+
   List<StoredDocument> _convertToStoredDocuments(
       List<DocumentWithIri> documents) {
     return documents.map((doc) {

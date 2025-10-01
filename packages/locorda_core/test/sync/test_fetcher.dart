@@ -28,6 +28,6 @@ class TestFetcher implements Fetcher {
 
     // If no mapping found, throw an error (tests should be explicit)
     throw Exception(
-        'No mapping found for URL: $url. Add it to TestFetcher.urlToPathMap');
+        'No mapping found for URL: $url. Add it to the urlToPathMap in all_tests.json');
   }
 }
