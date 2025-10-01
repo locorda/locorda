@@ -1,4 +1,5 @@
 import 'package:locorda/src/config/sync_config.dart';
+import 'package:locorda/src/config/sync_config_util.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
@@ -34,7 +35,7 @@ class SyncConfigValidator {
 
   ValidationResult validate(
     SyncConfig config,
-    Map<Type, IriTerm> resourceTypeCache, {
+    ResourceTypeCache resourceTypeCache, {
     required RdfMapper mapper,
   }) {
     final result = _baseValidator.validate(config);
@@ -109,7 +110,7 @@ class SyncConfigValidator {
   }
 
   void _validateResourceUniqueness(SyncConfig config, ValidationResult result,
-      Map<Type, IriTerm> resourceTypeCache) {
+      ResourceTypeCache resourceTypeCache) {
     // Check for duplicate Dart types
     final dartTypes = <Type>{};
     final rdfTypeIris = <String, Type>{};
@@ -126,8 +127,8 @@ class SyncConfigValidator {
 
       // Check for RDF type IRI collisions
       try {
-        final rdfTypeIri = resourceTypeCache[resource.type];
-        if (rdfTypeIri != null) {
+        if (resourceTypeCache.hasIri(resource.type)) {
+          final rdfTypeIri = resourceTypeCache.getIri(resource.type);
           final rdfTypeIriString = rdfTypeIri.value;
           if (rdfTypeIris.containsKey(rdfTypeIriString)) {
             result.addError(

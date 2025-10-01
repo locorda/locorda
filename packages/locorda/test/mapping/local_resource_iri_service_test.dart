@@ -1,3 +1,5 @@
+import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda_core/locorda_core.dart';
 import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
@@ -14,16 +16,17 @@ class TestUser {}
 void main() {
   group('LocalResourceIriService', () {
     late LocalResourceIriService service;
-    late Map<Type, IriTerm> mockResourceTypeCache;
+    late ResourceTypeCache mockResourceTypeCache;
     late PodIriConfig mockConfig;
 
     setUp(() {
-      service = LocalResourceIriService(LocalReferenceConverter());
-      mockResourceTypeCache = {
+      service = LocalResourceIriService(
+          LocalResourceLocator(iriTermFactory: IriTerm.validated));
+      mockResourceTypeCache = ResourceTypeCache({
         TestNote: const IriTerm('http://example.org/Note'),
         TestCategory: const IriTerm('http://example.org/Category'),
         TestUser: const IriTerm('http://example.org/User'),
-      };
+      });
       mockConfig = const PodIriConfig();
     });
 
@@ -101,7 +104,7 @@ void main() {
         service.createResourceIriMapper<TestNote>(mockConfig);
 
         // Pass cache missing the registered type
-        final incompleteCacheCache = <Type, IriTerm>{};
+        final incompleteCacheCache = ResourceTypeCache(<Type, IriTerm>{});
         final result = service.validate(incompleteCacheCache);
 
         expect(result.isValid, isFalse);

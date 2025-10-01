@@ -9,11 +9,15 @@
 - [x] merge-contract: In-memory caching of loaded merge contracts (LRU cache to avoid repeated expensive loading on every save)
 - [x] Use data from mapping documents to build the stop-word list to correctly separate appGraph from framework data in processing of the old stored document
 - [x] Implement context-identification for blank nodes 
-- [ ] Create a unique identifier IRI for identified blank nodes
-- [ ] Do not use blank nodes for framework metadata, use fragments with #lcrd- prefix instead. Fix the corresponding FIXMEs to create predictable, hash based fragments
-- [ ] Use context-identification as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
+- [x] Association of merge contract rules: if we do not find a rule, and the type is not specified, we should use type inference and look up the predicate rule within the class rules, assuming the type automatically. This is probably also a spec change proposal
+- [x] We need to implement the type-specific stop traversal as well
 - [x] rdf canonicalization 
 - [x] fix w3id.org redirects
+- [x] Create a unique identifier IRI for identified blank nodes
+- [x] Do not use blank nodes for framework metadata, use fragments with #lcrd- prefix instead. Fix the corresponding FIXMEs to create predictable, hash based fragments
+- [ ] Setup Testing Framework similar to official RDF Canonicalization test where there is a csv/json file describing the test cases and referencing input/output files. Use it to thoroughly test LocordaGraphSync.save()
+- [ ] Store Blank Node identifier IRI mapping in the document metadata, merging in the old data on save (?)
+- [ ] Use context-identification as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
 - [ ] Storage Layer: save locorda indices
 - [ ] Implement locorda index files in db and fill/update them on save
 - [ ] Create tombstones on save where needed (e.g. change detection)

@@ -1,5 +1,8 @@
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
+import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
+import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
+import 'package:locorda_core/src/mapping/metadata_generator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -23,21 +26,26 @@ abstract interface class CrdtType {
   RdfGraph initialValue(
       {required IriTerm documentIri,
       required RdfGraph appData,
+      required IdentifiedBlankNodes<IriTerm> blankNodes,
       required RdfSubject subject,
       required RdfPredicate predicate,
-      required List<RdfObject> values});
+      required List<RdfObject> values,
+      required CrdtMergeContext mergeContext});
 
   /// Creates the metadata triples for a local property value change.
   /// The returned graph may be empty if no metadata is needed.
   RdfGraph localValueChange({
     required IriTerm documentIri,
     required RdfGraph oldAppData,
+    required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
     required RdfSubject oldSubject,
     required RdfGraph newAppData,
+    required IdentifiedBlankNodes<IriTerm> newBlankNodes,
     required RdfSubject newSubject,
     required RdfPredicate predicate,
     required List<RdfObject> oldValues,
     required List<RdfObject> newValues,
+    required CrdtMergeContext mergeContext,
   });
 }
 
@@ -53,9 +61,11 @@ class LwwRegister implements CrdtType {
   RdfGraph initialValue(
       {required IriTerm documentIri,
       required RdfGraph appData,
+      required IdentifiedBlankNodes<IriTerm> blankNodes,
       required RdfSubject subject,
       required RdfPredicate predicate,
-      required List<RdfObject> values}) {
+      required List<RdfObject> values,
+      required CrdtMergeContext mergeContext}) {
     // No metadata needed for adding a LWW Register value
     return RdfGraphExtensions.empty;
   }
@@ -64,12 +74,16 @@ class LwwRegister implements CrdtType {
   RdfGraph localValueChange(
       {required IriTerm documentIri,
       required RdfGraph oldAppData,
+      required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
       required RdfSubject oldSubject,
       required RdfGraph newAppData,
+      required IdentifiedBlankNodes<IriTerm> newBlankNodes,
       required RdfSubject newSubject,
       required RdfPredicate predicate,
       required List<RdfObject> oldValues,
-      required List<RdfObject> newValues}) {
+      required List<RdfObject> newValues,
+      required CrdtMergeContext mergeContext}) {
+    // FIXME: what about the case when newValues is empty and oldValues is not? Do we need metadata for that?
     // No metadata needed for changing a LWW Register value - one will win based on the clock during merge, that is all
     return RdfGraphExtensions.empty;
   }
@@ -86,9 +100,11 @@ class FwwRegister implements CrdtType {
   RdfGraph initialValue(
       {required IriTerm documentIri,
       required RdfGraph appData,
+      required IdentifiedBlankNodes<IriTerm> blankNodes,
       required RdfSubject subject,
       required RdfPredicate predicate,
-      required List<RdfObject> values}) {
+      required List<RdfObject> values,
+      required CrdtMergeContext mergeContext}) {
     // No metadata needed for adding a FWW Register value
     return RdfGraphExtensions.empty;
   }
@@ -97,12 +113,16 @@ class FwwRegister implements CrdtType {
   RdfGraph localValueChange(
       {required IriTerm documentIri,
       required RdfGraph oldAppData,
+      required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
       required RdfSubject oldSubject,
       required RdfGraph newAppData,
+      required IdentifiedBlankNodes<IriTerm> newBlankNodes,
       required RdfSubject newSubject,
       required RdfPredicate predicate,
       required List<RdfObject> oldValues,
-      required List<RdfObject> newValues}) {
+      required List<RdfObject> newValues,
+      required CrdtMergeContext mergeContext}) {
+    // FIXME: what about the case when newValues is empty and oldValues is not? Do we need metadata for that?
     // No metadata needed for changing a FWW Register value - one will win based on the clock during merge, that is all
     return RdfGraphExtensions.empty;
   }
@@ -121,23 +141,42 @@ class OrSet implements CrdtType {
   RdfGraph initialValue(
       {required IriTerm documentIri,
       required RdfGraph appData,
+      required IdentifiedBlankNodes<IriTerm> blankNodes,
       required RdfSubject subject,
       required RdfPredicate predicate,
-      required List<RdfObject> values}) {
+      required List<RdfObject> values,
+      required CrdtMergeContext mergeContext}) {
+    validateBlankNodeValues(values, blankNodes, "Or Set values");
     // No metadata needed for adding a OR Set value
     return RdfGraphExtensions.empty;
+  }
+
+  void validateBlankNodeValues(List<RdfObject> values,
+      IdentifiedBlankNodes<IriTerm> blankNodes, String lbl) {
+    for (final value in values) {
+      if (value is BlankNodeTerm) {
+        if (blankNodes.getIdentifiedNodes(value) == null) {
+          throw ArgumentError('$lbl cannot be unidentifed blank nodes: $value');
+        }
+      }
+    }
   }
 
   @override
   RdfGraph localValueChange(
       {required IriTerm documentIri,
       required RdfGraph oldAppData,
+      required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
       required RdfSubject oldSubject,
       required RdfGraph newAppData,
+      required IdentifiedBlankNodes<IriTerm> newBlankNodes,
       required RdfSubject newSubject,
       required RdfPredicate predicate,
       required List<RdfObject> oldValues,
-      required List<RdfObject> newValues}) {
+      required List<RdfObject> newValues,
+      required CrdtMergeContext mergeContext}) {
+    validateBlankNodeValues(newValues, newBlankNodes, "Or Set values");
+    validateBlankNodeValues(oldValues, oldBlankNodes, "Old Or Set values");
     // for an OR set, we need to add tombstones for removed values
     final removedValues = oldValues.toSet();
     removedValues.removeAll(newValues);
@@ -147,76 +186,26 @@ class OrSet implements CrdtType {
     final deletionDate = timestampFactory();
     final deletionDateTerm = LiteralTermExtensions.dateTime(deletionDate);
     return removedValues
-        .map((value) => createPropertyValueMetadata(
-            documentIri,
-            newSubject,
-            predicate,
-            value,
-            (metadataSubject) => removedValues
-                .map((rv) => Triple(metadataSubject, RdfStatement.crdtDeletedAt,
-                    deletionDateTerm))
-                .toList()))
+        .map((value) => mergeContext.metadataGenerator
+            .createPropertyValueMetadata(
+                documentIri,
+                oldBlankNodes,
+                newSubject,
+                predicate,
+                value,
+                (metadataSubject) => removedValues
+                    .map((rv) => Triple(metadataSubject,
+                        RdfStatement.crdtDeletedAt, deletionDateTerm))
+                    .toList()))
         .mergeGraphs();
   }
 }
 
-RdfGraph createPropertyValueMetadata(
-    IriTerm documentIri,
-    RdfSubject subject,
-    RdfPredicate predicate,
-    RdfObject value,
-    List<Triple> Function(RdfSubject) createMetadataTriples) {
-  if (subject is BlankNodeTerm) {
-    throw ArgumentError(
-        'Property value metadata cannot be created for blank nodes.');
-  }
-  if (value is BlankNodeTerm) {
-    throw ArgumentError(
-        'Property value metadata cannot be created for blank node values.');
-  }
-  // FIXME: use the document Iri as base, and create a fragment IRI with #lcrd-stmt-{hash}
-  final metadataSubject = BlankNodeTerm();
-  return RdfGraph.fromTriples([
-    Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
-    Triple(metadataSubject, RdfStatement.subject, subject),
-    Triple(metadataSubject, RdfStatement.predicate,
-        switch (predicate) { IriTerm iri => iri }),
-    Triple(metadataSubject, RdfStatement.object, value),
-    ...createMetadataTriples(metadataSubject),
-  ]);
-}
-
-RdfGraph createPropertyMetadata(
-    IriTerm documentIri,
-    RdfSubject subject,
-    RdfPredicate predicate,
-    List<Triple> Function(RdfSubject) createMetadataTriples) {
-  if (subject is BlankNodeTerm) {
-    throw ArgumentError('Property metadata cannot be created for blank nodes.');
-  }
-  // FIXME: use the document Iri as base, and create a fragment IRI with #lcrd-stmt-{hash}
-  final metadataSubject = BlankNodeTerm();
-  return RdfGraph.fromTriples([
-    Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
-    Triple(metadataSubject, RdfStatement.subject, subject),
-    Triple(metadataSubject, RdfStatement.predicate,
-        switch (predicate) { IriTerm iri => iri }),
-    ...createMetadataTriples(metadataSubject),
-  ]);
-}
-
-RdfGraph createResourceMetadata(IriTerm documentIri, RdfSubject subject,
-    List<Triple> Function(RdfSubject) createMetadataTriples) {
-  if (subject is BlankNodeTerm) {
-    throw ArgumentError('Resource metadata cannot be created for blank nodes.');
-  }
-  // FIXME: use the document Iri as base, and create a fragment IRI with #lcrd-stmt-{hash}
-  final metadataSubject = BlankNodeTerm();
-  return RdfGraph.fromTriples([
-    Triple(documentIri, SyncManagedDocument.hasStatement, metadataSubject),
-    Triple(metadataSubject, RdfStatement.subject, subject),
-    ...createMetadataTriples(metadataSubject),
-  ]);
+class CrdtMergeContext {
+  final FrameworkIriGenerator iriGenerator;
+  final MetadataGenerator metadataGenerator;
+  CrdtMergeContext(
+      {required this.iriGenerator, required this.metadataGenerator});
 }
 
 class CrdtTypeRegistry {

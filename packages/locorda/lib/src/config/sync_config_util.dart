@@ -2,8 +2,26 @@ import 'package:locorda/locorda.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
 
-Map<Type, IriTerm> buildResourceTypeCache(
-    RdfMapper _mapper, SyncConfig config) {
+class ResourceTypeCache {
+  final Map<Type, IriTerm> _resourceTypeCache;
+  late final Map<IriTerm, Type> _iriToTypeCache = {
+    for (final entry in _resourceTypeCache.entries) entry.value: entry.key
+  };
+
+  ResourceTypeCache(this._resourceTypeCache);
+
+  /// Gets the IRI for the given resource type.
+  /// Returns null if the type is not registered as a resource.
+  bool hasIri(Type type) => _resourceTypeCache[type] == null;
+
+  IriTerm getIri(Type type) =>
+      _resourceTypeCache[type] ??
+      (throw ArgumentError(
+          'Type $type is not registered in resource type cache'));
+  Type? getDartType(IriTerm iri) => _iriToTypeCache[iri];
+}
+
+ResourceTypeCache buildResourceTypeCache(RdfMapper _mapper, SyncConfig config) {
   final resourceTypeCache = <Type, IriTerm>{};
   for (final resource in config.resources) {
     if (!resourceTypeCache.containsKey(resource.type)) {
@@ -13,7 +31,7 @@ Map<Type, IriTerm> buildResourceTypeCache(
       }
     }
   }
-  return resourceTypeCache;
+  return ResourceTypeCache(resourceTypeCache);
 }
 
 IriTerm? _getTypeIri(RdfMapper mapper, ResourceConfig resource) {

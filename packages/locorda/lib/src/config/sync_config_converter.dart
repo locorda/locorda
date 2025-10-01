@@ -36,8 +36,8 @@ CrdtIndexGraphConfig _toCrdtIndexGraphConfig(
 }
 
 ResourceGraphConfig _toResourceGraphConfig(
-    ResourceConfig resource, Map<Type, IriTerm> resourceTypeCache) {
-  final typeIri = resourceTypeCache[resource.type]!;
+    ResourceConfig resource, ResourceTypeCache resourceTypeCache) {
+  final typeIri = resourceTypeCache.getIri(resource.type);
   final indices = resource.indices
       .map((index) => _toCrdtIndexGraphConfig(resource, index))
       .toList();
@@ -50,7 +50,7 @@ ResourceGraphConfig _toResourceGraphConfig(
 }
 
 SyncGraphConfig toSyncGraphConfig(
-    SyncConfig config, Map<Type, IriTerm> resourceTypeCache) {
+    SyncConfig config, ResourceTypeCache resourceTypeCache) {
   final resources = config.resources
       .map((resource) => _toResourceGraphConfig(resource, resourceTypeCache))
       .toList();

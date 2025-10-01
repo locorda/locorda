@@ -87,6 +87,16 @@ extension IriTermExtensions on IriTerm {
     }
     return this; // Fallback to self if no separator found
   }
+
+  IriTerm withFragment(String fragment,
+      {IriTermFactory iriTermFactory = IriTerm.validated}) {
+    final hashIndex = value.lastIndexOf('#');
+    if (hashIndex != -1) {
+      return iriTermFactory(value.substring(0, hashIndex) + '#' + fragment);
+    }
+    return iriTermFactory(
+        value + '#' + fragment); // Fallback to self if no separator found
+  }
 }
 
 extension RdfGraphIterableExtensions on Iterable<RdfGraph> {

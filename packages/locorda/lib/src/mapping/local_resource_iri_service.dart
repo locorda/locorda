@@ -5,6 +5,8 @@
 /// to provide consistent IRI mapping across the application.
 library;
 
+import 'package:locorda/locorda.dart';
+import 'package:locorda/src/config/sync_config_util.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
 import 'package:locorda_core/locorda_core.dart';
@@ -33,9 +35,10 @@ class LocalResourceIriService {
   late Map<Type, IriTerm> _resourceTypeCache;
   final List<ValidationError> _setupErrors = [];
 
-  final LocalReferenceConverter _converter;
-
-  LocalResourceIriService(this._converter);
+  final LocalResourceLocator _resourceLocator;
+  final _DelegatingReferenceConverter _converter;
+  LocalResourceIriService(this._resourceLocator)
+      : _converter = _DelegatingReferenceConverter();
 
   /// Creates a mapper for primary resource IRI mapping during setup phase.
   ///
@@ -100,7 +103,7 @@ class LocalResourceIriService {
   /// - Setup errors collected during mapper creation
   /// - Referenced types have corresponding registered types
   /// - Resource type cache consistency
-  ValidationResult validate(Map<Type, IriTerm> resourceTypeCache) {
+  ValidationResult validate(ResourceTypeCache resourceTypeCache) {
     final result = ValidationResult();
 
     // Add any setup errors that were collected during mapper creation
@@ -132,10 +135,10 @@ class LocalResourceIriService {
   }
 
   void _validateResourceTypeCache(
-      ValidationResult result, Map<Type, IriTerm> resourceTypeCache) {
+      ValidationResult result, ResourceTypeCache resourceTypeCache) {
     for (final type in _registeredTypes.keys) {
-      final iriTerm = resourceTypeCache[type];
-      if (iriTerm == null) {
+      final hasIriTerm = resourceTypeCache.hasIri(type);
+      if (!hasIriTerm) {
         result.addError(
             'Missing IRI term for registered type $type in resource type cache. '
             'This indicates a configuration error in the RDF mapper setup.',
@@ -153,8 +156,7 @@ class LocalResourceIriService {
   ///
   /// Returns a [ValidationResult] that should be checked before proceeding.
   /// If validation fails, the service remains in setup phase and no state changes occur.
-  ValidationResult finishSetupAndValidate(
-      Map<Type, IriTerm> resourceTypeCache) {
+  ValidationResult finishSetupAndValidate(ResourceTypeCache resourceTypeCache) {
     // First validate the configuration
     final validationResult = validate(resourceTypeCache);
 
@@ -165,21 +167,20 @@ class LocalResourceIriService {
 
       // Cache the IRI terms for registered types
       _registeredTypes.forEach((type, config) {
-        final iriTerm = resourceTypeCache[type];
-        // We already validated this in validate(), so this should not be null
-        assert(iriTerm != null,
-            'IRI term should exist after successful validation');
-        _resourceTypeCache[type] = iriTerm!;
+        final iriTerm = resourceTypeCache.getIri(type);
+        _resourceTypeCache[type] = iriTerm;
       });
     }
-
+    _converter._inner = LocalReferenceConverter(
+        resourceLocator: _resourceLocator,
+        resourceTypeCache: resourceTypeCache);
     return validationResult;
   }
 }
 
 /// Local IRI mapper for primary resources using the app://local/{type}/{id} scheme.
 class _LocalResourceIriMapper<T> implements IriTermMapper<(String,)> {
-  final LocalReferenceConverter _converter;
+  final ReferenceConverter _converter;
 
   const _LocalResourceIriMapper(this._converter);
 
@@ -199,7 +200,7 @@ class _LocalResourceIriMapper<T> implements IriTermMapper<(String,)> {
 /// Local IRI mapper for resource references using the same scheme as resources.
 class _LocalReferenceIriMapper implements IriTermMapper<String> {
   final Type targetType;
-  final LocalReferenceConverter _converter;
+  final ReferenceConverter _converter;
 
   const _LocalReferenceIriMapper(this._converter, this.targetType);
 
@@ -214,30 +215,45 @@ class _LocalReferenceIriMapper implements IriTermMapper<String> {
   }
 }
 
+abstract interface class ReferenceConverter {
+  String fromIri(Type targetType, IriTerm term);
+  IriTerm toIri(Type targetType, String value);
+}
+
+class _DelegatingReferenceConverter implements ReferenceConverter {
+  late final ReferenceConverter _inner;
+
+  _DelegatingReferenceConverter();
+
+  @override
+  String fromIri(Type targetType, IriTerm term) {
+    return _inner.fromIri(targetType, term);
+  }
+
+  @override
+  IriTerm toIri(Type targetType, String value) {
+    return _inner.toIri(targetType, value);
+  }
+}
+
 /// Local IRI mapper for resource references using the same scheme as resources.
-class LocalReferenceConverter {
-  final IriTermFactory _iriTermFactory;
+class LocalReferenceConverter implements ReferenceConverter {
+  final ResourceLocator _resourceLocator;
+  final ResourceTypeCache _resourceTypeCache;
+
   const LocalReferenceConverter(
-      {IriTermFactory iriTermFactory = IriTerm.validated})
-      : _iriTermFactory = iriTermFactory;
+      {required ResourceLocator resourceLocator,
+      required ResourceTypeCache resourceTypeCache})
+      : _resourceLocator = resourceLocator,
+        _resourceTypeCache = resourceTypeCache;
 
   String fromIri(Type targetType, IriTerm term) {
-    final iri = term.value;
-    final typeName = targetType.toString();
-    final expectedPrefix = 'app://local/$typeName/';
-
-    if (!iri.startsWith(expectedPrefix)) {
-      throw ArgumentError(
-          'IRI $iri does not match expected pattern for target type $targetType');
-    }
-
-    // Return just the ID part (same as resource, but return String instead of tuple)
-    return iri.substring(expectedPrefix.length);
+    final typeIri = _resourceTypeCache.getIri(targetType);
+    return _resourceLocator.fromIri(typeIri, term);
   }
 
   IriTerm toIri(Type targetType, String value) {
-    final typeName = targetType.toString();
-    final iri = 'app://local/$typeName/$value';
-    return _iriTermFactory(iri);
+    final typeIri = _resourceTypeCache.getIri(targetType);
+    return _resourceLocator.toIri(typeIri, value);
   }
 }

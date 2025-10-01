@@ -31,21 +31,21 @@ class LocordaSync {
   final LocordaGraphSync _syncSystem;
   final RdfMapper _mapper;
   final SyncConfig _config;
-  final Map<Type, IriTerm> _resourceTypeCache;
+  final ResourceTypeCache _resourceTypeCache;
   late final GroupKeyConverter _groupKeyConverter;
-  final LocalReferenceConverter _localReferenceConverter;
+  final ResourceLocator _localResourceLocator;
 
   LocordaSync._({
     required LocordaGraphSync locordaGraphSync,
     required RdfMapper mapper,
     required SyncConfig config,
-    required Map<Type, IriTerm> resourceTypeCache,
-    required LocalReferenceConverter localReferenceConverter,
+    required ResourceTypeCache resourceTypeCache,
+    required ResourceLocator localResourceLocator,
   })  : _syncSystem = locordaGraphSync,
         _mapper = mapper,
         _config = config,
         _resourceTypeCache = resourceTypeCache,
-        _localReferenceConverter = localReferenceConverter {
+        _localResourceLocator = localResourceLocator {
     _groupKeyConverter = GroupKeyConverter(
       config: _config,
       mapper: _mapper,
@@ -72,9 +72,10 @@ class LocordaSync {
   }) async {
     iriTermFactory ??= IriTerm.validated;
     rdfCore ??= RdfCore.withStandardCodecs();
-    final localReferenceConverter =
-        LocalReferenceConverter(iriTermFactory: iriTermFactory);
-    final iriService = LocalResourceIriService(localReferenceConverter);
+
+    final localResourceLocator =
+        LocalResourceLocator(iriTermFactory: iriTermFactory);
+    final iriService = LocalResourceIriService(localResourceLocator);
     final mappingContext = SolidMappingContext(
       resourceIriFactory: iriService.createResourceIriMapper,
       resourceRefFactory: iriService.createResourceRefMapper,
@@ -117,7 +118,7 @@ class LocordaSync {
         locordaGraphSync: graphSync,
         mapper: mapper,
         config: config,
-        localReferenceConverter: localReferenceConverter,
+        localResourceLocator: localResourceLocator,
         resourceTypeCache: resourceTypeCache);
   }
 
@@ -202,12 +203,7 @@ class LocordaSync {
     _syncSystem.save(typeIri, graph);
   }
 
-  IriTerm _getTypeIri(Type type) {
-    final typeIri = _resourceTypeCache[type] ??
-        (throw Exception(
-            'Type $type is not a registered resource type in the sync configuration.'));
-    return typeIri;
-  }
+  IriTerm _getTypeIri(Type type) => _resourceTypeCache.getIri(type);
 
   /// Ensures a resource is available locally, fetching it from the remote source if necessary.
   ///
@@ -272,11 +268,11 @@ class LocordaSync {
     IriTerm typeIri = _getTypeIri(T);
 
     // If not found locally, ensure it from the sync system
-    final localIri = _localReferenceConverter.toIri(T, id);
+    final localIri = _localResourceLocator.toIri(typeIri, id);
 
     final graph = await _syncSystem.ensure(typeIri, localIri,
         skipInitialFetch: true, loadFromLocal: (IriTerm iri) async {
-      final id = _localReferenceConverter.fromIri(T, iri);
+      final id = _localResourceLocator.fromIri(typeIri, iri);
       final obj = await loadFromLocal(id);
       return obj == null ? null : _mapper.graph.encodeObject(obj);
     }, timeout: timeout);
@@ -299,7 +295,7 @@ class LocordaSync {
   /// 5. Schedule async Pod sync
   Future<void> deleteDocument<T>(String id) async {
     IriTerm typeIri = _getTypeIri(T);
-    final localIri = _localReferenceConverter.toIri(T, id);
+    final localIri = _localResourceLocator.toIri(typeIri, id);
     return _syncSystem.deleteDocument(typeIri, localIri);
   }
 
@@ -336,7 +332,7 @@ class LocordaSync {
     final String? indexName;
     final resourceConfig = _config.getResourceConfig(T);
     if (resourceConfig != null) {
-      typeIri = _resourceTypeCache[T]!;
+      typeIri = _resourceTypeCache.getIri(T);
       indexName = null;
     } else {
       // Not a resource type, check if it's an index item type
@@ -347,7 +343,7 @@ class LocordaSync {
       }
       final (resourceConfig, index) = r;
       indexName = getIndexName(resourceConfig, index);
-      typeIri = _resourceTypeCache[resourceConfig.type]!;
+      typeIri = _resourceTypeCache.getIri(resourceConfig.type);
     }
     return _syncSystem.hydrateStreaming(
         typeIri: typeIri,

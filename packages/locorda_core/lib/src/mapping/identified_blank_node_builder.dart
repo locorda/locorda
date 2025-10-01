@@ -1,3 +1,4 @@
+import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
@@ -105,18 +106,18 @@ class IdentifiedBlankNode {
   }
 }
 
-class IdentifiedBlankNodes {
-  final Map<BlankNodeTerm, List<IdentifiedBlankNode>> _identifiedMap;
+class IdentifiedBlankNodes<T> {
+  final Map<BlankNodeTerm, List<T>> _identifiedMap;
 
   static const IdentifiedBlankNodes empty =
       IdentifiedBlankNodes(identifiedMap: {});
 
   const IdentifiedBlankNodes(
-      {required Map<BlankNodeTerm, List<IdentifiedBlankNode>> identifiedMap})
+      {required Map<BlankNodeTerm, List<T>> identifiedMap})
       : _identifiedMap = identifiedMap;
 
   /// Get all identified blank nodes for a specific blank node term
-  List<IdentifiedBlankNode>? getIdentifiedNodes(BlankNodeTerm blankNode) =>
+  List<T>? getIdentifiedNodes(BlankNodeTerm blankNode) =>
       _identifiedMap[blankNode];
 
   /// Get all blank node terms that have been identified
@@ -125,79 +126,96 @@ class IdentifiedBlankNodes {
   /// Check if a blank node has been identified
   bool isIdentified(BlankNodeTerm blankNode) =>
       _identifiedMap.containsKey(blankNode);
+  bool isNotIdentified(BlankNodeTerm blankNode) =>
+      !_identifiedMap.containsKey(blankNode);
 
   /// Get read-only access to the complete mapping
-  Map<BlankNodeTerm, List<IdentifiedBlankNode>> get identifiedMap =>
+  Map<BlankNodeTerm, List<T>> get identifiedMap =>
       Map.unmodifiable(_identifiedMap);
 }
 
-IdentifiedBlankNodes computeIdentifiedBlankNodes(
-    RdfGraph graph, MergeContract mergeContract) {
-  final blankNodeSubjects = graph.subjects.whereType<BlankNodeTerm>();
+class IdentifiedBlankNodeBuilder {
+  final FrameworkIriGenerator _iriGenerator;
 
-  // 1st: find the identifying properties for each blank node. If there are none,
-  // then we do not need to go further - the blank node cannot be identified
-  final identifyingPredicates = {
-    for (final blankNode in blankNodeSubjects)
-      blankNode: mergeContract.getIdentifyingPredicates(graph, blankNode)
-  };
+  IdentifiedBlankNodeBuilder({required FrameworkIriGenerator iriGenerator})
+      : _iriGenerator = iriGenerator;
 
-  // 2nd: find the parent path(s)
-  final triples =
-      graph.triples.where((t) => blankNodeSubjects.contains(t.object));
-  final parents = triples.fold(<BlankNodeTerm, List<RdfSubject>>{}, (r, t) {
-    r
-        .putIfAbsent(t.object as BlankNodeTerm, () => <RdfSubject>[])
-        .add(t.subject);
-    return r;
-  });
-  final identifiedBlankNodes = <BlankNodeTerm, List<IdentifiedBlankNode>>{};
-
-  // Process nodes in dependency order: IRI-rooted first, then blank-node-rooted
-  final sortedNodes = _sortByDependencies(blankNodeSubjects.toList(), parents);
-
-  for (final blankNode in sortedNodes) {
-    _addIdentifiedBlankNodes(
-        graph, blankNode, identifyingPredicates, parents, identifiedBlankNodes);
+  IdentifiedBlankNodes<IriTerm> computeCanonicalBlankNodes(
+      IriTerm documentIri, RdfGraph graph, MergeContract mergeContract) {
+    return computeIdentifiedBlankNodes<IriTerm>(graph, mergeContract,
+        (ibn) => _iriGenerator.generateCanonicalBlankNodeIri(documentIri, ibn));
   }
-  // ok, now we might have to clean up circular references
-  final Set<BlankNodeTerm> circularReferences = identifiedBlankNodes.values
-      .expand((l) => l.expand((i) => i._circuitCheck))
-      .toSet();
-  final reversedIdentifiedMap = <IdentifiedBlankNode, BlankNodeTerm>{};
-  for (final entry in identifiedBlankNodes.entries) {
-    for (final ibn in entry.value) {
-      if (reversedIdentifiedMap.containsKey(ibn)) {
-        _log.warning(
-            "Detected that IdentifiedBlankNode $ibn is associated with multiple blank nodes (${reversedIdentifiedMap[ibn]} and ${entry.key}). This should not happen and indicates a bug in the identification algorithm.");
-      }
-      reversedIdentifiedMap[ibn] = entry.key;
+
+  IdentifiedBlankNodes<T> computeIdentifiedBlankNodes<T>(RdfGraph graph,
+      MergeContract mergeContract, T Function(IdentifiedBlankNode) converter) {
+    final blankNodeSubjects = graph.subjects.whereType<BlankNodeTerm>();
+
+    // 1st: find the identifying properties for each blank node. If there are none,
+    // then we do not need to go further - the blank node cannot be identified
+    final identifyingPredicates = {
+      for (final blankNode in blankNodeSubjects)
+        blankNode: mergeContract.getIdentifyingPredicates(graph, blankNode)
+    };
+
+    // 2nd: find the parent path(s)
+    final triples =
+        graph.triples.where((t) => blankNodeSubjects.contains(t.object));
+    final parents = triples.fold(<BlankNodeTerm, List<RdfSubject>>{}, (r, t) {
+      r
+          .putIfAbsent(t.object as BlankNodeTerm, () => <RdfSubject>[])
+          .add(t.subject);
+      return r;
+    });
+    final identifiedBlankNodes = <BlankNodeTerm, List<IdentifiedBlankNode>>{};
+
+    // Process nodes in dependency order: IRI-rooted first, then blank-node-rooted
+    final sortedNodes =
+        _sortByDependencies(blankNodeSubjects.toList(), parents);
+
+    for (final blankNode in sortedNodes) {
+      _addIdentifiedBlankNodes(graph, blankNode, identifyingPredicates, parents,
+          identifiedBlankNodes);
     }
-  }
-  if (!circularReferences.isEmpty) {
-    _log.warning(
-        "Detected ${circularReferences.length} circular references in identified blank nodes. These blank nodes will be removed from identification, so they will be handled as non-identified nodes.");
+    // ok, now we might have to clean up circular references
+    final Set<BlankNodeTerm> circularReferences = identifiedBlankNodes.values
+        .expand((l) => l.expand((i) => i._circuitCheck))
+        .toSet();
+    final reversedIdentifiedMap = <IdentifiedBlankNode, BlankNodeTerm>{};
+    for (final entry in identifiedBlankNodes.entries) {
+      for (final ibn in entry.value) {
+        if (reversedIdentifiedMap.containsKey(ibn)) {
+          _log.warning(
+              "Detected that IdentifiedBlankNode $ibn is associated with multiple blank nodes (${reversedIdentifiedMap[ibn]} and ${entry.key}). This should not happen and indicates a bug in the identification algorithm.");
+        }
+        reversedIdentifiedMap[ibn] = entry.key;
+      }
+    }
+    if (circularReferences.isNotEmpty) {
+      _log.warning(
+          "Detected ${circularReferences.length} circular references in identified blank nodes. These blank nodes will be removed from identification, so they will be handled as non-identified nodes.");
+    }
     final realIdentifedBlankNodeEntries =
         identifiedBlankNodes.entries.map((entry) {
-      final filtered = entry.value
-          .where((i) => !i
-              .blankNodeChain()
-              .map((ibn) => reversedIdentifiedMap[ibn]!)
-              .any((bn) => circularReferences.contains(bn)))
-          .toList();
-      if (filtered.isEmpty) {
-        _log.info(
-            "Removing blank node ${entry.key} from identified blank nodes because it is part of a circular reference.");
-        return null;
+      Iterable<IdentifiedBlankNode> filtered = entry.value;
+      if (circularReferences.isNotEmpty) {
+        filtered = filtered.where((i) => !i
+            .blankNodeChain()
+            .map((ibn) => reversedIdentifiedMap[ibn]!)
+            .any((bn) => circularReferences.contains(bn)));
+        if (filtered.isEmpty) {
+          _log.info(
+              "Removing blank node ${entry.key} from identified blank nodes because it is part of a circular reference.");
+          return null;
+        }
       }
-      return MapEntry(entry.key, filtered);
+      final iris = filtered.map(converter).toSet().toList();
+      return MapEntry(entry.key, iris);
     }).nonNulls;
     final realIdentifedBlankNodes = {
       for (final entry in realIdentifedBlankNodeEntries) entry.key: entry.value
     };
-    return IdentifiedBlankNodes(identifiedMap: realIdentifedBlankNodes);
+    return IdentifiedBlankNodes<T>(identifiedMap: realIdentifedBlankNodes);
   }
-  return IdentifiedBlankNodes(identifiedMap: identifiedBlankNodes);
 }
 
 /// Sort blank nodes to process IRI-rooted nodes first, which helps with circular dependencies

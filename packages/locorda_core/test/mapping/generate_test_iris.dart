@@ -1,6 +1,7 @@
-import 'package:locorda_core/src/mapping/canonical_iri_generator.dart';
 import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:rdf_core/rdf_core.dart';
+
+import 'canonical_iri_generator_test.dart' show generateCanonicalIri;
 
 void main() {
   // Test 1: Simple identified blank node
@@ -11,7 +12,8 @@ void main() {
     const IriTerm('http://schema.org/name'): [LiteralTerm('Tomato')],
     const IriTerm('http://schema.org/unit'): [LiteralTerm('cup')],
   });
-  print('Test 1 (simple with 2 properties): ${generateCanonicalIri(ibn1).value}');
+  print(
+      'Test 1 (simple with 2 properties): ${generateCanonicalIri(ibn1).value}');
 
   // Test 2: Different value
   final parent2 = IdentifiedBlankNodeParent.forIri(
@@ -38,7 +40,8 @@ void main() {
   final parentIbn = IdentifiedBlankNode(rootParent, {
     const IriTerm('http://schema.org/category'): [LiteralTerm('ingredient')],
   });
-  final childParent = IdentifiedBlankNodeParent.forIdentifiedBlankNode(parentIbn);
+  final childParent =
+      IdentifiedBlankNodeParent.forIdentifiedBlankNode(parentIbn);
   final childIbn = IdentifiedBlankNode(childParent, {
     const IriTerm('http://schema.org/name'): [LiteralTerm('Tomato')],
   });
@@ -84,7 +87,8 @@ void main() {
   );
   final ibn8 = IdentifiedBlankNode(parent8, {
     const IriTerm('http://schema.org/amount'): [
-      LiteralTerm('2', datatype: const IriTerm('http://www.w3.org/2001/XMLSchema#integer'))
+      LiteralTerm('2',
+          datatype: const IriTerm('http://www.w3.org/2001/XMLSchema#integer'))
     ],
   });
   print('Test 8 (integer datatype): ${generateCanonicalIri(ibn8).value}');
@@ -106,5 +110,6 @@ void main() {
   });
   print('Test 9a (property order test): ${generateCanonicalIri(ibn9a).value}');
   print('Test 9b (property order test): ${generateCanonicalIri(ibn9b).value}');
-  print('Test 9 match: ${generateCanonicalIri(ibn9a).value == generateCanonicalIri(ibn9b).value}');
+  print(
+      'Test 9 match: ${generateCanonicalIri(ibn9a).value == generateCanonicalIri(ibn9b).value}');
 }

@@ -9,9 +9,11 @@ import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
+import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
+import 'package:locorda_core/src/mapping/metadata_generator.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
@@ -89,7 +91,8 @@ void _validateResourceGraph(
           'Resource IRI ($iriSubjectValue) must be a fragment of the '
           'document IRI ($documentIriValue). Expected format: ${documentIriValue}#fragmentId');
     }
-    if (iriSubjectValue.startsWith('$documentIriValue#lcrd-')) {
+    if (iriSubjectValue.startsWith(
+        '$documentIriValue#${FrameworkIriGenerator.fragmentPrefix}')) {
       throw ArgumentError(
           'Resource IRI ($iriSubjectValue) must not start with reserved prefix #lcrd- in fragment identifier. '
           'This prefix is reserved for CRDT framework metadata.');
@@ -245,10 +248,16 @@ class LocordaGraphSync {
   final SyncGraphConfig _config;
   final MergeContractLoader _mergeContractLoader;
   final CrdtTypeRegistry _crdtTypeRegistry;
-
+  final FrameworkIriGenerator _iriGenerator;
   final HydrationStreamManager _streamManager;
   final GroupIndexGraphSubscriptionManager _groupIndexManager;
-  late final HydrationEmitter _emitter;
+  late final IdentifiedBlankNodeBuilder _identifiedBlankNodeBuilder =
+      IdentifiedBlankNodeBuilder(iriGenerator: _iriGenerator);
+  late final MetadataGenerator _metadataGenerator =
+      MetadataGenerator(frameworkIriGenerator: _iriGenerator);
+  late final HydrationEmitter _emitter = HydrationEmitter(
+    streamManager: _streamManager,
+  );
 
   // Factory functions for configurable time and clock generation
   final HlcService _hlcService;
@@ -260,6 +269,7 @@ class LocordaGraphSync {
     required MergeContractLoader mergeContractLoader,
     PhysicalTimestampFactory? physicalTimestampFactory,
     HlcService? hlcService,
+    IriTermFactory? iriTermFactory,
   })  : _storage = storage,
         _backend = backend,
         _config = config,
@@ -275,11 +285,8 @@ class LocordaGraphSync {
         _streamManager = HydrationStreamManager(),
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
           config: config,
-        ) {
-    _emitter = HydrationEmitter(
-      streamManager: _streamManager,
-    );
-  }
+        ),
+        _iriGenerator = FrameworkIriGenerator(iriTermFactory: iriTermFactory);
 
   /// Set up the CRDT sync system with resource-focused configuration.
   ///
@@ -468,10 +475,12 @@ class LocordaGraphSync {
       final physicalTimestamp = clock.physicalTime;
 
       // 4. Detect property changes between old and new graphs and generate CRDT metadata
-      final appBlankNodes = computeIdentifiedBlankNodes(appData, mergeContract);
+      final appBlankNodes = _identifiedBlankNodeBuilder
+          .computeCanonicalBlankNodes(documentIri, appData, mergeContract);
       final oldAppBlankNodes = oldAppData == null
-          ? IdentifiedBlankNodes.empty
-          : computeIdentifiedBlankNodes(oldAppData, mergeContract);
+          ? IdentifiedBlankNodes.empty as IdentifiedBlankNodes<IriTerm>
+          : _identifiedBlankNodeBuilder.computeCanonicalBlankNodes(
+              documentIri, oldAppData, mergeContract);
       final crdtMetadata = _generateCrdtMetadataForChanges(
         documentIri,
         appData,
@@ -832,7 +841,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   }
 
   Iterable<_IdentifiedRdfSubject> _getIdentifiedSubjects(
-          RdfGraph graph, IdentifiedBlankNodes blankNodes) =>
+          RdfGraph graph, IdentifiedBlankNodes<IriTerm> blankNodes) =>
       graph.subjects.map((subject) {
         if (subject is IriTerm) {
           return _IdentifiedIriSubject(subject);
@@ -848,9 +857,9 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   _CrdtMetadataResult _generateCrdtMetadataForChanges(
       IriTerm documentIri,
       RdfGraph appData,
-      IdentifiedBlankNodes appBlankNodes,
+      IdentifiedBlankNodes<IriTerm> appBlankNodes,
       RdfGraph? oldAppGraph,
-      IdentifiedBlankNodes oldAppBlankNodes,
+      IdentifiedBlankNodes<IriTerm> oldAppBlankNodes,
       MergeContract mergeContract,
       CurrentCrdtClock clock) {
     final metadataGraphs = <RdfGraph>[];
@@ -872,13 +881,15 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         if (oldIdentifiedSubjects.contains(subject))
           subject: oldIdentifiedSubjects.lookup(subject)!
     };
+    final context = CrdtMergeContext(
+        iriGenerator: _iriGenerator, metadataGenerator: _metadataGenerator);
 
     // Process deleted subjects - add resource tombstones
     for (final deletedSubject in deletedSubjects) {
       _log.fine('Deleted subject detected: ${deletedSubject.subject} ');
-      metadataGraphs.add(createResourceMetadata(
+      metadataGraphs.add(_metadataGenerator.createResourceMetadata(
           documentIri,
-          // FIXME: oh - problem for blank nodes
+          oldAppBlankNodes,
           deletedSubject.subject,
           (metadataSubject) => [
                 Triple(
@@ -909,9 +920,11 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         final metadataGraph = crdtType.initialValue(
           documentIri: documentIri,
           appData: appData,
+          blankNodes: appBlankNodes,
           subject: subjectTerm,
           predicate: predicate,
           values: values.cast<RdfObject>(),
+          mergeContext: context,
         );
 
         if (metadataGraph.isNotEmpty) {
@@ -971,12 +984,15 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         final metadataGraph = crdtType.localValueChange(
           documentIri: documentIri,
           oldAppData: oldAppGraph,
+          oldBlankNodes: oldAppBlankNodes,
           oldSubject: oldSubjectTerm,
           newAppData: appData,
+          newBlankNodes: appBlankNodes,
           newSubject: subjectTerm,
           predicate: predicate,
           oldValues: oldValues,
           newValues: newValues,
+          mergeContext: context,
         );
 
         if (metadataGraph.isNotEmpty) {
@@ -1192,7 +1208,7 @@ class _IdentifiedIriSubject extends _IdentifiedRdfSubject {
 
 class _IdentifiedBlankNodeSubject extends _IdentifiedRdfSubject {
   final BlankNodeTerm blankNode;
-  final List<IdentifiedBlankNode> identifiers;
+  final List<IriTerm> identifiers;
 
   _IdentifiedBlankNodeSubject(this.blankNode, this.identifiers);
 
