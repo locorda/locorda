@@ -306,9 +306,11 @@ class LocordaGraphSync {
     IriTermFactory? iriFactory,
     RdfCore? rdfCore,
     http.Client? httpClient,
+    Fetcher? fetcher,
   }) async {
     rdfCore ??= RdfCore.withStandardCodecs();
     httpClient ??= http.Client();
+    fetcher ??= HttpFetcher(httpClient: httpClient);
     iriFactory ??= IriTerm.validated;
 
     // Validate configuration before proceeding
@@ -322,7 +324,7 @@ class LocordaGraphSync {
 
     // TODO: the HttpRdfGraphFetcher should be db-cached (ideally with initialization from deployment and etag)
     final mergeContractLoader = StandardMergeContractLoader(RecursiveRdfLoader(
-        fetcher: HttpRdfGraphFetcher(httpClient: httpClient, rdfCore: rdfCore),
+        fetcher: StandardRdfGraphFetcher(fetcher: fetcher, rdfCore: rdfCore),
         iriFactory: iriFactory));
 
     return LocordaGraphSync._(
@@ -478,7 +480,7 @@ class LocordaGraphSync {
       final appBlankNodes = _identifiedBlankNodeBuilder
           .computeCanonicalBlankNodes(documentIri, appData, mergeContract);
       final oldAppBlankNodes = oldAppData == null
-          ? IdentifiedBlankNodes.empty as IdentifiedBlankNodes<IriTerm>
+          ? IdentifiedBlankNodes.empty<IriTerm>()
           : _identifiedBlankNodeBuilder.computeCanonicalBlankNodes(
               documentIri, oldAppData, mergeContract);
       final crdtMetadata = _generateCrdtMetadataForChanges(

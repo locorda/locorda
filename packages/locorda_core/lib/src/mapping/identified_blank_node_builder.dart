@@ -109,8 +109,8 @@ class IdentifiedBlankNode {
 class IdentifiedBlankNodes<T> {
   final Map<BlankNodeTerm, List<T>> _identifiedMap;
 
-  static const IdentifiedBlankNodes empty =
-      IdentifiedBlankNodes(identifiedMap: {});
+  static IdentifiedBlankNodes<T> empty<T>() =>
+      const IdentifiedBlankNodes(identifiedMap: const {});
 
   const IdentifiedBlankNodes(
       {required Map<BlankNodeTerm, List<T>> identifiedMap})

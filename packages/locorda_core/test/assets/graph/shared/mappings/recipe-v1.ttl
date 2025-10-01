@@ -1,0 +1,20 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix algo: <https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#> .
+@prefix mc: <https://w3id.org/solid-crdt-sync/vocab/merge-contract#> .
+@prefix mappings: <https://w3id.org/solid-crdt-sync/mappings/> .
+
+# Recipe merge contract mapping file
+<> a mc:DocumentMapping;
+   rdfs:label "Recipe Merge Contract v1" ;
+   # Import standard CRDT framework mappings
+   mc:imports ( mappings:core-v1 ) ;
+   # Define recipe-specific class mappings
+   mc:classMapping ( <#recipe> ) .
+
+<#recipe> a mc:ClassMapping;
+   mc:appliesToClass schema:Recipe;
+   mc:rule
+     [ mc:predicate schema:name; algo:mergeWith algo:LWW_Register ],
+     [ mc:predicate schema:recipeIngredient; algo:mergeWith algo:OR_Set ] .

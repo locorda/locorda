@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "baseTimestamp": "2024-01-01T00:00:00Z",
+  "urlToPathMap": {
+    "https://example.org/test/mappings/recipe-v1": "shared/mappings/recipe-v1.ttl",
+    "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl"
+  },
+  "test_suites": [
+    {
+      "suite": "save",
+      "description": "Tests for SyncGraphManager.save() operation",
+      "tests": [
+        {
+          "id": "save_01",
+          "title": "First save of new resource",
+          "description": "Saving a new resource when no data exists in storage should add all triples with CRDT metadata",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "input_resource": "test_cases/save/01_first_save/input_resource.ttl",
+          "expected_stored_graph": "test_cases/save/01_first_save/expected_stored_graph.ttl"
+        }
+      ]
+    }
+  ]
+}

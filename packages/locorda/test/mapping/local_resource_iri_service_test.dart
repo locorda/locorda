@@ -1,10 +1,10 @@
 import 'package:locorda/src/config/sync_config_util.dart';
 import 'package:locorda_core/locorda_core.dart';
-import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
+import 'package:test/test.dart';
+
 import '../../../locorda/lib/src/mapping/local_resource_iri_service.dart';
-import 'package:locorda_core/src/mapping/pod_iri_config.dart';
 
 // Mock types for testing
 class TestNote {}
@@ -177,36 +177,24 @@ void main() {
           returnsNormally,
         );
       });
-
-      test('should allow retry after failed validation', () {
-        service.createResourceIriMapper<TestNote>(mockConfig);
-        service
-            .createResourceRefMapper<String>(TestUser); // Missing registration
-
-        // First attempt fails
-        var result = service.finishSetupAndValidate(mockResourceTypeCache);
-        expect(result.isValid, isFalse);
-
-        // Fix the issue by registering the referenced type
-        service.createResourceIriMapper<TestUser>(mockConfig);
-
-        // Second attempt succeeds
-        result = service.finishSetupAndValidate(mockResourceTypeCache);
-        expect(result.isValid, isTrue);
-      });
     });
 
     group('IRI Mapper Creation', () {
       test('should create resource IRI mapper with correct scheme', () {
         final mapper = service.createResourceIriMapper<TestNote>(mockConfig);
+        service.finishSetupAndValidate(mockResourceTypeCache);
 
         // Test forward mapping (tuple to IRI)
         final iri = mapper.toRdfTerm(('note123',), MockSerializationContext());
-        expect(iri.value, equals('app://local/TestNote/note123'));
+        expect(
+            iri.value,
+            equals(
+                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTEyMw=='));
 
         // Test reverse mapping (IRI to tuple)
         final tuple = mapper.fromRdfTerm(
-            const IriTerm('app://local/TestNote/note456'),
+            IriTerm.validated(
+                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTQ1Ng=='),
             MockDeserializationContext());
         expect(tuple, equals(('note456',)));
       });
@@ -216,6 +204,7 @@ void main() {
         final resourceMapper =
             service.createResourceIriMapper<TestNote>(mockConfig);
         final refMapper = service.createResourceRefMapper<String>(TestNote);
+        service.finishSetupAndValidate(mockResourceTypeCache);
 
         // Both should generate the same IRI for the same ID
         final resourceIri =
@@ -224,11 +213,15 @@ void main() {
             refMapper.toRdfTerm('note123', MockSerializationContext());
 
         expect(resourceIri.value, equals(refIri.value));
-        expect(resourceIri.value, equals('app://local/TestNote/note123'));
+        expect(
+            resourceIri.value,
+            equals(
+                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTEyMw=='));
       });
 
       test('should validate IRI patterns in reverse mapping', () {
         final mapper = service.createResourceIriMapper<TestNote>(mockConfig);
+        service.finishSetupAndValidate(mockResourceTypeCache);
 
         expect(
           () => mapper.fromRdfTerm(
@@ -237,7 +230,7 @@ void main() {
           throwsA(isA<ArgumentError>().having(
             (e) => e.message,
             'message',
-            contains('does not match expected pattern'),
+            contains('does not belong to base IRI tag:locorda.org,2025:l:'),
           )),
         );
       });

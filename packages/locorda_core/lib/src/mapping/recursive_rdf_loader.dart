@@ -4,23 +4,39 @@ import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:http/http.dart' as http;
 
-class HttpRdfGraphFetcher implements RdfGraphFetcher {
+abstract interface class Fetcher {
+  Future<String> fetch(String url);
+}
+
+class HttpFetcher implements Fetcher {
   final http.Client httpClient;
-  final RdfCore rdfCore;
-  HttpRdfGraphFetcher({
+  HttpFetcher({
     required this.httpClient,
+  });
+  @override
+  Future<String> fetch(String url) async {
+    final response = await httpClient.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      // Parse the RDF graph from the response body
+      return response.body;
+    } else {
+      throw Exception('Failed to load RDF graph: ${response.statusCode}');
+    }
+  }
+}
+
+class StandardRdfGraphFetcher implements RdfGraphFetcher {
+  final Fetcher fetcher;
+  final RdfCore rdfCore;
+  StandardRdfGraphFetcher({
+    required this.fetcher,
     required this.rdfCore,
   });
   @override
   Future<RdfGraph> fetch(IriTerm iri) async {
-    final response = await httpClient.get(Uri.parse(iri.value));
-    if (response.statusCode == 200) {
-      // Parse the RDF graph from the response body
-      return rdfCore.decode(response.body,
-          contentType: "text/turtle", documentUrl: iri.value);
-    } else {
-      throw Exception('Failed to load RDF graph: ${response.statusCode}');
-    }
+    // Parse the RDF graph from the response body
+    return rdfCore.decode(await fetcher.fetch(iri.value),
+        contentType: "text/turtle", documentUrl: iri.value);
   }
 }
 

@@ -23,7 +23,7 @@ class LocalResourceLocator implements ResourceLocator {
   IriTerm toIri(IriTerm typeIri, String localId) {
     final encodedTypeIri = base64Url.encode(utf8.encode(typeIri.value));
     final encodedLocalId = base64Url.encode(utf8.encode(localId));
-    return _iriTermFactory('$prefix${encodedTypeIri}/$encodedLocalId');
+    return _iriTermFactory('$prefix${encodedTypeIri}:$encodedLocalId');
   }
 
   @override
@@ -32,8 +32,8 @@ class LocalResourceLocator implements ResourceLocator {
       throw ArgumentError(
           'Remote IRI ${remoteIri.value} does not belong to base IRI ${prefix}');
     }
-    final encoded = remoteIri.value.substring(prefix.length + 1);
-    final [encodedTypeIri, encodedLocalId] = encoded.split('/');
+    final encoded = remoteIri.value.substring(prefix.length);
+    final [encodedTypeIri, encodedLocalId] = encoded.split(':');
     final remoteTypeIri = utf8.decode(base64Url.decode(encodedTypeIri));
     if (remoteTypeIri != typeIri.value) // just to check if valid
       throw ArgumentError(

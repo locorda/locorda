@@ -24,6 +24,7 @@ dependencies:
 
   # RDF 
   rdf_core: ^0.9.20
+  rdf_canonicalization: ^0.2.0
   
 
 dev_dependencies:

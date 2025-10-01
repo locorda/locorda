@@ -30,8 +30,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:4e00e053b32db0e51ef6fc7b50fafde7'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-4e00e053b32db0e51ef6fc7b50fafde7'));
       });
 
       test('generates same IRI for identical identification patterns', () {
@@ -73,9 +75,13 @@ void main() {
         final iri2 = generateCanonicalIri(ibn2);
 
         expect(
-            iri1.value, equals('locorda:md5:07abf222389dcf94ab7940731360b350'));
+            iri1.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-07abf222389dcf94ab7940731360b350'));
         expect(
-            iri2.value, equals('locorda:md5:1d3ff5115e60205420d8a45f81796529'));
+            iri2.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-1d3ff5115e60205420d8a45f81796529'));
         expect(iri1, isNot(equals(iri2)));
       });
 
@@ -97,9 +103,13 @@ void main() {
         final iri2 = generateCanonicalIri(ibn2);
 
         expect(
-            iri1.value, equals('locorda:md5:316575dc67de6c477029c065c6156da5'));
+            iri1.value,
+            equals(
+                'https://example.com/recipe1#lcrd-ibn-md5-316575dc67de6c477029c065c6156da5'));
         expect(
-            iri2.value, equals('locorda:md5:c409e7585f2ce256f5edf55b8e8ad389'));
+            iri2.value,
+            equals(
+                'https://example.com/recipe2#lcrd-ibn-md5-c409e7585f2ce256f5edf55b8e8ad389'));
         expect(iri1, isNot(equals(iri2)));
       });
     });
@@ -123,8 +133,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(childIbn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:b27b392293a462ee38ed1e8a71f45e07'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/doc#lcrd-ibn-md5-b27b392293a462ee38ed1e8a71f45e07'));
       });
 
       test('generates same IRI for identical nested patterns', () {
@@ -223,8 +235,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(childIbn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:769ced3798ebe2b81d6d4918e83385d9'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/doc#lcrd-ibn-md5-769ced3798ebe2b81d6d4918e83385d9'));
       });
     });
 
@@ -243,8 +257,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:4232ddea4657c32412e4def686c2bb3b'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-4232ddea4657c32412e4def686c2bb3b'));
       });
 
       test('order of values in list affects canonical IRI', () {
@@ -285,8 +301,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:07abf222389dcf94ab7940731360b350'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-07abf222389dcf94ab7940731360b350'));
       });
 
       test('handles integer literals', () {
@@ -303,8 +321,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:c3658cbe8b3dd4c8c4a8ad0fcdbc0376'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-c3658cbe8b3dd4c8c4a8ad0fcdbc0376'));
       });
 
       test('handles IRI objects', () {
@@ -319,8 +339,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:0b970522bb8256aa32f160a76b5ea191'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-0b970522bb8256aa32f160a76b5ea191'));
       });
 
       test('handles language-tagged literals', () {
@@ -335,8 +357,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:7b47181c5db4737ca263cb9c12107c67'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-7b47181c5db4737ca263cb9c12107c67'));
       });
 
       test('different datatypes produce different IRIs', () {
@@ -395,8 +419,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:2775618549f1d39d19fbb16221025494'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-2775618549f1d39d19fbb16221025494'));
       });
 
       test('handles unicode in literals', () {
@@ -411,8 +437,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:8b5435f15e8f3712cee3f97dc5fdfe08'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-8b5435f15e8f3712cee3f97dc5fdfe08'));
       });
 
       test('handles empty string literal', () {
@@ -425,8 +453,10 @@ void main() {
 
         final canonicalIri = generateCanonicalIri(ibn);
 
-        expect(canonicalIri.value,
-            equals('locorda:md5:d76d48bdea8472c8cd0f239941c78f6f'));
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-d76d48bdea8472c8cd0f239941c78f6f'));
       });
     });
 
@@ -469,9 +499,13 @@ void main() {
         final iri2 = generateCanonicalIri(ibn2);
 
         expect(
-            iri1.value, equals('locorda:md5:68c4f4134b6bf772f7f564ddd5892acf'));
+            iri1.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-68c4f4134b6bf772f7f564ddd5892acf'));
         expect(
-            iri2.value, equals('locorda:md5:68c4f4134b6bf772f7f564ddd5892acf'));
+            iri2.value,
+            equals(
+                'https://example.com/recipe#lcrd-ibn-md5-68c4f4134b6bf772f7f564ddd5892acf'));
         expect(iri1, equals(iri2));
       });
     });

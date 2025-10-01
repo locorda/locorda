@@ -90,8 +90,8 @@ abstract class FullIndexConfigBase extends CrdtIndexConfigBase {
   const FullIndexConfigBase({
     required this.localName,
     this.item,
-    this.itemFetchPolicy = ItemFetchPolicy.prefetch,
-  });
+    ItemFetchPolicy? itemFetchPolicy,
+  }) : itemFetchPolicy = itemFetchPolicy ?? ItemFetchPolicy.prefetch;
 }
 
 /// Defines how a property should be used for grouping in a GroupIndex.
@@ -108,6 +108,12 @@ class RegexTransform {
   final String replacement;
 
   const RegexTransform(this.pattern, this.replacement);
+
+  factory RegexTransform.fromJson(Map<String, dynamic> json) {
+    final pattern = json['pattern'] as String;
+    final replacement = json['replacement'] as String;
+    return RegexTransform(pattern, replacement);
+  }
 
   @override
   String toString() => 'RegexTransform($pattern -> $replacement)';
@@ -157,4 +163,21 @@ class GroupingProperty {
     this.hierarchyLevel = 1,
     this.missingValue,
   });
+
+  factory GroupingProperty.fromJson(Map<String, dynamic> json) {
+    final predicate = IriTerm(json['predicate'] as String);
+    final hierarchyLevel = (json['hierarchyLevel'] as int?) ?? 1;
+    final missingValue = json['missingValue'] as String?;
+    final transformsJson = json['transforms'] as List<dynamic>?;
+    final transforms = transformsJson
+        ?.map((t) => RegexTransform.fromJson(t as Map<String, dynamic>))
+        .toList(growable: false);
+
+    return GroupingProperty(
+      predicate,
+      hierarchyLevel: hierarchyLevel,
+      missingValue: missingValue,
+      transforms: transforms,
+    );
+  }
 }

@@ -12,7 +12,7 @@ class ResourceTypeCache {
 
   /// Gets the IRI for the given resource type.
   /// Returns null if the type is not registered as a resource.
-  bool hasIri(Type type) => _resourceTypeCache[type] == null;
+  bool hasIri(Type type) => _resourceTypeCache[type] != null;
 
   IriTerm getIri(Type type) =>
       _resourceTypeCache[type] ??
