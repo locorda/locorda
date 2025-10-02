@@ -33,7 +33,8 @@ class LocalResourceLocator implements ResourceLocator {
       IriTerm typeIri, String localId, String? fragment) {
     final encodedTypeIri = base64Url.encode(utf8.encode(typeIri.value));
     final encodedLocalId = base64Url.encode(utf8.encode(localId));
-    final documentIri = _iriTermFactory('$prefix${encodedTypeIri}:$encodedLocalId');
+    final documentIri =
+        _iriTermFactory('$prefix${encodedTypeIri}:$encodedLocalId');
     final resourceIri = fragment != null
         ? _iriTermFactory('${documentIri.value}#$fragment')
         : documentIri;
@@ -46,12 +47,10 @@ class LocalResourceLocator implements ResourceLocator {
     // Split off fragment if present
     final iriValue = resourceIri.value;
     final fragmentIndex = iriValue.indexOf('#');
-    final documentIriValue = fragmentIndex >= 0
-        ? iriValue.substring(0, fragmentIndex)
-        : iriValue;
-    final fragment = fragmentIndex >= 0
-        ? iriValue.substring(fragmentIndex + 1)
-        : null;
+    final documentIriValue =
+        fragmentIndex >= 0 ? iriValue.substring(0, fragmentIndex) : iriValue;
+    final fragment =
+        fragmentIndex >= 0 ? iriValue.substring(fragmentIndex + 1) : null;
 
     if (!documentIriValue.startsWith(prefix)) {
       throw ArgumentError(

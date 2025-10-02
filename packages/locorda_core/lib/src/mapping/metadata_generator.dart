@@ -69,8 +69,8 @@ class MetadataGenerator {
     final temporaryIdSubject = BlankNodeTerm();
     final graphs = expandedSubject.expand((subj) {
       return (expandedObject?.cast<RdfObject?>() ?? [null]).map((obj) {
-        final idGraph = RdfGraph.fromTriples(
-            _createIdentifyingTriples(temporaryIdSubject, subj, predicate, obj));
+        final idGraph = RdfGraph.fromTriples(_createIdentifyingTriples(
+            temporaryIdSubject, subj, predicate, obj));
         final stmtIri = _frameworkIriGenerator.generateSimpleCanonicalIri(
             documentIri, 'stmt', idGraph.triples,
             labels: {temporaryIdSubject: 'stmt0'});

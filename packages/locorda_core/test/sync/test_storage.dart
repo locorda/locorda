@@ -78,8 +78,9 @@ class TestStorage implements Storage {
   }
 
   @override
-  Future<DocumentsResult> getDocumentsModifiedSince(IriTerm typeIri,
-      String? cursor, {required int limit}) async {
+  Future<DocumentsResult> getDocumentsModifiedSince(
+      IriTerm typeIri, String? cursor,
+      {required int limit}) async {
     // Simple implementation - filter by updatedAt > cursor
     final cursorTimestamp = cursor != null ? int.parse(cursor) : 0;
     final filtered = _documents.values
@@ -96,15 +97,16 @@ class TestStorage implements Storage {
   }
 
   @override
-  Future<DocumentsResult> getDocumentsChangedByUsSince(IriTerm typeIri,
-      String? cursor, {required int limit}) async {
+  Future<DocumentsResult> getDocumentsChangedByUsSince(
+      IriTerm typeIri, String? cursor,
+      {required int limit}) async {
     // Simple implementation - filter by ourPhysicalClock > cursor
     final cursorTimestamp = cursor != null ? int.parse(cursor) : 0;
     final filtered = _documents.values
         .where((doc) => doc.metadata.ourPhysicalClock > cursorTimestamp)
         .toList()
-      ..sort((a, b) => a.metadata.ourPhysicalClock
-          .compareTo(b.metadata.ourPhysicalClock));
+      ..sort((a, b) =>
+          a.metadata.ourPhysicalClock.compareTo(b.metadata.ourPhysicalClock));
 
     final page = filtered.take(limit).toList();
     final nextCursor = page.length < filtered.length

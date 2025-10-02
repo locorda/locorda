@@ -130,9 +130,8 @@ Future<void> _executeSaveTest(
   );
 
   // Create installation ID factory if base installation ID provided
-  final installationIdFactory = baseInstallationId != null
-      ? () => baseInstallationId
-      : null;
+  final installationIdFactory =
+      baseInstallationId != null ? () => baseInstallationId : null;
 
   final sync = await LocordaGraphSync.setup(
       backend: TestBackend(),
