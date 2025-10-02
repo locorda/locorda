@@ -346,9 +346,9 @@ class LocordaGraphSync {
       iriTermFactory: iriFactory,
     );
 
-    // Create HlcService with installation IRI
+    // Create HlcService with installation IRI and localId
     final hlcService = HlcService(
-      installationId: installationService.installationIri,
+      installationLocalId: installationService.installationLocalId,
       physicalTimestampFactory: physicalTimestampFactory,
     );
 
@@ -534,8 +534,8 @@ class LocordaGraphSync {
           ? null
           : _extractCrdtClock(oldDocument, documentIri);
       final clock = oldClock == null
-          ? _hlcService.newClock()
-          : _hlcService.incrementClock(oldClock);
+          ? _hlcService.newClock(documentIri)
+          : _hlcService.incrementClock(documentIri, oldClock);
       final physicalTimestamp = clock.physicalTime;
 
       // 4. Detect property changes between old and new graphs and generate CRDT metadata

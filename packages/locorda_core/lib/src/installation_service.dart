@@ -16,6 +16,7 @@ typedef InstallationIdFactory = String Function();
 /// Settings keys for installation management
 class InstallationSettings {
   static const installationIri = 'installation_iri';
+  static const installationLocalId = 'installation_local_id';
   static const installationDocumentSaved = 'installation_document_saved';
 }
 
@@ -28,11 +29,13 @@ class InstallationSettings {
 class InstallationService {
   final Storage _storage;
   final IriTerm installationIri;
+  final String installationLocalId;
   final bool installationDocumentSaved;
 
   InstallationService._({
     required Storage storage,
     required this.installationIri,
+    required this.installationLocalId,
     required this.installationDocumentSaved,
   }) : _storage = storage;
 
@@ -53,28 +56,36 @@ class InstallationService {
     IriTermFactory iriTermFactory = IriTerm.validated,
   }) async {
     installationIdFactory ??= () => const Uuid().v4();
-    // Load both settings in single request
+    // Load settings in single request
     final settings = await storage.getSettings([
       InstallationSettings.installationIri,
+      InstallationSettings.installationLocalId,
       InstallationSettings.installationDocumentSaved,
     ]);
 
     final IriTerm installationIri;
+    final String installationLocalId;
+
     if (settings.containsKey(InstallationSettings.installationIri)) {
-      // Load existing installation IRI
+      // Load existing installation IRI and localId
       installationIri =
           iriTermFactory(settings[InstallationSettings.installationIri]!);
+      installationLocalId = settings[InstallationSettings.installationLocalId]!;
     } else {
       // Generate new installation ID and IRI with 'installation' fragment
-      final installationId = installationIdFactory();
+      installationLocalId = installationIdFactory();
       final iris = resourceLocator.toIri(
         CrdtClientInstallation.classIri,
-        installationId,
+        installationLocalId,
         'installation',
       );
       installationIri = iris.resourceIri;
 
-      // Persist installation IRI (the resource IRI with fragment)
+      // Persist both installation IRI and localId
+      await storage.setSetting(
+        InstallationSettings.installationLocalId,
+        installationLocalId,
+      );
       await storage.setSetting(
         InstallationSettings.installationIri,
         installationIri.value,
@@ -87,6 +98,7 @@ class InstallationService {
     return InstallationService._(
       storage: storage,
       installationIri: installationIri,
+      installationLocalId: installationLocalId,
       installationDocumentSaved: installationDocumentSaved,
     );
   }

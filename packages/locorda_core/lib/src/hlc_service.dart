@@ -1,6 +1,8 @@
 /// Main facade for the CRDT sync system.
 library;
 
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -8,18 +10,11 @@ import 'package:rdf_core/rdf_core.dart';
 /// Factory function for generating physical timestamps (wall-clock time)
 typedef PhysicalTimestampFactory = DateTime Function();
 
-/// Factory function for generating logical clock values
-typedef LogicalClockFactory = int Function();
-
 // Default factory functions for time and clock generation
 DateTime defaultPhysicalTimestampFactory() => DateTime.now();
 
-int _logicalClockCounter = 0;
-int _defaultLogicalClockFactory() => ++_logicalClockCounter;
-
 typedef CrdtClock = List<Node>;
 typedef CurrentCrdtClock = ({
-  IriTerm installationId,
   int logicalTime,
   int physicalTime,
   CrdtClock fullClock,
@@ -27,55 +22,52 @@ typedef CurrentCrdtClock = ({
 });
 
 class HlcService {
-  final IriTerm _installationId;
+  final String _installationLocalId;
   final PhysicalTimestampFactory _physicalTimestampFactory;
-  final LogicalClockFactory _logicalClockFactory;
 
   HlcService({
-    required IriTerm installationId,
+    required String installationLocalId,
     PhysicalTimestampFactory physicalTimestampFactory =
         defaultPhysicalTimestampFactory,
-    LogicalClockFactory logicalClockFactory = _defaultLogicalClockFactory,
-  })  : _installationId = installationId,
-        _physicalTimestampFactory = physicalTimestampFactory,
-        _logicalClockFactory = logicalClockFactory;
+  })  : _installationLocalId = installationLocalId,
+        _physicalTimestampFactory = physicalTimestampFactory;
 
-  Node _buildClockEntryNode(
-      IriTerm installationId, int physicalTime, int logicalTime) {
-    // Create a blank node for the clock entry
-    final clockEntryNode = BlankNodeTerm();
-    final triples = <Triple>[];
-
-    triples.add(Triple(
-      clockEntryNode,
-      CrdtClockEntry.installationId,
-      installationId,
-    ));
-
-    triples.add(Triple(
-      clockEntryNode,
-      CrdtClockEntry.logicalTime,
-      LiteralTerm.integer(logicalTime),
-    ));
-
-    triples.add(Triple(
-      clockEntryNode,
-      CrdtClockEntry.physicalTime,
-      LiteralTerm.integer(physicalTime),
-    ));
-    return (clockEntryNode, RdfGraph.fromTriples(triples));
+  /// Generates a stable clock entry IRI based on installation localId
+  /// Fragment format: #lcrd-clk-md5-{hash-of-installation-localId}
+  IriTerm _generateClockEntryIri(IriTerm documentIri) {
+    final hash = md5.convert(utf8.encode(_installationLocalId)).toString();
+    return documentIri.withFragment('lcrd-clk-md5-$hash');
   }
 
-  CurrentCrdtClock newClock() {
+  /// Builds a clock entry node as an IRI resource (not blank node)
+  /// Note: installationIri property is NOT added here - it's added during sync
+  Node _buildClockEntryNode(
+      IriTerm documentIri, int physicalTime, int logicalTime) {
+    final clockEntryIri = _generateClockEntryIri(documentIri);
+    final triples = <Triple>[
+      Triple(
+        clockEntryIri,
+        CrdtClockEntry.logicalTime,
+        LiteralTerm.integer(logicalTime),
+      ),
+      Triple(
+        clockEntryIri,
+        CrdtClockEntry.physicalTime,
+        LiteralTerm.integer(physicalTime),
+      ),
+    ];
+    return (clockEntryIri, RdfGraph.fromTriples(triples));
+  }
+
+  CurrentCrdtClock newClock(IriTerm documentIri) {
     final physicalTime = _physicalTimestampFactory();
-    final logicalTime = _logicalClockFactory();
+    final logicalTime = 1;
 
     var fullClock = [
       _buildClockEntryNode(
-          _installationId, physicalTime.millisecondsSinceEpoch, logicalTime)
+          documentIri, physicalTime.millisecondsSinceEpoch, logicalTime)
     ];
     return (
-      installationId: _installationId,
       logicalTime: logicalTime,
       physicalTime: physicalTime.millisecondsSinceEpoch,
       fullClock: fullClock,
@@ -83,15 +75,14 @@ class HlcService {
     );
   }
 
-  CurrentCrdtClock incrementClock(CrdtClock clock) {
+  CurrentCrdtClock incrementClock(IriTerm documentIri, CrdtClock clock) {
     final physicalTime = _physicalTimestampFactory();
+    final ourClockEntryIri = _generateClockEntryIri(documentIri);
+
     final (ours: ours, theirs: theirs) =
         clock.fold((ours: <Node>[], theirs: <Node>[]), (acc, entry) {
       final (node, triples) = entry;
-      final idTriple =
-          triples.findTriples(predicate: CrdtClockEntry.installationId).single;
-      final id = idTriple.object;
-      if (id == _installationId) {
+      if (node == ourClockEntryIri) {
         acc.ours.add(entry);
       } else {
         acc.theirs.add(entry);
@@ -107,12 +98,11 @@ class HlcService {
     final oldLogicalTime = int.parse(oldLogicalTimeTerm.value);
     final logicalTime = oldLogicalTime + 1;
     final ourNewEntry = _buildClockEntryNode(
-        _installationId, physicalTime.millisecondsSinceEpoch, logicalTime);
+        documentIri, physicalTime.millisecondsSinceEpoch, logicalTime);
 
     var fullClock = [ourNewEntry, ...theirs];
 
     return (
-      installationId: _installationId,
       logicalTime: logicalTime,
       physicalTime: physicalTime.millisecondsSinceEpoch,
       fullClock: fullClock,
@@ -120,9 +110,26 @@ class HlcService {
     );
   }
 
+  /// Computes clock hash from logical and physical time only
+  /// Per spec: includes only logicalTime and physicalTime triples, excludes installationIri
   String _hashClock(CrdtClock clock) {
-    // TODO: Implement proper clock hash generation - for now using simple hash
+    final triples = <Triple>[];
 
-    return "FIXME";
+    // Extract only logicalTime and physicalTime triples from all clock entries
+    for (final (_, graph) in clock) {
+      triples.addAll(graph.findTriples(predicate: CrdtClockEntry.logicalTime));
+      triples.addAll(graph.findTriples(predicate: CrdtClockEntry.physicalTime));
+    }
+
+    // Serialize to canonical N-Quads
+    final dataset = RdfDataset.fromDefaultGraph(RdfGraph.fromTriples(triples));
+    final nquadsEncoder = NQuadsEncoder(
+      options: const NQuadsEncoderOptions(canonical: true),
+    );
+    final nquads =
+        nquadsEncoder.encode(dataset, generateNewBlankNodeLabels: false);
+
+    // Compute MD5 hash
+    return md5.convert(utf8.encode(nquads)).toString();
   }
 }
