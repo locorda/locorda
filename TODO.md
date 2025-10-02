@@ -16,10 +16,10 @@
 - [x] Create a unique identifier IRI for identified blank nodes
 - [x] Do not use blank nodes for framework metadata, use fragments with #lcrd- prefix instead. Fix the corresponding FIXMEs to create predictable, hash based fragments
 - [x] Setup Testing Framework similar to official RDF Canonicalization test where there is a csv/json file describing the test cases and referencing input/output files. 
-- [ ] Installation document is needed and installation id generating (needs to be controlled/overridden in tests though)
-- [ ] check hlc clock handling and creation - the hlc clock in the expected test data looks dubious
-- [ ] shall we keep the clock entries as blank nodes, or identify them? If we keep them as blank nodes, then they probably need to be detected and merged as ibn - but that would add extra meta data so it is rather suboptimal. I tend to think that framework data must not be blank nodes, so clock entries would become identifiable iris as well. or we need special handling - doing special handling for clock entries seems sensible anyways, right?
-- [ ] Implement clock hash computation
+- [x] Installation document is needed and installation id generating (needs to be controlled/overridden in tests though)
+- [x] check hlc clock handling and creation - the hlc clock in the expected test data looks dubious
+- [x] shall we keep the clock entries as blank nodes, or identify them? If we keep them as blank nodes, then they probably need to be detected and merged as ibn - but that would add extra meta data so it is rather suboptimal. I tend to think that framework data must not be blank nodes, so clock entries would become identifiable iris as well. or we need special handling - doing special handling for clock entries seems sensible anyways, right?
+- [x] Implement clock hash computation
 - [ ] Use the testing framework to thoroughly test LocordaGraphSync.save()
 - [ ] Store Blank Node identifier IRI mapping in the document metadata, merging in the old data on save (?)
 - [ ] Use context-identification as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
