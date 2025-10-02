@@ -184,7 +184,7 @@ RdfGraph _constructCrdtDocument(
     ...allTriples.where((t) => t.subject == documentIri).map((t) => t.predicate)
   };
   final additionalGraph = oldFrameworkGraph?.subgraph(documentIri,
-      filter: (t, depth) => allManagedPredicates.contains(t)
+      filter: (t, depth) => allManagedPredicates.contains(t.predicate)
           ? TraversalDecision.skip
           : TraversalDecision.include);
   if (additionalGraph != null) {
@@ -207,11 +207,9 @@ List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
       const <IriTerm>[];
   final ourGovernedByFile = IriTerm.validated(
       config.getResourceConfig(resourceType).crdtMapping.toString());
-  final governedByFiles = oldIsGovernedByFiles.contains(ourGovernedByFile)
+  return oldIsGovernedByFiles.contains(ourGovernedByFile)
       ? oldIsGovernedByFiles
-      : oldIsGovernedByFiles.toList()
-    ..add(ourGovernedByFile);
-  return governedByFiles;
+      : ([...oldIsGovernedByFiles, ourGovernedByFile]);
 }
 
 ({RdfGraph appGraph, RdfGraph frameworkGraph}) _splitDocument(

@@ -28,6 +28,110 @@
           "action_ts": {
             "save": "2024-01-01T02:00:00Z"
           }
+        },
+        {
+          "id": "save_02",
+          "title": "Update existing resource - LWW property change",
+          "description": "Updating a LWW-Register property (name) should increment clock and replace old value",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/02_update_lww/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/02_update_lww/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/02_update_lww/expected_stored_graph.ttl"
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_03",
+          "title": "Update existing resource - OR-Set add elements",
+          "description": "Adding elements to an OR-Set property (recipeIngredient) should preserve existing elements and add new ones",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/03_orset_add/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/03_orset_add/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/03_orset_add/expected_stored_graph.ttl"
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_04",
+          "title": "Update existing resource - OR-Set remove element",
+          "description": "Removing an element from an OR-Set property should generate tombstone metadata and remove the element",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/04_orset_remove/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/04_orset_remove/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/04_orset_remove/expected_stored_graph.ttl"
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_05",
+          "title": "Update multiple properties simultaneously",
+          "description": "Updating both LWW (name) and OR-Set (recipeIngredient) properties in single save should increment clock once and handle both CRDT types",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/05_multiple_properties/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/05_multiple_properties/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/05_multiple_properties/expected_stored_graph.ttl"
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_06",
+          "title": "No-op save (identical data)",
+          "description": "Saving identical data should detect no changes, skip save, and leave document unchanged",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/06_noop/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/06_noop/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/06_noop/expected_stored_graph.ttl"
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_07",
+          "title": "Nested resources with fragment identifiers",
+          "description": "Saving a resource with nested fragment-identified resources should handle both resources and their properties correctly",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "input_resource": "test_cases/save/07_nested_fragments/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/07_nested_fragments/expected_stored_graph.ttl"
+          },
+          "action_ts": {
+            "save": "2024-01-01T02:00:00Z"
+          }
         }
       ]
     }

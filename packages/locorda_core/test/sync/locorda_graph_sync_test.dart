@@ -110,6 +110,7 @@ Future<void> _executeSaveTest(
   final documentIri = inputResource.subjects
       .whereType<IriTerm>()
       .map((s) => s.getDocumentIri())
+      .toSet()
       .single;
   final storage = TestStorage();
   if (storedGraphBefore != null) {
