@@ -38,7 +38,15 @@
           "stored_graph_before": "test_cases/save/02_update_lww/stored_graph_before.ttl",
           "input_resource": "test_cases/save/02_update_lww/input_resource.ttl",
           "expected": {
-            "stored_graph": "test_cases/save/02_update_lww/expected_stored_graph.ttl"
+            "stored_graph": "test_cases/save/02_update_lww/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/name",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
           },
           "action_ts": {
             "prepare": {
@@ -56,7 +64,15 @@
           "stored_graph_before": "test_cases/save/03_orset_add/stored_graph_before.ttl",
           "input_resource": "test_cases/save/03_orset_add/input_resource.ttl",
           "expected": {
-            "stored_graph": "test_cases/save/03_orset_add/expected_stored_graph.ttl"
+            "stored_graph": "test_cases/save/03_orset_add/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/recipeIngredient",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
           },
           "action_ts": {
             "prepare": {
@@ -74,7 +90,15 @@
           "stored_graph_before": "test_cases/save/04_orset_remove/stored_graph_before.ttl",
           "input_resource": "test_cases/save/04_orset_remove/input_resource.ttl",
           "expected": {
-            "stored_graph": "test_cases/save/04_orset_remove/expected_stored_graph.ttl"
+            "stored_graph": "test_cases/save/04_orset_remove/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/recipeIngredient",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
           },
           "action_ts": {
             "prepare": {
@@ -92,7 +116,21 @@
           "stored_graph_before": "test_cases/save/05_multiple_properties/stored_graph_before.ttl",
           "input_resource": "test_cases/save/05_multiple_properties/input_resource.ttl",
           "expected": {
-            "stored_graph": "test_cases/save/05_multiple_properties/expected_stored_graph.ttl"
+            "stored_graph": "test_cases/save/05_multiple_properties/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/name",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              },
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/recipeIngredient",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
           },
           "action_ts": {
             "prepare": {
@@ -110,7 +148,8 @@
           "stored_graph_before": "test_cases/save/06_noop/stored_graph_before.ttl",
           "input_resource": "test_cases/save/06_noop/input_resource.ttl",
           "expected": {
-            "stored_graph": "test_cases/save/06_noop/expected_stored_graph.ttl"
+            "stored_graph": "test_cases/save/06_noop/expected_stored_graph.ttl",
+            "property_changes": []
           },
           "action_ts": {
             "prepare": {

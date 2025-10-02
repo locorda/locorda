@@ -100,6 +100,7 @@ Future<void> _executeSaveTest(
       testAssetsDir, expectedJson['stored_graph'] as String)!;
   final expectedInstallation = _readGraphFromPath(
       testAssetsDir, expectedJson['installation'] as String?);
+  final expectedPropertyChanges = _parseExpectedPropertyChanges(expectedJson);
   final timestampFactory =
       TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
 
@@ -157,6 +158,12 @@ Future<void> _executeSaveTest(
   }
   _expectEqualGraphs(stored.document, expectedStoredGraph);
 
+  // Verify property changes if expected
+  if (expectedPropertyChanges != null) {
+    final actualPropertyChanges = await storage.getPropertyChanges(documentIri);
+    _expectEqualPropertyChanges(actualPropertyChanges, expectedPropertyChanges);
+  }
+
   // Verify installation document if expected
   if (expectedInstallation != null) {
     final settings = await storage.getSettings(['installation_iri']);
@@ -202,4 +209,59 @@ SyncGraphConfig _loadConfig(Directory testAssetsDir, String configPath) {
       jsonDecode(configFile.readAsStringSync()) as Map<String, dynamic>;
 
   return SyncGraphConfig.fromJson(configJson);
+}
+
+/// Parse expected property changes from test JSON.
+/// Returns null if property_changes is not specified (meaning: don't test).
+/// Returns empty list if property_changes is specified as empty array.
+List<PropertyChange>? _parseExpectedPropertyChanges(
+    Map<String, dynamic> expectedJson) {
+  if (!expectedJson.containsKey('property_changes')) {
+    return null; // Not specified - don't test property changes
+  }
+
+  final propertyChangesJson = expectedJson['property_changes'] as List<dynamic>;
+  return propertyChangesJson.map((json) {
+    final map = json as Map<String, dynamic>;
+    return PropertyChange(
+      resourceIri: IriTerm(map['resource_iri'] as String),
+      propertyIri: IriTerm(map['property_iri'] as String),
+      changedAtMs: DateTime.parse(map['changed_at'] as String)
+          .millisecondsSinceEpoch,
+      changeLogicalClock: map['logical_clock'] as int,
+    );
+  }).toList();
+}
+
+/// Compare actual and expected property changes (order-independent).
+void _expectEqualPropertyChanges(
+    List<PropertyChange> actual, List<PropertyChange> expected) {
+  // Sort both lists by a consistent key for comparison
+  String key(PropertyChange pc) =>
+      '${pc.resourceIri.value}|${(pc.propertyIri as IriTerm).value}|${pc.changeLogicalClock}';
+
+  final actualSorted = actual.toList()..sort((a, b) => key(a).compareTo(key(b)));
+  final expectedSorted = expected.toList()
+    ..sort((a, b) => key(a).compareTo(key(b)));
+
+  if (actualSorted.length != expectedSorted.length) {
+    fail('Expected ${expectedSorted.length} property changes, '
+        'but got ${actualSorted.length}.\n'
+        'Expected: ${expectedSorted.map((pc) => '${pc.resourceIri.value}#${(pc.propertyIri as IriTerm).value}@${pc.changeLogicalClock}').join(', ')}\n'
+        'Actual: ${actualSorted.map((pc) => '${pc.resourceIri.value}#${(pc.propertyIri as IriTerm).value}@${pc.changeLogicalClock}').join(', ')}');
+  }
+
+  for (var i = 0; i < expectedSorted.length; i++) {
+    final exp = expectedSorted[i];
+    final act = actualSorted[i];
+
+    expect(act.resourceIri, equals(exp.resourceIri),
+        reason: 'Property change $i: resource IRI mismatch');
+    expect(act.propertyIri, equals(exp.propertyIri),
+        reason: 'Property change $i: property IRI mismatch');
+    expect(act.changeLogicalClock, equals(exp.changeLogicalClock),
+        reason: 'Property change $i: logical clock mismatch');
+    expect(act.changedAtMs, equals(exp.changedAtMs),
+        reason: 'Property change $i: timestamp mismatch');
+  }
 }
