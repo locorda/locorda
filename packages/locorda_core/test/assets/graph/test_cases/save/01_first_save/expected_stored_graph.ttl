@@ -1,5 +1,4 @@
 @prefix cm: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
-@prefix doc: <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix mappings: <https://example.org/test/mappings/> .
 @prefix ns1: <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#> .
@@ -7,7 +6,7 @@
 @prefix schema: <https://schema.org/> .
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
 
-doc: a sync:ManagedDocument;
+<tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz> a sync:ManagedDocument;
     foaf:primaryTopic ns1:it;
     cm:clockHash "360824ca935ab53d8d863f8d51ffe104";
     cm:createdAt "2024-01-01T01:00:00.000";
