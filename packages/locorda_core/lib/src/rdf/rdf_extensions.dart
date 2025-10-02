@@ -107,7 +107,8 @@ extension RdfGraphIterableExtensions on Iterable<RdfGraph> {
 
 extension LiteralTermExtensions on LiteralTerm {
   static LiteralTerm dateTime(DateTime dateTime) {
-    return LiteralTerm(dateTime.toIso8601String(), datatype: Xsd.dateTime);
+    return LiteralTerm(dateTime.toUtc().toIso8601String(),
+        datatype: Xsd.dateTime);
   }
 
   static LiteralTerm dateTimeFromMillisecondsSinceEpoch(

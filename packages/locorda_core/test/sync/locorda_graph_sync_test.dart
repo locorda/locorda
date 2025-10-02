@@ -95,8 +95,11 @@ Future<void> _executeSaveTest(
   final inputResource =
       _readGraphFromPath(testAssetsDir, testJson['input_resource'] as String)!;
 
+  final expectedJson = testJson['expected'] as Map<String, dynamic>;
   final expectedStoredGraph = _readGraphFromPath(
-      testAssetsDir, testJson['expected_stored_graph'] as String)!;
+      testAssetsDir, expectedJson['stored_graph'] as String)!;
+  final expectedInstallation = _readGraphFromPath(
+      testAssetsDir, expectedJson['installation'] as String?);
   final timestampFactory =
       TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
 
@@ -152,6 +155,22 @@ Future<void> _executeSaveTest(
     fail('No document stored for $documentIri');
   }
   _expectEqualGraphs(stored.document, expectedStoredGraph);
+
+  // Verify installation document if expected
+  if (expectedInstallation != null) {
+    final settings = await storage.getSettings(['installation_iri']);
+    final installationIriStr = settings['installation_iri'];
+    if (installationIriStr == null) {
+      fail('No installation IRI found in settings');
+    }
+    final installationIri = IriTerm(installationIriStr).getDocumentIri();
+    final storedInstallation = await storage.getDocument(installationIri);
+
+    if (storedInstallation == null) {
+      fail('No installation document stored for $installationIri');
+    }
+    _expectEqualGraphs(storedInstallation.document, expectedInstallation);
+  }
 }
 
 void _expectEqualGraphs(RdfGraph actual, RdfGraph expected) {

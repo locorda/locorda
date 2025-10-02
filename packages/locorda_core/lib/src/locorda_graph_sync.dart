@@ -171,12 +171,11 @@ RdfGraph _constructCrdtDocument(
       documentIri, SyncManagedDocument.crdtClockHash, LiteralTerm(clock.hash)));
 
   // 7. Add creation timestamp (OR-Set semantics for document lifecycle)
-  final creationTime =
-      DateTime.fromMillisecondsSinceEpoch(clock.physicalTime).toIso8601String();
+  final creationTime = DateTime.fromMillisecondsSinceEpoch(clock.physicalTime);
   allTriples.add(Triple(
     documentIri,
     SyncManagedDocument.crdtCreatedAt,
-    LiteralTerm(creationTime),
+    LiteralTermExtensions.dateTime(creationTime),
   ));
 
   // 8. add old/foreign framework triples
