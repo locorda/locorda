@@ -31,7 +31,7 @@ class AlgoFWW_Register {
 
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
-  /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
+  /// Links a resource to a IRI resource representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///

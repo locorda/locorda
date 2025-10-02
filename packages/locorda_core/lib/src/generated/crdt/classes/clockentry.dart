@@ -9,7 +9,7 @@ import 'package:rdf_core/rdf_core.dart';
 
 /// ClockEntry class from Crdt vocabulary
 ///
-/// A single entry in a Hybrid Logical Clock (HLC), mapping an installation ID to both its logical time (causality counter) and physical time (wall-clock timestamp for tie-breaking).
+/// A single entry in a Hybrid Logical Clock (HLC), mapping an installation IRI to both its logical time (causality counter) and physical time (wall-clock timestamp for tie-breaking). NOTE: It is really important that this is not a blank node, but a IRI identified resource where the fragment is used for actually identifying the installation, so that the fragment is stable across different possible backends (and local).
 ///
 /// Inherits from:
 /// - Resource (http://www.w3.org/2000/01/rdf-schema#Resource)
@@ -30,7 +30,7 @@ class CrdtClockEntry {
 
   /// hasClockEntry [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
-  /// Links a resource to a blank node representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
+  /// Links a resource to a IRI resource representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///
@@ -38,14 +38,14 @@ class CrdtClockEntry {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#hasClockEntry',
   );
 
-  /// installationId [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
+  /// installationIri [Expects: http://www.w3.org/2000/01/rdf-schema#Resource]
   ///
-  /// The unique identifier for a client installation within a Hybrid Logical Clock entry. Corresponds to 'client ID' in CRDT literature, but uses 'installation' to avoid confusion with storage backend client identifiers.
+  /// IRI for a client installation within a Hybrid Logical Clock entry.
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry
   ///
-  static const installationId = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#installationId',
+  static const installationIri = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#installationIri',
   );
 
   /// logicalTime [Expects: http://www.w3.org/2001/XMLSchema#long]
