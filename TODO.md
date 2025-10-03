@@ -23,9 +23,9 @@
 - [x] Store Blank Node identifier IRI mapping in the document metadata, merging in the old data on save (?)
 - [x] Use context-identification (aka identified blank node) as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
 - [x] Create tombstones on save where needed (e.g. change detection)
+- [x] What about tombstones for blank nodes - only possible for identified, exceptions else
+- [x] Tests for error cases
 - [ ] Implement namespace / resource identity?
-- [ ] What about tombstones for blank nodes?
-- [ ] Tests for error cases
 - [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil?
 - [ ] Use the testing framework to thoroughly test LocordaGraphSync.save()
 - [ ] test clock merge during save (e.g. when a foreign clock entry existed)
