@@ -674,6 +674,54 @@
             },
             "save": "2024-01-01T02:00:00Z"
           }
+        },
+        {
+          "id": "save_25",
+          "title": "No-op save with identified blank nodes and tombstones",
+          "description": "Re-saving identical data with deep structure of identified blank nodes (ingredients and supplier) including existing tombstones. Should be a complete no-op with no property changes or clock increments.",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/25_no_op_identified_blank_nodes/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/25_no_op_identified_blank_nodes/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/25_no_op_identified_blank_nodes/expected_stored_graph.ttl",
+            "property_changes": []
+          },
+          "action_ts": {
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_26",
+          "title": "No-op save with mixed identified and unidentified blank nodes",
+          "description": "Re-saving identical data with identified ingredients and unidentified supplier. Should be a complete no-op with no property changes or clock increments.",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/26_no_op_mixed_identified_unidentified/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/26_no_op_mixed_identified_unidentified/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/26_no_op_mixed_identified_unidentified/expected_stored_graph.ttl",
+            "property_changes": []
+          },
+          "action_ts": {
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_27",
+          "title": "No-op save with all unidentified blank nodes",
+          "description": "Re-saving identical data with all unidentified blank nodes (ingredients and supplier). Should be a complete no-op with no property changes or clock increments.",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/27_no_op_all_unidentified/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/27_no_op_all_unidentified/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/27_no_op_all_unidentified/expected_stored_graph.ttl",
+            "property_changes": []
+          },
+          "action_ts": {
+            "save": "2024-01-01T02:00:00Z"
+          }
         }
       ]
     }
