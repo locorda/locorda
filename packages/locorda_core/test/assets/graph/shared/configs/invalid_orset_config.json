@@ -1,0 +1,15 @@
+{
+  "resources": [
+    {
+      "typeIri": "https://schema.org/Recipe",
+      "crdtMapping": "https://example.org/test/mappings/recipe-v1-invalid-orset",
+      "indices": [
+        {
+          "type": "FullIndex",
+          "localName": "recipe-index",
+          "itemFetchPolicy": "prefetch"
+        }
+      ]
+    }
+  ]
+}

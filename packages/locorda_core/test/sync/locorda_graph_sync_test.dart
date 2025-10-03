@@ -54,6 +54,10 @@ void main() {
               await _executeSaveTest(testJson, testAssetsDir, urlToPathMap,
                   testBaseTimestamp, baseInstallationId);
               break;
+            case 'save_error':
+              await _executeSaveErrorTest(testJson, testAssetsDir, urlToPathMap,
+                  testBaseTimestamp, baseInstallationId);
+              break;
             default:
               fail('Unknown test suite: $suiteName');
           }
@@ -278,3 +282,93 @@ void _expectEqualPropertyChanges(
 
 String formatChangedProperty(PropertyChange exp) =>
     'resource=${exp.resourceIri.value}, property=${(exp.propertyIri as IriTerm).value}, clock=${exp.changeLogicalClock}, timestamp=${exp.changedAtMs}';
+
+/// Execute a save error test - expects an exception to be thrown
+Future<void> _executeSaveErrorTest(
+    Map<String, dynamic> testJson,
+    Directory testAssetsDir,
+    Map<String, String> urlToPathMap,
+    DateTime baseTimestamp,
+    String? baseInstallationId) async {
+  // Load configuration
+  final config = _loadConfig(testAssetsDir, testJson['config'] as String);
+
+  // Get type IRI from test JSON
+  final typeIri = IriTerm(testJson['typeIri'] as String);
+
+  // Load TTL files
+  final storedGraphBefore = _readGraphFromPath(
+      testAssetsDir, testJson['stored_graph_before'] as String?);
+  final inputResource =
+      _readGraphFromPath(testAssetsDir, testJson['input_resource'] as String)!;
+
+  final expectedJson = testJson['expected'] as Map<String, dynamic>;
+  final expectedErrorType = expectedJson['error_type'] as String;
+  final expectedErrorMessagePattern = expectedJson['error_message_pattern'] as String?;
+
+  final timestampFactory =
+      TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
+
+  // Load action timestamps if provided
+  final actionTs = testJson['action_ts'] as Map<String, dynamic>?;
+
+  // Extract document IRI from input resource
+  final documentIri = inputResource.subjects
+      .whereType<IriTerm>()
+      .map((s) => s.getDocumentIri())
+      .toSet()
+      .single;
+  final storage = TestStorage();
+  if (storedGraphBefore != null) {
+    // Set timestamp for prepare.save if specified
+    setTime(actionTs?['prepare']?['save'], timestampFactory);
+    final now = timestampFactory();
+    storage.saveDocument(
+        documentIri,
+        typeIri,
+        storedGraphBefore,
+        DocumentMetadata(
+          ourPhysicalClock: now.millisecondsSinceEpoch,
+          updatedAt: now.millisecondsSinceEpoch,
+        ),
+        []);
+  }
+
+  final fetcher = TestFetcher(
+    testAssetsDir: testAssetsDir,
+    urlToPathMap: urlToPathMap,
+  );
+
+  // Create installation ID factory if base installation ID provided
+  final installationIdFactory =
+      baseInstallationId != null ? () => baseInstallationId : null;
+
+  final sync = await LocordaGraphSync.setup(
+      backend: TestBackend(),
+      storage: storage,
+      config: config,
+      fetcher: fetcher,
+      physicalTimestampFactory: timestampFactory,
+      installationIdFactory: installationIdFactory);
+
+  // Set timestamp for save action if specified
+  setTime(actionTs?['save'], timestampFactory);
+
+  // Expect the save to throw an error
+  try {
+    await sync.save(typeIri, inputResource);
+    fail('Expected $expectedErrorType to be thrown, but save succeeded');
+  } catch (e) {
+    // Verify error type
+    final actualErrorType = e.runtimeType.toString();
+    expect(actualErrorType, equals(expectedErrorType),
+        reason: 'Expected error type $expectedErrorType but got $actualErrorType');
+
+    // Verify error message pattern if specified
+    if (expectedErrorMessagePattern != null) {
+      final errorMessage = e.toString();
+      expect(errorMessage, contains(expectedErrorMessagePattern),
+          reason: 'Error message "$errorMessage" does not contain expected pattern "$expectedErrorMessagePattern"');
+    }
+  }
+}

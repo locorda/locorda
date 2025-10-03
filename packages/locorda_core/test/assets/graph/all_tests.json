@@ -8,6 +8,7 @@
     "https://example.org/test/mappings/recipe-v1": "shared/mappings/recipe-v1.ttl",
     "https://example.org/test/mappings/recipe-v1-unidentified": "shared/mappings/recipe-v1-unidentified.ttl",
     "https://example.org/test/mappings/recipe-v1-all-unidentified": "shared/mappings/recipe-v1-all-unidentified.ttl",
+    "https://example.org/test/mappings/recipe-v1-invalid-orset": "shared/mappings/recipe-v1-invalid-orset.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/client-installation-v1": "../../../../../spec/mappings/client-installation-v1.ttl"
   },
@@ -718,6 +719,27 @@
           "expected": {
             "stored_graph": "test_cases/save/27_no_op_all_unidentified/expected_stored_graph.ttl",
             "property_changes": []
+          },
+          "action_ts": {
+            "save": "2024-01-01T02:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "suite": "save_error",
+      "description": "Tests for SyncGraphManager.save() error cases",
+      "tests": [
+        {
+          "id": "save_error_01",
+          "title": "OR-Set with unidentified blank nodes",
+          "description": "Attempting to use OR-Set merge strategy with unidentified blank nodes should fail with ArgumentError since OR-Set requires identifiable values for tombstone creation.",
+          "config": "shared/configs/invalid_orset_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "input_resource": "test_cases/save_error/01_orset_unidentified_blank_nodes/input_resource.ttl",
+          "expected": {
+            "error_type": "ArgumentError",
+            "error_message_pattern": "cannot be unidentifed blank nodes"
           },
           "action_ts": {
             "save": "2024-01-01T02:00:00Z"
