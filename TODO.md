@@ -25,10 +25,10 @@
 - [x] Create tombstones on save where needed (e.g. change detection)
 - [x] What about tombstones for blank nodes - only possible for identified, exceptions else
 - [x] Tests for error cases
+- [x] test clock merge during save (e.g. when a foreign clock entry existed) => save_11 test
+- [x] Use the testing framework to thoroughly test LocordaGraphSync.save()
 - [ ] Implement namespace / resource identity?
 - [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil?
-- [ ] Use the testing framework to thoroughly test LocordaGraphSync.save()
-- [ ] test clock merge during save (e.g. when a foreign clock entry existed)
 - [ ] Storage Layer: save locorda indices
 - [ ] Implement locorda index files in db and fill/update them on save
 - [ ] Implement saving/loading/merging documents with local storage persistence
