@@ -7,6 +7,7 @@
   "urlToPathMap": {
     "https://example.org/test/mappings/recipe-v1": "shared/mappings/recipe-v1.ttl",
     "https://example.org/test/mappings/recipe-v1-unidentified": "shared/mappings/recipe-v1-unidentified.ttl",
+    "https://example.org/test/mappings/recipe-v1-all-unidentified": "shared/mappings/recipe-v1-all-unidentified.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/client-installation-v1": "../../../../../spec/mappings/client-installation-v1.ttl"
   },
@@ -637,6 +638,31 @@
               {
                 "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
                 "property_iri": "https://schema.org/provider",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_24",
+          "title": "Chain of unidentified blank nodes, leaf deleted",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/recipeIngredient",
                 "changed_at": "2024-01-01T02:00:00Z",
                 "logical_clock": 2
               }
