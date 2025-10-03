@@ -6,6 +6,7 @@
   },
   "urlToPathMap": {
     "https://example.org/test/mappings/recipe-v1": "shared/mappings/recipe-v1.ttl",
+    "https://example.org/test/mappings/recipe-v1-unidentified": "shared/mappings/recipe-v1-unidentified.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/client-installation-v1": "../../../../../spec/mappings/client-installation-v1.ttl"
   },
@@ -606,6 +607,32 @@
           "input_resource": "test_cases/save/22_multiple_refs_identified_remove_one/input_resource.ttl",
           "expected": {
             "stored_graph": "test_cases/save/22_multiple_refs_identified_remove_one/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                "property_iri": "https://schema.org/provider",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_23",
+          "title": "Shared unidentified blank node referenced from multiple identified resources",
+          "description": "When an unidentified blank node (supplier with no identifying properties) is referenced from two identified resources (tomato and basil ingredients, identified by name) and one reference is removed (basil's provider property), the removal is handled via LWW-Register semantics. The shared unidentified supplier blank node remains since it's still referenced by tomato. No tombstone is created because LWW-Register replaces the value with absence.",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/23_multiple_refs_unidentified_remove_one/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/23_multiple_refs_unidentified_remove_one/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/23_multiple_refs_unidentified_remove_one/expected_stored_graph.ttl",
             "property_changes": [
               {
                 "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",

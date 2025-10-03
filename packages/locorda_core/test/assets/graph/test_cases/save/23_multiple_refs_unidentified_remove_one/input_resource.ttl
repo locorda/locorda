@@ -1,0 +1,25 @@
+@prefix schema: <https://schema.org/> .
+@prefix ex: <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#> .
+
+# Both ingredients still present, but provider removed from basil only
+# Ingredients are identified (by name), supplier is unidentified (no identifying properties)
+# The basil's provider will be removed via LWW-Register semantics (no tombstone needed)
+ex:it a schema:Recipe ;
+    schema:name "Tomato Soup" ;
+    schema:recipeIngredient [
+        a schema:Ingredient ;
+        schema:name "Tomato" ;
+        schema:amount "2" ;
+        schema:unit "cups" ;
+        schema:provider [
+            a schema:Organization ;
+            schema:name "Local Farmers Market" ;
+            schema:telephone "555-1234"
+        ]
+    ], [
+        a schema:Ingredient ;
+        schema:name "Basil" ;
+        schema:amount "1" ;
+        schema:unit "bunch"
+        # No provider - removed via LWW semantics!
+    ] .
