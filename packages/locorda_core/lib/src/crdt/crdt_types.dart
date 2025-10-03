@@ -23,7 +23,7 @@ abstract interface class CrdtType {
   /// Note that you should not simply duplicate the property triples here,
   /// as they are added separately by the merge logic.
   /// Only add true metadata triples needed for the CRDT algorithm like tombstones, counter increments etc.
-  RdfGraph initialValue(
+  Iterable<Node> initialValue(
       {required IriTerm documentIri,
       required RdfGraph appData,
       required IdentifiedBlankNodes<IriTerm> blankNodes,
@@ -34,7 +34,7 @@ abstract interface class CrdtType {
 
   /// Creates the metadata triples for a local property value change.
   /// The returned graph may be empty if no metadata is needed.
-  RdfGraph localValueChange({
+  Iterable<Node> localValueChange({
     required IriTerm documentIri,
     required RdfGraph oldAppData,
     required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
@@ -58,7 +58,7 @@ class LwwRegister implements CrdtType {
   IriTerm get iri => AlgoLWW_Register.classIri;
 
   @override
-  RdfGraph initialValue(
+  Iterable<Node> initialValue(
       {required IriTerm documentIri,
       required RdfGraph appData,
       required IdentifiedBlankNodes<IriTerm> blankNodes,
@@ -67,11 +67,11 @@ class LwwRegister implements CrdtType {
       required List<RdfObject> values,
       required CrdtMergeContext mergeContext}) {
     // No metadata needed for adding a LWW Register value
-    return RdfGraphExtensions.empty;
+    return const <Node>[];
   }
 
   @override
-  RdfGraph localValueChange(
+  Iterable<Node> localValueChange(
       {required IriTerm documentIri,
       required RdfGraph oldAppData,
       required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
@@ -85,7 +85,7 @@ class LwwRegister implements CrdtType {
       required CrdtMergeContext mergeContext}) {
     // FIXME: what about the case when newValues is empty and oldValues is not? Do we need metadata for that?
     // No metadata needed for changing a LWW Register value - one will win based on the clock during merge, that is all
-    return RdfGraphExtensions.empty;
+    return const <Node>[];
   }
 }
 
@@ -97,7 +97,7 @@ class FwwRegister implements CrdtType {
   IriTerm get iri => AlgoFWW_Register.classIri;
 
   @override
-  RdfGraph initialValue(
+  Iterable<Node> initialValue(
       {required IriTerm documentIri,
       required RdfGraph appData,
       required IdentifiedBlankNodes<IriTerm> blankNodes,
@@ -106,11 +106,11 @@ class FwwRegister implements CrdtType {
       required List<RdfObject> values,
       required CrdtMergeContext mergeContext}) {
     // No metadata needed for adding a FWW Register value
-    return RdfGraphExtensions.empty;
+    return const <Node>[];
   }
 
   @override
-  RdfGraph localValueChange(
+  Iterable<Node> localValueChange(
       {required IriTerm documentIri,
       required RdfGraph oldAppData,
       required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
@@ -124,7 +124,7 @@ class FwwRegister implements CrdtType {
       required CrdtMergeContext mergeContext}) {
     // FIXME: what about the case when newValues is empty and oldValues is not? Do we need metadata for that?
     // No metadata needed for changing a FWW Register value - one will win based on the clock during merge, that is all
-    return RdfGraphExtensions.empty;
+    return const <Node>[];
   }
 }
 
@@ -138,7 +138,7 @@ class OrSet implements CrdtType {
   IriTerm get iri => AlgoOR_Set.classIri;
 
   @override
-  RdfGraph initialValue(
+  Iterable<Node> initialValue(
       {required IriTerm documentIri,
       required RdfGraph appData,
       required IdentifiedBlankNodes<IriTerm> blankNodes,
@@ -148,7 +148,7 @@ class OrSet implements CrdtType {
       required CrdtMergeContext mergeContext}) {
     validateBlankNodeValues(values, blankNodes, "Or Set values");
     // No metadata needed for adding a OR Set value
-    return RdfGraphExtensions.empty;
+    return const <Node>[];
   }
 
   void validateBlankNodeValues(List<RdfObject> values,
@@ -163,7 +163,7 @@ class OrSet implements CrdtType {
   }
 
   @override
-  RdfGraph localValueChange(
+  Iterable<Node> localValueChange(
       {required IriTerm documentIri,
       required RdfGraph oldAppData,
       required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
@@ -185,7 +185,7 @@ class OrSet implements CrdtType {
     final removedValues = identifiedOldValues.toSet();
     removedValues.removeAll(identifiedNewValues);
     if (removedValues.isEmpty) {
-      return RdfGraphExtensions.empty;
+      return const <Node>[];
     }
     final deletionDate = timestampFactory();
     final deletionDateTerm = LiteralTermExtensions.dateTime(deletionDate);
@@ -194,7 +194,7 @@ class OrSet implements CrdtType {
               IdentifiedBlankNodeSubject ibn => ibn.identifiers,
               _ => [identifiedValue as RdfObject],
             })
-        .map((value) => mergeContext.metadataGenerator
+        .expand((value) => mergeContext.metadataGenerator
             .createPropertyValueMetadata(
                 documentIri,
                 oldBlankNodes,
@@ -204,8 +204,7 @@ class OrSet implements CrdtType {
                 (metadataSubject) => removedValues
                     .map((rv) => Triple(metadataSubject,
                         RdfStatement.crdtDeletedAt, deletionDateTerm))
-                    .toList()))
-        .mergeGraphs();
+                    .toList()));
   }
 
   Object _identify(RdfObject v, IdentifiedBlankNodes<IriTerm> newBlankNodes) {

@@ -12,16 +12,21 @@
     cm:clockHash "adfa2af6c13b54c71f623cb0bf0554aa";
     cm:createdAt "2024-01-01T00:00:00.000Z"^^xsd:dateTime;
     cm:hasClockEntry ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54;
-    sync:hasStatement ns1:lcrd-stmt-md5-1b2a9046fb09a6dd5ba114df9881602a;
+    sync:hasStatement ns1:lcrd-stmt-md5-oldtombstone;
     sync:isGovernedBy (mappings:recipe-v1);
     sync:managedResourceType schema:Recipe .
 
 ns1:it a schema:Recipe;
     schema:name "Chocolate Cake";
-    schema:recipeIngredient "flour", "sugar", "cocoa" .
+    schema:recipeIngredient "flour", "sugar", "eggs";
+    schema:cookTime "PT30M";
+    schema:prepTime "PT15M" .
 
 ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54 cm:logicalTime 2;
-    cm:physicalTime 1704074400000 .
+    cm:physicalTime 1704067200000 .
 
-ns1:lcrd-stmt-md5-1b2a9046fb09a6dd5ba114df9881602a rdf:subject ns1:nutrition;
-    cm:deletedAt "2024-01-01T03:00:00.000"^^xsd:dateTime .
+# Existing tombstone from a previous deletion
+ns1:lcrd-stmt-md5-oldtombstone rdf:object "cocoa";
+    rdf:predicate schema:recipeIngredient;
+    rdf:subject ns1:it;
+    cm:deletedAt "2024-01-01T00:00:00.001Z"^^xsd:dateTime .

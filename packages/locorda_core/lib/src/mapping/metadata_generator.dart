@@ -11,7 +11,7 @@ class MetadataGenerator {
   MetadataGenerator({required FrameworkIriGenerator frameworkIriGenerator})
       : _frameworkIriGenerator = frameworkIriGenerator;
 
-  RdfGraph createPropertyValueMetadata(
+  Iterable<Node> createPropertyValueMetadata(
           IriTerm documentIri,
           IdentifiedBlankNodes<IriTerm> identifiedBlankNodes,
           RdfSubject subject,
@@ -22,7 +22,7 @@ class MetadataGenerator {
           documentIri, identifiedBlankNodes, subject, createMetadataTriples,
           predicate: predicate, value: value);
 
-  RdfGraph createPropertyMetadata(
+  Iterable<Node> createPropertyMetadata(
           IriTerm documentIri,
           IdentifiedBlankNodes<IriTerm> identifiedBlankNodes,
           RdfSubject subject,
@@ -36,7 +36,7 @@ class MetadataGenerator {
         predicate: predicate,
       );
 
-  RdfGraph createResourceMetadata(
+  Iterable<Node> createResourceMetadata(
           IriTerm documentIri,
           IdentifiedBlankNodes<IriTerm> identifiedBlankNodes,
           RdfSubject subject,
@@ -44,7 +44,7 @@ class MetadataGenerator {
       _createPropertyValueMetadata(
           documentIri, identifiedBlankNodes, subject, createMetadataTriples);
 
-  RdfGraph _createPropertyValueMetadata(
+  Iterable<Node> _createPropertyValueMetadata(
     IriTerm documentIri,
     IdentifiedBlankNodes<IriTerm> identifiedBlankNodes,
     RdfSubject subject,
@@ -82,15 +82,14 @@ class MetadataGenerator {
               'Metadata triples must not contain blank node objects: $metadataTriples');
         }
         final graph = RdfGraph.fromTriples([
-          Triple(documentIri, SyncManagedDocument.hasStatement, stmtIri),
           ..._createIdentifyingTriples(stmtIri, subj, predicate, obj),
           ...metadataTriples,
         ]);
-        return graph;
+        return (stmtIri, graph);
       });
     });
 
-    return graphs.mergeGraphs();
+    return graphs;
   }
 
   List<Triple> _createIdentifyingTriples(RdfSubject idSubject, IriTerm subj,

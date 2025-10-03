@@ -102,7 +102,7 @@ void _validateResourceGraph(
   }
 }
 
-final defaultManagedPredicates = <IriTerm>{
+final _defaultManagedDocumentLevelPredicates = <IriTerm>{
   Rdf.type,
   SyncManagedDocument.managedResourceType,
   SyncManagedDocument.foafPrimaryTopic,
@@ -130,11 +130,12 @@ final defaultManagedPredicates = <IriTerm>{
 RdfGraph _constructCrdtDocument(
   IriTerm documentIri,
   RdfGraph? oldFrameworkGraph,
-  RdfGraph crdtMetadata,
+  List<Node> crdtMetadata,
   List<RdfObject> governedByFiles,
   IriTerm primaryResourceIri,
   IriTerm resourceType,
   RdfGraph resourceGraph,
+  RdfObject createdAt,
   CurrentCrdtClock clock,
   IdentifiedBlankNodes<IriTerm> blankNodeMappings,
 ) {
@@ -174,11 +175,11 @@ RdfGraph _constructCrdtDocument(
       documentIri, SyncManagedDocument.crdtClockHash, LiteralTerm(clock.hash)));
 
   // 7. Add creation timestamp (OR-Set semantics for document lifecycle)
-  final creationTime = DateTime.fromMillisecondsSinceEpoch(clock.physicalTime);
+
   allTriples.add(Triple(
     documentIri,
     SyncManagedDocument.crdtCreatedAt,
-    LiteralTermExtensions.dateTime(creationTime),
+    createdAt,
   ));
 
   // 8. Add blank node mappings for identified blank nodes
@@ -186,20 +187,36 @@ RdfGraph _constructCrdtDocument(
   allTriples.addAll(toBlankNodeMappingTriples(blankNodeMappings, documentIri));
 
   // 9. add old/foreign framework triples
-  final allManagedPredicates = {
-    ...defaultManagedPredicates,
+  final allManagedDocumentLevelPredicates = {
+    ..._defaultManagedDocumentLevelPredicates,
     ...allTriples.where((t) => t.subject == documentIri).map((t) => t.predicate)
   };
   final additionalGraph = oldFrameworkGraph?.subgraph(documentIri,
-      filter: (t, depth) => allManagedPredicates.contains(t.predicate)
-          ? TraversalDecision.skip
-          : TraversalDecision.include);
+      // Really important: do not skip any existing statements from the old framework graph, we need to copy them over!
+      filter: (t, depth) {
+    if (t.subject != documentIri) {
+      // We only filter triples with the document as subject, everything else is included
+      // once we reached it via the non-skipped triples
+      return TraversalDecision.include;
+    }
+    return t.predicate != SyncManagedDocument.hasStatement &&
+            allManagedDocumentLevelPredicates.contains(t.predicate)
+        ? TraversalDecision.skip
+        : TraversalDecision.include;
+  });
   if (additionalGraph != null) {
     allTriples.addAll(additionalGraph.triples);
   }
 
+// FIXME: test cases for non-identified blank nodes
+// FIXME: are identified blank nodes correctly preserved if they were referenced from two places and removed from one?
+
   // 10. Add CRDT metadata (tombstones, counters, etc.)
-  allTriples.addAll(crdtMetadata.triples);
+  for (final node in crdtMetadata) {
+    final (iri, graph) = node;
+    allTriples.add(Triple(documentIri, SyncManagedDocument.hasStatement, iri));
+    allTriples.addAll(graph.triples);
+  }
 
   // 11. Add all original resource triples
   allTriples.addAll(resourceGraph.triples);
@@ -274,30 +291,6 @@ List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
     appGraph: document.without(frameworkGraph),
     frameworkGraph: frameworkGraph
   );
-}
-
-/// Extracts blank node mappings from a stored document's framework graph.
-///
-/// Returns a map from canonical IRI (fragment identifier) to blank node term.
-/// This mapping is used to preserve existing blank node identities across saves.
-Map<IriTerm, BlankNodeTerm> _extractBlankNodeMappings(
-    RdfGraph frameworkGraph, IriTerm documentIri) {
-  final mappings = <IriTerm, BlankNodeTerm>{};
-
-  // Get all sync:hasBlankNodeMapping links from the document
-  final mappingIris = frameworkGraph.getMultiValueObjects<IriTerm>(
-      documentIri, SyncManagedDocument.hasBlankNodeMapping);
-
-  for (final mappingIri in mappingIris) {
-    // Get the blank node this mapping points to
-    final blankNode = frameworkGraph.findSingleObject<BlankNodeTerm>(
-        mappingIri, Sync.blankNode);
-    if (blankNode != null) {
-      mappings[mappingIri] = blankNode;
-    }
-  }
-
-  return mappings;
 }
 
 /// Main facade for the locorda system.
@@ -622,17 +615,21 @@ class LocordaGraphSync {
             'No property changes detected for $resourceIri, skipping save');
         return;
       }
-
+      final createdAt = oldFrameworkGraph?.findSingleObject<LiteralTerm>(
+              documentIri, SyncManagedDocument.crdtCreatedAt) ??
+          LiteralTermExtensions.dateTime(DateTime.fromMillisecondsSinceEpoch(
+              physicalTimestamp,
+              isUtc: true));
       // 5. Construct complete CRDT document with framework metadata
       final crdtDocument = _constructCrdtDocument(
         documentIri,
         oldFrameworkGraph,
-        // FIXME: what about the metadata from the old document? Don't we need to merge that too?
         crdtMetadata.metadataGraph,
         governedByFiles,
         resourceIri,
         type,
         appData,
+        createdAt,
         clock,
         appBlankNodes,
       );
@@ -989,7 +986,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
       IdentifiedBlankNodes<IriTerm> oldAppBlankNodes,
       MergeContract mergeContract,
       CurrentCrdtClock clock) {
-    final metadataGraphs = <RdfGraph>[];
+    final metadataGraphs = <Node>[];
     final propertyChanges = <PropertyChange>[];
 
     // Get all identifiable subjects from both graphs
@@ -1014,7 +1011,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
     // Process deleted subjects - add resource tombstones
     for (final deletedSubject in deletedSubjects) {
       _log.fine('Deleted subject detected: ${deletedSubject.subject} ');
-      metadataGraphs.add(_metadataGenerator.createResourceMetadata(
+      metadataGraphs.addAll(_metadataGenerator.createResourceMetadata(
           documentIri,
           oldAppBlankNodes,
           deletedSubject.subject,
@@ -1054,9 +1051,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
           mergeContext: context,
         );
 
-        if (metadataGraph.isNotEmpty) {
-          metadataGraphs.add(metadataGraph);
-        }
+        metadataGraphs.addAll(metadataGraph);
 
         // Record property change using canonical IRI (for identified blank nodes) or IRI
         for (final propertyChangeIri in addedSubject.propertyChangeIris) {
@@ -1121,9 +1116,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
           mergeContext: context,
         );
 
-        if (metadataGraph.isNotEmpty) {
-          metadataGraphs.add(metadataGraph);
-        }
+        metadataGraphs.addAll(metadataGraph);
 
         // Record property change using canonical IRI (for identified blank nodes) or IRI
         for (final propertyChangeIri in entry.key.propertyChangeIris) {
@@ -1139,7 +1132,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
     }
 
     return _CrdtMetadataResult(
-      metadataGraph: metadataGraphs.mergeGraphs(),
+      metadataGraph: metadataGraphs,
       propertyChanges: propertyChanges,
     );
   }
@@ -1291,7 +1284,7 @@ bool _isEqualSet<T>(Set<T> set, Set<T> set2) {
 
 /// Result of CRDT metadata generation containing metadata triples and property changes
 class _CrdtMetadataResult {
-  final RdfGraph metadataGraph;
+  final List<Node> metadataGraph;
   final List<PropertyChange> propertyChanges;
 
   _CrdtMetadataResult({

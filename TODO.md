@@ -20,14 +20,16 @@
 - [x] check hlc clock handling and creation - the hlc clock in the expected test data looks dubious
 - [x] shall we keep the clock entries as blank nodes, or identify them? If we keep them as blank nodes, then they probably need to be detected and merged as ibn - but that would add extra meta data so it is rather suboptimal. I tend to think that framework data must not be blank nodes, so clock entries would become identifiable iris as well. or we need special handling - doing special handling for clock entries seems sensible anyways, right?
 - [x] Implement clock hash computation
+- [x] Store Blank Node identifier IRI mapping in the document metadata, merging in the old data on save (?)
+- [x] Use context-identification (aka identified blank node) as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
+- [x] Create tombstones on save where needed (e.g. change detection)
+- [ ] Implement namespace / resource identity?
+- [ ] What about tombstones for blank nodes?
+- [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil?
 - [ ] Use the testing framework to thoroughly test LocordaGraphSync.save()
 - [ ] test clock merge during save (e.g. when a foreign clock entry existed)
-- [ ] Store Blank Node identifier IRI mapping in the document metadata, merging in the old data on save (?)
-- [ ] Use context-identification as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
 - [ ] Storage Layer: save locorda indices
 - [ ] Implement locorda index files in db and fill/update them on save
-- [ ] Create tombstones on save where needed (e.g. change detection)
-- [ ] What about tombstones for blank nodes?
 - [ ] Implement saving/loading/merging documents with local storage persistence
   - Currently `save()` just emits hydration events without storage persistence
   - Need CRDT merging logic and actual storage operations => CRDT merging is not part of pure persistence
