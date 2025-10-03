@@ -81,7 +81,16 @@ RdfGraph? _readGraphFromPath(Directory testAssetsDir, String? path) {
   return turtle.decode(content);
 }
 
-Future<void> _executeSaveTest(
+typedef TestData = ({
+  IriTerm documentIri,
+  Map<String, dynamic> expectedJson,
+  IriTerm typeIri,
+  RdfGraph? storedGraphBefore,
+  RdfGraph inputResource,
+  Map<String, dynamic>? actionTs,
+  SyncGraphConfig config
+});
+Future<TestData> _prepare(
     Map<String, dynamic> testJson,
     Directory testAssetsDir,
     Map<String, String> urlToPathMap,
@@ -100,13 +109,6 @@ Future<void> _executeSaveTest(
       _readGraphFromPath(testAssetsDir, testJson['input_resource'] as String)!;
 
   final expectedJson = testJson['expected'] as Map<String, dynamic>;
-  final expectedStoredGraph = _readGraphFromPath(
-      testAssetsDir, expectedJson['stored_graph'] as String)!;
-  final expectedInstallation = _readGraphFromPath(
-      testAssetsDir, expectedJson['installation'] as String?);
-  final expectedPropertyChanges = _parseExpectedPropertyChanges(expectedJson);
-  final timestampFactory =
-      TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
 
   // Load action timestamps if provided
   final actionTs = testJson['action_ts'] as Map<String, dynamic>?;
@@ -117,7 +119,36 @@ Future<void> _executeSaveTest(
       .map((s) => s.getDocumentIri())
       .toSet()
       .single;
-  final storage = TestStorage();
+
+  return (
+    documentIri: documentIri,
+    expectedJson: expectedJson,
+    typeIri: typeIri,
+    storedGraphBefore: storedGraphBefore,
+    inputResource: inputResource,
+    actionTs: actionTs,
+    config: config
+  );
+}
+
+Future<void> _executeSave(
+    TestData testData,
+    TestStorage storage,
+    Directory testAssetsDir,
+    Map<String, String> urlToPathMap,
+    DateTime baseTimestamp,
+    String? baseInstallationId) async {
+  final timestampFactory =
+      TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
+  final (
+    documentIri: documentIri,
+    expectedJson: _,
+    typeIri: typeIri,
+    storedGraphBefore: storedGraphBefore,
+    inputResource: inputResource,
+    actionTs: actionTs,
+    config: config
+  ) = testData;
   if (storedGraphBefore != null) {
     // Set timestamp for prepare.save if specified
     setTime(actionTs?['prepare']?['save'], timestampFactory);
@@ -154,6 +185,27 @@ Future<void> _executeSaveTest(
   setTime(actionTs?['save'], timestampFactory);
 
   await sync.save(typeIri, inputResource);
+}
+
+Future<void> _executeSaveTest(
+    Map<String, dynamic> testJson,
+    Directory testAssetsDir,
+    Map<String, String> urlToPathMap,
+    DateTime baseTimestamp,
+    String? baseInstallationId) async {
+  final testData = await _prepare(
+      testJson, testAssetsDir, urlToPathMap, baseTimestamp, baseInstallationId);
+  final storage = TestStorage();
+  await _executeSave(testData, storage, testAssetsDir, urlToPathMap,
+      baseTimestamp, baseInstallationId);
+
+  final expectedJson = testData.expectedJson;
+  final documentIri = testData.documentIri;
+  final expectedStoredGraph = _readGraphFromPath(
+      testAssetsDir, expectedJson['stored_graph'] as String)!;
+  final expectedInstallation = _readGraphFromPath(
+      testAssetsDir, expectedJson['installation'] as String?);
+  final expectedPropertyChanges = _parseExpectedPropertyChanges(expectedJson);
 
   final stored = await storage.getDocument(documentIri);
 
@@ -290,85 +342,30 @@ Future<void> _executeSaveErrorTest(
     Map<String, String> urlToPathMap,
     DateTime baseTimestamp,
     String? baseInstallationId) async {
-  // Load configuration
-  final config = _loadConfig(testAssetsDir, testJson['config'] as String);
-
-  // Get type IRI from test JSON
-  final typeIri = IriTerm(testJson['typeIri'] as String);
-
-  // Load TTL files
-  final storedGraphBefore = _readGraphFromPath(
-      testAssetsDir, testJson['stored_graph_before'] as String?);
-  final inputResource =
-      _readGraphFromPath(testAssetsDir, testJson['input_resource'] as String)!;
-
-  final expectedJson = testJson['expected'] as Map<String, dynamic>;
+  final testData = await _prepare(
+      testJson, testAssetsDir, urlToPathMap, baseTimestamp, baseInstallationId);
+  final expectedJson = testData.expectedJson;
   final expectedErrorType = expectedJson['error_type'] as String;
-  final expectedErrorMessagePattern = expectedJson['error_message_pattern'] as String?;
-
-  final timestampFactory =
-      TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
-
-  // Load action timestamps if provided
-  final actionTs = testJson['action_ts'] as Map<String, dynamic>?;
-
-  // Extract document IRI from input resource
-  final documentIri = inputResource.subjects
-      .whereType<IriTerm>()
-      .map((s) => s.getDocumentIri())
-      .toSet()
-      .single;
+  final expectedErrorMessagePattern =
+      expectedJson['error_message_pattern'] as String?;
   final storage = TestStorage();
-  if (storedGraphBefore != null) {
-    // Set timestamp for prepare.save if specified
-    setTime(actionTs?['prepare']?['save'], timestampFactory);
-    final now = timestampFactory();
-    storage.saveDocument(
-        documentIri,
-        typeIri,
-        storedGraphBefore,
-        DocumentMetadata(
-          ourPhysicalClock: now.millisecondsSinceEpoch,
-          updatedAt: now.millisecondsSinceEpoch,
-        ),
-        []);
-  }
-
-  final fetcher = TestFetcher(
-    testAssetsDir: testAssetsDir,
-    urlToPathMap: urlToPathMap,
-  );
-
-  // Create installation ID factory if base installation ID provided
-  final installationIdFactory =
-      baseInstallationId != null ? () => baseInstallationId : null;
-
-  final sync = await LocordaGraphSync.setup(
-      backend: TestBackend(),
-      storage: storage,
-      config: config,
-      fetcher: fetcher,
-      physicalTimestampFactory: timestampFactory,
-      installationIdFactory: installationIdFactory);
-
-  // Set timestamp for save action if specified
-  setTime(actionTs?['save'], timestampFactory);
-
-  // Expect the save to throw an error
   try {
-    await sync.save(typeIri, inputResource);
+    await _executeSave(testData, storage, testAssetsDir, urlToPathMap,
+        baseTimestamp, baseInstallationId);
     fail('Expected $expectedErrorType to be thrown, but save succeeded');
   } catch (e) {
     // Verify error type
     final actualErrorType = e.runtimeType.toString();
     expect(actualErrorType, equals(expectedErrorType),
-        reason: 'Expected error type $expectedErrorType but got $actualErrorType');
+        reason:
+            'Expected error type $expectedErrorType but got $actualErrorType');
 
     // Verify error message pattern if specified
     if (expectedErrorMessagePattern != null) {
       final errorMessage = e.toString();
       expect(errorMessage, contains(expectedErrorMessagePattern),
-          reason: 'Error message "$errorMessage" does not contain expected pattern "$expectedErrorMessagePattern"');
+          reason:
+              'Error message "$errorMessage" does not contain expected pattern "$expectedErrorMessagePattern"');
     }
   }
 }
