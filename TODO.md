@@ -25,6 +25,7 @@
 - [x] Create tombstones on save where needed (e.g. change detection)
 - [ ] Implement namespace / resource identity?
 - [ ] What about tombstones for blank nodes?
+- [ ] Tests for error cases
 - [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil?
 - [ ] Use the testing framework to thoroughly test LocordaGraphSync.save()
 - [ ] test clock merge during save (e.g. when a foreign clock entry existed)

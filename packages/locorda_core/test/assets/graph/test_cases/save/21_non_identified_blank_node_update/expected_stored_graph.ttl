@@ -1,0 +1,26 @@
+@prefix cm: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix mappings: <https://example.org/test/mappings/> .
+@prefix ns1: <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <https://schema.org/> .
+@prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz> a sync:ManagedDocument;
+    foaf:primaryTopic ns1:it;
+    cm:clockHash "adfa2af6c13b54c71f623cb0bf0554aa";
+    cm:createdAt "2024-01-01T00:00:00.000Z"^^xsd:dateTime;
+    cm:hasClockEntry ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54;
+    sync:isGovernedBy (mappings:recipe-v1);
+    sync:managedResourceType schema:Recipe .
+
+ns1:it a schema:Recipe;
+    schema:name "Tomato Soup";
+    schema:nutrition _:nutrition2 .
+
+_:nutrition2 a schema:NutritionInformation;
+    schema:calories "300" .
+
+ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54 cm:logicalTime 2;
+    cm:physicalTime 1704074400000 .

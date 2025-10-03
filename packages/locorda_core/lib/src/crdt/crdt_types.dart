@@ -155,7 +155,7 @@ class OrSet implements CrdtType {
       IdentifiedBlankNodes<IriTerm> blankNodes, String lbl) {
     for (final value in values) {
       if (value is BlankNodeTerm) {
-        if (blankNodes.getIdentifiedNodes(value) == null) {
+        if (!blankNodes.hasIdentifiedNodes(value)) {
           throw ArgumentError('$lbl cannot be unidentifed blank nodes: $value');
         }
       }
@@ -197,10 +197,9 @@ class OrSet implements CrdtType {
         .expand((value) => mergeContext.metadataGenerator
             .createPropertyValueMetadata(
                 documentIri,
-                oldBlankNodes,
-                newSubject,
+                IdTerm.create(newSubject, newBlankNodes),
                 predicate,
-                value,
+                IdTerm.create(value, oldBlankNodes),
                 (metadataSubject) => removedValues
                     .map((rv) => Triple(metadataSubject,
                         RdfStatement.crdtDeletedAt, deletionDateTerm))
@@ -209,12 +208,7 @@ class OrSet implements CrdtType {
 
   Object _identify(RdfObject v, IdentifiedBlankNodes<IriTerm> newBlankNodes) {
     if (v is BlankNodeTerm) {
-      final iris = newBlankNodes.getIdentifiedNodes(v);
-      if (iris == null || iris.isEmpty) {
-        throw ArgumentError(
-            'Or Set values cannot be unidentifed blank nodes: $v');
-      }
-      return IdentifiedBlankNodeSubject(v, iris);
+      return IdentifiedBlankNodeSubject(v, newBlankNodes.getIdentifiedNodes(v));
     } else {
       return v;
     }

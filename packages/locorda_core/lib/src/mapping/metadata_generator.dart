@@ -13,24 +13,20 @@ class MetadataGenerator {
 
   Iterable<Node> createPropertyValueMetadata(
           IriTerm documentIri,
-          IdentifiedBlankNodes<IriTerm> identifiedBlankNodes,
-          RdfSubject subject,
+          IdTerm<RdfSubject> subject,
           RdfPredicate predicate,
-          RdfObject value,
+          IdTerm<RdfObject> value,
           List<Triple> Function(RdfSubject) createMetadataTriples) =>
-      _createPropertyValueMetadata(
-          documentIri, identifiedBlankNodes, subject, createMetadataTriples,
+      _createPropertyValueMetadata(documentIri, subject, createMetadataTriples,
           predicate: predicate, value: value);
 
   Iterable<Node> createPropertyMetadata(
           IriTerm documentIri,
-          IdentifiedBlankNodes<IriTerm> identifiedBlankNodes,
-          RdfSubject subject,
+          IdTerm<RdfSubject> subject,
           RdfPredicate predicate,
           List<Triple> Function(RdfSubject) createMetadataTriples) =>
       _createPropertyValueMetadata(
         documentIri,
-        identifiedBlankNodes,
         subject,
         createMetadataTriples,
         predicate: predicate,
@@ -38,26 +34,23 @@ class MetadataGenerator {
 
   Iterable<Node> createResourceMetadata(
           IriTerm documentIri,
-          IdentifiedBlankNodes<IriTerm> identifiedBlankNodes,
-          RdfSubject subject,
+          IdTerm<RdfSubject> subject,
           List<Triple> Function(RdfSubject) createMetadataTriples) =>
-      _createPropertyValueMetadata(
-          documentIri, identifiedBlankNodes, subject, createMetadataTriples);
+      _createPropertyValueMetadata(documentIri, subject, createMetadataTriples);
 
   Iterable<Node> _createPropertyValueMetadata(
     IriTerm documentIri,
-    IdentifiedBlankNodes<IriTerm> identifiedBlankNodes,
-    RdfSubject subject,
+    IdTerm<RdfSubject> subject,
     List<Triple> Function(RdfSubject) createMetadataTriples, {
     RdfPredicate? predicate,
-    RdfObject? value,
+    IdTerm<RdfObject>? value,
   }) {
-    final expandedSubject =
-        expandLocalSubjectIris(subject, identifiedBlankNodes);
-    final List<RdfObject>? expandedObject = switch (value) {
+    final expandedSubject = expandLocalSubjectIris(subject);
+    final List<RdfObject>? expandedObject = switch (value?.value) {
       LiteralTerm lt => [lt],
       IriTerm iri => [iri],
-      BlankNodeTerm ibn => expandLocalSubjectIris(ibn, identifiedBlankNodes),
+      BlankNodeTerm ibn =>
+        value!.identifiers ?? (throw UnidentifiedBlankNodeException(ibn)),
       null => null
     };
 
@@ -75,9 +68,7 @@ class MetadataGenerator {
             documentIri, 'stmt', idGraph.triples,
             labels: {temporaryIdSubject: 'stmt0'});
         final metadataTriples = createMetadataTriples(stmtIri);
-        if (metadataTriples.any((m) =>
-            m.object is BlankNodeTerm &&
-            identifiedBlankNodes.isNotIdentified(m.object as BlankNodeTerm))) {
+        if (metadataTriples.any((m) => m.object is BlankNodeTerm)) {
           throw ArgumentError(
               'Metadata triples must not contain blank node objects: $metadataTriples');
         }
@@ -103,13 +94,11 @@ class MetadataGenerator {
     ];
   }
 
-  List<IriTerm> expandLocalSubjectIris(
-      RdfSubject subject, IdentifiedBlankNodes<IriTerm> identifiedBlankNodes) {
-    final result = switch (subject) {
+  List<IriTerm> expandLocalSubjectIris(IdTerm<RdfSubject> subject) {
+    final result = switch (subject.value) {
       IriTerm iri => [iri],
-      BlankNodeTerm ibn => identifiedBlankNodes.getIdentifiedNodes(ibn) ??
-          (throw ArgumentError(
-              'No IRI found for blank node $ibn - unidentified blank nodes are not supported here.')),
+      BlankNodeTerm bn =>
+        subject.identifiers ?? (throw UnidentifiedBlankNodeException(bn)),
     };
     if (!result.every(LocalResourceLocator.isLocalIri)) {
       throw ArgumentError(
@@ -117,4 +106,23 @@ class MetadataGenerator {
     }
     return result;
   }
+}
+
+class IdTerm<T extends RdfTerm> {
+  final T value;
+  final List<IriTerm>? identifiers;
+
+  IdTerm._(this.value, this.identifiers);
+
+  factory IdTerm.create(
+      T value, IdentifiedBlankNodes<IriTerm> identifiedBlankNodes) {
+    return switch (value) {
+      BlankNodeTerm ibn => identifiedBlankNodes.hasIdentifiedNodes(ibn)
+          ? IdTerm._(ibn as T, identifiedBlankNodes.getIdentifiedNodes(ibn))
+          : IdTerm._(value, null),
+      _ => IdTerm._(value, null)
+    };
+  }
+  @override
+  String toString() => 'IdentifiedOrTerm($value, $identifiers)';
 }

@@ -11,7 +11,7 @@
    # Import standard CRDT framework mappings
    mc:imports ( mappings:core-v1 ) ;
    # Define recipe-specific class mappings
-   mc:classMapping ( <#recipe> <#nutrition> <#ingredient> ) .
+   mc:classMapping ( <#recipe> <#nutrition> <#ingredient> <#supplier> ) .
 
 <#recipe> a mc:ClassMapping;
    mc:appliesToClass schema:Recipe;
@@ -31,4 +31,11 @@
    mc:rule
      [ mc:predicate schema:name; algo:mergeWith algo:LWW_Register; mc:isIdentifying true ],
      [ mc:predicate schema:amount; algo:mergeWith algo:LWW_Register ],
-     [ mc:predicate schema:unit; algo:mergeWith algo:LWW_Register ] .
+     [ mc:predicate schema:unit; algo:mergeWith algo:LWW_Register ],
+     [ mc:predicate schema:provider; algo:mergeWith algo:OR_Set ] .
+
+<#supplier> a mc:ClassMapping;
+   mc:appliesToClass schema:Organization;
+   mc:rule
+     [ mc:predicate schema:name; algo:mergeWith algo:LWW_Register; mc:isIdentifying true ],
+     [ mc:predicate schema:telephone; algo:mergeWith algo:LWW_Register ] .

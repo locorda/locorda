@@ -191,14 +191,14 @@ RdfGraph _constructCrdtDocument(
     ..._defaultManagedDocumentLevelPredicates,
     ...allTriples.where((t) => t.subject == documentIri).map((t) => t.predicate)
   };
-  final additionalGraph = oldFrameworkGraph?.subgraph(documentIri,
-      // Really important: do not skip any existing statements from the old framework graph, we need to copy them over!
-      filter: (t, depth) {
+  final additionalGraph =
+      oldFrameworkGraph?.subgraph(documentIri, filter: (t, depth) {
     if (t.subject != documentIri) {
       // We only filter triples with the document as subject, everything else is included
       // once we reached it via the non-skipped triples
       return TraversalDecision.include;
     }
+    // Really important: do not skip any existing statements from the old framework graph, we need to copy them over!
     return t.predicate != SyncManagedDocument.hasStatement &&
             allManagedDocumentLevelPredicates.contains(t.predicate)
         ? TraversalDecision.skip
@@ -534,6 +534,8 @@ class LocordaGraphSync {
   /// 3. Hydration stream automatically emits update
   /// 4. Schedule async Pod sync
   Future<void> save(IriTerm type, RdfGraph appData) async {
+    RdfGraph? oldDocument;
+    RdfGraph? crdtDocument;
     try {
       // Validate input parameters
       if (appData.isEmpty) {
@@ -572,7 +574,8 @@ class LocordaGraphSync {
         _log.warning('Failed to load existing document $documentIri: $e');
         // Continue with save - treat as new document
       }
-      final oldDocument = existingStoredDocument?.document;
+      oldDocument = existingStoredDocument?.document;
+
       final governedByFiles =
           _computeIsGovernedBy(oldDocument, documentIri, _config, type);
 
@@ -621,7 +624,7 @@ class LocordaGraphSync {
               physicalTimestamp,
               isUtc: true));
       // 5. Construct complete CRDT document with framework metadata
-      final crdtDocument = _constructCrdtDocument(
+      crdtDocument = _constructCrdtDocument(
         documentIri,
         oldFrameworkGraph,
         crdtMetadata.metadataGraph,
@@ -677,9 +680,29 @@ class LocordaGraphSync {
 
       _log.info(
           'Successfully saved document $documentIri with ${propertyChanges.length} property changes');
+    } on UnidentifiedBlankNodeException catch (e, stackTrace) {
+      _log.severe('Save operation failed for type $type', e, stackTrace);
+      final blankNode = e.blankNode;
+      throwIfUsedIn(stackTrace, "Old Doument", oldDocument, blankNode);
+      throwIfUsedIn(stackTrace, "New App Data", appData, blankNode);
+      throwIfUsedIn(stackTrace, "New Doument", crdtDocument, blankNode);
+      rethrow;
     } catch (e, stackTrace) {
       _log.severe('Save operation failed for type $type', e, stackTrace);
       rethrow;
+    }
+  }
+
+  void throwIfUsedIn(StackTrace stackTrace, String context,
+      RdfGraph? oldDocument, BlankNodeTerm blankNode) {
+    if (oldDocument != null) {
+      final subjectTriples = oldDocument.findTriples(subject: blankNode);
+      final objectTriples = oldDocument.findTriples(object: blankNode);
+      if (subjectTriples.isNotEmpty || objectTriples.isNotEmpty) {
+        final ex = UnidentifiedBlankNodeWithContextException(blankNode, context,
+            subjectTriples.toList(), objectTriples.toList());
+        Error.throwWithStackTrace(ex, stackTrace);
+      }
     }
   }
 
@@ -970,9 +993,9 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         if (subject is IriTerm) {
           return IdentifiedIriSubject(subject);
         } else if (subject is BlankNodeTerm) {
-          final identifier = blankNodes.getIdentifiedNodes(subject);
-          if (identifier != null) {
-            return IdentifiedBlankNodeSubject(subject, identifier);
+          if (blankNodes.hasIdentifiedNodes(subject)) {
+            return IdentifiedBlankNodeSubject(
+                subject, blankNodes.getIdentifiedNodes(subject));
           }
         }
         return null; // Unidentified blank node
@@ -1013,8 +1036,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
       _log.fine('Deleted subject detected: ${deletedSubject.subject} ');
       metadataGraphs.addAll(_metadataGenerator.createResourceMetadata(
           documentIri,
-          oldAppBlankNodes,
-          deletedSubject.subject,
+          IdTerm.create(deletedSubject.subject, oldAppBlankNodes),
           (metadataSubject) => [
                 Triple(
                     metadataSubject,
@@ -1209,8 +1231,12 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
 
     // For blank nodes, check if they're identified and equal
     if (oldValue is BlankNodeTerm && newValue is BlankNodeTerm) {
-      final oldIdentifiers = oldBlankNodes.getIdentifiedNodes(oldValue);
-      final newIdentifiers = newBlankNodes.getIdentifiedNodes(newValue);
+      final oldIdentifiers = oldBlankNodes.hasIdentifiedNodes(oldValue)
+          ? oldBlankNodes.getIdentifiedNodes(oldValue)
+          : null;
+      final newIdentifiers = newBlankNodes.hasIdentifiedNodes(newValue)
+          ? newBlankNodes.getIdentifiedNodes(newValue)
+          : null;
 
       // If both are identified, check if they share any identifier
       if (oldIdentifiers != null && newIdentifiers != null) {

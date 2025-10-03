@@ -117,8 +117,17 @@ class IdentifiedBlankNodes<T> {
       : _identifiedMap = identifiedMap;
 
   /// Get all identified blank nodes for a specific blank node term
-  List<T>? getIdentifiedNodes(BlankNodeTerm blankNode) =>
-      _identifiedMap[blankNode];
+  bool hasIdentifiedNodes(BlankNodeTerm blankNode) =>
+      _identifiedMap[blankNode] != null &&
+      _identifiedMap[blankNode]!.isNotEmpty;
+
+  List<T> getIdentifiedNodes(BlankNodeTerm blankNode) {
+    final nodes = _identifiedMap[blankNode];
+    if (nodes == null || nodes.isEmpty) {
+      throw UnidentifiedBlankNodeException(blankNode);
+    }
+    return nodes;
+  }
 
   /// Get all blank node terms that have been identified
   Iterable<BlankNodeTerm> get identifiedBlankNodes => _identifiedMap.keys;
@@ -132,6 +141,44 @@ class IdentifiedBlankNodes<T> {
   /// Get read-only access to the complete mapping
   Map<BlankNodeTerm, List<T>> get identifiedMap =>
       Map.unmodifiable(_identifiedMap);
+}
+
+class UnidentifiedBlankNodeException implements Exception {
+  final BlankNodeTerm blankNode;
+
+  UnidentifiedBlankNodeException(this.blankNode);
+
+  @override
+  String toString() =>
+      'UnidentifiedBlankNodeException: The blank node $blankNode could not be identified.';
+}
+
+class UnidentifiedBlankNodeWithContextException implements Exception {
+  final BlankNodeTerm blankNode;
+  final String context;
+  final List<Triple> subjectTriples;
+  final List<Triple> objectTriples;
+
+  UnidentifiedBlankNodeWithContextException(
+
+      this.blankNode, this.context, this.subjectTriples, this.objectTriples);
+
+  @override
+  String toString() {
+    final msg = '''
+UnidentifiedBlankNodeWithContextException: The blank node $blankNode could not be identified.
+
+It is found in the following triples of $context:
+
+As subject:
+${subjectTriples.map((t) => '  $t').join('\n')}
+
+As object:
+${objectTriples.map((t) => '  $t').join('\n')}
+
+    ''';
+    return msg;
+  }
 }
 
 class IdentifiedBlankNodeBuilder {
