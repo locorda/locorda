@@ -21,6 +21,7 @@
 - [x] shall we keep the clock entries as blank nodes, or identify them? If we keep them as blank nodes, then they probably need to be detected and merged as ibn - but that would add extra meta data so it is rather suboptimal. I tend to think that framework data must not be blank nodes, so clock entries would become identifiable iris as well. or we need special handling - doing special handling for clock entries seems sensible anyways, right?
 - [x] Implement clock hash computation
 - [ ] Use the testing framework to thoroughly test LocordaGraphSync.save()
+- [ ] test clock merge during save (e.g. when a foreign clock entry existed)
 - [ ] Store Blank Node identifier IRI mapping in the document metadata, merging in the old data on save (?)
 - [ ] Use context-identification as a base for `List<PropertyChange>` passed to storage layer instead of IriTerm for resource identification
 - [ ] Storage Layer: save locorda indices

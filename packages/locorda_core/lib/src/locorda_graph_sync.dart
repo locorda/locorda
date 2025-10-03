@@ -111,6 +111,8 @@ final defaultManagedPredicates = <IriTerm>{
   SyncManagedDocument.crdtClockHash,
   SyncManagedDocument.crdtCreatedAt,
   SyncManagedDocument.crdtDeletedAt,
+  SyncManagedDocument.hasBlankNodeMapping,
+  SyncManagedDocument.hasStatement
 };
 
 /// Constructs a complete CRDT-managed document with framework metadata.
@@ -134,6 +136,7 @@ RdfGraph _constructCrdtDocument(
   IriTerm resourceType,
   RdfGraph resourceGraph,
   CurrentCrdtClock clock,
+  IdentifiedBlankNodes<IriTerm> blankNodeMappings,
 ) {
   final allTriples = <Triple>[];
 
@@ -178,7 +181,11 @@ RdfGraph _constructCrdtDocument(
     LiteralTermExtensions.dateTime(creationTime),
   ));
 
-  // 8. add old/foreign framework triples
+  // 8. Add blank node mappings for identified blank nodes
+  // Create framework-reserved fragment identifiers and map them to blank nodes
+  allTriples.addAll(toBlankNodeMappingTriples(blankNodeMappings, documentIri));
+
+  // 9. add old/foreign framework triples
   final allManagedPredicates = {
     ...defaultManagedPredicates,
     ...allTriples.where((t) => t.subject == documentIri).map((t) => t.predicate)
@@ -191,13 +198,47 @@ RdfGraph _constructCrdtDocument(
     allTriples.addAll(additionalGraph.triples);
   }
 
-  // 9. Add CRDT metadata (tombstones, counters, etc.)
+  // 10. Add CRDT metadata (tombstones, counters, etc.)
   allTriples.addAll(crdtMetadata.triples);
 
-  // 10. Add all original resource triples
+  // 11. Add all original resource triples
   allTriples.addAll(resourceGraph.triples);
 
   return allTriples.toRdfGraph();
+}
+
+Iterable<Triple> toBlankNodeMappingTriples(
+    IdentifiedBlankNodes<IriTerm> blankNodeMappings,
+    IriTerm documentIri) sync* {
+  for (final entry in blankNodeMappings.identifiedMap.entries) {
+    final blankNode = entry.key;
+    final canonicalIris = entry.value;
+
+    for (final canonicalIri in canonicalIris) {
+      // Add sync:hasBlankNodeMapping link from document to mapping
+      yield Triple(
+        documentIri,
+        SyncManagedDocument.hasBlankNodeMapping,
+        canonicalIri,
+      );
+
+      // Add the mapping itself: canonicalIri sync:blankNode _:blankNode
+      yield Triple(
+        canonicalIri,
+        Sync.blankNode,
+        blankNode,
+      );
+      // Optimization: do not add the type for the mapping - it is not strictly necessary
+      /*
+      // Add type for the mapping
+      yield Triple(
+        canonicalIri,
+        Rdf.type,
+        SyncBlankNodeMapping.classIri,
+      );
+      */
+    }
+  }
 }
 
 List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
@@ -233,6 +274,30 @@ List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
     appGraph: document.without(frameworkGraph),
     frameworkGraph: frameworkGraph
   );
+}
+
+/// Extracts blank node mappings from a stored document's framework graph.
+///
+/// Returns a map from canonical IRI (fragment identifier) to blank node term.
+/// This mapping is used to preserve existing blank node identities across saves.
+Map<IriTerm, BlankNodeTerm> _extractBlankNodeMappings(
+    RdfGraph frameworkGraph, IriTerm documentIri) {
+  final mappings = <IriTerm, BlankNodeTerm>{};
+
+  // Get all sync:hasBlankNodeMapping links from the document
+  final mappingIris = frameworkGraph.getMultiValueObjects<IriTerm>(
+      documentIri, SyncManagedDocument.hasBlankNodeMapping);
+
+  for (final mappingIri in mappingIris) {
+    // Get the blank node this mapping points to
+    final blankNode = frameworkGraph.findSingleObject<BlankNodeTerm>(
+        mappingIri, Sync.blankNode);
+    if (blankNode != null) {
+      mappings[mappingIri] = blankNode;
+    }
+  }
+
+  return mappings;
 }
 
 /// Main facade for the locorda system.
@@ -569,6 +634,7 @@ class LocordaGraphSync {
         type,
         appData,
         clock,
+        appBlankNodes,
       );
 
       final updatedAtTimestamp = physicalTimestamp;
@@ -901,19 +967,19 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
     }).toList();
   }
 
-  Iterable<_IdentifiedRdfSubject> _getIdentifiedSubjects(
+  Iterable<IdentifiedRdfSubject> _getIdentifiedSubjects(
           RdfGraph graph, IdentifiedBlankNodes<IriTerm> blankNodes) =>
       graph.subjects.map((subject) {
         if (subject is IriTerm) {
-          return _IdentifiedIriSubject(subject);
+          return IdentifiedIriSubject(subject);
         } else if (subject is BlankNodeTerm) {
           final identifier = blankNodes.getIdentifiedNodes(subject);
           if (identifier != null) {
-            return _IdentifiedBlankNodeSubject(subject, identifier);
+            return IdentifiedBlankNodeSubject(subject, identifier);
           }
         }
         return null; // Unidentified blank node
-      }).whereType<_IdentifiedRdfSubject>();
+      }).whereType<IdentifiedRdfSubject>();
 
   _CrdtMetadataResult _generateCrdtMetadataForChanges(
       IriTerm documentIri,
@@ -930,7 +996,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
     final identifiedSubjects =
         _getIdentifiedSubjects(appData, appBlankNodes).toSet();
     final oldIdentifiedSubjects = oldAppGraph == null
-        ? const <_IdentifiedRdfSubject>{}
+        ? const <IdentifiedRdfSubject>{}
         : _getIdentifiedSubjects(oldAppGraph, oldAppBlankNodes).toSet();
 
     // Partition subjects into added, deleted, and common
@@ -992,11 +1058,10 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
           metadataGraphs.add(metadataGraph);
         }
 
-        // Record property change
-        if (subjectTerm is IriTerm) {
-          //FIXME: restriction to IriTerm is wrong
+        // Record property change using canonical IRI (for identified blank nodes) or IRI
+        for (final propertyChangeIri in addedSubject.propertyChangeIris) {
           propertyChanges.add(PropertyChange(
-            resourceIri: subjectTerm,
+            resourceIri: propertyChangeIri,
             propertyIri: predicate,
             changedAtMs: clock.physicalTime,
             changeLogicalClock: clock.logicalTime,
@@ -1060,16 +1125,16 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
           metadataGraphs.add(metadataGraph);
         }
 
-        // Record property change (only for IRI subjects - blank nodes don't get tracked in storage)
-        if (subjectTerm is IriTerm) {
-          // FIXME: restriction to IriTerm is wrong
+        // Record property change using canonical IRI (for identified blank nodes) or IRI
+        for (final propertyChangeIri in entry.key.propertyChangeIris) {
           propertyChanges.add(PropertyChange(
-            resourceIri: subjectTerm,
+            resourceIri: propertyChangeIri,
             propertyIri: predicate,
             changedAtMs: clock.physicalTime,
             changeLogicalClock: clock.logicalTime,
           ));
         }
+        _log.fine('Property change detected on $subjectTerm for $predicate');
       }
     }
 
@@ -1245,55 +1310,4 @@ class _HydrationStreamSubscription implements HydrationSubscription {
 
   @override
   bool get isActive => _subscription.isPaused == false;
-}
-
-sealed class _IdentifiedRdfSubject {
-  RdfSubject get subject;
-}
-
-class _IdentifiedIriSubject extends _IdentifiedRdfSubject {
-  final IriTerm iri;
-
-  _IdentifiedIriSubject(this.iri);
-
-  @override
-  RdfSubject get subject => iri;
-
-  @override
-  int get hashCode => iri.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      other is _IdentifiedIriSubject && other.iri == iri;
-}
-
-class _IdentifiedBlankNodeSubject extends _IdentifiedRdfSubject {
-  final BlankNodeTerm blankNode;
-  final List<IriTerm> identifiers;
-
-  _IdentifiedBlankNodeSubject(this.blankNode, this.identifiers);
-
-  @override
-  RdfSubject get subject => blankNode;
-
-  // Two identified blank nodes are considered equal if they share at least one identifier,
-  // so we cannot implement hashCode properly since we cannot know here which
-  // of the identifiers will match. So the only way to get a consistent behaviour
-  // is to return a constant hashCode and do a full comparison in operator==.
-  @override
-  int get hashCode => 0;
-
-  @override
-  bool operator ==(Object other) {
-    if (other is! _IdentifiedBlankNodeSubject) {
-      return false;
-    }
-    // Actually, we consider two identified blank nodes equal if they share at least one identifier
-
-    if (identifiers.any((id) => other.identifiers.contains(id))) {
-      return true;
-    }
-
-    return false;
-  }
 }

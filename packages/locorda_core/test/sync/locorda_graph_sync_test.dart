@@ -226,8 +226,8 @@ List<PropertyChange>? _parseExpectedPropertyChanges(
     return PropertyChange(
       resourceIri: IriTerm(map['resource_iri'] as String),
       propertyIri: IriTerm(map['property_iri'] as String),
-      changedAtMs: DateTime.parse(map['changed_at'] as String)
-          .millisecondsSinceEpoch,
+      changedAtMs:
+          DateTime.parse(map['changed_at'] as String).millisecondsSinceEpoch,
       changeLogicalClock: map['logical_clock'] as int,
     );
   }).toList();
@@ -240,28 +240,41 @@ void _expectEqualPropertyChanges(
   String key(PropertyChange pc) =>
       '${pc.resourceIri.value}|${(pc.propertyIri as IriTerm).value}|${pc.changeLogicalClock}';
 
-  final actualSorted = actual.toList()..sort((a, b) => key(a).compareTo(key(b)));
+  final actualSorted = actual.toList()
+    ..sort((a, b) => key(a).compareTo(key(b)));
   final expectedSorted = expected.toList()
     ..sort((a, b) => key(a).compareTo(key(b)));
 
   if (actualSorted.length != expectedSorted.length) {
     fail('Expected ${expectedSorted.length} property changes, '
         'but got ${actualSorted.length}.\n'
-        'Expected: ${expectedSorted.map((pc) => '${pc.resourceIri.value}#${(pc.propertyIri as IriTerm).value}@${pc.changeLogicalClock}').join(', ')}\n'
-        'Actual: ${actualSorted.map((pc) => '${pc.resourceIri.value}#${(pc.propertyIri as IriTerm).value}@${pc.changeLogicalClock}').join(', ')}');
+        '\nExpected: \n\t${expectedSorted.map(formatChangedProperty).join('\n\t')}\n'
+        '\nActual: \n\t${actualSorted.map(formatChangedProperty).join('\n\t')}');
   }
 
   for (var i = 0; i < expectedSorted.length; i++) {
     final exp = expectedSorted[i];
     final act = actualSorted[i];
 
-    expect(act.resourceIri, equals(exp.resourceIri),
-        reason: 'Property change $i: resource IRI mismatch');
-    expect(act.propertyIri, equals(exp.propertyIri),
-        reason: 'Property change $i: property IRI mismatch');
-    expect(act.changeLogicalClock, equals(exp.changeLogicalClock),
-        reason: 'Property change $i: logical clock mismatch');
-    expect(act.changedAtMs, equals(exp.changedAtMs),
-        reason: 'Property change $i: timestamp mismatch');
+    // Build a detailed context message for this property change comparison
+    String context() => '\n'
+        '\nExpected:\n\t${formatChangedProperty(exp)}\n'
+        '\nActual:\n\t${formatChangedProperty(act)}';
+
+    if (act.resourceIri != exp.resourceIri) {
+      fail('Property change #$i: resource IRI mismatch${context()}');
+    }
+    if (act.propertyIri != exp.propertyIri) {
+      fail('Property change #$i: property IRI mismatch${context()}');
+    }
+    if (act.changeLogicalClock != exp.changeLogicalClock) {
+      fail('Property change #$i: logical clock mismatch${context()}');
+    }
+    if (act.changedAtMs != exp.changedAtMs) {
+      fail('Property change #$i: timestamp mismatch${context()}');
+    }
   }
 }
+
+String formatChangedProperty(PropertyChange exp) =>
+    'resource=${exp.resourceIri.value}, property=${(exp.propertyIri as IriTerm).value}, clock=${exp.changeLogicalClock}, timestamp=${exp.changedAtMs}';

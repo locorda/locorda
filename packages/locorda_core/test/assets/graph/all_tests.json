@@ -299,6 +299,148 @@
             },
             "save": "2024-01-01T02:00:00Z"
           }
+        },
+        {
+          "id": "save_12",
+          "title": "First save with identified blank nodes",
+          "description": "Saving a resource with identified blank nodes should generate canonical fragment IRIs and create sync:hasBlankNodeMapping entries",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "input_resource": "test_cases/save/12_blank_node_first_save/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/12_blank_node_first_save/expected_stored_graph.ttl"
+          },
+          "action_ts": {
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_13",
+          "title": "Update preserves identified blank node mappings",
+          "description": "Updating a resource with existing identified blank node mappings should preserve those mappings and not create duplicates",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/13_blank_node_preserved/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/13_blank_node_preserved/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/13_blank_node_preserved/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/name",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_14",
+          "title": "Update identified blank node properties",
+          "description": "Changing properties of an identified blank node should track the change and preserve the canonical mapping",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/14_update_blank_node_property/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/14_update_blank_node_property/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/14_update_blank_node_property/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-74f4d0cc07fa8ce00b8856defa9a0e31",
+                "property_iri": "https://schema.org/amount",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_15",
+          "title": "Add new identified blank node to existing set",
+          "description": "Adding a new identified blank node to an OR-Set should create a new mapping and track the property change",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/15_add_blank_node/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/15_add_blank_node/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/15_add_blank_node/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/recipeIngredient",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              },
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                "property_iri": "https://schema.org/amount",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              },
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                "property_iri": "https://schema.org/unit",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              },
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                "property_iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              },
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                "property_iri": "https://schema.org/name",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_16",
+          "title": "Remove identified blank node from set",
+          "description": "Removing an identified blank node from an OR-Set should generate a tombstone using the canonical IRI and preserve the mapping",
+          "config": "shared/configs/basic_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "stored_graph_before": "test_cases/save/16_remove_blank_node/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/16_remove_blank_node/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/16_remove_blank_node/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                "property_iri": "https://schema.org/recipeIngredient",
+                "changed_at": "2024-01-01T02:00:00Z",
+                "logical_clock": 2
+              }
+            ]
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-01T00:00:00Z"
+            },
+            "save": "2024-01-01T02:00:00Z"
+          }
         }
       ]
     }

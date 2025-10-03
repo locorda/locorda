@@ -141,10 +141,12 @@ class IdentifiedBlankNodeBuilder {
       : _iriGenerator = iriGenerator;
 
   IdentifiedBlankNodes<IriTerm> computeCanonicalBlankNodes(
-      IriTerm documentIri, RdfGraph graph, MergeContract mergeContract) {
-    return computeIdentifiedBlankNodes<IriTerm>(graph, mergeContract,
-        (ibn) => _iriGenerator.generateCanonicalBlankNodeIri(documentIri, ibn));
-  }
+          IriTerm documentIri, RdfGraph graph, MergeContract mergeContract) =>
+      computeIdentifiedBlankNodes<IriTerm>(
+          graph,
+          mergeContract,
+          (ibn) =>
+              _iriGenerator.generateCanonicalBlankNodeIri(documentIri, ibn));
 
   IdentifiedBlankNodes<T> computeIdentifiedBlankNodes<T>(RdfGraph graph,
       MergeContract mergeContract, T Function(IdentifiedBlankNode) converter) {
@@ -310,4 +312,66 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
   }).toList();
   identifiedBlankNodes[blankNode] = ips;
   return ips;
+}
+
+sealed class IdentifiedRdfSubject {
+  RdfSubject get subject;
+
+  /// Get the IRI to use for property change tracking.
+  /// For IRI subjects, returns the IRI itself.
+  /// For identified blank nodes, returns the first canonical IRI.
+  List<IriTerm> get propertyChangeIris;
+}
+
+class IdentifiedIriSubject extends IdentifiedRdfSubject {
+  final IriTerm iri;
+
+  IdentifiedIriSubject(this.iri);
+
+  @override
+  RdfSubject get subject => iri;
+
+  @override
+  List<IriTerm> get propertyChangeIris => [iri];
+
+  @override
+  int get hashCode => iri.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is IdentifiedIriSubject && other.iri == iri;
+}
+
+class IdentifiedBlankNodeSubject extends IdentifiedRdfSubject {
+  final BlankNodeTerm blankNode;
+  final List<IriTerm> identifiers;
+
+  IdentifiedBlankNodeSubject(this.blankNode, this.identifiers);
+
+  @override
+  RdfSubject get subject => blankNode;
+
+  @override
+  List<IriTerm> get propertyChangeIris => identifiers;
+
+  // Two identified blank nodes are considered equal if they share at least one identifier,
+  // so we cannot implement hashCode properly since we cannot know here which
+  // of the identifiers will match. So the only way to get a consistent behaviour
+  // is to return a constant hashCode and do a full comparison in operator==.
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! IdentifiedBlankNodeSubject) {
+      return false;
+    }
+    // Actually, we consider two identified blank nodes equal if they share at least one identifier
+
+    if (identifiers.any((id) => other.identifiers.contains(id))) {
+      return true;
+    }
+
+    return false;
+  }
 }

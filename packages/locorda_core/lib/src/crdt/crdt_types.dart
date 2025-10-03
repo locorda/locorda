@@ -177,15 +177,23 @@ class OrSet implements CrdtType {
       required CrdtMergeContext mergeContext}) {
     validateBlankNodeValues(newValues, newBlankNodes, "Or Set values");
     validateBlankNodeValues(oldValues, oldBlankNodes, "Old Or Set values");
+    final identifiedNewValues =
+        newValues.map((v) => _identify(v, newBlankNodes)).toSet();
+    final identifiedOldValues =
+        oldValues.map((v) => _identify(v, oldBlankNodes)).toSet();
     // for an OR set, we need to add tombstones for removed values
-    final removedValues = oldValues.toSet();
-    removedValues.removeAll(newValues);
+    final removedValues = identifiedOldValues.toSet();
+    removedValues.removeAll(identifiedNewValues);
     if (removedValues.isEmpty) {
       return RdfGraphExtensions.empty;
     }
     final deletionDate = timestampFactory();
     final deletionDateTerm = LiteralTermExtensions.dateTime(deletionDate);
     return removedValues
+        .expand((identifiedValue) => switch (identifiedValue) {
+              IdentifiedBlankNodeSubject ibn => ibn.identifiers,
+              _ => [identifiedValue as RdfObject],
+            })
         .map((value) => mergeContext.metadataGenerator
             .createPropertyValueMetadata(
                 documentIri,
@@ -198,6 +206,19 @@ class OrSet implements CrdtType {
                         RdfStatement.crdtDeletedAt, deletionDateTerm))
                     .toList()))
         .mergeGraphs();
+  }
+
+  Object _identify(RdfObject v, IdentifiedBlankNodes<IriTerm> newBlankNodes) {
+    if (v is BlankNodeTerm) {
+      final iris = newBlankNodes.getIdentifiedNodes(v);
+      if (iris == null || iris.isEmpty) {
+        throw ArgumentError(
+            'Or Set values cannot be unidentifed blank nodes: $v');
+      }
+      return IdentifiedBlankNodeSubject(v, iris);
+    } else {
+      return v;
+    }
   }
 }
 

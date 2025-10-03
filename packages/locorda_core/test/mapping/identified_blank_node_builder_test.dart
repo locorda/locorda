@@ -5,11 +5,10 @@ import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
-IdentifiedBlankNodes computeIdentifiedBlankNodes(
-    RdfGraph graph, MergeContract mergeContract) {
-  return IdentifiedBlankNodeBuilder(iriGenerator: FrameworkIriGenerator())
-      .computeIdentifiedBlankNodes(graph, mergeContract, (ibn) => ibn);
-}
+IdentifiedBlankNodes<IdentifiedBlankNode> computeIdentifiedBlankNodes(
+        RdfGraph graph, MergeContract mergeContract) =>
+    IdentifiedBlankNodeBuilder(iriGenerator: FrameworkIriGenerator())
+        .computeIdentifiedBlankNodes(graph, mergeContract, (ibn) => ibn);
 
 void main() {
   group('BlankNodeParent', () {

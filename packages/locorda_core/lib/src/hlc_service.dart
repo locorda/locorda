@@ -89,18 +89,22 @@ class HlcService {
       }
       return acc;
     });
+    final Node entry;
+    final int logicalTime;
+    if (ours.length > 0) {
+      final ourClockEntry = ours.single;
+      final oldLogicalTime = ourClockEntry.$2.findSingleObject<LiteralTerm>(
+          ourClockEntry.$1, CrdtClockEntry.logicalTime)!;
+      logicalTime = oldLogicalTime.integerValue + 1;
+      entry = _buildClockEntryNode(
+          documentIri, physicalTime.millisecondsSinceEpoch, logicalTime);
+    } else {
+      logicalTime = 1;
+      entry = _buildClockEntryNode(
+          documentIri, physicalTime.millisecondsSinceEpoch, logicalTime);
+    }
 
-    final ourClockEntry = ours.single;
-    final oldLogicalTimeTriple = ourClockEntry.$2
-        .findTriples(predicate: CrdtClockEntry.logicalTime)
-        .single;
-    final oldLogicalTimeTerm = oldLogicalTimeTriple.object as LiteralTerm;
-    final oldLogicalTime = int.parse(oldLogicalTimeTerm.value);
-    final logicalTime = oldLogicalTime + 1;
-    final ourNewEntry = _buildClockEntryNode(
-        documentIri, physicalTime.millisecondsSinceEpoch, logicalTime);
-
-    var fullClock = [ourNewEntry, ...theirs];
+    var fullClock = [entry, ...theirs];
 
     return (
       logicalTime: logicalTime,
