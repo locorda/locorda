@@ -139,4 +139,14 @@ class Mc {
   static const stopTraversal = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#stopTraversal',
   );
+
+  /// IRI for mc:isPathIdentifying [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  ///
+  /// A boolean flag used within mc:Rule to declare that blank nodes at this predicate are identified by their property path. Only valid for single-valued properties (algorithms that support single-valued semantics like LWW-Register, Immutable, FWW-Register). When true, the framework generates canonical IRIs based on the property path from the parent resource rather than property values. This enables property-level CRDT tracking within blank nodes at single-valued properties.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
+  ///
+  static const isPathIdentifying = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#isPathIdentifying',
+  );
 }

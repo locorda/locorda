@@ -27,6 +27,8 @@
 - [x] Tests for error cases
 - [x] test clock merge during save (e.g. when a foreign clock entry existed) => save_11 test
 - [x] Use the testing framework to thoroughly test LocordaGraphSync.save()
+- [ ] Concept addition: I think we need to revisit the identified blank node concept - Pure, path based should work as well 
+- [ ] LocordaSync: Make sure that all patterns like IRI-Identified Sub-Resources, identified blank nodes and unidentified blank nodes are shown. Ideas: Weblink in Note for (classical) identified blank node, Comment in Note for IRI-Identified sub-content, CategoryDisplaySettings in Category for single-path-identified blank node, and ??? for sets of unidentified blank nodes
 - [ ] Implement namespace / resource identity?
 - [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil?
 - [ ] Storage Layer: save locorda indices
@@ -35,7 +37,8 @@
   - Currently `save()` just emits hydration events without storage persistence
   - Need CRDT merging logic and actual storage operations => CRDT merging is not part of pure persistence
   - This unblocks the example app's core functionality
- 
+- [ ] rdf_vocabulary_to_dart: failed to load RDF graph for graphs marked as skipped must not be an error, build must not be marked as "failed" due to this
+
 ### Priority 2: SyncManager with Status Stream
 - [ ] Create SyncManager with status stream and automatic sync triggering
   - Essential for user-facing sync control and feedback

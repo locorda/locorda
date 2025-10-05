@@ -70,3 +70,9 @@ sync:parent a rdf:Property;
     rdfs:label "parent";
     rdfs:comment "Links an identified blank node to its parent resource within an identification graph during canonical fragment computation.";
     rdfs:domain sync:IdentificationGraph .
+
+sync:parentProperty a rdf:Property;
+    rdfs:label "parent property";
+    rdfs:comment "The property IRI connecting the parent resource to this path-identified blank node. Used in identification graphs to represent the property path for path-based canonical IRI generation.";
+    rdfs:domain sync:IdentificationGraph;
+    rdfs:range rdf:Property .

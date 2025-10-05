@@ -1,3 +1,4 @@
+import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
@@ -56,13 +57,17 @@ class IdentifiedBlankNodeParent {
 class IdentifiedBlankNode {
   final IdentifiedBlankNodeParent _parent;
   final Map<RdfPredicate, List<RdfObject>> _identifyingProperties;
+  final RdfPredicate? _parentPredicate;
 
-  IdentifiedBlankNode(this._parent, this._identifyingProperties)
-      : assert(_identifyingProperties.isNotEmpty);
+  IdentifiedBlankNode(this._parent, this._identifyingProperties,
+      [this._parentPredicate])
+      : assert(_identifyingProperties.isNotEmpty || _parentPredicate != null,
+            'Blank node must be identified by either identifying properties or parent predicate');
 
   IdentifiedBlankNodeParent get parent => _parent;
   Map<RdfPredicate, List<RdfObject>> get identifyingProperties =>
       Map.unmodifiable(_identifyingProperties);
+  RdfPredicate? get parentPredicate => _parentPredicate;
 
   Set<BlankNodeTerm> get _circuitCheck =>
       _parent._circuitCheck ?? _parent._blankNode?._circuitCheck ?? {};
@@ -70,6 +75,7 @@ class IdentifiedBlankNode {
   @override
   int get hashCode => Object.hashAll([
         _parent,
+        _parentPredicate,
         _identifyingProperties.length,
         // Hash based on sorted entries for consistent results
         ..._identifyingProperties.entries
@@ -84,6 +90,7 @@ class IdentifiedBlankNode {
     if (other is! IdentifiedBlankNode) return false;
 
     return _parent == other._parent &&
+        _parentPredicate == other._parentPredicate &&
         _identifyingProperties.length == other._identifyingProperties.length &&
         _identifyingProperties.entries.every((entry) {
           final otherValue = other._identifyingProperties[entry.key];
@@ -95,7 +102,7 @@ class IdentifiedBlankNode {
 
   @override
   String toString() {
-    return 'IdentifiedBlankNode(parent: $_parent, properties: $_identifyingProperties)';
+    return 'IdentifiedBlankNode(parent: $_parent, parentPredicate: $_parentPredicate, properties: $_identifyingProperties)';
   }
 
   Iterable<IdentifiedBlankNode> blankNodeChain() sync* {
@@ -160,7 +167,6 @@ class UnidentifiedBlankNodeWithContextException implements Exception {
   final List<Triple> objectTriples;
 
   UnidentifiedBlankNodeWithContextException(
-
       this.blankNode, this.context, this.subjectTriples, this.objectTriples);
 
   @override
@@ -206,24 +212,23 @@ class IdentifiedBlankNodeBuilder {
         blankNode: mergeContract.getIdentifyingPredicates(graph, blankNode)
     };
 
-    // 2nd: find the parent path(s)
-    final triples =
-        graph.triples.where((t) => blankNodeSubjects.contains(t.object));
-    final parents = triples.fold(<BlankNodeTerm, List<RdfSubject>>{}, (r, t) {
-      r
-          .putIfAbsent(t.object as BlankNodeTerm, () => <RdfSubject>[])
-          .add(t.subject);
+    // 2nd: find the parent path(s) - store full triples to access predicates
+    final parentTriples = graph.triples
+        .where((t) => blankNodeSubjects.contains(t.object))
+        .fold(<BlankNodeTerm, List<Triple>>{}, (r, t) {
+      r.putIfAbsent(t.object as BlankNodeTerm, () => <Triple>[]).add(t);
       return r;
     });
+
     final identifiedBlankNodes = <BlankNodeTerm, List<IdentifiedBlankNode>>{};
 
     // Process nodes in dependency order: IRI-rooted first, then blank-node-rooted
     final sortedNodes =
-        _sortByDependencies(blankNodeSubjects.toList(), parents);
+        _sortByDependencies(blankNodeSubjects.toList(), parentTriples);
 
     for (final blankNode in sortedNodes) {
-      _addIdentifiedBlankNodes(graph, blankNode, identifyingPredicates, parents,
-          identifiedBlankNodes);
+      _addIdentifiedBlankNodes(graph, blankNode, identifyingPredicates,
+          parentTriples, identifiedBlankNodes, mergeContract);
     }
     // ok, now we might have to clean up circular references
     final Set<BlankNodeTerm> circularReferences = identifiedBlankNodes.values
@@ -269,13 +274,13 @@ class IdentifiedBlankNodeBuilder {
 
 /// Sort blank nodes to process IRI-rooted nodes first, which helps with circular dependencies
 List<BlankNodeTerm> _sortByDependencies(List<BlankNodeTerm> blankNodes,
-    Map<BlankNodeTerm, List<RdfSubject>> parents) {
+    Map<BlankNodeTerm, List<Triple>> parentTriples) {
   final iriRooted = <BlankNodeTerm>[];
   final blankRooted = <BlankNodeTerm>[];
 
   for (final node in blankNodes) {
-    final nodeParents = parents[node] ?? [];
-    final hasIriParent = nodeParents.any((p) => p is IriTerm);
+    final nodeParents = parentTriples[node] ?? [];
+    final hasIriParent = nodeParents.any((t) => t.subject is IriTerm);
     if (hasIriParent) {
       iriRooted.add(node);
     } else {
@@ -291,8 +296,9 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
     RdfGraph graph,
     BlankNodeTerm blankNode,
     Map<BlankNodeTerm, Set<RdfPredicate>> identifyingPredicates,
-    Map<BlankNodeTerm, List<RdfSubject>> parents,
+    Map<BlankNodeTerm, List<Triple>> parentTriples,
     Map<BlankNodeTerm, List<IdentifiedBlankNode>> identifiedBlankNodes,
+    MergeContract mergeContract,
     {Set<BlankNodeTerm>? circuit}) {
   if (identifiedBlankNodes.containsKey(blankNode)) {
     return identifiedBlankNodes[blankNode]!;
@@ -301,17 +307,43 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
   circuitCheck.add(blankNode);
   final identifyingPreds = identifyingPredicates[blankNode];
 
-  final parentSubjects = parents[blankNode];
-  if (identifyingPreds == null || identifyingPreds.isEmpty) {
-    // cannot identify this blank node
+  final parentTriplesForNode = parentTriples[blankNode];
+  if (parentTriplesForNode == null || parentTriplesForNode.isEmpty) {
+    _log.warning(
+        "Found blank node ${blankNode} that cannot be identified because it has no parent.");
     return const [];
   }
-  final identifyingProps = {
-    for (final pred in identifyingPreds)
-      pred: graph.getMultiValueObjects(blankNode, pred)
-  };
-  // verify the objects of the identifying properties - we currently do not
-  // supprort identifying properties that are blank nodes themselves
+
+  // Check if this blank node can be identified
+  final hasPropertyIdentification =
+      identifyingPreds != null && identifyingPreds.isNotEmpty;
+
+  // Check for path identification - any parent predicate with mc:isPathIdentifying
+  final pathIdentifyingTriples = parentTriplesForNode.where((triple) {
+    final resourceType =
+        graph.findSingleObject<IriTerm>(triple.subject, Rdf.type);
+    final rule =
+        mergeContract.getEffectivePredicateRule(resourceType, triple.predicate);
+    return rule?.isPathIdentifying == true;
+  }).toList();
+
+  final hasPathIdentification = pathIdentifyingTriples.isNotEmpty;
+
+  if (!hasPropertyIdentification && !hasPathIdentification) {
+    // Cannot identify this blank node - no identification mechanism
+    return const [];
+  }
+
+  // Build identifying properties map (empty if only path-identified)
+  final identifyingProps = hasPropertyIdentification
+      ? {
+          for (final pred in identifyingPreds)
+            pred: graph.getMultiValueObjects(blankNode, pred)
+        }
+      : <RdfPredicate, List<RdfObject>>{};
+
+  // Verify the objects of the identifying properties - we currently do not
+  // support identifying properties that are blank nodes themselves
   for (final entry in identifyingProps.entries) {
     final hasBlankNodeObject = entry.value.any((o) => o is BlankNodeTerm);
     if (hasBlankNodeObject) {
@@ -319,18 +351,21 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
           "Found identifiable Blank node ${blankNode} that cannot be identified because one of its identifying properties (${entry.key}) has a blank node as object.");
     }
   }
-  if (parentSubjects == null || parentSubjects.isEmpty) {
-    _log.warning(
-        "Found identifiable Blank node ${blankNode} that cannot be identified because it has no parent.");
-    // cannot identify this blank node - it has no parent
-    return const [];
-  }
-  final ips = parentSubjects.expand<IdentifiedBlankNode>((ps) {
-    switch (ps) {
+
+  // Generate IdentifiedBlankNode instances for each parent
+  final ips = parentTriplesForNode.expand<IdentifiedBlankNode>((triple) {
+    final parentSubject = triple.subject;
+    final parentPredicate = triple.predicate;
+
+    // Determine if this specific parent path is path-identifying
+    final isPathIdentifying = pathIdentifyingTriples.contains(triple);
+    final effectiveParentPredicate = isPathIdentifying ? parentPredicate : null;
+
+    switch (parentSubject) {
       case IriTerm iriTerm:
         return [
-          IdentifiedBlankNode(
-              IdentifiedBlankNodeParent.forIri(iriTerm), identifyingProps)
+          IdentifiedBlankNode(IdentifiedBlankNodeParent.forIri(iriTerm),
+              identifyingProps, effectiveParentPredicate)
         ];
       case BlankNodeTerm blankNodeParent:
         if (circuitCheck.contains(blankNodeParent)) {
@@ -339,7 +374,8 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
           return [
             IdentifiedBlankNode(
                 IdentifiedBlankNodeParent._circuitBreaker(circuitCheck),
-                identifyingProps)
+                identifyingProps,
+                effectiveParentPredicate)
           ];
         }
 
@@ -347,13 +383,15 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
             graph,
             blankNodeParent,
             identifyingPredicates,
-            parents,
+            parentTriples,
             identifiedBlankNodes,
+            mergeContract,
             circuit: circuitCheck);
         return identifiedParents
             .map((ip) => IdentifiedBlankNode(
                 IdentifiedBlankNodeParent.forIdentifiedBlankNode(ip),
-                identifyingProps))
+                identifyingProps,
+                effectiveParentPredicate))
             .toList();
     }
   }).toList();

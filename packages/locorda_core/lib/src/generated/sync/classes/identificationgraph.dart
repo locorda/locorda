@@ -58,6 +58,16 @@ class SyncIdentificationGraph {
     'https://w3id.org/solid-crdt-sync/vocab/sync#parent',
   );
 
+  /// parentProperty [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
+  ///
+  /// The property IRI connecting the parent resource to this path-identified blank node. Used in identification graphs to represent the property path for path-based canonical IRI generation.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#IdentificationGraph
+  ///
+  static const parentProperty = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#parentProperty',
+  );
+
   /// hasClockEntry from crdt vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClockEntry]
   ///
   /// Links a resource to a IRI resource representing a single entry in its Hybrid Logical Clock (HLC). Each entry tracks both logical time (causality) and physical time (for intuitive tie-breaking) for one installation.

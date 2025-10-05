@@ -84,3 +84,9 @@ mc:stopTraversal a rdf:Property;
     rdfs:comment "A boolean flag used within mc:Rule to mark a predicate as a boundary for framework/app data separation during graph traversal. When true, the predicate creates a traversal boundary - the framework will not follow edges with this predicate when separating framework data from application data.";
     rdfs:domain mc:Rule;
     rdfs:range xsd:boolean .
+
+mc:isPathIdentifying a rdf:Property;
+    rdfs:label "is path identifying";
+    rdfs:comment "A boolean flag used within mc:Rule to declare that blank nodes at this predicate are identified by their property path. Only valid for single-valued properties (algorithms that support single-valued semantics like LWW-Register, Immutable, FWW-Register). When true, the framework generates canonical IRIs based on the property path from the parent resource rather than property values. This enables property-level CRDT tracking within blank nodes at single-valued properties.";
+    rdfs:domain mc:Rule;
+    rdfs:range xsd:boolean .

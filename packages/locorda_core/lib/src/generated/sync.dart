@@ -121,4 +121,14 @@ class Sync {
   static const parent = IriTerm(
     'https://w3id.org/solid-crdt-sync/vocab/sync#parent',
   );
+
+  /// IRI for sync:parentProperty [Expects: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property]
+  ///
+  /// The property IRI connecting the parent resource to this path-identified blank node. Used in identification graphs to represent the property path for path-based canonical IRI generation.
+  ///
+  /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/sync#IdentificationGraph
+  ///
+  static const parentProperty = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/sync#parentProperty',
+  );
 }

@@ -125,6 +125,15 @@ _GraphWithLabels _buildIdentificationGraphWithLabels(IdentifiedBlankNode ibn) {
     }
     // else: circuit breaker parent - should not happen here
 
+    // Add parent predicate if available
+    if (current.parentPredicate != null) {
+      yield Triple(
+          subject,
+          Sync.parentProperty,
+          switch (current.parentPredicate!) {
+            IriTerm iri => iri,
+          });
+    }
     // Add identifying properties
     for (final entry in current.identifyingProperties.entries) {
       final predicate = entry.key;

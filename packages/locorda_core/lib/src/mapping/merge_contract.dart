@@ -12,22 +12,28 @@ class PredicateRule {
   final IriTerm? mergeWith;
   final bool? stopTraversal;
   final bool? isIdentifying;
-  PredicateRule(
-      {required this.predicateIri,
-      required this.mergeWith,
-      required this.stopTraversal,
-      required this.isIdentifying});
+  final bool? isPathIdentifying;
+  PredicateRule({
+    required this.predicateIri,
+    required this.mergeWith,
+    required this.stopTraversal,
+    required this.isIdentifying,
+    this.isPathIdentifying,
+  });
 
   PredicateRule withOptions({
     IriTerm? mergeWith,
     bool? stopTraversal,
     bool? isIdentifying,
+    bool? isPathIdentifying,
   }) {
     var newMergeWith = mergeWith ?? this.mergeWith;
     var newStopTraversal = stopTraversal ?? this.stopTraversal;
     var newIsIdentifying = isIdentifying ?? this.isIdentifying;
+    var newIsPathIdentifying = isPathIdentifying ?? this.isPathIdentifying;
     if (newStopTraversal == this.stopTraversal &&
         newIsIdentifying == this.isIdentifying &&
+        newIsPathIdentifying == this.isPathIdentifying &&
         newMergeWith == this.mergeWith) {
       return this;
     }
@@ -36,17 +42,21 @@ class PredicateRule {
       mergeWith: newMergeWith,
       stopTraversal: newStopTraversal,
       isIdentifying: newIsIdentifying,
+      isPathIdentifying: newIsPathIdentifying,
     );
   }
 
   PredicateRule withFallback(PredicateRule? fallbackRule) {
     final newStopTraversal = stopTraversal ?? fallbackRule?.stopTraversal;
     final newIsIdentifying = isIdentifying ?? fallbackRule?.isIdentifying;
+    final newIsPathIdentifying =
+        isPathIdentifying ?? fallbackRule?.isPathIdentifying;
     final newMergeWith = mergeWith ?? fallbackRule?.mergeWith;
 
     return withOptions(
         stopTraversal: newStopTraversal,
         isIdentifying: newIsIdentifying,
+        isPathIdentifying: newIsPathIdentifying,
         mergeWith: newMergeWith);
   }
 }

@@ -139,12 +139,16 @@ class StandardMergeContractLoader implements MergeContractLoader {
     final isIdentifying = graph
         .findSingleObject<LiteralTerm>(ref, McRule.isIdentifying)
         ?.booleanValue;
+    final isPathIdentifying = graph
+        .findSingleObject<LiteralTerm>(ref, McRule.isPathIdentifying)
+        ?.booleanValue;
 
     return PredicateRule(
       predicateIri: predicateIri,
       mergeWith: mergeWithIri,
       stopTraversal: stopTraversal,
       isIdentifying: isIdentifying,
+      isPathIdentifying: isPathIdentifying,
     );
   }
 

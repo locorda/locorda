@@ -258,13 +258,15 @@ void main() {
       Set<IriTerm> globalIdentifyingPredicates = const {},
       Map<IriTerm, Set<IriTerm>> classIdentifyingPredicates = const {},
       Map<IriTerm, Set<IriTerm>> classNonIdentifyingPredicates = const {},
+      Map<IriTerm, Set<IriTerm>> classPathIdentifyingPredicates = const {},
     }) {
       final classMappings = <IriTerm, ClassMapping>{};
 
       // Collect all class IRIs that have any rules
       final allClassIris = {
         ...classIdentifyingPredicates.keys,
-        ...classNonIdentifyingPredicates.keys
+        ...classNonIdentifyingPredicates.keys,
+        ...classPathIdentifyingPredicates.keys,
       };
 
       for (final classIri in allClassIris) {
@@ -272,23 +274,27 @@ void main() {
             classIdentifyingPredicates[classIri] ?? const {};
         final nonIdentifyingPreds =
             classNonIdentifyingPredicates[classIri] ?? const {};
+        final pathIdentifyingPreds =
+            classPathIdentifyingPredicates[classIri] ?? const {};
 
         final rules = <IriTerm, PredicateRule>{
           // Add identifying predicates (isIdentifying: true)
-          for (final pred in identifyingPreds)
+          for (final pred in {
+            ...identifyingPreds,
+            ...nonIdentifyingPreds,
+            ...pathIdentifyingPreds,
+          })
             pred: PredicateRule(
               predicateIri: pred,
               mergeWith: null,
               stopTraversal: false,
-              isIdentifying: true,
-            ),
-          // Add non-identifying predicates (isIdentifying: false)
-          for (final pred in nonIdentifyingPreds)
-            pred: PredicateRule(
-              predicateIri: pred,
-              mergeWith: null,
-              stopTraversal: false,
-              isIdentifying: false,
+              isIdentifying: identifyingPreds.contains(pred)
+                  ? true
+                  : nonIdentifyingPreds.contains(pred)
+                      ? false
+                      : null,
+              isPathIdentifying:
+                  pathIdentifyingPreds.contains(pred) ? true : null,
             ),
         };
 
@@ -1240,6 +1246,177 @@ void main() {
         final result2 = computeIdentifiedBlankNodes(graph, mergeContract);
 
         expect(result1.identifiedMap, equals(result2.identifiedMap));
+      });
+    });
+
+    group('path-identified blank nodes', () {
+      test('identifies blank node with path identification only', () {
+        final blankNode = BlankNodeTerm();
+        final parentIri = const IriTerm('https://example.com/resource');
+        final parentType = const IriTerm('https://example.com/ParentType');
+        final pathPredicate =
+            const IriTerm('https://example.com/displaySettings');
+
+        final graph = RdfGraph.fromTriples([
+          Triple(parentIri, Rdf.type, parentType),
+          Triple(parentIri, pathPredicate, blankNode),
+          Triple(blankNode, const IriTerm('https://example.com/sortOrder'),
+              LiteralTerm('alphabetical')),
+        ]);
+
+        final mergeContract = createMergeContract(
+          classPathIdentifyingPredicates: {
+            parentType: {pathPredicate}
+          },
+        );
+
+        final result = computeIdentifiedBlankNodes(graph, mergeContract);
+
+        expect(result.identifiedMap, hasLength(1));
+        expect(result.identifiedMap[blankNode], hasLength(1));
+
+        final identifiedNode = result.identifiedMap[blankNode]!.first;
+        expect(identifiedNode.parent.iriTerm, equals(parentIri));
+        expect(identifiedNode.parentPredicate, equals(pathPredicate));
+        expect(identifiedNode.identifyingProperties, isEmpty);
+      });
+
+      test('identifies blank node with both path and property identification',
+          () {
+        final blankNode = BlankNodeTerm();
+        final parentIri = const IriTerm('https://example.com/resource');
+        final parentType = const IriTerm('https://example.com/ParentType');
+        final pathPredicate = const IriTerm('https://example.com/item');
+        final identifyingProp = const IriTerm('https://example.com/name');
+
+        final graph = RdfGraph.fromTriples([
+          Triple(parentIri, Rdf.type, parentType),
+          Triple(parentIri, pathPredicate, blankNode),
+          Triple(blankNode, identifyingProp, LiteralTerm('Item1')),
+        ]);
+
+        final mergeContract = createMergeContract(
+          classPathIdentifyingPredicates: {
+            parentType: {pathPredicate}
+          },
+          globalIdentifyingPredicates: {identifyingProp},
+        );
+
+        final result = computeIdentifiedBlankNodes(graph, mergeContract);
+
+        expect(result.identifiedMap, hasLength(1));
+        final identifiedNode = result.identifiedMap[blankNode]!.first;
+        expect(identifiedNode.parent.iriTerm, equals(parentIri));
+        expect(identifiedNode.parentPredicate, equals(pathPredicate));
+        expect(identifiedNode.identifyingProperties[identifyingProp],
+            equals([LiteralTerm('Item1')]));
+      });
+
+      test('generates canonical IRI for path-identified blank node', () {
+        final blankNode = BlankNodeTerm();
+        final documentIri = const IriTerm('https://example.com/doc');
+        final parentIri = const IriTerm('https://example.com/doc#it');
+        final parentType = const IriTerm('https://example.com/Category');
+        final pathPredicate = const IriTerm('https://example.com/settings');
+
+        final graph = RdfGraph.fromTriples([
+          Triple(parentIri, Rdf.type, parentType),
+          Triple(parentIri, pathPredicate, blankNode),
+          Triple(blankNode, const IriTerm('https://example.com/value'),
+              LiteralTerm('test')),
+        ]);
+
+        final mergeContract = createMergeContract(
+          classPathIdentifyingPredicates: {
+            parentType: {pathPredicate}
+          },
+        );
+
+        final result =
+            IdentifiedBlankNodeBuilder(iriGenerator: FrameworkIriGenerator())
+                .computeCanonicalBlankNodes(documentIri, graph, mergeContract);
+
+        expect(result.identifiedMap, hasLength(1));
+        final canonicalIri = result.identifiedMap[blankNode]!.first;
+
+        // Verify exact canonical IRI - deterministic hash of identification graph:
+        // _:ibn0 <sync:parent> <https://example.com/doc#it> .
+        // _:ibn0 <sync:parentProperty> <https://example.com/settings> .
+        expect(
+            canonicalIri.value,
+            equals(
+                'https://example.com/doc#lcrd-ibn-md5-9a90bc3f69ef4cf11f98d79d1a337aa7'));
+      });
+
+      test('nested path-identified blank nodes', () {
+        final outerBlankNode = BlankNodeTerm();
+        final innerBlankNode = BlankNodeTerm();
+        final parentIri = const IriTerm('https://example.com/resource');
+        final parentType = const IriTerm('https://example.com/Note');
+        final outerPredicate = const IriTerm('https://example.com/preferences');
+        final innerPredicate = const IriTerm('https://example.com/display');
+
+        final graph = RdfGraph.fromTriples([
+          Triple(parentIri, Rdf.type, parentType),
+          Triple(parentIri, outerPredicate, outerBlankNode),
+          Triple(outerBlankNode, innerPredicate, innerBlankNode),
+          Triple(innerBlankNode, const IriTerm('https://example.com/theme'),
+              LiteralTerm('dark')),
+        ]);
+
+        final mergeContract = createMergeContract(
+          classPathIdentifyingPredicates: {
+            parentType: {outerPredicate, innerPredicate}
+          },
+        );
+
+        final result = computeIdentifiedBlankNodes(graph, mergeContract);
+
+        expect(result.identifiedMap, hasLength(2));
+        expect(result.identifiedMap[outerBlankNode], hasLength(1));
+        expect(result.identifiedMap[innerBlankNode], hasLength(1));
+
+        final outerNode = result.identifiedMap[outerBlankNode]!.first;
+        expect(outerNode.parent.iriTerm, equals(parentIri));
+        expect(outerNode.parentPredicate, equals(outerPredicate));
+
+        final innerNode = result.identifiedMap[innerBlankNode]!.first;
+        expect(innerNode.parent.blankNode, equals(outerNode));
+        expect(innerNode.parentPredicate, equals(innerPredicate));
+      });
+
+      test('multiple paths to same path-identified blank node', () {
+        final blankNode = BlankNodeTerm();
+        final parentIri = const IriTerm('https://example.com/resource');
+        final parentType = const IriTerm('https://example.com/Note');
+        final predicate1 = const IriTerm('https://example.com/primarySettings');
+        final predicate2 =
+            const IriTerm('https://example.com/fallbackSettings');
+
+        final graph = RdfGraph.fromTriples([
+          Triple(parentIri, Rdf.type, parentType),
+          Triple(parentIri, predicate1, blankNode),
+          Triple(parentIri, predicate2, blankNode),
+          Triple(blankNode, const IriTerm('https://example.com/value'),
+              LiteralTerm('shared')),
+        ]);
+
+        final mergeContract = createMergeContract(
+          classPathIdentifyingPredicates: {
+            parentType: {predicate1, predicate2}
+          },
+        );
+
+        final result = computeIdentifiedBlankNodes(graph, mergeContract);
+
+        expect(result.identifiedMap, hasLength(1));
+        // Should have 2 identified nodes with different parent predicates
+        expect(result.identifiedMap[blankNode], hasLength(2));
+
+        final predicates = result.identifiedMap[blankNode]!
+            .map((ibn) => ibn.parentPredicate)
+            .toSet();
+        expect(predicates, containsAll([predicate1, predicate2]));
       });
     });
   });
