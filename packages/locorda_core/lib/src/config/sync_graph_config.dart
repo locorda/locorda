@@ -69,20 +69,112 @@ class GroupIndexGraphConfig extends GroupIndexConfigBase
   }
 }
 
+class DocumentIriTemplate {
+  final String template;
+  final List<String> variables;
+
+  /// The prefix before the first variable (everything before first '{')
+  /// Used for efficient prefix matching when checking if an IRI matches this template
+  late final String prefix;
+
+  /// The suffix after the last variable (everything after last '}')
+  /// Used for efficient suffix matching when checking if an IRI matches this template
+  late final String suffix;
+
+  DocumentIriTemplate._(this.template, this.variables) {
+    final firstBraceIndex = template.indexOf('{');
+    final lastBraceIndex = template.lastIndexOf('}');
+
+    prefix = firstBraceIndex >= 0
+        ? template.substring(0, firstBraceIndex)
+        : template;
+    suffix = lastBraceIndex >= 0 && lastBraceIndex < template.length - 1
+        ? template.substring(lastBraceIndex + 1)
+        : '';
+  }
+
+  factory DocumentIriTemplate.fromJson(String json) {
+    final template = json;
+    final variableRegex = RegExp(r'\{([^}]+)\}');
+    final variables = variableRegex
+        .allMatches(template)
+        .map((match) => match.group(1)!)
+        .toList(growable: false);
+
+    // Validation: must have exactly one variable and it must be called "id"
+    if (variables.length != 1) {
+      throw ArgumentError(
+          'Document IRI template must have exactly one variable. '
+          'Got ${variables.length} variables: $variables in template: $template');
+    }
+
+    if (variables.single != 'id') {
+      throw ArgumentError('Document IRI template variable must be named "id". '
+          'Got: ${variables.single} in template: $template');
+    }
+
+    return DocumentIriTemplate._(template, variables);
+  }
+
+  /// Efficiently checks if a given IRI matches this template pattern
+  ///
+  /// First does a quick prefix/suffix check, then extracts the ID if it matches
+  /// Returns the extracted URL-decoded ID if the IRI matches, null otherwise
+  String? extractId(String iriValue) {
+    // Quick prefix check
+    if (!iriValue.startsWith(prefix)) {
+      return null;
+    }
+
+    // Quick suffix check
+    if (suffix.isNotEmpty && !iriValue.endsWith(suffix)) {
+      return null;
+    }
+
+    // Extract the ID value between prefix and suffix
+    final startIndex = prefix.length;
+    final endIndex =
+        suffix.isEmpty ? iriValue.length : iriValue.length - suffix.length;
+
+    if (startIndex >= endIndex) {
+      return null;
+    }
+
+    final encodedId = iriValue.substring(startIndex, endIndex);
+
+    // URL decode the extracted ID
+    return Uri.decodeComponent(encodedId);
+  }
+
+  /// Creates an IRI from this template by substituting the URL-encoded ID
+  String toIri(String id) {
+    // URL encode the ID before substituting
+    final encodedId = Uri.encodeComponent(id);
+    return template.replaceAll('{id}', encodedId);
+  }
+}
+
 class ResourceGraphConfig extends ResourceConfigBase {
   final List<CrdtIndexGraphConfig> indices;
 
   final IriTerm typeIri;
+  final DocumentIriTemplate? documentIriTemplate;
+
   ResourceGraphConfig({
     required this.typeIri,
     required super.crdtMapping,
     required this.indices,
-  }) : super(indices: indices);
+    String? documentIriTemplate,
+  })  : documentIriTemplate = documentIriTemplate != null
+            ? DocumentIriTemplate.fromJson(documentIriTemplate)
+            : null,
+        super(indices: indices);
 
   factory ResourceGraphConfig.fromJson(Map<String, dynamic> json) {
     final typeIri = IriTerm(json['typeIri'] as String);
     final crdtMappingStr = json['crdtMapping'] as String;
     final crdtMapping = Uri.parse(crdtMappingStr);
+    final documentIriTemplate = json['documentIriTemplate'] as String?;
 
     final indicesJson = json['indices'] as List<dynamic>;
     final indices = <CrdtIndexGraphConfig>[];
@@ -108,6 +200,7 @@ class ResourceGraphConfig extends ResourceConfigBase {
       typeIri: typeIri,
       crdtMapping: crdtMapping,
       indices: indices,
+      documentIriTemplate: documentIriTemplate,
     );
   }
 }

@@ -13,6 +13,7 @@ import 'package:locorda_core/src/installation_service.dart'
     show InstallationService, InstallationIdFactory;
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
+import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/mapping/metadata_generator.dart';
@@ -306,6 +307,7 @@ class LocordaGraphSync {
   final MergeContractLoader _mergeContractLoader;
   final CrdtTypeRegistry _crdtTypeRegistry;
   final FrameworkIriGenerator _iriGenerator;
+  final IriTranslator _iriTranslator;
   final HydrationStreamManager _streamManager;
   final GroupIndexGraphSubscriptionManager _groupIndexManager;
   late final IdentifiedBlankNodeBuilder _identifiedBlankNodeBuilder =
@@ -325,21 +327,25 @@ class LocordaGraphSync {
     required SyncGraphConfig config,
     required MergeContractLoader mergeContractLoader,
     required HlcService hlcService,
-    PhysicalTimestampFactory? physicalTimestampFactory,
-    IriTermFactory? iriTermFactory,
+    required ResourceLocator resourceLocator,
+    required PhysicalTimestampFactory physicalTimestampFactory,
+    required IriTermFactory iriTermFactory,
   })  : _storage = storage,
         _backend = backend,
         _config = config,
         _mergeContractLoader = mergeContractLoader,
         _crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
-            physicalTimestampFactory:
-                physicalTimestampFactory ?? defaultPhysicalTimestampFactory),
+            physicalTimestampFactory: physicalTimestampFactory),
         _hlcService = hlcService,
         _streamManager = HydrationStreamManager(),
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
           config: config,
         ),
-        _iriGenerator = FrameworkIriGenerator(iriTermFactory: iriTermFactory);
+        _iriGenerator = FrameworkIriGenerator(iriTermFactory: iriTermFactory),
+        _iriTranslator = IriTranslator(
+          resourceLocator: resourceLocator,
+          resourceConfigs: config.resources,
+        );
 
   /// Set up the CRDT sync system with resource-focused configuration.
   ///
@@ -418,7 +424,9 @@ class LocordaGraphSync {
         config: effectiveConfig,
         mergeContractLoader: CachingMergeContractLoader(mergeContractLoader),
         physicalTimestampFactory: physicalTimestampFactory,
-        hlcService: hlcService);
+        hlcService: hlcService,
+        iriTermFactory: iriFactory,
+        resourceLocator: localResourceLocator);
 
     if (!installationService.installationDocumentSaved) {
       final iri = installationService.installationIri;
@@ -536,9 +544,12 @@ class LocordaGraphSync {
   Future<void> save(IriTerm type, RdfGraph appData) async {
     RdfGraph? oldDocument;
     RdfGraph? crdtDocument;
+    // 0. Translate external IRIs to internal format if documentIriTemplate is configured
+    final internalAppData = _iriTranslator.translateGraphToInternal(appData);
+
     try {
       // Validate input parameters
-      if (appData.isEmpty) {
+      if (internalAppData.isEmpty) {
         throw ArgumentError('Cannot save empty graph');
       }
 
@@ -549,7 +560,7 @@ class LocordaGraphSync {
       late final IriTerm documentIri;
 
       try {
-        resourceIri = appData.getIdentifier(type);
+        resourceIri = internalAppData.getIdentifier(type);
         documentIri = _extractDocumentIri(resourceIri);
       } on ArgumentError catch (e) {
         _log.severe('Invalid resource configuration for type $type: $e');
@@ -562,7 +573,7 @@ class LocordaGraphSync {
       }
 
       // Validate resource graph structure
-      _validateResourceGraph(documentIri, resourceIri, type, appData);
+      _validateResourceGraph(documentIri, resourceIri, type, internalAppData);
 
       _log.fine('Saving resource $resourceIri to document $documentIri');
 
@@ -597,15 +608,16 @@ class LocordaGraphSync {
       final physicalTimestamp = clock.physicalTime;
 
       // 4. Detect property changes between old and new graphs and generate CRDT metadata
-      final appBlankNodes = _identifiedBlankNodeBuilder
-          .computeCanonicalBlankNodes(documentIri, appData, mergeContract);
+      final appBlankNodes =
+          _identifiedBlankNodeBuilder.computeCanonicalBlankNodes(
+              documentIri, internalAppData, mergeContract);
       final oldAppBlankNodes = oldAppData == null
           ? IdentifiedBlankNodes.empty<IriTerm>()
           : _identifiedBlankNodeBuilder.computeCanonicalBlankNodes(
               documentIri, oldAppData, mergeContract);
       final crdtMetadata = _generateCrdtMetadataForChanges(
         documentIri,
-        appData,
+        internalAppData,
         appBlankNodes,
         oldAppData,
         oldAppBlankNodes,
@@ -631,7 +643,7 @@ class LocordaGraphSync {
         governedByFiles,
         resourceIri,
         type,
-        appData,
+        internalAppData,
         createdAt,
         clock,
         appBlankNodes,
@@ -663,9 +675,18 @@ class LocordaGraphSync {
       try {
         // FIXME: The emitter currently does the deriving of index items,
         // but this must be done here and each index has its own cursor
+
+        // FIXME: is this the correct place for translating to external IRIs,
+        // should it be done in the emitter?
+        // Translate back to external IRIs for application consumption
+        final externalAppData =
+            _iriTranslator.translateGraphToExternal(internalAppData);
+        final externalResourceIri =
+            _iriTranslator.internalToExternal(resourceIri);
+
         _emitter.emit(
           HydrationResult<IdentifiedGraph>(
-            items: [(resourceIri, appData)],
+            items: [(externalResourceIri, externalAppData)],
             deletedItems: [],
             originalCursor: saveResult.previousCursor,
             nextCursor: saveResult.currentCursor,
@@ -684,7 +705,7 @@ class LocordaGraphSync {
       _log.severe('Save operation failed for type $type', e, stackTrace);
       final blankNode = e.blankNode;
       throwIfUsedIn(stackTrace, "Old Doument", oldDocument, blankNode);
-      throwIfUsedIn(stackTrace, "New App Data", appData, blankNode);
+      throwIfUsedIn(stackTrace, "New App Data", internalAppData, blankNode);
       throwIfUsedIn(stackTrace, "New Doument", crdtDocument, blankNode);
       rethrow;
     } catch (e, stackTrace) {
@@ -807,21 +828,24 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   /// 3. Store updated document in sync system
   /// 4. Hydration stream automatically emits deletion
   /// 5. Schedule async Pod sync
-  Future<void> deleteDocument(IriTerm typeIri, IriTerm localIri) async {
+  Future<void> deleteDocument(IriTerm typeIri, IriTerm externalIri) async {
+    // Translate external IRI to internal format
+    final internalIri = _iriTranslator.externalToInternal(externalIri);
+
     final resourceConfig = _config.getResourceConfig(typeIri);
     // Basic implementation to maintain hydration stream contract
     // TODO: Add proper CRDT deletion processing and storage persistence
 
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    // Emit data change
+    // Emit data change with external IRI for application consumption
     _emitter.emit(
         HydrationResult<IdentifiedGraph>(
           items: [],
           deletedItems: [
             (
-              localIri,
-              RdfGraph.fromTriples([Triple(localIri, Rdf.type, typeIri)])
+              externalIri,
+              RdfGraph.fromTriples([Triple(externalIri, Rdf.type, typeIri)])
             )
           ],
           originalCursor: null,

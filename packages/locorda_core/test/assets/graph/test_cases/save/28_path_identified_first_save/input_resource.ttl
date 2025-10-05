@@ -1,0 +1,12 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix pnotes: <https://example.org/vocab/personal-notes#> .
+
+<https://example.com/categories/work#it> a pnotes:NotesCategory ;
+    schema:name "Work" ;
+    pnotes:displaySettings [
+        a pnotes:CategoryDisplaySettings ;
+        pnotes:sortOrder "priority" ;
+        pnotes:defaultView "list" ;
+        pnotes:showArchived false
+    ] .

@@ -249,11 +249,11 @@ class LocalReferenceConverter implements ReferenceConverter {
   String fromIri(Type targetType, IriTerm term) {
     final typeIri = _resourceTypeCache.getIri(targetType);
     final result = _resourceLocator.fromIri(typeIri, term);
-    return result.localId;
+    return result.id;
   }
 
   IriTerm toIri(Type targetType, String value) {
     final typeIri = _resourceTypeCache.getIri(targetType);
-    return _resourceLocator.toIri(typeIri, value, null);
+    return _resourceLocator.toIri(ResourceIdentifier.document(typeIri, value));
   }
 }

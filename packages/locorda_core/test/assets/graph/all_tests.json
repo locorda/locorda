@@ -9,6 +9,7 @@
     "https://example.org/test/mappings/recipe-v1-unidentified": "shared/mappings/recipe-v1-unidentified.ttl",
     "https://example.org/test/mappings/recipe-v1-all-unidentified": "shared/mappings/recipe-v1-all-unidentified.ttl",
     "https://example.org/test/mappings/recipe-v1-invalid-orset": "shared/mappings/recipe-v1-invalid-orset.ttl",
+    "https://example.org/test/mappings/category-v1": "shared/mappings/category-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/client-installation-v1": "../../../../../spec/mappings/client-installation-v1.ttl"
   },
@@ -722,6 +723,85 @@
           },
           "action_ts": {
             "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_28",
+          "title": "First save with path-identified blank node",
+          "description": "Saving a new NotesCategory resource with a path-identified displaySettings blank node. The blank node should be assigned a canonical IRI based on its parent path (pnotes:displaySettings from the category resource).",
+          "config": "shared/configs/category_config.json",
+          "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
+          "input_resource": "test_cases/save/28_path_identified_first_save/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/28_path_identified_first_save/expected_stored_graph.ttl",
+            "installation": "test_cases/save/28_path_identified_first_save/expected_installation.ttl"
+          },
+          "action_ts": {
+            "save": "2024-01-15T10:00:00Z"
+          }
+        },
+        {
+          "id": "save_29",
+          "title": "Update path-identified blank node properties",
+          "description": "Updating properties within a path-identified blank node. The blank node keeps the same canonical IRI (based on parent path), but its LWW properties are updated with new clocks.",
+          "config": "shared/configs/category_config.json",
+          "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
+          "stored_graph_before": "test_cases/save/29_path_identified_update/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/29_path_identified_update/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/29_path_identified_update/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
+                "property_iri": "https://example.org/vocab/personal-notes#sortOrder",
+                "changed_at": "2024-01-15T12:00:00Z",
+                "logical_clock": 2
+              },
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
+                "property_iri": "https://example.org/vocab/personal-notes#defaultView",
+                "changed_at": "2024-01-15T12:00:00Z",
+                "logical_clock": 2
+              },
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
+                "property_iri": "https://example.org/vocab/personal-notes#showArchived",
+                "changed_at": "2024-01-15T12:00:00Z",
+                "logical_clock": 2
+              }
+            ]
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-15T10:00:00Z"
+            },
+            "save": "2024-01-15T12:00:00Z"
+          }
+        },
+        {
+          "id": "save_30",
+          "title": "Delete path-identified blank node via LWW",
+          "description": "Removing the displaySettings property (LWW-Register) implicitly deletes the path-identified blank node. Creates deletion tombstones for both the parent property and all blank node properties.",
+          "config": "shared/configs/category_config.json",
+          "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
+          "stored_graph_before": "test_cases/save/30_path_identified_delete/stored_graph_before.ttl",
+          "input_resource": "test_cases/save/30_path_identified_delete/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/30_path_identified_delete/expected_stored_graph.ttl",
+            "property_changes": [
+              {
+                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#it",
+                "property_iri": "https://example.org/vocab/personal-notes#displaySettings",
+                "changed_at": "2024-01-15T14:00:00Z",
+                "logical_clock": 2
+              }
+            ]
+          },
+          "action_ts": {
+            "prepare": {
+              "save": "2024-01-15T12:00:00Z"
+            },
+            "save": "2024-01-15T14:00:00Z"
           }
         }
       ]

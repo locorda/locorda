@@ -1,0 +1,31 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix mc: <https://w3id.org/solid-crdt-sync/vocab/merge-contract#> .
+@prefix algo: <https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#> .
+@prefix schema: <http://schema.org/> .
+@prefix pnotes: <https://example.org/vocab/personal-notes#> .
+
+<https://example.org/test/mappings/category-v1> a mc:DocumentMapping ;
+    rdfs:label "Category Merge Contract v1" ;
+    rdfs:comment "Merge contract for NotesCategory with path-identified displaySettings blank node" ;
+    mc:imports ( <https://w3id.org/solid-crdt-sync/mappings/core-v1> ) ;
+    mc:classMapping (
+        <#category-mapping>
+        <#display-settings-mapping>
+    ) .
+
+<#category-mapping> a mc:ClassMapping ;
+    mc:appliesToClass pnotes:NotesCategory ;
+    mc:rule
+        [ mc:predicate rdf:type ; algo:mergeWith algo:Immutable ],
+        [ mc:predicate schema:name ; algo:mergeWith algo:LWW_Register ],
+        [ mc:predicate pnotes:displaySettings ;
+          algo:mergeWith algo:LWW_Register ;
+          mc:isPathIdentifying true ] .
+
+<#display-settings-mapping> a mc:ClassMapping ;
+    mc:appliesToClass pnotes:CategoryDisplaySettings ;
+    mc:rule
+        [ mc:predicate pnotes:sortOrder ; algo:mergeWith algo:LWW_Register ],
+        [ mc:predicate pnotes:defaultView ; algo:mergeWith algo:LWW_Register ],
+        [ mc:predicate pnotes:showArchived ; algo:mergeWith algo:LWW_Register ] .

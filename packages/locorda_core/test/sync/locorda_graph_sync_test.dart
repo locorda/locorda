@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/mapping/iri_translator.dart';
+import 'package:locorda_core/src/mapping/resource_locator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_canonicalization/rdf_canonicalization.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -68,8 +70,8 @@ void main() {
   group('Generate Iri', () {
     test('Recipe Iri Generation', () {
       final loc = LocalResourceLocator(iriTermFactory: IriTerm.validated);
-      final resourceIri =
-          loc.toIri(IriTerm('https://schema.org/Recipe'), 'recipe123', "it");
+      final resourceIri = loc.toIri(ResourceIdentifier(
+          IriTerm('https://schema.org/Recipe'), 'recipe123', "it"));
       print(resourceIri);
       expect(
           resourceIri.value,
@@ -86,7 +88,7 @@ RdfGraph? _readGraphFromPath(Directory testAssetsDir, String? path) {
 }
 
 typedef TestData = ({
-  IriTerm documentIri,
+  IriTerm externalDocumentIri,
   Map<String, dynamic> expectedJson,
   IriTerm typeIri,
   RdfGraph? storedGraphBefore,
@@ -117,7 +119,8 @@ Future<TestData> _prepare(
   // Load action timestamps if provided
   final actionTs = testJson['action_ts'] as Map<String, dynamic>?;
 
-  // Extract document IRI from input resource
+  // Extract document IRI - use stored_graph_before if available (which has internal IRIs),
+  // otherwise use input_resource (which has external IRIs that will be translated)
   final documentIri = inputResource.subjects
       .whereType<IriTerm>()
       .map((s) => s.getDocumentIri())
@@ -125,7 +128,7 @@ Future<TestData> _prepare(
       .single;
 
   return (
-    documentIri: documentIri,
+    externalDocumentIri: documentIri,
     expectedJson: expectedJson,
     typeIri: typeIri,
     storedGraphBefore: storedGraphBefore,
@@ -141,11 +144,12 @@ Future<void> _executeSave(
     Directory testAssetsDir,
     Map<String, String> urlToPathMap,
     DateTime baseTimestamp,
-    String? baseInstallationId) async {
+    String? baseInstallationId,
+    IriTranslator iriTranslator) async {
   final timestampFactory =
       TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
   final (
-    documentIri: documentIri,
+    externalDocumentIri: documentIri,
     expectedJson: _,
     typeIri: typeIri,
     storedGraphBefore: storedGraphBefore,
@@ -157,8 +161,9 @@ Future<void> _executeSave(
     // Set timestamp for prepare.save if specified
     setTime(actionTs?['prepare']?['save'], timestampFactory);
     final now = timestampFactory();
+
     storage.saveDocument(
-        documentIri,
+        iriTranslator.externalToInternal(documentIri),
         typeIri,
         storedGraphBefore,
         DocumentMetadata(
@@ -200,11 +205,13 @@ Future<void> _executeSaveTest(
   final testData = await _prepare(
       testJson, testAssetsDir, urlToPathMap, baseTimestamp, baseInstallationId);
   final storage = TestStorage();
+  final iriTranslator = _createIriTranslator(testData);
   await _executeSave(testData, storage, testAssetsDir, urlToPathMap,
-      baseTimestamp, baseInstallationId);
+      baseTimestamp, baseInstallationId, iriTranslator);
 
   final expectedJson = testData.expectedJson;
-  final documentIri = testData.documentIri;
+  final documentIri =
+      iriTranslator.externalToInternal(testData.externalDocumentIri);
   final expectedStoredGraph = _readGraphFromPath(
       testAssetsDir, expectedJson['stored_graph'] as String)!;
   final expectedInstallation = _readGraphFromPath(
@@ -239,6 +246,12 @@ Future<void> _executeSaveTest(
     }
     _expectEqualGraphs(storedInstallation.document, expectedInstallation);
   }
+}
+
+IriTranslator _createIriTranslator(TestData testData) {
+  return IriTranslator(
+      resourceLocator: LocalResourceLocator(iriTermFactory: IriTerm.validated),
+      resourceConfigs: testData.config.resources);
 }
 
 void _expectEqualGraphs(RdfGraph actual, RdfGraph expected) {
@@ -353,9 +366,10 @@ Future<void> _executeSaveErrorTest(
   final expectedErrorMessagePattern =
       expectedJson['error_message_pattern'] as String?;
   final storage = TestStorage();
+  final iriTranslator = _createIriTranslator(testData);
   try {
     await _executeSave(testData, storage, testAssetsDir, urlToPathMap,
-        baseTimestamp, baseInstallationId);
+        baseTimestamp, baseInstallationId, iriTranslator);
     fail('Expected $expectedErrorType to be thrown, but save succeeded');
   } catch (e) {
     // Verify error type

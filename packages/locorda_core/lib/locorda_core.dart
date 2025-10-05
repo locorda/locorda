@@ -93,7 +93,7 @@ export 'src/index/index_config_base.dart'
 export 'src/locorda_graph_sync.dart' show LocordaGraphSync, IdentifiedGraph;
 export 'src/mapping/pod_iri_config.dart' show PodIriConfig;
 export 'src/mapping/resource_locator.dart'
-    show ResourceLocator, LocalResourceLocator;
+    show ResourceLocator, LocalResourceLocator, ResourceIdentifier;
 export 'src/storage/remote_storage.dart' show RemoteStorage;
 export 'src/storage/storage_interface.dart'
     show

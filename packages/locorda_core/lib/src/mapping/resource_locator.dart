@@ -10,13 +10,23 @@ import 'package:rdf_core/rdf_core.dart';
 abstract interface class ResourceLocator {
   /// Convert local ID and optional fragment to resource IRI.
   ///
-  IriTerm toIri(IriTerm typeIri, String localId, String? fragment);
+  IriTerm toIri(ResourceIdentifier identifier);
 
   /// Extract local ID and fragment from resource IRI.
   ///
   /// Returns a record with the localId and optional fragment.
-  ({String localId, String? fragment}) fromIri(
-      IriTerm typeIri, IriTerm resourceIri);
+  ResourceIdentifier fromIri(IriTerm typeIri, IriTerm resourceIri);
+}
+
+final class ResourceIdentifier {
+  final IriTerm typeIri;
+  final String id;
+  final String? fragment;
+
+  ResourceIdentifier(this.typeIri, this.id, String fragment)
+      : assert(fragment.isNotEmpty),
+        fragment = fragment;
+  ResourceIdentifier.document(this.typeIri, this.id) : fragment = null;
 }
 
 class LocalResourceLocator implements ResourceLocator {
@@ -27,16 +37,16 @@ class LocalResourceLocator implements ResourceLocator {
       : _iriTermFactory = iriTermFactory;
 
   @override
-  IriTerm toIri(IriTerm typeIri, String localId, String? fragment) {
-    final encodedTypeIri = base64Url.encode(utf8.encode(typeIri.value));
-    final encodedLocalId = base64Url.encode(utf8.encode(localId));
+  IriTerm toIri(ResourceIdentifier identifier) {
+    final encodedTypeIri =
+        base64Url.encode(utf8.encode(identifier.typeIri.value));
+    final encodedLocalId = base64Url.encode(utf8.encode(identifier.id));
     return _iriTermFactory(
-        '$prefix${encodedTypeIri}:$encodedLocalId${fragment != null ? '#$fragment' : ''}');
+        '$prefix${encodedTypeIri}:$encodedLocalId${identifier.fragment != null ? '#${identifier.fragment}' : ''}');
   }
 
   @override
-  ({String localId, String? fragment}) fromIri(
-      IriTerm typeIri, IriTerm resourceIri) {
+  ResourceIdentifier fromIri(IriTerm typeIri, IriTerm resourceIri) {
     // Split off fragment if present
     final iriValue = resourceIri.value;
     final fragmentIndex = iriValue.indexOf('#');
@@ -60,7 +70,10 @@ class LocalResourceLocator implements ResourceLocator {
     }
 
     final localId = utf8.decode(base64Url.decode(encodedLocalId));
-    return (localId: localId, fragment: fragment);
+    if (fragment == null) {
+      return ResourceIdentifier.document(typeIri, localId);
+    }
+    return ResourceIdentifier(typeIri, localId, fragment);
   }
 
   static bool isLocalIri(IriTerm subjectIri) {
