@@ -254,7 +254,6 @@ class LocalReferenceConverter implements ReferenceConverter {
 
   IriTerm toIri(Type targetType, String value) {
     final typeIri = _resourceTypeCache.getIri(targetType);
-    final result = _resourceLocator.toIri(typeIri, value, null);
-    return result.resourceIri;
+    return _resourceLocator.toIri(typeIri, value, null);
   }
 }

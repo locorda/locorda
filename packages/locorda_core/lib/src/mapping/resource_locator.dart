@@ -10,9 +10,7 @@ import 'package:rdf_core/rdf_core.dart';
 abstract interface class ResourceLocator {
   /// Convert local ID and optional fragment to resource IRI.
   ///
-  /// Returns a record with documentIri (without fragment) and resourceIri (with fragment if provided).
-  ({IriTerm documentIri, IriTerm resourceIri}) toIri(
-      IriTerm typeIri, String localId, String? fragment);
+  IriTerm toIri(IriTerm typeIri, String localId, String? fragment);
 
   /// Extract local ID and fragment from resource IRI.
   ///
@@ -29,16 +27,11 @@ class LocalResourceLocator implements ResourceLocator {
       : _iriTermFactory = iriTermFactory;
 
   @override
-  ({IriTerm documentIri, IriTerm resourceIri}) toIri(
-      IriTerm typeIri, String localId, String? fragment) {
+  IriTerm toIri(IriTerm typeIri, String localId, String? fragment) {
     final encodedTypeIri = base64Url.encode(utf8.encode(typeIri.value));
     final encodedLocalId = base64Url.encode(utf8.encode(localId));
-    final documentIri =
-        _iriTermFactory('$prefix${encodedTypeIri}:$encodedLocalId');
-    final resourceIri = fragment != null
-        ? _iriTermFactory('${documentIri.value}#$fragment')
-        : documentIri;
-    return (documentIri: documentIri, resourceIri: resourceIri);
+    return _iriTermFactory(
+        '$prefix${encodedTypeIri}:$encodedLocalId${fragment != null ? '#$fragment' : ''}');
   }
 
   @override

@@ -68,9 +68,13 @@ void main() {
   group('Generate Iri', () {
     test('Recipe Iri Generation', () {
       final loc = LocalResourceLocator(iriTermFactory: IriTerm.validated);
-      final result =
-          loc.toIri(IriTerm('https://schema.org/Recipe'), 'recipe123', null);
-      print(result.resourceIri);
+      final resourceIri =
+          loc.toIri(IriTerm('https://schema.org/Recipe'), 'recipe123', "it");
+      print(resourceIri);
+      expect(
+          resourceIri.value,
+          equals(
+              "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it"));
     });
   });
 }

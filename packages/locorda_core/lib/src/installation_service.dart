@@ -74,12 +74,11 @@ class InstallationService {
     } else {
       // Generate new installation ID and IRI with 'installation' fragment
       installationLocalId = installationIdFactory();
-      final iris = resourceLocator.toIri(
+      installationIri = resourceLocator.toIri(
         CrdtClientInstallation.classIri,
         installationLocalId,
         'installation',
       );
-      installationIri = iris.resourceIri;
 
       // Persist both installation IRI and localId
       await storage.setSetting(
