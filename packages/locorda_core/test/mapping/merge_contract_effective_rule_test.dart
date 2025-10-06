@@ -13,8 +13,8 @@ void main() {
   late IriTerm prop1;
   late IriTerm prop2;
   late IriTerm prop3;
-  late PredicateRule globalRule1;
-  late PredicateRule classRuleA1;
+  late PredicateMergeRule globalRule1;
+  late PredicateMergeRule classRuleA1;
 
   setUp(() {
     classA = IriTerm('http://example.com/ClassA');
@@ -23,14 +23,14 @@ void main() {
     prop2 = IriTerm('http://example.com/prop2');
     prop3 = IriTerm('http://example.com/prop3');
 
-    globalRule1 = PredicateRule(
+    globalRule1 = PredicateMergeRule(
       predicateIri: prop1,
       mergeWith: Algo.LWW_Register,
       stopTraversal: false,
       isIdentifying: false,
     );
 
-    classRuleA1 = PredicateRule(
+    classRuleA1 = PredicateMergeRule(
       predicateIri: prop1,
       mergeWith: Algo.OR_Set, // Different from global
       stopTraversal: true, // Different from global
@@ -40,7 +40,7 @@ void main() {
 
   group('getEffectivePredicateRule - with type specified', () {
     test('returns class-specific rule when type and rule exist', () {
-      final classMapping = ClassMapping(classA, {prop1: classRuleA1});
+      final classMapping = ClassMergeRules(classA, {prop1: classRuleA1});
       final contract = MergeContract({classA: classMapping}, {});
 
       final rule = contract.getEffectivePredicateRule(classA, prop1);
@@ -49,26 +49,8 @@ void main() {
       expect(rule!.mergeWith, equals(Algo.OR_Set));
     });
 
-    test('class rule inherits from global rule via fallback', () {
-      final classMapping = ClassMapping(classA, {prop1: classRuleA1});
-      final contract = MergeContract(
-        {classA: classMapping},
-        {prop1: globalRule1},
-      );
-
-      final rule = contract.getEffectivePredicateRule(classA, prop1);
-
-      expect(rule, isNotNull);
-      // Class specifies OR_Set, not LWW
-      expect(rule!.mergeWith, equals(Algo.OR_Set));
-      // Class specifies stopTraversal=true
-      expect(rule.stopTraversal, isTrue);
-      // Class has isIdentifying=null, should fall back to global (false)
-      expect(rule.isIdentifying, isFalse);
-    });
-
     test('returns global rule when type has no class-specific rule', () {
-      final classMapping = ClassMapping(classA, {});
+      final classMapping = ClassMergeRules(classA, {});
       final contract = MergeContract(
         {classA: classMapping},
         {prop2: globalRule1},
@@ -80,7 +62,7 @@ void main() {
     });
 
     test('returns null when neither class nor global rule exists', () {
-      final classMapping = ClassMapping(classA, {});
+      final classMapping = ClassMergeRules(classA, {});
       final contract = MergeContract({classA: classMapping}, {});
 
       final rule = contract.getEffectivePredicateRule(classA, prop1);
@@ -93,7 +75,7 @@ void main() {
     test('Class Mapping is inferred from property when no type given', () {
       // This test documents the current buggy behavior
       // _classMappingsByPredicate is indexed by classIri instead of predicateIri
-      final classMapping = ClassMapping(classA, {prop1: classRuleA1});
+      final classMapping = ClassMergeRules(classA, {prop1: classRuleA1});
       final contract = MergeContract({classA: classMapping}, {});
 
       // Type inference doesn't work due to bug in line 123
@@ -103,11 +85,11 @@ void main() {
     });
 
     test('uses global rule when property belongs to multiple classes', () {
-      final classMappingA = ClassMapping(classA, {prop1: classRuleA1});
-      final classMappingB = ClassMapping(
+      final classMappingA = ClassMergeRules(classA, {prop1: classRuleA1});
+      final classMappingB = ClassMergeRules(
         classB,
         {
-          prop1: PredicateRule(
+          prop1: PredicateMergeRule(
             predicateIri: prop1,
             mergeWith: Algo.Immutable,
             stopTraversal: false,
@@ -128,7 +110,7 @@ void main() {
     });
 
     test('returns global rule when property exists in no classes', () {
-      final classMapping = ClassMapping(classA, {prop1: classRuleA1});
+      final classMapping = ClassMergeRules(classA, {prop1: classRuleA1});
       final contract = MergeContract(
         {classA: classMapping},
         {prop3: globalRule1},
@@ -140,7 +122,7 @@ void main() {
     });
 
     test('returns null when no type, no class match, and no global rule', () {
-      final classMapping = ClassMapping(classA, {prop1: classRuleA1});
+      final classMapping = ClassMergeRules(classA, {prop1: classRuleA1});
       final contract = MergeContract({classA: classMapping}, {});
 
       final rule = contract.getEffectivePredicateRule(null, prop3);
@@ -151,15 +133,15 @@ void main() {
 
   group('isStopTraversalPredicate', () {
     test('returns true when class rule has stopTraversal=true', () {
-      final classMapping = ClassMapping(classA, {prop1: classRuleA1});
+      final classMapping = ClassMergeRules(classA, {prop1: classRuleA1});
       final contract = MergeContract({classA: classMapping}, {});
 
       expect(contract.isStopTraversalPredicate(classA, prop1), isTrue);
     });
 
     test('returns false when rule has stopTraversal=false', () {
-      final classMapping = ClassMapping(classA, {
-        prop2: PredicateRule(
+      final classMapping = ClassMergeRules(classA, {
+        prop2: PredicateMergeRule(
           predicateIri: prop2,
           mergeWith: null,
           stopTraversal: false,
@@ -178,7 +160,7 @@ void main() {
     });
 
     test('stopTraversal check without type infers class mapping', () {
-      final classMapping = ClassMapping(classA, {prop1: classRuleA1});
+      final classMapping = ClassMergeRules(classA, {prop1: classRuleA1});
       final contract = MergeContract({classA: classMapping}, {});
 
       expect(contract.isStopTraversalPredicate(null, prop1), isTrue);

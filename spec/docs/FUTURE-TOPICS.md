@@ -47,6 +47,88 @@ These topics must be completed for v1 release. They represent essential function
 
 **Implementation Strategy**: Build on existing installation document infrastructure to add version metadata and basic compatibility checks.
 
+### External Merge Contract Stability and Error Handling
+
+**Specific Stability Case**: What happens when an application depends on a merge contract document hosted on the internet, and that document gets corrupted or updated incorrectly?
+
+**Current Behavior (as of v1)**:
+- Merge contracts are loaded from IRIs referenced in `sync:isGovernedBy`
+- Validation errors (via `ValidationResult` class) are thrown during merge contract loading
+- Applications fail to start if referenced merge contracts are invalid
+- Examples of validation errors that cause failure:
+  - Class mapping missing `mc:appliesToClass`
+  - Predicate rule missing `mc:predicate`
+  - Unknown CRDT algorithm types
+  - Cyclic imports in merge contract documents
+
+**Problem Scenarios**:
+1. **Corrupted Update**: A previously valid merge contract at `https://w3id.org/solid-crdt-sync/mappings/recipe-v1` gets corrupted (e.g., `mc:appliesToClass` accidentally removed)
+2. **Breaking Change**: Contract author pushes breaking changes without version bump
+3. **Network Issues**: Intermittent failures fetching remote contracts
+4. **Availability Problems**: External contract server goes down
+
+**Impact**:
+- Applications that previously worked suddenly break
+- Users cannot sync or access their data
+- No clear recovery path for end users
+- Developers cannot fix the problem (external contract)
+
+**Potential Solutions to Explore**:
+
+**Option 1: Contract Caching and Fallback**
+- Cache validated contracts locally
+- On validation failure, use cached version with warning
+- Allow applications to continue operating with last-known-good contract
+- Trade-off: May miss intentional updates
+
+**Option 2: Contract Versioning Requirements**
+- Enforce versioned contract IRIs (e.g., `mappings/recipe-v1.0.0` instead of `mappings/recipe-v1`)
+- Immutable contracts - breaking changes require new version
+- Applications explicitly upgrade to new versions
+- Trade-off: More complex version management
+
+**Option 3: Contract Pinning**
+- Applications can pin to specific contract hashes/snapshots
+- Optional "latest" mode for development/testing
+- Trade-off: Applications may miss bug fixes
+
+**Option 4: Graceful Degradation**
+- Parse contracts in "best-effort" mode
+- Skip invalid class mappings but continue with valid ones
+- Log validation warnings without blocking application startup
+- Trade-off: May allow semantically incorrect merges
+
+**Option 5: Local Contract Override**
+- Applications can bundle backup contracts
+- On fetch/validation failure, fall back to bundled version
+- Trade-off: Duplication, potential staleness
+
+**Decision Deferred**: This requires deeper analysis of real-world failure modes and user impact. Key questions:
+- How often do remote contracts actually change?
+- What's the acceptable failure rate for external dependencies?
+- Should framework provide default strategies or let applications decide?
+- How to balance safety with flexibility?
+
+**Related ValidationResult Class**:
+The `ValidationResult` class (in `packages/locorda_core/lib/locorda_core.dart`) provides structured error reporting for merge contract validation, including:
+- Hierarchical error context (which document, which mapping, which rule)
+- Detailed error messages with helpful suggestions
+- Warnings vs. errors distinction
+- Ability to accumulate multiple validation issues
+
+This infrastructure is critical for any stability strategy - it provides the diagnostic information needed to:
+1. Detect when contracts are invalid
+2. Communicate problems clearly to developers
+3. Make informed decisions about fallback strategies
+4. Log detailed debugging information
+
+**Example Validation Errors**:
+- "Class mapping missing appliesToClass" - indicates malformed mapping that cannot be processed
+- "Unknown CRDT type {IRI}" - references non-existent algorithm
+- "Cyclic import in merge contract" - would cause infinite recursion
+
+**v1 Scope**: Document current validation behavior and failure modes. Implement basic caching to improve resilience. Defer comprehensive stability strategy to v2+ when we have production experience with contract evolution patterns.
+
 ### Identified Blank Node Hash Algorithm Evolution
 
 **Specific Compatibility Case**: Evolution from MD5 to alternative hash algorithms for identified blank node canonical fragments.

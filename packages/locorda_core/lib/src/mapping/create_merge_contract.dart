@@ -1,3 +1,5 @@
+import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'merge_contract.dart';
 
@@ -10,7 +12,10 @@ import 'merge_contract.dart';
 /// 4. Imported Predicate Mappings (lowest priority)
 ///
 /// Uses first-wins semantics for conflict resolution
-MergeContract createMergeContractFrom(List<DocumentMapping> documents) {
+(MergeContract, ValidationResult) createMergeContractFrom(
+    List<DocumentMapping> documents,
+    {required CrdtTypeRegistry crdtRegistry}) {
+  ValidationResult validation = ValidationResult();
   final mergedClassMappings = collectClassMappings(documents);
   final predicateMappings = collectPredicateMappings(documents);
 
@@ -18,8 +23,61 @@ MergeContract createMergeContractFrom(List<DocumentMapping> documents) {
     throw StateError('Unexpected multiple merged predicate mappings');
   }
 
-  final predicateRules = predicateMappings.firstOrNull?.predicateRules ?? {};
-  return MergeContract(mergedClassMappings, predicateRules);
+  final predicateRules =
+      predicateMappings.firstOrNull?.predicateRules ?? const {};
+
+  // Now, we need to apply the global defaults to the class mappings
+  final classMappings = {
+    for (final e in mergedClassMappings.entries)
+      e.key: _createClassMergeRules(e.value, crdtRegistry, predicateRules)
+  };
+  final predicateMergeRules = {
+    for (final e in predicateRules.entries)
+      e.key: _toPredicateMergeRule(e.value, crdtRegistry)
+  };
+
+// FIXME: compute (and validate) the effective resulting rules, meaning that
+// e.g. we need to check if the algorithm is single value and then set the
+// path identifying flag, if not set explicitly.
+  return (MergeContract(classMappings, predicateMergeRules), validation);
+}
+
+ClassMergeRules _createClassMergeRules(
+    ClassMapping value,
+    CrdtTypeRegistry crdtRegistry,
+    Map<RdfPredicate, PredicateRule> predicateRules) {
+  // Apply global defaults to the class mapping
+  final updatedPropertyRules = {
+    for (final entry in value.propertyRules.entries)
+      entry.key: _toPredicateMergeRule(
+          _applyGlobalDefaultsToRule(entry.value, crdtRegistry, predicateRules),
+          crdtRegistry)
+  };
+  return ClassMergeRules(value.classIri, updatedPropertyRules);
+}
+
+PredicateMergeRule _toPredicateMergeRule(
+    PredicateRule rule, CrdtTypeRegistry crdtRegistry) {
+  final mergeWith = rule.mergeWith;
+  final bool isPathIdentifying;
+  // FIXME: do we need to validate anything here?
+  if (mergeWith != null && crdtRegistry.hasType(mergeWith)) {
+    final algo = crdtRegistry.getType(mergeWith);
+    isPathIdentifying = algo.isSingleValueSupported &&
+        rule.disableBlankNodePathIdentification != true;
+  } else {
+    isPathIdentifying = false;
+  }
+  return PredicateMergeRule.fromRule(rule,
+      isPathIdentifying: isPathIdentifying);
+}
+
+PredicateRule _applyGlobalDefaultsToRule(
+    PredicateRule rule,
+    CrdtTypeRegistry crdtRegistry,
+    Map<RdfPredicate, PredicateRule> predicateRules) {
+  final global = predicateRules[rule.predicateIri];
+  return global == null ? rule : rule.withFallback(global);
 }
 
 /// Recursively collects and merges class mappings from documents and their imports

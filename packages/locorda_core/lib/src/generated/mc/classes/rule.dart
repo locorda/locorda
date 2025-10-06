@@ -58,14 +58,14 @@ class McRule {
     'https://w3id.org/solid-crdt-sync/vocab/merge-contract#stopTraversal',
   );
 
-  /// isPathIdentifying [Expects: http://www.w3.org/2001/XMLSchema#boolean]
+  /// disableBlankNodePathIdentification [Expects: http://www.w3.org/2001/XMLSchema#boolean]
   ///
-  /// A boolean flag used within mc:Rule to declare that blank nodes at this predicate are identified by their property path. Only valid for single-valued properties (algorithms that support single-valued semantics like LWW-Register, Immutable, FWW-Register). When true, the framework generates canonical IRIs based on the property path from the parent resource rather than property values. This enables property-level CRDT tracking within blank nodes at single-valued properties.
+  /// A boolean flag used within mc:Rule to disable the default path-based identification for blank nodes at this predicate. When true, blank nodes are treated as unidentified (atomic replacement). This flag is rarely needed - property-based identification (mc:isIdentifying) should be preferred when blank nodes need stable identity. Use cases: (1) Atomic replacement desired where all blank node properties should change together as a conceptual unit, (2) Multi-valued blank nodes without identification where atomic LWW replacement is acceptable. Important: This flag only affects path-based identification; property-based identification (mc:isIdentifying true) can and should still be used for collections.
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/merge-contract#Rule
   ///
-  static const isPathIdentifying = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#isPathIdentifying',
+  static const disableBlankNodePathIdentification = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/merge-contract#disableBlankNodePathIdentification',
   );
 
   /// mergeWith from algo vocabulary [Expects: https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#Algorithm]

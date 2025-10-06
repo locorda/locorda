@@ -330,12 +330,12 @@ class LocordaGraphSync {
     required ResourceLocator resourceLocator,
     required PhysicalTimestampFactory physicalTimestampFactory,
     required IriTermFactory iriTermFactory,
+    required CrdtTypeRegistry crdtTypeRegistry,
   })  : _storage = storage,
         _backend = backend,
         _config = config,
         _mergeContractLoader = mergeContractLoader,
-        _crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
-            physicalTimestampFactory: physicalTimestampFactory),
+        _crdtTypeRegistry = crdtTypeRegistry,
         _hlcService = hlcService,
         _streamManager = HydrationStreamManager(),
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
@@ -412,11 +412,16 @@ class LocordaGraphSync {
       installationLocalId: installationService.installationLocalId,
       physicalTimestampFactory: physicalTimestampFactory,
     );
+    final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
+        physicalTimestampFactory: physicalTimestampFactory);
 
     // TODO: the HttpRdfGraphFetcher should be db-cached (ideally with initialization from deployment and etag)
-    final mergeContractLoader = StandardMergeContractLoader(RecursiveRdfLoader(
-        fetcher: StandardRdfGraphFetcher(fetcher: fetcher, rdfCore: rdfCore),
-        iriFactory: iriFactory));
+    final mergeContractLoader = StandardMergeContractLoader(
+        RecursiveRdfLoader(
+            fetcher:
+                StandardRdfGraphFetcher(fetcher: fetcher, rdfCore: rdfCore),
+            iriFactory: iriFactory),
+        crdtTypeRegistry);
 
     final sync = LocordaGraphSync._(
         storage: storage,
@@ -426,7 +431,8 @@ class LocordaGraphSync {
         physicalTimestampFactory: physicalTimestampFactory,
         hlcService: hlcService,
         iriTermFactory: iriFactory,
-        resourceLocator: localResourceLocator);
+        resourceLocator: localResourceLocator,
+        crdtTypeRegistry: crdtTypeRegistry);
 
     if (!installationService.installationDocumentSaved) {
       final iri = installationService.installationIri;

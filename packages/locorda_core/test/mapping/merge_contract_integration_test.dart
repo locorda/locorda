@@ -1,7 +1,11 @@
+import 'package:locorda_core/src/crdt/crdt_types.dart';
+import 'package:locorda_core/src/hlc_service.dart';
 import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/create_merge_contract.dart';
+
+import 'test_matchers.dart';
 
 /// Integration tests verifying the complete precedence hierarchy
 /// as specified in the CRDT specification section 5.2.2.3
@@ -101,7 +105,7 @@ void main() {
       );
 
       // Build the contract and verify precedence
-      final contract = createMergeContractFrom([mainDocument]);
+      final contract = _createValidMergeContractFrom([mainDocument]);
 
       // Verify class mapping exists and has merged properties correctly
       final finalClassMapping = contract.getClassMapping(classIri);
@@ -111,7 +115,7 @@ void main() {
       // This tests: Local Class Mappings > Imported Class Mappings
       expect(
         finalClassMapping!.getPropertyRule(conflictingPredicateIri),
-        equals(localClassRule),
+        hasRuleProperties(localClassRule),
         reason: 'Local class mapping should win over imported class mapping',
       );
 
@@ -119,7 +123,7 @@ void main() {
       // This tests: merging of non-conflicting properties
       expect(
         finalClassMapping.getPropertyRule(predicateIri),
-        equals(appClassRule),
+        hasRuleProperties(appClassRule),
         reason: 'Non-conflicting imported class mapping should be preserved',
       );
 
@@ -127,7 +131,7 @@ void main() {
       // This tests: Class Mappings > Predicate Mappings precedence
       expect(
         contract.getPredicateMapping(conflictingPredicateIri),
-        equals(frameworkPredicateRule),
+        hasRuleProperties(frameworkPredicateRule),
         reason: 'Framework predicate mapping should be available as fallback',
       );
     });
@@ -182,12 +186,12 @@ void main() {
         predicateMappings: [topMapping],
       );
 
-      final contract = createMergeContractFrom([topDoc]);
+      final contract = _createValidMergeContractFrom([topDoc]);
 
       // Top-level should win due to first-wins precedence
       expect(
         contract.getPredicateMapping(conflictingPredicateIri),
-        equals(topRule),
+        hasRuleProperties(topRule),
         reason: 'Top-level predicate mapping should win in import hierarchy',
       );
     });
@@ -236,14 +240,14 @@ void main() {
         predicateMappings: [globalMapping],
       );
 
-      final contract = createMergeContractFrom([document]);
+      final contract = _createValidMergeContractFrom([document]);
 
       // Verify all mappings are preserved correctly
       expect(contract.getClassMapping(classA)!.getPropertyRule(prop1),
-          equals(classARule1));
+          hasRuleProperties(classARule1));
       expect(contract.getClassMapping(classB)!.getPropertyRule(prop2),
-          equals(classBRule2));
-      expect(contract.getPredicateMapping(prop3), equals(globalRule3));
+          hasRuleProperties(classBRule2));
+      expect(contract.getPredicateMapping(prop3), hasRuleProperties(globalRule3));
 
       // Verify class mappings don't interfere with each other
       expect(contract.getClassMapping(classA)!.getPropertyRule(prop2), isNull);
@@ -310,15 +314,23 @@ void main() {
         predicateMappings: [],
       );
 
-      final contract = createMergeContractFrom([doc1, doc2]);
+      final contract = _createValidMergeContractFrom([doc1, doc2]);
       final finalMapping = contract.getClassMapping(classIri)!;
 
       // All properties should be present
-      expect(finalMapping.getPropertyRule(prop1), equals(rule1));
-      expect(finalMapping.getPropertyRule(prop2), equals(rule2));
+      expect(finalMapping.getPropertyRule(prop1), hasRuleProperties(rule1));
+      expect(finalMapping.getPropertyRule(prop2), hasRuleProperties(rule2));
 
       // First-wins should resolve the conflict
-      expect(finalMapping.getPropertyRule(prop3), equals(rule3Winner));
+      expect(finalMapping.getPropertyRule(prop3), hasRuleProperties(rule3Winner));
     });
   });
+}
+
+MergeContract _createValidMergeContractFrom(List<DocumentMapping> documents) {
+  final (result, validation) = createMergeContractFrom(documents,
+      crdtRegistry: CrdtTypeRegistry.forStandardTypes(
+          physicalTimestampFactory: defaultPhysicalTimestampFactory));
+  validation.throwIfInvalid();
+  return result;
 }

@@ -55,7 +55,7 @@ class RegexTransformValidator {
     if (_alternationPattern.hasMatch(pattern)) {
       result.addError(
         'RegexTransform pattern contains alternation (|) which is not supported in the cross-platform compatible subset. Use multiple transform rules instead.',
-        context: pattern,
+        details: pattern,
       );
     }
 
@@ -64,7 +64,7 @@ class RegexTransformValidator {
     for (final match in namedClassMatches) {
       result.addError(
         'RegexTransform pattern contains named character class ${match.group(0)} which is not supported. Use explicit ranges like [a-zA-Z] or [0-9] instead.',
-        context: pattern,
+        details: pattern,
       );
     }
 
@@ -78,7 +78,7 @@ class RegexTransformValidator {
       } catch (e) {
         result.addError(
           'RegexTransform pattern is not a valid regular expression: $e',
-          context: pattern,
+          details: pattern,
         );
       }
     }
@@ -97,7 +97,7 @@ class RegexTransformValidator {
     if (_invalidDollarPattern.hasMatch(replacement)) {
       result.addError(
         'RegexTransform replacement contains invalid \$ usage. Use \${n} for backreferences or \$\$ for literal \$ character.',
-        context: replacement,
+        details: replacement,
       );
     }
 
@@ -105,7 +105,7 @@ class RegexTransformValidator {
     if (_emptyBracesPattern.hasMatch(replacement)) {
       result.addError(
         'RegexTransform replacement contains empty braces \${} which is invalid.',
-        context: replacement,
+        details: replacement,
       );
     }
 
@@ -117,7 +117,7 @@ class RegexTransformValidator {
       if (groupStr.isNotEmpty && !RegExp(r'^\d+$').hasMatch(groupStr)) {
         result.addError(
           'RegexTransform replacement contains invalid backreference \${$groupStr}',
-          context: replacement,
+          details: replacement,
         );
       } else if (groupStr.isNotEmpty) {
         // Check if the group number exists in the pattern
@@ -125,7 +125,7 @@ class RegexTransformValidator {
         if (groupNum > captureGroupCount) {
           result.addError(
             'RegexTransform replacement references capture group \${$groupStr} but pattern only has $captureGroupCount capture groups',
-            context: replacement,
+            details: replacement,
           );
         }
       }
@@ -150,7 +150,7 @@ class RegexTransformValidator {
           if (i + 1 >= pattern.length) {
             result.addError(
               'RegexTransform pattern ends with incomplete escape sequence',
-              context: pattern,
+              details: pattern,
             );
             return 0;
           }
@@ -162,7 +162,7 @@ class RegexTransformValidator {
               !RegExp(r'[nrtfvab]').hasMatch(nextChar)) {
             result.addWarning(
               'RegexTransform pattern contains escape sequence \\$nextChar which may not be portable across all platforms',
-              context: pattern,
+              details: pattern,
             );
           }
           i++; // Skip the escaped character
@@ -199,7 +199,7 @@ class RegexTransformValidator {
             if (parenDepth < 0) {
               result.addError(
                 'RegexTransform pattern contains unmatched closing parenthesis',
-                context: pattern,
+                details: pattern,
               );
               return 0;
             }
@@ -214,7 +214,7 @@ class RegexTransformValidator {
             if (braceDepth < 0) {
               result.addError(
                 'RegexTransform pattern contains unmatched closing brace',
-                context: pattern,
+                details: pattern,
               );
               return 0;
             }
@@ -226,19 +226,19 @@ class RegexTransformValidator {
     if (bracketDepth > 0) {
       result.addError(
         'RegexTransform pattern contains unmatched opening bracket [',
-        context: pattern,
+        details: pattern,
       );
     }
     if (parenDepth > 0) {
       result.addError(
         'RegexTransform pattern contains unmatched opening parenthesis (',
-        context: pattern,
+        details: pattern,
       );
     }
     if (braceDepth > 0) {
       result.addError(
         'RegexTransform pattern contains unmatched opening brace {',
-        context: pattern,
+        details: pattern,
       );
     }
 

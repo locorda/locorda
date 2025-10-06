@@ -30,6 +30,7 @@
 - [x] Concept addition: I think we need to revisit the identified blank node concept - Pure, path based should work as well => proposal 008 and impl.
 - [x] Implement resource identity
 - [x] Implement (optional) external IRI for better DX 
+- [x] Change 008 proposal slightly again: we really should use the path identification by default
 - [ ] LocordaSync: Make sure that all patterns like IRI-Identified Sub-Resources, identified blank nodes and unidentified blank nodes are shown. Ideas: Weblink in Note for (classical) identified blank node, Comment in Note for IRI-Identified sub-content, CategoryDisplaySettings in Category for single-path-identified blank node, and ??? for sets of unidentified blank nodes
 - [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil?
 - [ ] Storage Layer: save locorda indices

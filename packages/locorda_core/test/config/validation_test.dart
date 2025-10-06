@@ -36,11 +36,11 @@ void main() {
       final result = ValidationResult();
       final context = {'type': String, 'path': '/test'};
 
-      result.addError('Error with context', context: context);
-      result.addWarning('Warning with context', context: context);
+      result.addError('Error with context', details: context);
+      result.addWarning('Warning with context', details: context);
 
-      expect(result.errors.first.context, equals(context));
-      expect(result.warnings.first.context, equals(context));
+      expect(result.errors.first.details, equals(context));
+      expect(result.warnings.first.details, equals(context));
     });
 
     test('should throw validation exception when invalid', () {
@@ -94,15 +94,15 @@ void main() {
       const message = 'Test message';
       final context = {'key': 'value'};
 
-      final error = ValidationError(message, context: context);
-      final warning = ValidationWarning(message, context: context);
+      final error = ValidationError([], message, details: context);
+      final warning = ValidationWarning([], message, details: context);
 
       expect(error.message, equals(message));
-      expect(error.context, equals(context));
+      expect(error.details, equals(context));
       expect(error.toString(), equals(message));
 
       expect(warning.message, equals(message));
-      expect(warning.context, equals(context));
+      expect(warning.details, equals(context));
       expect(warning.toString(), equals(message));
     });
   });

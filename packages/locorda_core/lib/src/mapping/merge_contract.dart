@@ -1,3 +1,5 @@
+import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
@@ -12,28 +14,31 @@ class PredicateRule {
   final IriTerm? mergeWith;
   final bool? stopTraversal;
   final bool? isIdentifying;
-  final bool? isPathIdentifying;
+  final bool? disableBlankNodePathIdentification;
   PredicateRule({
     required this.predicateIri,
     required this.mergeWith,
     required this.stopTraversal,
     required this.isIdentifying,
-    this.isPathIdentifying,
+    this.disableBlankNodePathIdentification,
   });
 
   PredicateRule withOptions({
     IriTerm? mergeWith,
     bool? stopTraversal,
     bool? isIdentifying,
-    bool? isPathIdentifying,
+    bool? disableBlankNodePathIdentification,
   }) {
     var newMergeWith = mergeWith ?? this.mergeWith;
     var newStopTraversal = stopTraversal ?? this.stopTraversal;
     var newIsIdentifying = isIdentifying ?? this.isIdentifying;
-    var newIsPathIdentifying = isPathIdentifying ?? this.isPathIdentifying;
+    var newDisableBlankNodePathIdentification =
+        disableBlankNodePathIdentification ??
+            this.disableBlankNodePathIdentification;
     if (newStopTraversal == this.stopTraversal &&
         newIsIdentifying == this.isIdentifying &&
-        newIsPathIdentifying == this.isPathIdentifying &&
+        newDisableBlankNodePathIdentification ==
+            this.disableBlankNodePathIdentification &&
         newMergeWith == this.mergeWith) {
       return this;
     }
@@ -42,21 +47,23 @@ class PredicateRule {
       mergeWith: newMergeWith,
       stopTraversal: newStopTraversal,
       isIdentifying: newIsIdentifying,
-      isPathIdentifying: newIsPathIdentifying,
+      disableBlankNodePathIdentification: newDisableBlankNodePathIdentification,
     );
   }
 
   PredicateRule withFallback(PredicateRule? fallbackRule) {
     final newStopTraversal = stopTraversal ?? fallbackRule?.stopTraversal;
     final newIsIdentifying = isIdentifying ?? fallbackRule?.isIdentifying;
-    final newIsPathIdentifying =
-        isPathIdentifying ?? fallbackRule?.isPathIdentifying;
+    final newDisableBlankNodePathIdentification =
+        disableBlankNodePathIdentification ??
+            fallbackRule?.disableBlankNodePathIdentification;
     final newMergeWith = mergeWith ?? fallbackRule?.mergeWith;
 
     return withOptions(
         stopTraversal: newStopTraversal,
         isIdentifying: newIsIdentifying,
-        isPathIdentifying: newIsPathIdentifying,
+        disableBlankNodePathIdentification:
+            newDisableBlankNodePathIdentification,
         mergeWith: newMergeWith);
   }
 }
@@ -97,6 +104,45 @@ class ClassMapping {
   /// Provides read-only access to all property rules for merging operations
   Map<RdfPredicate, PredicateRule> get propertyRules =>
       Map.unmodifiable(_propertyRules);
+}
+
+class PredicateMergeRule {
+  final RdfPredicate predicateIri;
+  final IriTerm? mergeWith;
+  final bool? stopTraversal;
+  final bool? isIdentifying;
+  final bool isPathIdentifying;
+
+  PredicateMergeRule(
+      {required this.predicateIri,
+      this.mergeWith,
+      this.stopTraversal,
+      this.isIdentifying,
+      this.isPathIdentifying = true});
+
+  factory PredicateMergeRule.fromRule(PredicateRule rule,
+      {required bool isPathIdentifying}) {
+    return PredicateMergeRule(
+      predicateIri: rule.predicateIri,
+      mergeWith: rule.mergeWith,
+      stopTraversal: rule.stopTraversal,
+      isIdentifying: rule.isIdentifying,
+      isPathIdentifying: isPathIdentifying,
+    );
+  }
+}
+
+class ClassMergeRules {
+  final IriTerm classIri;
+  final Map<RdfPredicate, PredicateMergeRule> _propertyRules;
+  ClassMergeRules(this.classIri, this._propertyRules);
+
+  PredicateMergeRule? getPropertyRule(RdfPredicate propertyIri) =>
+      _propertyRules[propertyIri];
+
+  /// Provides read-only access to all property rules for merging operations
+  Map<RdfPredicate, PredicateMergeRule> get propertyRules =>
+      Map.unmodifiable(_propertyRules);
 
   late final Set<RdfPredicate> identifyingPredicates =
       _computeIdentifyingPredicates();
@@ -126,25 +172,26 @@ class ClassMapping {
 }
 
 class MergeContract {
-  final Map<IriTerm, ClassMapping> _classMappings;
-  final Map<RdfPredicate, PredicateRule> _predicateRules;
-  late final Map<RdfPredicate, List<ClassMapping>> _classMappingsByPredicate =
-      _classMappings.entries.fold({}, (r, e) {
+  final Map<IriTerm, ClassMergeRules> _classMappings;
+  final Map<RdfPredicate, PredicateMergeRule> _predicateRules;
+  late final Map<RdfPredicate, List<ClassMergeRules>>
+      _classMappingsByPredicate = _classMappings.entries.fold({}, (r, e) {
     for (final p in e.value.propertyRules.keys) {
       r.putIfAbsent(p, () => []).add(e.value);
     }
     return r;
   });
+
   MergeContract(this._classMappings, this._predicateRules);
 
-  PredicateRule? getEffectivePredicateRule(
+  PredicateMergeRule? getEffectivePredicateRule(
       IriTerm? typeIri, RdfPredicate propertyIri) {
     final globalRule = _predicateRules[propertyIri];
     if (typeIri != null) {
       final classMapping = getClassMapping(typeIri);
       final rule = classMapping?.getPropertyRule(propertyIri);
       if (rule != null) {
-        return rule.withFallback(globalRule);
+        return rule;
       }
       return globalRule;
     }
@@ -157,7 +204,7 @@ class MergeContract {
       if (rule != null) {
         _log.fine(
             'Inferred type $inferredTypes for property $propertyIri to apply class-specific merge rule.');
-        return rule.withFallback(globalRule);
+        return rule;
       }
     } else if (inferredTypes.length > 1) {
       _log.warning(
@@ -224,13 +271,16 @@ class MergeContract {
     return const {};
   }
 
-  ClassMapping? getClassMapping(IriTerm classIri) => _classMappings[classIri];
+  ClassMergeRules? getClassMapping(IriTerm classIri) =>
+      _classMappings[classIri];
 
-  PredicateRule? getPredicateMapping(RdfPredicate predicateIri) =>
+  PredicateMergeRule? getPredicateMapping(RdfPredicate predicateIri) =>
       _predicateRules[predicateIri];
 
-  static MergeContract fromDocumentMappings(List<DocumentMapping> documents) {
-    return createMergeContractFrom(documents);
+  static (MergeContract, ValidationResult) fromDocumentMappings(
+      List<DocumentMapping> documents,
+      {required CrdtTypeRegistry crdtRegistry}) {
+    return createMergeContractFrom(documents, crdtRegistry: crdtRegistry);
   }
 
   bool isStopTraversalPredicate(IriTerm? type, RdfPredicate predicate) {

@@ -59,8 +59,8 @@ class LocalResourceIriService {
     // This is a configuration validation issue - collect for later reporting
     if (_registeredTypes.containsKey(T)) {
       _setupErrors.add(ValidationError(
-          'Resource IRI mapper for type $T is already registered',
-          context: {'type': T, 'operation': 'createResourceIriMapper'}));
+          [], 'Resource IRI mapper for type $T is already registered',
+          details: {'type': T, 'operation': 'createResourceIriMapper'}));
     } else {
       _registeredTypes[T] = config;
     }
@@ -125,7 +125,7 @@ class LocalResourceIriService {
         result.addError(
             'Referenced type $refType was not registered as a resource type. '
             'All types used in resource references must be registered via createResourceIriMapper.',
-            context: {
+            details: {
               'referencedType': refType,
               'registeredTypes': _registeredTypes.keys.toList()
             });
@@ -141,7 +141,7 @@ class LocalResourceIriService {
         result.addError(
             'Missing IRI term for registered type $type in resource type cache. '
             'This indicates a configuration error in the RDF mapper setup.',
-            context: {'type': type});
+            details: {'type': type});
       }
     }
   }

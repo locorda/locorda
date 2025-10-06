@@ -1,7 +1,11 @@
+import 'package:locorda_core/src/crdt/crdt_types.dart';
+import 'package:locorda_core/src/hlc_service.dart';
 import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/create_merge_contract.dart';
+
+import 'test_matchers.dart';
 
 void main() {
   group('create_merge_contract functions', () {
@@ -33,7 +37,7 @@ void main() {
 
     group('createMergeContractFrom', () {
       test('should build empty contract from empty documents', () {
-        final contract = createMergeContractFrom([]);
+        final contract = _createValidMergeContractFrom([]);
 
         expect(contract.getClassMapping(classIriA), isNull);
         expect(contract.getPredicateMapping(predicateIri1), isNull);
@@ -58,12 +62,12 @@ void main() {
           predicateMappings: [],
         );
 
-        final contract = createMergeContractFrom([document]);
+        final contract = _createValidMergeContractFrom([document]);
 
         expect(contract.getClassMapping(classIriA), isNotNull);
         expect(
             contract.getClassMapping(classIriA)!.getPropertyRule(predicateIri1),
-            equals(propertyRule));
+            hasRuleProperties(propertyRule));
         expect(contract.getPredicateMapping(predicateIri1), isNull);
       });
 
@@ -86,11 +90,12 @@ void main() {
           predicateMappings: [predicateMapping],
         );
 
-        final contract = createMergeContractFrom([document]);
+        final contract = _createValidMergeContractFrom([document]);
 
         expect(contract.getClassMapping(classIriA), isNull);
         expect(
-            contract.getPredicateMapping(predicateIri1), equals(predicateRule));
+            contract.getPredicateMapping(predicateIri1),
+            hasRuleProperties(predicateRule));
       });
     });
 
@@ -122,7 +127,7 @@ void main() {
         expect(result, hasLength(1));
         expect(result[classIriA], isNotNull);
         expect(result[classIriA]!.getPropertyRule(predicateIri1),
-            equals(propertyRule));
+            matchesRule(propertyRule));
       });
 
       test('should respect first-wins precedence for local mappings', () {
@@ -160,7 +165,7 @@ void main() {
         final result = collectClassMappings([doc1, doc2]);
 
         expect(
-            result[classIriA]!.getPropertyRule(predicateIri1), equals(rule1));
+            result[classIriA]!.getPropertyRule(predicateIri1), matchesRule(rule1));
       });
 
       test('should process imports with correct precedence', () {
@@ -201,7 +206,7 @@ void main() {
 
         // Local rule should win over imported rule
         expect(result[classIriA]!.getPropertyRule(predicateIri1),
-            equals(localRule));
+            matchesRule(localRule));
       });
 
       test('should merge properties from same class across documents', () {
@@ -239,9 +244,9 @@ void main() {
         final result = collectClassMappings([doc1, doc2]);
 
         expect(
-            result[classIriA]!.getPropertyRule(predicateIri1), equals(rule1));
+            result[classIriA]!.getPropertyRule(predicateIri1), matchesRule(rule1));
         expect(
-            result[classIriA]!.getPropertyRule(predicateIri2), equals(rule2));
+            result[classIriA]!.getPropertyRule(predicateIri2), matchesRule(rule2));
       });
     });
 
@@ -276,9 +281,9 @@ void main() {
 
         expect(result, hasLength(2));
         expect(
-            result[classIriA]!.getPropertyRule(predicateIri1), equals(ruleA));
+            result[classIriA]!.getPropertyRule(predicateIri1), matchesRule(ruleA));
         expect(
-            result[classIriB]!.getPropertyRule(predicateIri2), equals(ruleB));
+            result[classIriB]!.getPropertyRule(predicateIri2), matchesRule(ruleB));
       });
     });
 
@@ -307,7 +312,7 @@ void main() {
         final result = collectPredicateMappings([document]).toList();
 
         expect(result, hasLength(1));
-        expect(result.first.getPredicateRule(predicateIri1), equals(rule));
+        expect(result.first.getPredicateRule(predicateIri1), matchesRule(rule));
       });
     });
 
@@ -339,8 +344,8 @@ void main() {
             mergePredicateMappingGroups([mapping1, mapping2]).toList();
 
         expect(result, hasLength(1));
-        expect(result.first.getPredicateRule(predicateIri1), equals(rule1));
-        expect(result.first.getPredicateRule(predicateIri2), equals(rule2));
+        expect(result.first.getPredicateRule(predicateIri1), matchesRule(rule1));
+        expect(result.first.getPredicateRule(predicateIri2), matchesRule(rule2));
       });
     });
 
@@ -371,8 +376,8 @@ void main() {
         final result = mergePredicateRuleGroups([collection1, collection2]);
 
         expect(result, hasLength(2));
-        expect(result[predicateIri1], equals(rule1));
-        expect(result[predicateIri2], equals(rule2));
+        expect(result[predicateIri1], matchesRule(rule1));
+        expect(result[predicateIri2], matchesRule(rule2));
       });
 
       test('should use first-wins for overlapping predicates', () {
@@ -396,7 +401,7 @@ void main() {
         final result = mergePredicateRuleGroups([collection1, collection2]);
 
         expect(result, hasLength(1));
-        expect(result[predicateIri1], equals(rule1));
+        expect(result[predicateIri1], matchesRule(rule1));
       });
     });
 
@@ -449,13 +454,16 @@ void main() {
           predicateMappings: [],
         );
 
-        final contract = createMergeContractFrom([topDoc]);
+        final contract = _createValidMergeContractFrom([topDoc]);
 
         // All rules should be present in the final merged class
         final finalMapping = contract.getClassMapping(classIriA)!;
-        expect(finalMapping.getPropertyRule(predicateIri1), equals(baseRule));
-        expect(finalMapping.getPropertyRule(predicateIri2), equals(middleRule));
-        expect(finalMapping.getPropertyRule(predicateIri3), equals(topRule));
+        expect(finalMapping.getPropertyRule(predicateIri1),
+            hasRuleProperties(baseRule, expectedIsPathIdentifying: false));
+        expect(finalMapping.getPropertyRule(predicateIri2),
+            hasRuleProperties(middleRule, expectedIsPathIdentifying: false));
+        expect(finalMapping.getPropertyRule(predicateIri3),
+            hasRuleProperties(topRule, expectedIsPathIdentifying: false));
       });
 
       test('should handle mixed class and predicate mappings', () {
@@ -485,14 +493,24 @@ void main() {
           predicateMappings: [predicateMapping],
         );
 
-        final contract = createMergeContractFrom([document]);
+        final contract = _createValidMergeContractFrom([document]);
 
         expect(
             contract.getClassMapping(classIriA)!.getPropertyRule(predicateIri1),
-            equals(classRule));
-        expect(
-            contract.getPredicateMapping(predicateIri2), equals(predicateRule));
+            hasRuleProperties(classRule, expectedIsPathIdentifying: false));
+        expect(contract.getPredicateMapping(predicateIri2),
+            hasRuleProperties(predicateRule, expectedIsPathIdentifying: false));
       });
     });
   });
+}
+
+final _crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
+    physicalTimestampFactory: defaultPhysicalTimestampFactory);
+
+MergeContract _createValidMergeContractFrom(List<DocumentMapping> documents) {
+  final (result, validation) =
+      createMergeContractFrom(documents, crdtRegistry: _crdtTypeRegistry);
+  validation.throwIfInvalid();
+  return result;
 }

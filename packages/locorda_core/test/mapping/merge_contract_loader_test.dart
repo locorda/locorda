@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:locorda_core/src/config/validation.dart';
+import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
@@ -83,12 +86,16 @@ class _MockFetcher implements RdfGraphFetcher {
 }
 
 void main() {
+  late CrdtTypeRegistry crdtTypeRegistry;
+
   late MockRecursiveRdfLoader mockLoader;
   late MergeContractLoader contractLoader;
 
   setUp(() {
+    crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
+        physicalTimestampFactory: defaultPhysicalTimestampFactory);
     mockLoader = MockRecursiveRdfLoader();
-    contractLoader = StandardMergeContractLoader(mockLoader);
+    contractLoader = StandardMergeContractLoader(mockLoader, crdtTypeRegistry);
   });
 
   tearDown(() {
@@ -258,7 +265,7 @@ void main() {
         expect(rule.isIdentifying, isTrue);
       });
 
-      test('handles class mapping without appliesToClass', () async {
+      test('rejects class mapping without appliesToClass', () async {
         final mappingUri = const IriTerm('https://example.com/mapping');
         final classMappingNode = BlankNodeTerm();
 
@@ -272,13 +279,22 @@ void main() {
 
         mockLoader.setMockData(mappingUri, RdfGraph.fromTriples(triples));
 
-        final result = await contractLoader.load([mappingUri]);
-
-        // Should load successfully but skip the invalid class mapping
-        expect(result, isA<MergeContract>());
+        // Should throw validation exception with helpful error message
+        expect(
+          () => contractLoader.load([mappingUri]),
+          throwsA(isA<SyncConfigValidationException>().having(
+            (e) => e.result.errors,
+            'validation errors',
+            contains(isA<ValidationError>().having(
+              (err) => err.message,
+              'error message',
+              contains('missing appliesToClass'),
+            )),
+          )),
+        );
       });
 
-      test('handles invalid class mapping reference', () async {
+      test('rejects invalid class mapping reference', () async {
         final mappingUri = const IriTerm('https://example.com/mapping');
         final invalidNode = BlankNodeTerm();
 
@@ -291,10 +307,19 @@ void main() {
 
         mockLoader.setMockData(mappingUri, RdfGraph.fromTriples(triples));
 
-        final result = await contractLoader.load([mappingUri]);
-
-        // Should load successfully but skip the invalid reference
-        expect(result, isA<MergeContract>());
+        // Should throw validation exception
+        expect(
+          () => contractLoader.load([mappingUri]),
+          throwsA(isA<SyncConfigValidationException>().having(
+            (e) => e.result.errors,
+            'validation errors',
+            contains(isA<ValidationError>().having(
+              (err) => err.message,
+              'error message',
+              contains('resolve class mapping reference'),
+            )),
+          )),
+        );
       });
 
       test('handles duplicate class mappings', () async {
@@ -436,7 +461,7 @@ void main() {
         expect(rule.isIdentifying, isNull); // Not explicitly set
       });
 
-      test('skips rule without predicate', () async {
+      test('rejects rule without predicate', () async {
         final mappingUri = const IriTerm('https://example.com/mapping');
         final predicateMappingNode = BlankNodeTerm();
         final ruleNode = BlankNodeTerm();
@@ -453,10 +478,19 @@ void main() {
 
         mockLoader.setMockData(mappingUri, RdfGraph.fromTriples(triples));
 
-        final result = await contractLoader.load([mappingUri]);
-
-        // Should load successfully but skip the invalid rule
-        expect(result, isA<MergeContract>());
+        // Should throw validation exception
+        expect(
+          () => contractLoader.load([mappingUri]),
+          throwsA(isA<SyncConfigValidationException>().having(
+            (e) => e.result.errors,
+            'validation errors',
+            contains(isA<ValidationError>().having(
+              (err) => err.message,
+              'error message',
+              contains('missing mc:predicate'),
+            )),
+          )),
+        );
       });
     });
 
@@ -499,7 +533,7 @@ void main() {
         expect(rule!.mergeWith, equals(Algo.OR_Set));
       });
 
-      test('handles circular imports', () async {
+      test('rejects circular imports', () async {
         final doc1Uri = const IriTerm('https://example.com/doc1');
         final doc2Uri = const IriTerm('https://example.com/doc2');
 
@@ -518,11 +552,19 @@ void main() {
         mockLoader.setMockData(doc1Uri, RdfGraph.fromTriples(doc1Triples));
         mockLoader.setMockData(doc2Uri, RdfGraph.fromTriples(doc2Triples));
 
-        final result = await contractLoader.load([doc1Uri]);
-
-        // Should load successfully despite circular reference
-        expect(result, isA<MergeContract>());
-        expect(mockLoader.fetchedUris, containsAll([doc1Uri, doc2Uri]));
+        // Should throw validation exception for circular import
+        expect(
+          () => contractLoader.load([doc1Uri]),
+          throwsA(isA<SyncConfigValidationException>().having(
+            (e) => e.result.errors,
+            'validation errors',
+            contains(isA<ValidationError>().having(
+              (err) => err.message,
+              'error message',
+              contains('Cyclic import'),
+            )),
+          )),
+        );
       });
     });
 

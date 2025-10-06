@@ -1,5 +1,7 @@
 import 'dart:collection';
 
+import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
@@ -73,25 +75,43 @@ abstract interface class MergeContractLoader {
 
 class StandardMergeContractLoader implements MergeContractLoader {
   final RecursiveRdfLoader fetcher;
+  final CrdtTypeRegistry _crdtRegistry;
 
-  StandardMergeContractLoader(this.fetcher);
+  StandardMergeContractLoader(this.fetcher, this._crdtRegistry);
 
   @override
   Future<MergeContract> load(List<IriTerm> isGovernedBy) async {
+    final ValidationResult validation = ValidationResult();
     final loadedContractDocuments = await fetcher.loadRdfDocumentsRecursively(
         isGovernedBy,
         extractors: const [DocumentMappingDependencyExtractor()]);
     final all = loadedContractDocuments.values.mergeGraphs();
 
     // Parse loaded RDF graphs and extract mappings
-    final documents =
+    final parsedDocuments =
         isGovernedBy.map((iri) => _parseDocumentMapping(all, iri)).toList();
-
-    return MergeContract.fromDocumentMappings(documents);
+    final documents = parsedDocuments.map((e) => e.$1).toList();
+    for (var v in parsedDocuments.map((e) => e.$2).where((v) => v.hasIssues)) {
+      validation.addSubvalidationResult(v, context: "sync:isGovernedBy");
+    }
+    final (result, resultValidation) = MergeContract.fromDocumentMappings(
+        documents,
+        crdtRegistry: _crdtRegistry);
+    validation.addSubvalidationResult(resultValidation,
+        context: "During merge contract creation");
+    validation.throwIfInvalid();
+    return result;
   }
 
-  DocumentMapping _parseDocumentMapping(RdfGraph all, RdfSubject subject,
+  (DocumentMapping, ValidationResult) _parseDocumentMapping(
+      RdfGraph all, RdfSubject subject,
       [Set<RdfSubject>? visited]) {
+    ValidationResult validation = ValidationResult(
+        switch (subject) {
+          IriTerm iri => iri.value,
+          BlankNodeTerm bnode => "Blank Node $bnode"
+        },
+        {'document': subject});
     final seen = visited ?? <RdfSubject>{};
     seen.add(subject);
 
@@ -101,16 +121,26 @@ class StandardMergeContractLoader implements MergeContractLoader {
         all.getListObjects<RdfSubject>(subject, McDocumentMapping.classMapping);
     final predicateMappingRefs = all.getListObjects<RdfSubject>(
         subject, McDocumentMapping.predicateMapping);
-    final classMappings = _parseClassMappings(all, classMappingRefs);
-    final predicateMappings = predicateMappingRefs
+    final (classMappings, classMappingsValidation) =
+        _parseClassMappings(all, classMappingRefs);
+    validation.addSubvalidationResult(
+      classMappingsValidation,
+    );
+    final parsedPredicateMappings = predicateMappingRefs
         .map((ref) => _parsePredicateMapping(all, ref))
-        .whereType<PredicateMapping>()
         .toList();
-    final imports = importRefs
+    final predicateMappings =
+        parsedPredicateMappings.map((e) => e.$1).nonNulls.toList();
+    for (var v
+        in parsedPredicateMappings.map((e) => e.$2).where((v) => v.hasIssues)) {
+      validation.addSubvalidationResult(v);
+    }
+    final parsedImports = importRefs
         .where((ref) {
           if (seen.contains(ref)) {
             _log.warning(
                 'Detected cyclic import in merge contract at $ref, skipping.');
+            validation.addError('Cyclic import in merge contract at $ref');
             return false;
           } else {
             return true;
@@ -118,88 +148,135 @@ class StandardMergeContractLoader implements MergeContractLoader {
         })
         .map((ref) => _parseDocumentMapping(all, ref, seen))
         .toList();
-    return DocumentMapping(
-        documentIri: subject,
-        imports: imports,
-        classMappings: classMappings,
-        predicateMappings: predicateMappings);
+    final imports = parsedImports.map((e) => e.$1).toList();
+    for (var v in parsedImports.map((e) => e.$2).where((v) => v.hasIssues)) {
+      validation.addSubvalidationResult(v, context: "mc:imports");
+    }
+    return (
+      DocumentMapping(
+          documentIri: subject,
+          imports: imports,
+          classMappings: classMappings,
+          predicateMappings: predicateMappings),
+      validation
+    );
   }
 
-  PredicateRule? _parseRule(RdfGraph graph, RdfSubject ref) {
+  (PredicateRule?, ValidationResult) _parseRule(
+      RdfGraph graph, RdfSubject ref) {
+    final ValidationResult validation = ValidationResult();
     final predicateIri = graph.findSingleObject<IriTerm>(ref, McRule.predicate);
     if (predicateIri == null) {
       _log.warning('Predicate mapping missing mc:predicate: $ref');
-      return null;
+      validation.addError('Predicate mapping missing mc:predicate');
+      return (null, validation);
     }
     final mergeWithIri =
         graph.findSingleObject<IriTerm>(ref, McRule.algoMergeWith);
+    if (mergeWithIri != null) {
+      if (!_crdtRegistry.hasType(mergeWithIri)) {
+        validation.addError(
+            'Unknown CRDT type ${mergeWithIri.value} in predicate rule '
+            'for predicate ${predicateIri}');
+      }
+    }
     final stopTraversal = graph
         .findSingleObject<LiteralTerm>(ref, McRule.stopTraversal)
         ?.booleanValue;
     final isIdentifying = graph
         .findSingleObject<LiteralTerm>(ref, McRule.isIdentifying)
         ?.booleanValue;
-    final isPathIdentifying = graph
-        .findSingleObject<LiteralTerm>(ref, McRule.isPathIdentifying)
+    final disableBlankNodePathIdentification = graph
+        .findSingleObject<LiteralTerm>(
+            ref, McRule.disableBlankNodePathIdentification)
         ?.booleanValue;
 
-    return PredicateRule(
+    final result = PredicateRule(
       predicateIri: predicateIri,
       mergeWith: mergeWithIri,
       stopTraversal: stopTraversal,
       isIdentifying: isIdentifying,
-      isPathIdentifying: isPathIdentifying,
+      disableBlankNodePathIdentification: disableBlankNodePathIdentification,
     );
+    return (result, validation);
   }
 
-  Map<IriTerm, ClassMapping> _parseClassMappings(
+  (Map<IriTerm, ClassMapping>, ValidationResult) _parseClassMappings(
       RdfGraph graph, List<RdfSubject> classMappingRefs) {
+    final ValidationResult validation = ValidationResult();
     final classMappings = <IriTerm, ClassMapping>{};
+    final validations = <RdfSubject, ValidationResult>{};
     for (final ref in classMappingRefs) {
+      final ValidationResult validation = ValidationResult();
+      validations[ref] = validation;
       if (!graph.hasTriples(
           subject: ref, predicate: Rdf.type, object: McClassMapping.classIri)) {
         _log.warning('Skipping invalid class mapping reference: $ref');
+        validation.addError('Cannot resolve class mapping reference',
+            details: {'ref': ref});
         continue;
       }
       final classIri =
           graph.findSingleObject<IriTerm>(ref, McClassMapping.appliesToClass);
       if (classIri == null) {
         _log.warning('Class mapping missing appliesToClass: $ref');
+        validation.addError('Class mapping missing appliesToClass',
+            details: {'ref': ref});
         continue;
       }
       final predicateRuleRefs =
           graph.getMultiValueObjects<RdfSubject>(ref, McClassMapping.rule);
+      final parsedRules = predicateRuleRefs.map((r) => _parseRule(graph, r));
       final predicateMappings = {
-        for (var rule in predicateRuleRefs
-            .map((r) => _parseRule(graph, r))
-            .whereType<PredicateRule>())
+        for (var rule in parsedRules.map((r) => r.$1).nonNulls)
           rule.predicateIri: rule
       };
+      for (var v in parsedRules.map((r) => r.$2).where((v) => v.hasIssues)) {
+        validation.addSubvalidationResult(v,
+            context: switch (ref) {
+              IriTerm iri => '#${iri.fragment}',
+              BlankNodeTerm bnode => "Blank Node $bnode"
+            },
+            details: {'ref': ref});
+      }
       if (classMappings.containsKey(classIri)) {
         _log.warning('Duplicate class mapping for $classIri, overwriting.');
+        validation.addWarning('Duplicate class mapping for $classIri',
+            details: {'ref': ref, 'classIri': classIri});
       }
       classMappings[classIri] = ClassMapping(classIri, predicateMappings);
     }
-    return classMappings;
+    for (var e in validations.entries.where((e) => e.value.hasIssues)) {
+      validation.addSubvalidationResult(e.value,
+          context: 'mc:classMapping', details: {'ref': e.key});
+    }
+    return (classMappings, validation);
   }
 
-  PredicateMapping? _parsePredicateMapping(RdfGraph graph, RdfSubject ref) {
-    if (!graph.hasTriples(
-        subject: ref,
-        predicate: Rdf.type,
-        object: McPredicateMapping.classIri)) {
-      _log.warning('Skipping invalid class mapping reference: $ref');
-      return null;
+  (PredicateMapping?, ValidationResult) _parsePredicateMapping(
+      RdfGraph graph, RdfSubject ref) {
+    final ValidationResult validation = ValidationResult();
+    final type = graph.findSingleObject(ref, Rdf.type);
+    if (type != null && type != McPredicateMapping.classIri) {
+      validation.addWarning(
+          'Predicate mapping subject ${switch (ref) {
+            IriTerm iri => iri.value,
+            BlankNodeTerm bnode => "Blank Node $bnode"
+          }} is not of type mc:PredicateMapping, but of type $type',
+          details: {'ref': ref});
     }
     final predicateRuleRefs =
         graph.getMultiValueObjects<RdfSubject>(ref, McPredicateMapping.rule);
+    final parsedRules =
+        predicateRuleRefs.map((r) => _parseRule(graph, r)).toList();
     final rules = {
-      for (var rule in predicateRuleRefs
-          .map((r) => _parseRule(graph, r))
-          .whereType<PredicateRule>())
+      for (var rule in parsedRules.map((r) => r.$1).nonNulls)
         rule.predicateIri: rule
     };
-
-    return PredicateMapping(rules);
+    for (var v in parsedRules.map((r) => r.$2).where((v) => v.hasIssues)) {
+      validation.addSubvalidationResult(v,
+          context: 'In predicate mapping $ref', details: {'ref': ref});
+    }
+    return (PredicateMapping(rules), validation);
   }
 }

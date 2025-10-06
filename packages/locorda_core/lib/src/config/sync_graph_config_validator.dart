@@ -33,7 +33,7 @@ class SyncGraphConfigValidator {
       if (typeIris.contains(resource.typeIri)) {
         result.addError(
             'Duplicate resource type: ${resource.typeIri}. Each  type can only be configured once.',
-            context: {'type': resource.typeIri});
+            details: {'type': resource.typeIri});
         continue; // Skip further processing for this resource
       }
       typeIris.add(resource.typeIri);

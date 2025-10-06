@@ -20,8 +20,7 @@
         [ mc:predicate rdf:type ; algo:mergeWith algo:Immutable ],
         [ mc:predicate schema:name ; algo:mergeWith algo:LWW_Register ],
         [ mc:predicate pnotes:displaySettings ;
-          algo:mergeWith algo:LWW_Register ;
-          mc:isPathIdentifying true ] .
+          algo:mergeWith algo:LWW_Register ] .
 
 <#display-settings-mapping> a mc:ClassMapping ;
     mc:appliesToClass pnotes:CategoryDisplaySettings ;

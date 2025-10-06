@@ -81,7 +81,7 @@ void main() {
         expect(result.errors, hasLength(1));
         expect(result.errors.first.message, contains('already registered'));
         expect(
-            (result.errors.first.context as Map?)?['type'], equals(TestNote));
+            (result.errors.first.details as Map?)?['type'], equals(TestNote));
       });
 
       test('should collect validation error for unreferenced types', () {
@@ -94,7 +94,7 @@ void main() {
         expect(result.errors, hasLength(1));
         expect(result.errors.first.message,
             contains('was not registered as a resource type'));
-        expect((result.errors.first.context as Map?)?['referencedType'],
+        expect((result.errors.first.details as Map?)?['referencedType'],
             equals(TestUser));
       });
 
@@ -112,7 +112,7 @@ void main() {
         expect(result.errors.first.message,
             contains('Missing IRI term for registered type'));
         expect(
-            (result.errors.first.context as Map?)?['type'], equals(TestNote));
+            (result.errors.first.details as Map?)?['type'], equals(TestNote));
       });
 
       test('should collect multiple validation errors', () {

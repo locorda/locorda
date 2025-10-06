@@ -77,7 +77,7 @@ class SyncConfigValidator {
         result.addError(
             'Type $type is a primitive type and cannot be used as a mappable resource, groupKey, or itemType. '
             'Use proper RDF-mapped classes instead.',
-            context: {'type': type});
+            details: {'type': type});
         continue;
       }
 
@@ -93,18 +93,18 @@ class SyncConfigValidator {
             result.addError(
                 'Type $type has a serializer but no deserializer registered in RdfMapper. '
                 'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
-                context: {'type': type, 'typeIri': serializer.typeIri});
+                details: {'type': type, 'typeIri': serializer.typeIri});
           }
         }
       } on SerializerNotFoundException {
         result.addError(
             'Type $type is not registered in RdfMapper. '
             'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
-            context: {'type': type});
+            details: {'type': type});
       } catch (e) {
         result.addWarning(
             'Could not verify mapper registration for type $type: $e',
-            context: {'type': type, 'error': e.toString()});
+            details: {'type': type, 'error': e.toString()});
       }
     }
   }
@@ -120,7 +120,7 @@ class SyncConfigValidator {
       if (dartTypes.contains(resource.type)) {
         result.addError(
             'Duplicate resource type: ${resource.type}. Each Dart type can only be configured once.',
-            context: {'type': resource.type});
+            details: {'type': resource.type});
         continue; // Skip further processing for this resource
       }
       dartTypes.add(resource.type);
@@ -134,7 +134,7 @@ class SyncConfigValidator {
             result.addError(
                 'RDF type IRI collision: ${resource.type} and ${rdfTypeIris[rdfTypeIriString]} '
                 'both use $rdfTypeIriString. Each Dart type must have a unique RDF type IRI.',
-                context: {
+                details: {
                   'conflicting_types': [
                     resource.type,
                     rdfTypeIris[rdfTypeIriString]
@@ -146,12 +146,12 @@ class SyncConfigValidator {
         } else {
           result.addError(
               'No RDF type IRI found for ${resource.type}. Resource types must be annotated with @PodResource.',
-              context: {'type': resource.type});
+              details: {'type': resource.type});
         }
       } catch (e) {
         result.addError(
             'Could not resolve RDF type IRI for ${resource.type}: $e',
-            context: {'type': resource.type, 'error': e.toString()});
+            details: {'type': resource.type, 'error': e.toString()});
       }
     }
   }
@@ -181,7 +181,7 @@ class SyncConfigValidator {
           if (index.groupingProperties.isEmpty) {
             result.addError(
                 'GroupIndex must have at least one grouping property for ${resource.type}',
-                context: {'type': resource.type, 'index': index});
+                details: {'type': resource.type, 'index': index});
           }
 
           // Track groupKeyType + localName combination for uniqueness
@@ -202,7 +202,7 @@ class SyncConfigValidator {
               'Duplicate index local name "$localName" for index item type $itemType. '
               'Used by resources: ${resourceTypes.join(', ')}. '
               'Local names must be unique per index item type.',
-              context: {
+              details: {
                 'localName': localName,
                 'itemType': itemType,
                 'conflictingResources': resourceTypes
@@ -220,7 +220,7 @@ class SyncConfigValidator {
             'Duplicate groupKeyType and localName combination: $combinationKey. '
             'Used by resources: ${resourceTypes.join(', ')}. '
             'GroupIndex groupKeyType and localName combinations must be unique.',
-            context: {
+            details: {
               'combinationKey': combinationKey,
               'localName': localName,
               'conflictingResources': resourceTypes

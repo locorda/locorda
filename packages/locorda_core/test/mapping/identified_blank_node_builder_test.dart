@@ -1,3 +1,4 @@
+import 'package:locorda_core/src/config/validation.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
@@ -258,15 +259,18 @@ void main() {
       Set<IriTerm> globalIdentifyingPredicates = const {},
       Map<IriTerm, Set<IriTerm>> classIdentifyingPredicates = const {},
       Map<IriTerm, Set<IriTerm>> classNonIdentifyingPredicates = const {},
-      Map<IriTerm, Set<IriTerm>> classPathIdentifyingPredicates = const {},
+      Map<IriTerm, Map<IriTerm, IriTerm>> classPredicateAlgorithms = const {},
+      Map<IriTerm, Set<IriTerm>>
+          classDisableBlankNodePathIdentificationPredicates = const {},
     }) {
-      final classMappings = <IriTerm, ClassMapping>{};
+      final classMappings = <IriTerm, ClassMergeRules>{};
 
       // Collect all class IRIs that have any rules
       final allClassIris = {
         ...classIdentifyingPredicates.keys,
         ...classNonIdentifyingPredicates.keys,
-        ...classPathIdentifyingPredicates.keys,
+        ...classPredicateAlgorithms.keys,
+        ...classDisableBlankNodePathIdentificationPredicates.keys,
       };
 
       for (final classIri in allClassIris) {
@@ -274,40 +278,44 @@ void main() {
             classIdentifyingPredicates[classIri] ?? const {};
         final nonIdentifyingPreds =
             classNonIdentifyingPredicates[classIri] ?? const {};
-        final pathIdentifyingPreds =
-            classPathIdentifyingPredicates[classIri] ?? const {};
+        final predicateAlgos =
+            classPredicateAlgorithms[classIri] ?? const <IriTerm, IriTerm>{};
+        final disablePathIdPreds =
+            classDisableBlankNodePathIdentificationPredicates[classIri] ??
+                const {};
 
-        final rules = <IriTerm, PredicateRule>{
-          // Add identifying predicates (isIdentifying: true)
+        final rules = <IriTerm, PredicateMergeRule>{
+          // Add all predicates that have any configuration
           for (final pred in {
             ...identifyingPreds,
             ...nonIdentifyingPreds,
-            ...pathIdentifyingPreds,
+            ...predicateAlgos.keys,
+            ...disablePathIdPreds,
           })
-            pred: PredicateRule(
+            pred: PredicateMergeRule(
               predicateIri: pred,
-              mergeWith: null,
+              mergeWith: predicateAlgos[pred],
               stopTraversal: false,
               isIdentifying: identifyingPreds.contains(pred)
                   ? true
                   : nonIdentifyingPreds.contains(pred)
                       ? false
                       : null,
-              isPathIdentifying:
-                  pathIdentifyingPreds.contains(pred) ? true : null,
+              isPathIdentifying: !disablePathIdPreds.contains(pred),
             ),
         };
 
-        classMappings[classIri] = ClassMapping(classIri, rules);
+        classMappings[classIri] = ClassMergeRules(classIri, rules);
       }
 
       final predicateRules = {
         for (final pred in globalIdentifyingPredicates)
-          pred: PredicateRule(
+          pred: PredicateMergeRule(
             predicateIri: pred,
             mergeWith: null,
             stopTraversal: false,
             isIdentifying: true,
+            isPathIdentifying: true,
           )
       };
 
@@ -1265,8 +1273,8 @@ void main() {
         ]);
 
         final mergeContract = createMergeContract(
-          classPathIdentifyingPredicates: {
-            parentType: {pathPredicate}
+          classPredicateAlgorithms: {
+            parentType: {pathPredicate: Algo.LWW_Register}
           },
         );
 
@@ -1296,8 +1304,8 @@ void main() {
         ]);
 
         final mergeContract = createMergeContract(
-          classPathIdentifyingPredicates: {
-            parentType: {pathPredicate}
+          classPredicateAlgorithms: {
+            parentType: {pathPredicate: Algo.LWW_Register}
           },
           globalIdentifyingPredicates: {identifyingProp},
         );
@@ -1327,8 +1335,8 @@ void main() {
         ]);
 
         final mergeContract = createMergeContract(
-          classPathIdentifyingPredicates: {
-            parentType: {pathPredicate}
+          classPredicateAlgorithms: {
+            parentType: {pathPredicate: Algo.LWW_Register}
           },
         );
 
@@ -1365,8 +1373,11 @@ void main() {
         ]);
 
         final mergeContract = createMergeContract(
-          classPathIdentifyingPredicates: {
-            parentType: {outerPredicate, innerPredicate}
+          classPredicateAlgorithms: {
+            parentType: {
+              outerPredicate: Algo.LWW_Register,
+              innerPredicate: Algo.LWW_Register
+            }
           },
         );
 
@@ -1402,8 +1413,11 @@ void main() {
         ]);
 
         final mergeContract = createMergeContract(
-          classPathIdentifyingPredicates: {
-            parentType: {predicate1, predicate2}
+          classPredicateAlgorithms: {
+            parentType: {
+              predicate1: Algo.LWW_Register,
+              predicate2: Algo.LWW_Register
+            }
           },
         );
 
@@ -1417,6 +1431,111 @@ void main() {
             .map((ibn) => ibn.parentPredicate)
             .toSet();
         expect(predicates, containsAll([predicate1, predicate2]));
+      });
+    });
+
+    group('validation - multiple blank nodes at path', () {
+      test('throws error when multiple blank nodes at path-identified property',
+          () {
+        final blankNode1 = BlankNodeTerm();
+        final blankNode2 = BlankNodeTerm();
+        final parentIri = const IriTerm('https://example.com/resource');
+        final parentType = const IriTerm('https://example.com/Category');
+        final pathPredicate =
+            const IriTerm('https://example.com/displaySettings');
+
+        final graph = RdfGraph.fromTriples([
+          Triple(parentIri, Rdf.type, parentType),
+          Triple(parentIri, pathPredicate, blankNode1),
+          Triple(parentIri, pathPredicate, blankNode2), // Multiple blank nodes!
+          Triple(blankNode1, const IriTerm('https://example.com/value'),
+              LiteralTerm('value1')),
+          Triple(blankNode2, const IriTerm('https://example.com/value'),
+              LiteralTerm('value2')),
+        ]);
+
+        final mergeContract = createMergeContract(
+          classPredicateAlgorithms: {
+            parentType: {pathPredicate: Algo.LWW_Register}
+          },
+        );
+
+        expect(
+          () => computeIdentifiedBlankNodes(graph, mergeContract),
+          throwsA(isA<SyncConfigValidationException>()
+              .having((e) => e.result.errors.length, 'error count', equals(1))
+              .having((e) => e.result.errors.first.message, 'error message',
+                  contains('blank nodes at the same path'))),
+        );
+      });
+
+      test(
+          'allows multiple blank nodes when mc:disableBlankNodePathIdentification is true',
+          () {
+        final blankNode1 = BlankNodeTerm();
+        final blankNode2 = BlankNodeTerm();
+        final parentIri = const IriTerm('https://example.com/resource');
+        final parentType = const IriTerm('https://example.com/Category');
+        final pathPredicate =
+            const IriTerm('https://example.com/displaySettings');
+
+        final graph = RdfGraph.fromTriples([
+          Triple(parentIri, Rdf.type, parentType),
+          Triple(parentIri, pathPredicate, blankNode1),
+          Triple(parentIri, pathPredicate, blankNode2),
+          Triple(blankNode1, const IriTerm('https://example.com/value'),
+              LiteralTerm('value1')),
+          Triple(blankNode2, const IriTerm('https://example.com/value'),
+              LiteralTerm('value2')),
+        ]);
+
+        final mergeContract = createMergeContract(
+          classPredicateAlgorithms: {
+            parentType: {pathPredicate: Algo.LWW_Register}
+          },
+          classDisableBlankNodePathIdentificationPredicates: {
+            parentType: {pathPredicate}
+          },
+        );
+
+        // Should not throw - blank nodes are unidentified (atomic replacement)
+        final result = computeIdentifiedBlankNodes(graph, mergeContract);
+        expect(result.identifiedMap, isEmpty);
+      });
+
+      test(
+          'allows multiple blank nodes when they have property-based identification',
+          () {
+        final blankNode1 = BlankNodeTerm();
+        final blankNode2 = BlankNodeTerm();
+        final parentIri = const IriTerm('https://example.com/resource');
+        final parentType = const IriTerm('https://example.com/Recipe');
+        final pathPredicate =
+            const IriTerm('https://example.com/recipeIngredient');
+        final identifyingProp = const IriTerm('https://example.com/name');
+
+        final graph = RdfGraph.fromTriples([
+          Triple(parentIri, Rdf.type, parentType),
+          Triple(parentIri, pathPredicate, blankNode1),
+          Triple(parentIri, pathPredicate, blankNode2),
+          Triple(blankNode1, identifyingProp, LiteralTerm('Tomato')),
+          Triple(blankNode2, identifyingProp, LiteralTerm('Basil')),
+        ]);
+
+        final mergeContract = createMergeContract(
+          classPredicateAlgorithms: {
+            parentType: {pathPredicate: Algo.OR_Set}
+          },
+          classIdentifyingPredicates: {
+            parentType: {identifyingProp}
+          },
+        );
+
+        // Should not throw - blank nodes use property-based identification
+        final result = computeIdentifiedBlankNodes(graph, mergeContract);
+        expect(result.identifiedMap, hasLength(2));
+        expect(result.identifiedMap[blankNode1], isNotEmpty);
+        expect(result.identifiedMap[blankNode2], isNotEmpty);
       });
     });
   });

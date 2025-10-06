@@ -80,6 +80,14 @@ extension IriTermExtensions on IriTerm {
     return value; // Fallback to full IRI if no separator found
   }
 
+  String get fragment {
+    final hashIndex = value.lastIndexOf('#');
+    if (hashIndex != -1 && hashIndex <= value.length - 1) {
+      return value.substring(hashIndex + 1);
+    }
+    return ''; // Fallback to empty if no fragment found
+  }
+
   IriTerm getDocumentIri([IriTermFactory iriFactory = IriTerm.validated]) {
     final hashIndex = value.lastIndexOf('#');
     if (hashIndex != -1) {

@@ -1,8 +1,13 @@
+import 'package:locorda_core/src/crdt/crdt_types.dart';
+import 'package:locorda_core/src/hlc_service.dart';
 import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 
 void main() {
+  final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
+      physicalTimestampFactory: defaultPhysicalTimestampFactory);
+
   group('MergeContract', () {
     late IriTerm classIriA;
     late IriTerm classIriB;
@@ -12,6 +17,9 @@ void main() {
     late PredicateRule predicateRule1;
     late PredicateRule predicateRule2;
     late ClassMapping classMapping;
+    late PredicateMergeRule predicateMergeRule1;
+    late PredicateMergeRule predicateMergeRule2;
+    late ClassMergeRules classMergeRules;
 
     setUp(() {
       classIriA = IriTerm('http://example.com/ClassA');
@@ -26,14 +34,19 @@ void main() {
         stopTraversal: false,
         isIdentifying: false,
       );
-
+      predicateMergeRule1 =
+          PredicateMergeRule.fromRule(predicateRule1, isPathIdentifying: true);
       predicateRule2 = PredicateRule(
         predicateIri: predicateIri2,
         mergeWith: mergeAlgoLWW,
         stopTraversal: true,
         isIdentifying: true,
       );
+      predicateMergeRule2 =
+          PredicateMergeRule.fromRule(predicateRule2, isPathIdentifying: true);
 
+      classMergeRules =
+          ClassMergeRules(classIriA, {predicateIri1: predicateMergeRule1});
       classMapping = ClassMapping(classIriA, {predicateIri1: predicateRule1});
     });
 
@@ -45,33 +58,33 @@ void main() {
     });
 
     test('should create MergeContract with class mappings', () {
-      final classMappings = {classIriA: classMapping};
+      final classMappings = {classIriA: classMergeRules};
       final contract = MergeContract(classMappings, {});
 
-      expect(contract.getClassMapping(classIriA), equals(classMapping));
+      expect(contract.getClassMapping(classIriA), equals(classMergeRules));
       expect(contract.getClassMapping(classIriB), isNull);
       expect(contract.getPredicateMapping(predicateIri1), isNull);
     });
 
     test('should create MergeContract with predicate mappings', () {
-      final predicateRules = {predicateIri1: predicateRule1};
+      final predicateRules = {predicateIri1: predicateMergeRule1};
       final contract = MergeContract({}, predicateRules);
 
       expect(contract.getClassMapping(classIriA), isNull);
-      expect(
-          contract.getPredicateMapping(predicateIri1), equals(predicateRule1));
+      expect(contract.getPredicateMapping(predicateIri1),
+          equals(predicateMergeRule1));
       expect(contract.getPredicateMapping(predicateIri2), isNull);
     });
 
     test('should create MergeContract with both class and predicate mappings',
         () {
-      final classMappings = {classIriA: classMapping};
-      final predicateRules = {predicateIri2: predicateRule2};
+      final classMappings = {classIriA: classMergeRules};
+      final predicateRules = {predicateIri2: predicateMergeRule2};
       final contract = MergeContract(classMappings, predicateRules);
 
-      expect(contract.getClassMapping(classIriA), equals(classMapping));
-      expect(
-          contract.getPredicateMapping(predicateIri2), equals(predicateRule2));
+      expect(contract.getClassMapping(classIriA), equals(classMergeRules));
+      expect(contract.getPredicateMapping(predicateIri2),
+          equals(predicateMergeRule2));
     });
 
     group('fromDocumentMappings', () {
@@ -83,8 +96,10 @@ void main() {
           predicateMappings: [],
         );
 
-        final contract = MergeContract.fromDocumentMappings([document]);
-
+        final (contract, validation) = MergeContract.fromDocumentMappings(
+            [document],
+            crdtRegistry: crdtTypeRegistry);
+        validation.throwIfInvalid();
         expect(contract.getClassMapping(classIriA), isNotNull);
         expect(
             contract.getClassMapping(classIriA)!.classIri, equals(classIriA));

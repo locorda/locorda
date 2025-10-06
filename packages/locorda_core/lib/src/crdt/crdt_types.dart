@@ -15,6 +15,8 @@ import 'package:rdf_core/rdf_core.dart';
 abstract interface class CrdtType {
   const CrdtType();
 
+  bool get isSingleValueSupported;
+
   IriTerm get iri;
 
   /// Creates the initial metadata triples for a property value addition.
@@ -57,6 +59,8 @@ class LwwRegister implements CrdtType {
   @override
   IriTerm get iri => AlgoLWW_Register.classIri;
 
+  bool get isSingleValueSupported => true;
+
   @override
   Iterable<Node> initialValue(
       {required IriTerm documentIri,
@@ -89,12 +93,53 @@ class LwwRegister implements CrdtType {
   }
 }
 
+class Immutable implements CrdtType {
+  const Immutable();
+
+  @override
+  IriTerm get iri => AlgoImmutable.classIri;
+
+  bool get isSingleValueSupported => true;
+
+  @override
+  Iterable<Node> initialValue(
+      {required IriTerm documentIri,
+      required RdfGraph appData,
+      required IdentifiedBlankNodes<IriTerm> blankNodes,
+      required RdfSubject subject,
+      required RdfPredicate predicate,
+      required List<RdfObject> values,
+      required CrdtMergeContext mergeContext}) {
+    // No metadata needed
+    return const <Node>[];
+  }
+
+  @override
+  Iterable<Node> localValueChange(
+      {required IriTerm documentIri,
+      required RdfGraph oldAppData,
+      required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
+      required RdfSubject oldSubject,
+      required RdfGraph newAppData,
+      required IdentifiedBlankNodes<IriTerm> newBlankNodes,
+      required RdfSubject newSubject,
+      required RdfPredicate predicate,
+      required List<RdfObject> oldValues,
+      required List<RdfObject> newValues,
+      required CrdtMergeContext mergeContext}) {
+    // No metadata needed for changing a Immutable value - there are not changes allowed.
+    return const <Node>[];
+  }
+}
+
 /// First-Writer-Wins Register for immutable properties.
 class FwwRegister implements CrdtType {
   const FwwRegister();
 
   @override
   IriTerm get iri => AlgoFWW_Register.classIri;
+
+  bool get isSingleValueSupported => true;
 
   @override
   Iterable<Node> initialValue(
@@ -136,6 +181,8 @@ class OrSet implements CrdtType {
 
   @override
   IriTerm get iri => AlgoOR_Set.classIri;
+
+  bool get isSingleValueSupported => false;
 
   @override
   Iterable<Node> initialValue(
@@ -233,6 +280,7 @@ class CrdtTypeRegistry {
       : this._([
           LwwRegister(),
           FwwRegister(),
+          Immutable(),
           OrSet(physicalTimestampFactory),
         ]);
 
@@ -240,4 +288,6 @@ class CrdtTypeRegistry {
   CrdtType getType(IriTerm? typeIri,
           {CrdtType fallback = CrdtTypeRegistry.fallback}) =>
       typeIri == null ? fallback : _typesByIri[typeIri] ?? fallback;
+
+  bool hasType(IriTerm algo) => _typesByIri.containsKey(algo);
 }

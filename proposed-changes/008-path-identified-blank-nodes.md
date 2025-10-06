@@ -1,7 +1,7 @@
 # Path-Identified Blank Nodes
 
 **Status**: Accepted
-**Context**: Complementary identification mechanism for single-valued blank node properties
+**Context**: Default identification mechanism for single-valued blank nodes using property paths
 
 ## Problem
 
@@ -42,17 +42,18 @@ Here, `_:settings` is the **only** blank node at this path. Adding artificial ID
 
 ## Proposed Solution
 
-Extend the identification mechanism to support **path-based identification** for single-valued properties.
+Make **path-based identification** the **default behavior** for all blank nodes. This provides property-level CRDT tracking without requiring artificial ID properties.
 
 ### Core Concept
 
-For blank nodes at **single-valued properties**, use the property path as identification:
+**Default behavior**: Blank nodes are automatically identified by their property path:
 
 **Identification Pattern**: `(parent_resource, property_path)`
 
 This complements existing property-based identification:
-- **Property-identified**: `(parent_resource, identifying_property_values)` - for OR-Set collections
-- **Path-identified**: `(parent_resource, property_path)` - for LWW-Register single-valued properties
+- **Path-identified** (default): `(parent_resource, property_path)` - automatic for single-valued blank nodes
+- **Property-identified**: `(parent_resource, identifying_property_values)` - for OR-Set collections, requires `mc:isIdentifying true`
+- **Unidentified** (rare): No identification, atomic replacement - requires explicit `mc:disableBlankNodePathIdentification true`
 
 ### Canonical IRI Generation
 
@@ -108,15 +109,14 @@ _:settings pnotes:sortOrder "alphabetical" ;
 
 ### Merge Contract Declaration
 
-Declare path-identification in merge contract using new `mc:isPathIdentifying` flag:
+**Default Behavior**: Path-identification is **automatic** for blank nodes with **single-value algorithms**:
 
 ```turtle
 <#category-mapping> a mc:ClassMapping;
   mc:appliesToClass pnotes:NotesCategory;
   mc:rule
     [ mc:predicate pnotes:displaySettings;
-      algo:mergeWith algo:LWW_Register;
-      mc:isPathIdentifying true ] .  # NEW: Declares path-based identification
+      algo:mergeWith algo:LWW_Register ] .  # Path identification happens automatically
 
 <#display-settings-mapping> a mc:ClassMapping;
   mc:appliesToClass pnotes:CategoryDisplaySettings;
@@ -126,15 +126,35 @@ Declare path-identification in merge contract using new `mc:isPathIdentifying` f
     [ mc:predicate pnotes:showArchived; algo:mergeWith algo:LWW_Register ] .
 ```
 
-**Constraint**: `mc:isPathIdentifying true` is **only valid** with algorithms that support single-valued semantics (LWW-Register, Immutable, FWW-Register).
+**Algorithm Compatibility**:
+- **Single-value algorithms** (LWW-Register, FWW-Register, Immutable): Path-identification is the **default** for blank nodes
+- **Multi-value algorithms** (OR-Set, 2P-Set): Path-identification **not possible**; blank nodes **must** use property-identification (`mc:isIdentifying true`)
+
+**Disabling Path Identification**: Use `mc:disableBlankNodePathIdentification true` to override the default (only valid with single-value algorithms):
+
+```turtle
+<#address-mapping> a mc:ClassMapping;
+  mc:appliesToClass schema:PostalAddress;
+  mc:rule
+    [ mc:predicate schema:address;
+      algo:mergeWith algo:LWW_Register;
+      mc:disableBlankNodePathIdentification true ] .  # Treat as atomic unit
+```
+
+**When to disable** (rare cases, only with single-value algorithms):
+1. **Atomic replacement desired**: All properties should change together as a unit (e.g., postal address where street/city/zip are conceptually inseparable)
+
+**Important**: For multi-value algorithms (OR-Set, 2P-Set), blank nodes **must** use property-based identification (`mc:isIdentifying true`). Both path-identification and unidentified blank nodes are invalid with multi-value algorithms because:
+- Path-identification requires single-value semantics (one blank node at the path)
+- Unidentified blank nodes cannot be tombstoned in multi-value sets
 
 ### Blank Node Type Comparison
 
-| Type | Identification | Property Cardinality | CRDT Granularity | Declaration |
-|------|----------------|---------------------|------------------|-------------|
-| **Unidentified** | None | Single or multi-valued (LWW) | Atomic replacement | No special flags |
-| **Path-identified** | Property path | Single valued (LWW) | Property-level tracking | `mc:isPathIdentifying true` |
-| **Property-identified** | Property values | Single- or Multi-valued (supports also OR-Set in addition to LWW etc) | Property-level tracking | `mc:isIdentifying true` |
+| Type | Identification | Algorithm Support | CRDT Granularity | Declaration |
+|------|----------------|-------------------|------------------|-------------|
+| **Path-identified** (default) | Property path | Single-value only (LWW, FWW, Immutable) | Property-level tracking | Automatic for single-value algorithms |
+| **Property-identified** | Property values | All algorithms (LWW, FWW, Immutable, OR-Set, 2P-Set) | Property-level tracking | `mc:isIdentifying true` (required for OR-Set/2P-Set) |
+| **Unidentified** | None | Single-value only (LWW, FWW, Immutable) | Atomic replacement | `mc:disableBlankNodePathIdentification true` (rare, only single-value) |
 
 ### Example: Category Display Settings
 
@@ -144,8 +164,7 @@ Declare path-identification in merge contract using new `mc:isPathIdentifying` f
   mc:appliesToClass pnotes:NotesCategory;
   mc:rule
     [ mc:predicate pnotes:displaySettings;
-      algo:mergeWith algo:LWW_Register;
-      mc:isPathIdentifying true ] .
+      algo:mergeWith algo:LWW_Register ] .  # Path identification automatic
 
 <#display-settings-mapping> a mc:ClassMapping;
   mc:appliesToClass pnotes:CategoryDisplaySettings;
@@ -183,9 +202,9 @@ sync:parentProperty a rdf:Property ;
   rdfs:comment "The property IRI connecting the parent resource to this path-identified blank node. Used in identification graphs to represent the property path." .
 
 # In merge-contract.ttl
-mc:isPathIdentifying a rdf:Property;
-  rdfs:label "is path identifying";
-  rdfs:comment "A boolean flag used within mc:Rule to declare that blank nodes at this predicate are identified by their property path. Only valid for single-valued properties (LWW-Register). When true, the framework generates canonical IRIs based on the property path rather than property values.";
+mc:disableBlankNodePathIdentification a rdf:Property;
+  rdfs:label "disable blank node path identification";
+  rdfs:comment "A boolean flag used within mc:Rule to disable the default path-based identification for blank nodes at this predicate. When true, blank nodes are treated as unidentified (atomic replacement). This flag is rarely needed - property-based identification (mc:isIdentifying) should be preferred when blank nodes need stable identity. Use cases: (1) Atomic replacement desired where all blank node properties should change together as a conceptual unit, (2) Multi-valued blank nodes without identification where atomic LWW replacement is acceptable. Important: This flag only affects path-based identification; property-based identification (mc:isIdentifying true) can and should still be used for collections.";
   rdfs:domain mc:Rule;
   rdfs:range xsd:boolean .
 ```
@@ -194,13 +213,13 @@ mc:isPathIdentifying a rdf:Property;
 
 **Strict validation required**:
 
-1. **Single-valued algorithm constraint**: `mc:isPathIdentifying true` is only valid with algorithms that support single-valued semantics
-   - Valid: LWW-Register, Immutable, FWW-Register
-   - Invalid: OR-Set, 2P-Set (inherently multi-valued)
-   - Error if used with multi-valued algorithms
+1. **Path uniqueness for identified blank nodes**: Only one blank node may exist at a property path (default path-identification behavior)
+   - Error on save/merge if multiple (non-property-identified) blank nodes found at a property without `mc:disableBlankNodePathIdentification true` 
+   - To allow multiple (non-property-identified) blank nodes: explicitly set `mc:disableBlankNodePathIdentification true` (disables identification, enables atomic LWW replacement)
 
-2. **Path uniqueness**: Only one blank node may exist at a path declared with `mc:isPathIdentifying true`
-   - Error on save/merge if multiple blank nodes found
+2. **Algorithm compatibility**: Path-identification (default) works only with single-value supporting algorithms
+   - LWW-Register, FWW-Register, Immutable: Support both single-valued IRIs/literals AND single-valued blank nodes. For IRIs ans literals multi-valued are supported by treating them as one set which either "wins" or "loses" on merge, but is never merged together
+   - OR-Set, 2P-Set: Support multi-valued IRIs/literals, but blank nodes must be property-identified. Path-Identified is not possible because of multi-value and non-identified blank nodes also are not possible because they cannot be tombstoned
 
 ### Edge Cases
 
@@ -224,14 +243,13 @@ mc:isPathIdentifying a rdf:Property;
 **Detection algorithm**:
 ```
 for each blank node:
-  if referenced_by_property has mc:isPathIdentifying true:
-    validate: property has a single-value compatible algorithm like algo:LWW_Register
-    validate: only one blank node at this path
-    → generate path-based canonical IRI
-  else if blank_node has properties with mc:isIdentifying true:
+  if blank_node has properties with mc:isIdentifying true:
     → generate property-based canonical IRI (proposal 005)
+  else if referenced_by_property has mc:disableBlankNodePathIdentification true:
+    → unidentified blank node (no canonical IRI, atomic replacement)
   else:
-    → unidentified blank node (no canonical IRI)
+    → DEFAULT: generate path-based canonical IRI
+    validate: only one blank node at this path (error if multiple found)
 ```
 
 **Performance**: Same as property-identified blank nodes (O(parent_chain_depth), typically 1-3 levels)
@@ -246,39 +264,46 @@ for each blank node:
 
 ### When to Use Each Type
 
-**Unidentified blank node**:
-- Atomic replacement is **desired** - treating structure as indivisible unit
-- Example: Postal address where all fields should change together conceptually
-- Multi-valued LWW where property-identification not possible and atomicity is **acceptable** (compromise, not ideal)
-
-**Path-identified blank node** (this proposal):
-- Default for structured objects in LWW properties
-- Property-level tracking desired
+**Path-identified blank node** (default for single-value algorithms):
+- **Default behavior** - automatically used with LWW-Register, FWW-Register, Immutable
+- Enables property-level tracking and merging
 - Example: Display settings, user preferences, configuration objects
+- No declaration needed - happens automatically
 
-**Property-identified blank node** (existing):
-- Multiple instances in collections (OR-Set)
+**Property-identified blank node**:
+- **Required** for multi-value algorithms (OR-Set, 2P-Set)
+- **Optional** for single-value algorithms when multiple instances exist
 - Need individual item identity via property values
-- Example: Ingredients, checklist items, comments
+- Declared with `mc:isIdentifying true` on identifying properties
+- Example: Ingredients (OR-Set), checklist items, comments
 
-**Note**: Unidentified blank nodes should be a rare exception, not the default pattern.
+**Unidentified blank node** (rare, only single-value algorithms):
+- Atomic replacement is **desired** - treating structure as indivisible unit
+- Only valid with LWW-Register, FWW-Register, Immutable
+- Declared with `mc:disableBlankNodePathIdentification true`
+- Example: Postal address where all fields should change together conceptually
+
+**Note**: For OR-Set/2P-Set, property-identification is **mandatory** - both path-identification and unidentified blank nodes are invalid.
 
 ## Migration Path
 
-Existing unidentified blank nodes can be upgraded to path-identified by:
-1. Adding merge contract declaration: `mc:isPathIdentifying true`
-2. Framework automatically generates path-based canonical IRIs on next save
-3. No changes to application data structure required
-4. Existing property-level changes become trackable
+**Automatic upgrade**: Path-identification is now the default behavior.
+
+Existing blank nodes automatically become path-identified unless:
+1. They have `mc:isIdentifying true` properties (already property-identified)
+2. They have `mc:disableBlankNodePathIdentification true` (explicit opt-out)
+
+**No migration steps required**: Framework automatically generates path-based canonical IRIs on next save for all single-valued blank nodes.
 
 ## Open Questions
 
-1. **Error handling for violations**: Strict rejection or graceful degradation when multiple blank nodes found at path-identified property?
-   - **Proposed**: Strict rejection during save/merge - this is a data modeling error
+1. **Error handling for violations**: Strict rejection or graceful degradation when multiple blank nodes found at path-identified property (default behavior)?
+   - **Proposed**: Strict rejection during save/merge - this is a data modeling error that should be caught early
 
 2. **Blank node deletion**: How to represent deletion of path-identified blank node?
    - Like all deleted resources, this will lead to a resource deletion tombstone
    - Removal of single value is actually a separate topic that we did not clarify yet and which is connected to the crdt algorithm implementation. A tombstone for the property value is one option, but this needs to be thoroughly checked. Anyways, an identified blank node will behave like an IRI or a Literal in that context, so no special logic needed in this proposal.
 
-3. **Compatibility with annotations**: Should code generator infer `mc:isPathIdentifying` automatically for single-valued blank node properties?
-   - **Proposed**: Yes, if property is LWW-Register and type is blank node class without identifying properties
+3. **Compatibility with annotations**: Path-identification is now automatic. Should code generator provide warnings or validation?
+   - **Proposed**: Warn if blank node class has no identifying properties AND is used in multi-valued context (likely modeling error)
+   - Suggest either adding `mc:isIdentifying` properties or using `mc:disableBlankNodePathIdentification true`

@@ -18,7 +18,7 @@
    mc:rule
      [ mc:predicate schema:name; algo:mergeWith algo:LWW_Register ],
      [ mc:predicate schema:recipeIngredient; algo:mergeWith algo:OR_Set ],
-     [ mc:predicate schema:nutrition; algo:mergeWith algo:LWW_Register ] .
+     [ mc:predicate schema:nutrition; algo:mergeWith algo:LWW_Register; mc:disableBlankNodePathIdentification true ] .
 
 <#nutrition> a mc:ClassMapping;
    mc:appliesToClass schema:NutritionInformation;

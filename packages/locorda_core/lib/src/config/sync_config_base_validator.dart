@@ -23,7 +23,7 @@ class SyncConfigBaseValidator {
       // Attempt to create a validated IriTerm to ensure the IRI is valid
       IriTerm.validated(iri.value);
     } catch (e) {
-      result.addError('$context: Invalid IRI "$iri" - $e', context: {
+      result.addError('$context: Invalid IRI "$iri" - $e', details: {
         'iri': iri,
         'validation_error': e.toString(),
         ...?contextData,
@@ -48,13 +48,13 @@ class SyncConfigBaseValidator {
       if (!uri.isAbsolute) {
         result.addError(
             'CRDT mapping URI must be absolute for ${_getDebugName(resource)}: $uri',
-            context: {'type': _getDebugName(resource), 'uri': uri});
+            details: {'type': _getDebugName(resource), 'uri': uri});
       }
 
       if (uri.scheme == 'http') {
         result.addWarning(
             'CRDT mapping URI should use HTTPS for ${_getDebugName(resource)}: $uri',
-            context: {'type': _getDebugName(resource), 'uri': uri});
+            details: {'type': _getDebugName(resource), 'uri': uri});
       }
     }
   }
@@ -67,7 +67,7 @@ class SyncConfigBaseValidator {
         if (index.localName.isEmpty) {
           result.addError(
               'Index local name cannot be empty for ${_getDebugName(resource)}',
-              context: {'type': _getDebugName(resource), 'index': index});
+              details: {'type': _getDebugName(resource), 'index': index});
         }
 
         // Validate GroupIndex specific requirements
@@ -75,7 +75,7 @@ class SyncConfigBaseValidator {
           if (index.groupingProperties.isEmpty) {
             result.addError(
                 'GroupIndex must have at least one grouping property for ${_getDebugName(resource)}',
-                context: {'type': _getDebugName(resource), 'index': index});
+                details: {'type': _getDebugName(resource), 'index': index});
           }
 
           // Validate grouping properties
@@ -96,7 +96,7 @@ class SyncConfigBaseValidator {
             if (property.hierarchyLevel <= 0) {
               result.addError(
                   'GroupingProperty hierarchy level must be positive for ${_getDebugName(resource)}. Got: ${property.hierarchyLevel}',
-                  context: {
+                  details: {
                     'type': _getDebugName(resource),
                     'property': property.predicate.value,
                     'hierarchyLevel': property.hierarchyLevel,
@@ -109,7 +109,7 @@ class SyncConfigBaseValidator {
                 property.missingValue!.isEmpty) {
               result.addError(
                   'GroupingProperty missing value cannot be empty for ${_getDebugName(resource)}. Use null to indicate no default value.',
-                  context: {
+                  details: {
                     'type': _getDebugName(resource),
                     'property': property.predicate.value,
                     'missingValue': property.missingValue,
@@ -123,13 +123,15 @@ class SyncConfigBaseValidator {
               final transformValidationResult =
                   RegexTransformValidator.validateList(property.transforms!);
               result.addSubvalidationResult(
-                  '[${_getDebugName(resource)}][Grouping][${property.predicate.value}]',
-                  {
-                    'type': _getDebugName(resource),
-                    'property': property.predicate.value,
-                    'index': index,
-                  },
-                  transformValidationResult);
+                transformValidationResult,
+                context:
+                    '[${_getDebugName(resource)}][Grouping][${property.predicate.value}]',
+                details: {
+                  'type': _getDebugName(resource),
+                  'property': property.predicate.value,
+                  'index': index,
+                },
+              );
             }
           }
 
@@ -146,7 +148,7 @@ class SyncConfigBaseValidator {
                   'Hierarchy level gap detected in GroupIndex for ${_getDebugName(resource)}: '
                   'level ${hierarchyLevels[i - 1]} is followed by ${hierarchyLevels[i]}. '
                   'Consider using consecutive hierarchy levels for better organization.',
-                  context: {
+                  details: {
                     'type': _getDebugName(resource),
                     'gap_before': hierarchyLevels[i - 1],
                     'gap_after': hierarchyLevels[i],

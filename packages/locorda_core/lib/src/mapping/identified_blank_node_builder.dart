@@ -1,3 +1,5 @@
+import 'package:locorda_core/src/config/validation.dart';
+import 'package:locorda_core/src/generated/algo.dart';
 import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
@@ -235,14 +237,45 @@ class IdentifiedBlankNodeBuilder {
         .expand((l) => l.expand((i) => i._circuitCheck))
         .toSet();
     final reversedIdentifiedMap = <IdentifiedBlankNode, BlankNodeTerm>{};
+    final duplicateBlankNodes = <IdentifiedBlankNode, List<BlankNodeTerm>>{};
     for (final entry in identifiedBlankNodes.entries) {
       for (final ibn in entry.value) {
         if (reversedIdentifiedMap.containsKey(ibn)) {
-          _log.warning(
-              "Detected that IdentifiedBlankNode $ibn is associated with multiple blank nodes (${reversedIdentifiedMap[ibn]} and ${entry.key}). This should not happen and indicates a bug in the identification algorithm.");
+          duplicateBlankNodes
+              .putIfAbsent(ibn, () => [reversedIdentifiedMap[ibn]!])
+              .add(entry.key);
         }
         reversedIdentifiedMap[ibn] = entry.key;
       }
+    }
+    if (duplicateBlankNodes.isNotEmpty) {
+      ValidationResult result = ValidationResult();
+      for (final entry in duplicateBlankNodes.entries) {
+        final context = entry.key
+            .blankNodeChain()
+            .expand<String>((bn) => [
+                  if (bn.parentPredicate is IriTerm)
+                    (bn.parentPredicate as IriTerm).value,
+                  if (bn.parent.isIri) bn.parent.iriTerm!.value,
+                  if (bn._identifyingProperties.isNotEmpty)
+                    "${bn._identifyingProperties.length} identifying properties"
+                ])
+            .toList()
+            .reversed
+            .toList();
+        result.addError(
+            """Found ${entry.value.length} blank nodes at the same path that would be treated as the same entity during synchronization.
+
+This creates ambiguity - the system cannot determine which blank node should be used during merge operations.
+
+Solutions:
+1. If these blank nodes should remain distinct, use `mc:disableBlankNodePathIdentification` on the parent predicate. This disables path-based identification, but means the blank node values will be replaced atomically (not merged property-by-property).
+
+2. If these blank nodes represent duplicate data, ensure each has unique identifying properties configured in the merge contract, or remove the duplicate blank nodes from your data.
+""",
+            context: context);
+      }
+      result.throwIfInvalid();
     }
     if (circularReferences.isNotEmpty) {
       _log.warning(
@@ -318,19 +351,22 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
   final hasPropertyIdentification =
       identifyingPreds != null && identifyingPreds.isNotEmpty;
 
-  // Check for path identification - any parent predicate with mc:isPathIdentifying
+  // Path identification is the default for single-value algorithms
+  // Check which parent triples support path identification
   final pathIdentifyingTriples = parentTriplesForNode.where((triple) {
     final resourceType =
         graph.findSingleObject<IriTerm>(triple.subject, Rdf.type);
     final rule =
         mergeContract.getEffectivePredicateRule(resourceType, triple.predicate);
+
+    // Path identification enabled?
     return rule?.isPathIdentifying == true;
   }).toList();
 
   final hasPathIdentification = pathIdentifyingTriples.isNotEmpty;
 
   if (!hasPropertyIdentification && !hasPathIdentification) {
-    // Cannot identify this blank node - no identification mechanism
+    // Cannot identify this blank node - no identification mechanism available
     return const [];
   }
 
