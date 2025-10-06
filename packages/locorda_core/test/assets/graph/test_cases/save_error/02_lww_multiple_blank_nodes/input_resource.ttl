@@ -1,0 +1,18 @@
+@prefix schema: <https://schema.org/> .
+@prefix ex: <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#> .
+
+# Attempting to use LWW-Register with multiple blank nodes
+# This should fail because LWW-Register can only hold a single value
+# and path identification requires exactly one blank node per property
+ex:it a schema:Recipe ;
+    schema:name "Tomato Soup" ;
+    # Two blank nodes on a LWW-Register property - this is invalid
+    schema:nutrition [
+        a schema:NutritionInformation ;
+        schema:calories "250" ;
+        schema:fatContent "10g"
+    ], [
+        a schema:NutritionInformation ;
+        schema:calories "300" ;
+        schema:fatContent "15g"
+    ] .

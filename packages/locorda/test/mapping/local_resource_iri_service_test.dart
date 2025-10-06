@@ -189,12 +189,12 @@ void main() {
         expect(
             iri.value,
             equals(
-                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTEyMw=='));
+                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTEyMw==#it'));
 
         // Test reverse mapping (IRI to tuple)
         final tuple = mapper.fromRdfTerm(
             IriTerm.validated(
-                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTQ1Ng=='),
+                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTQ1Ng==#it'),
             MockDeserializationContext());
         expect(tuple, equals(('note456',)));
       });
@@ -216,7 +216,7 @@ void main() {
         expect(
             resourceIri.value,
             equals(
-                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTEyMw=='));
+                'tag:locorda.org,2025:l:aHR0cDovL2V4YW1wbGUub3JnL05vdGU=:bm90ZTEyMw==#it'));
       });
 
       test('should validate IRI patterns in reverse mapping', () {

@@ -9,6 +9,7 @@
     "https://example.org/test/mappings/recipe-v1-unidentified": "shared/mappings/recipe-v1-unidentified.ttl",
     "https://example.org/test/mappings/recipe-v1-all-unidentified": "shared/mappings/recipe-v1-all-unidentified.ttl",
     "https://example.org/test/mappings/recipe-v1-invalid-orset": "shared/mappings/recipe-v1-invalid-orset.ttl",
+    "https://example.org/test/mappings/recipe-v1-invalid-lww-multiple": "shared/mappings/recipe-v1-invalid-lww-multiple.ttl",
     "https://example.org/test/mappings/category-v1": "shared/mappings/category-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/client-installation-v1": "../../../../../spec/mappings/client-installation-v1.ttl"
@@ -820,6 +821,21 @@
           "expected": {
             "error_type": "ArgumentError",
             "error_message_pattern": "cannot be unidentifed blank nodes"
+          },
+          "action_ts": {
+            "save": "2024-01-01T02:00:00Z"
+          }
+        },
+        {
+          "id": "save_error_02",
+          "title": "LWW-Register with multiple blank nodes at same path",
+          "description": "Attempting to use LWW-Register with path-identified blank nodes when multiple blank nodes exist at the same path should fail with SyncConfigValidationException since path identification requires exactly one blank node per path.",
+          "config": "shared/configs/invalid_lww_multiple_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "input_resource": "test_cases/save_error/02_lww_multiple_blank_nodes/input_resource.ttl",
+          "expected": {
+            "error_type": "SyncConfigValidationException",
+            "error_message_pattern": "Found 2 blank nodes at the same path that would be treated as the same entity during synchronization."
           },
           "action_ts": {
             "save": "2024-01-01T02:00:00Z"
