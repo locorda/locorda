@@ -62,6 +62,7 @@
      # Global lifecycle semantics - applies to all contexts where lifecycle properties are used
      # Uses temporal ordering: document/value is deleted if max(crdt:deletedAt) > max(crdt:createdAt)
      # Solves zombie deletion problems during document recreation scenarios
+     [ mc:predicate rdf:type; algo:mergeWith algo:LWW_Register ],  # rdf:type
      [ mc:predicate crdt:createdAt; algo:mergeWith algo:OR_Set ],  # Creation/recreation timestamps
      [ mc:predicate crdt:deletedAt; algo:mergeWith algo:OR_Set ] . # Deletion timestamps
 

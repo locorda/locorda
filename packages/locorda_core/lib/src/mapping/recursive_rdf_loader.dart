@@ -5,7 +5,7 @@ import 'package:rdf_core/rdf_core.dart';
 import 'package:http/http.dart' as http;
 
 abstract interface class Fetcher {
-  Future<String> fetch(String url);
+  Future<String> fetch(String url, {String? contentType});
 }
 
 class HttpFetcher implements Fetcher {
@@ -13,14 +13,60 @@ class HttpFetcher implements Fetcher {
   HttpFetcher({
     required this.httpClient,
   });
+
+  /// Checks if the server supports content negotiation for the given URL.
+  ///
+  /// Returns true if the HEAD response indicates the content type matches
+  /// the requested type, false otherwise.
+  Future<bool> _supportsContentNegotiation(
+      String url, String? contentType) async {
+    if (contentType == null) return true;
+
+    final headers = <String, String>{'Accept': contentType};
+    try {
+      final response = await httpClient.head(Uri.parse(url), headers: headers);
+      if (response.statusCode != 200) return false;
+
+      final responseContentType = response.headers['content-type'];
+      if (responseContentType == null) return false;
+
+      // Check if response content type matches requested type
+      // Handle cases like "text/turtle; charset=utf-8"
+      return responseContentType
+          .toLowerCase()
+          .contains(contentType.toLowerCase());
+    } catch (e) {
+      // If HEAD fails, assume no content negotiation support
+      return false;
+    }
+  }
+
   @override
-  Future<String> fetch(String url) async {
-    final response = await httpClient.get(Uri.parse(url));
+  Future<String> fetch(String url, {String? contentType}) async {
+    final headers = <String, String>{};
+    if (contentType != null) {
+      headers['Accept'] = contentType;
+    }
+
+    // Check if server supports content negotiation
+    final supportsNegotiation =
+        await _supportsContentNegotiation(url, contentType);
+
+    // If no content negotiation support and URL doesn't end with .ttl, try appending it
+    var fetchUrl = url;
+    if (!supportsNegotiation &&
+        contentType == 'text/turtle' &&
+        !url.endsWith('.ttl')) {
+      fetchUrl = '$url.ttl';
+    }
+
+    final response =
+        await httpClient.get(Uri.parse(fetchUrl), headers: headers);
     if (response.statusCode == 200) {
-      // Parse the RDF graph from the response body
       return response.body;
     } else {
-      throw Exception('Failed to load RDF graph: ${response.statusCode}');
+      throw Exception(
+          'Failed to load RDF graph at $fetchUrl: ${response.statusCode}');
     }
   }
 }
@@ -35,8 +81,10 @@ class StandardRdfGraphFetcher implements RdfGraphFetcher {
   @override
   Future<RdfGraph> fetch(IriTerm iri) async {
     // Parse the RDF graph from the response body
-    return rdfCore.decode(await fetcher.fetch(iri.value),
-        contentType: "text/turtle", documentUrl: iri.value);
+    return rdfCore.decode(
+        await fetcher.fetch(iri.value, contentType: "text/turtle"),
+        contentType: "text/turtle",
+        documentUrl: iri.value);
   }
 }
 

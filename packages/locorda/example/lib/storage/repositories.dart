@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:locorda/locorda.dart';
 import '../models/category.dart' as models;
+import '../models/category_display_settings.dart' as models;
 import '../models/note.dart' as models;
 import '../models/note_index_entry.dart' as models;
 import '../models/note_group_key.dart';
@@ -114,12 +115,17 @@ class CategoryRepository {
 
   /// Convert Drift Category to app Category model
   models.Category _categoryFromDrift(Category drift) {
+    models.CategoryDisplaySettings? settings;
+    if (drift.color != null || drift.icon != null) {
+      settings =
+          models.CategoryDisplaySettings(color: drift.color, icon: drift.icon);
+    }
+
     return models.Category(
       id: drift.id,
       name: drift.name,
       description: drift.description,
-      color: drift.color,
-      icon: drift.icon,
+      settings: settings,
       createdAt: drift.createdAt,
       modifiedAt: drift.modifiedAt,
       archived: drift.archived,
@@ -133,8 +139,8 @@ class CategoryRepository {
       id: Value(category.id),
       name: Value(category.name),
       description: Value(category.description),
-      color: Value(category.color),
-      icon: Value(category.icon),
+      color: Value(category.settings?.color),
+      icon: Value(category.settings?.icon),
       createdAt: Value(category.createdAt),
       modifiedAt: Value(category.modifiedAt),
       archived: Value(category.archived),
@@ -234,14 +240,24 @@ class NoteRepository {
 
   /// Get a specific note by ID
   Future<models.Note?> getNote(String id) async {
-    return _syncSystem.ensure<models.Note>(id, loadFromLocal: (id) async {
+    final note = await _syncSystem.ensure<models.Note>(id, loadFromLocal: (id) async {
       final driftNote = await _noteDao.getNoteById(id);
       return driftNote != null ? _noteFromDrift(driftNote) : null;
     });
+
+    // Debug: Check if weblinks are present
+    if (note != null) {
+      print('📝 Loaded note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}');
+    }
+
+    return note;
   }
 
   /// Save a note (insert or update) with sync coordination
   Future<void> saveNote(models.Note note) async {
+    // Debug: Check what we're saving
+    print('💾 Saving note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}');
+
     // Use sync system - local storage will be updated via hydration stream
     await _syncSystem.save<models.Note>(note);
   }
@@ -260,7 +276,8 @@ class NoteRepository {
         id: drift.id,
         title: drift.title,
         content: drift.content,
-        tags: drift.tags, // Now properly handled by StringSetConverter
+        tags: drift.tags,
+        weblinks: drift.weblinks,
         categoryId: drift.categoryId,
         createdAt: drift.createdAt,
         modifiedAt: drift.modifiedAt,
@@ -272,7 +289,8 @@ class NoteRepository {
         id: Value(note.id),
         title: Value(note.title),
         content: Value(note.content),
-        tags: Value(note.tags), // Now properly handled by StringSetConverter
+        tags: Value(note.tags),
+        weblinks: Value(note.weblinks),
         categoryId: Value(note.categoryId),
         createdAt: Value(note.createdAt),
         modifiedAt: Value(note.modifiedAt),

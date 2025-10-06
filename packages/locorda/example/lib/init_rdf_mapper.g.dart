@@ -12,6 +12,10 @@ import 'package:rdf_mapper/rdf_mapper.dart';
 import 'package:personal_notes_app/models/category.dart' as category;
 import 'package:personal_notes_app/models/category.rdf_mapper.g.dart' as crmg;
 import 'package:locorda_core/locorda_core.dart' as locorda_core;
+import 'package:personal_notes_app/models/category_display_settings.dart'
+    as cds;
+import 'package:personal_notes_app/models/category_display_settings.rdf_mapper.g.dart'
+    as cdsrmg;
 import 'package:personal_notes_app/models/note.dart' as note;
 import 'package:personal_notes_app/models/note.rdf_mapper.g.dart' as nrmg;
 import 'package:personal_notes_app/models/note_group_key.dart' as ngk;
@@ -20,6 +24,8 @@ import 'package:personal_notes_app/models/note_group_key.rdf_mapper.g.dart'
 import 'package:personal_notes_app/models/note_index_entry.dart' as nie;
 import 'package:personal_notes_app/models/note_index_entry.rdf_mapper.g.dart'
     as niermg;
+import 'package:personal_notes_app/models/weblink.dart' as weblink;
+import 'package:personal_notes_app/models/weblink.rdf_mapper.g.dart' as wrmg;
 
 /// Initializes and returns an RdfMapper with mappers registered.
 ///
@@ -40,15 +46,18 @@ RdfMapper initRdfMapper({
   registry.registerMapper<category.Category>(
     crmg.CategoryMapper(
       iriMapper: $resourceIriFactory<category.Category>(
-        const locorda_core.PodIriConfig(),
+        const locorda_core.PodIriConfig('it'),
       ),
     ),
+  );
+  registry.registerMapper<cds.CategoryDisplaySettings>(
+    cdsrmg.CategoryDisplaySettingsMapper(),
   );
   registry.registerMapper<note.Note>(
     nrmg.NoteMapper(
       categoryIdMapper: $resourceRefFactory<String?>(category.Category),
       iriMapper: $resourceIriFactory<note.Note>(
-        const locorda_core.PodIriConfig(),
+        const locorda_core.PodIriConfig('note'),
       ),
     ),
   );
@@ -59,6 +68,7 @@ RdfMapper initRdfMapper({
       idMapper: $resourceRefFactory<String>(note.Note),
     ),
   );
+  registry.registerMapper<weblink.Weblink>(wrmg.WeblinkMapper());
 
   return rdfMapper;
 }

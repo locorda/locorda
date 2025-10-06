@@ -25,8 +25,8 @@ void main() {
         expect(category.id, isNotEmpty);
         expect(category.id, startsWith('category_'));
         expect(category.description, isNull);
-        expect(category.color, isNull);
-        expect(category.icon, isNull);
+        expect(category.settings?.color, isNull);
+        expect(category.settings?.icon, isNull);
       });
 
       test('creates category with all fields', () {
@@ -39,8 +39,8 @@ void main() {
 
         expect(category.name, equals('Personal'));
         expect(category.description, equals('Personal notes and tasks'));
-        expect(category.color, equals('#FF5722'));
-        expect(category.icon, equals('person'));
+        expect(category.settings?.color, equals('#FF5722'));
+        expect(category.settings?.icon, equals('person'));
         expect(category.id, isNotEmpty);
         expect(category.id, startsWith('category_'));
       });

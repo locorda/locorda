@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:math';
 
 import '../models/category.dart';
+import '../models/category_display_settings.dart';
 import '../storage/repositories.dart';
 
 /// Service for managing categories with offline-first CRDT synchronization.
@@ -59,12 +60,16 @@ class CategoriesService {
     String? color,
     String? icon,
   }) {
+    CategoryDisplaySettings? settings;
+    if (color != null || icon != null) {
+      settings = CategoryDisplaySettings(color: color, icon: icon);
+    }
+
     return Category(
       id: _generateCategoryId(),
       name: name,
       description: description,
-      color: color,
-      icon: icon,
+      settings: settings,
     );
   }
 

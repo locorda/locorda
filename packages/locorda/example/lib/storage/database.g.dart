@@ -471,6 +471,13 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
               requiredDuringInsert: false,
               defaultValue: const Constant('[]'))
           .withConverter<Set<String>>($NotesTable.$convertertags);
+  @override
+  late final GeneratedColumnWithTypeConverter<Set<Weblink>, String> weblinks =
+      GeneratedColumn<String>('weblinks', aliasedName, false,
+              type: DriftSqlType.string,
+              requiredDuringInsert: false,
+              defaultValue: const Constant('[]'))
+          .withConverter<Set<Weblink>>($NotesTable.$converterweblinks);
   static const VerificationMeta _categoryIdMeta =
       const VerificationMeta('categoryId');
   @override
@@ -494,7 +501,7 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, title, content, tags, categoryId, createdAt, modifiedAt];
+      [id, title, content, tags, weblinks, categoryId, createdAt, modifiedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -559,6 +566,9 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
           .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
       tags: $NotesTable.$convertertags.fromSql(attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}tags'])!),
+      weblinks: $NotesTable.$converterweblinks.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}weblinks'])!),
       categoryId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}category_id']),
       createdAt: attachedDatabase.typeMapping
@@ -575,6 +585,8 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
 
   static TypeConverter<Set<String>, String> $convertertags =
       const StringSetConverter();
+  static TypeConverter<Set<Weblink>, String> $converterweblinks =
+      const WeblinkSetConverter();
 }
 
 class Note extends DataClass implements Insertable<Note> {
@@ -590,6 +602,9 @@ class Note extends DataClass implements Insertable<Note> {
   /// Tags that can be added/removed independently
   final Set<String> tags;
 
+  /// Weblinks referenced by this note
+  final Set<Weblink> weblinks;
+
   /// Category ID (foreign key)
   final String? categoryId;
 
@@ -603,6 +618,7 @@ class Note extends DataClass implements Insertable<Note> {
       required this.title,
       required this.content,
       required this.tags,
+      required this.weblinks,
       this.categoryId,
       required this.createdAt,
       required this.modifiedAt});
@@ -614,6 +630,10 @@ class Note extends DataClass implements Insertable<Note> {
     map['content'] = Variable<String>(content);
     {
       map['tags'] = Variable<String>($NotesTable.$convertertags.toSql(tags));
+    }
+    {
+      map['weblinks'] =
+          Variable<String>($NotesTable.$converterweblinks.toSql(weblinks));
     }
     if (!nullToAbsent || categoryId != null) {
       map['category_id'] = Variable<String>(categoryId);
@@ -629,6 +649,7 @@ class Note extends DataClass implements Insertable<Note> {
       title: Value(title),
       content: Value(content),
       tags: Value(tags),
+      weblinks: Value(weblinks),
       categoryId: categoryId == null && nullToAbsent
           ? const Value.absent()
           : Value(categoryId),
@@ -645,6 +666,7 @@ class Note extends DataClass implements Insertable<Note> {
       title: serializer.fromJson<String>(json['title']),
       content: serializer.fromJson<String>(json['content']),
       tags: serializer.fromJson<Set<String>>(json['tags']),
+      weblinks: serializer.fromJson<Set<Weblink>>(json['weblinks']),
       categoryId: serializer.fromJson<String?>(json['categoryId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       modifiedAt: serializer.fromJson<DateTime>(json['modifiedAt']),
@@ -658,6 +680,7 @@ class Note extends DataClass implements Insertable<Note> {
       'title': serializer.toJson<String>(title),
       'content': serializer.toJson<String>(content),
       'tags': serializer.toJson<Set<String>>(tags),
+      'weblinks': serializer.toJson<Set<Weblink>>(weblinks),
       'categoryId': serializer.toJson<String?>(categoryId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'modifiedAt': serializer.toJson<DateTime>(modifiedAt),
@@ -669,6 +692,7 @@ class Note extends DataClass implements Insertable<Note> {
           String? title,
           String? content,
           Set<String>? tags,
+          Set<Weblink>? weblinks,
           Value<String?> categoryId = const Value.absent(),
           DateTime? createdAt,
           DateTime? modifiedAt}) =>
@@ -677,6 +701,7 @@ class Note extends DataClass implements Insertable<Note> {
         title: title ?? this.title,
         content: content ?? this.content,
         tags: tags ?? this.tags,
+        weblinks: weblinks ?? this.weblinks,
         categoryId: categoryId.present ? categoryId.value : this.categoryId,
         createdAt: createdAt ?? this.createdAt,
         modifiedAt: modifiedAt ?? this.modifiedAt,
@@ -687,6 +712,7 @@ class Note extends DataClass implements Insertable<Note> {
       title: data.title.present ? data.title.value : this.title,
       content: data.content.present ? data.content.value : this.content,
       tags: data.tags.present ? data.tags.value : this.tags,
+      weblinks: data.weblinks.present ? data.weblinks.value : this.weblinks,
       categoryId:
           data.categoryId.present ? data.categoryId.value : this.categoryId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -702,6 +728,7 @@ class Note extends DataClass implements Insertable<Note> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('tags: $tags, ')
+          ..write('weblinks: $weblinks, ')
           ..write('categoryId: $categoryId, ')
           ..write('createdAt: $createdAt, ')
           ..write('modifiedAt: $modifiedAt')
@@ -710,8 +737,8 @@ class Note extends DataClass implements Insertable<Note> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, content, tags, categoryId, createdAt, modifiedAt);
+  int get hashCode => Object.hash(
+      id, title, content, tags, weblinks, categoryId, createdAt, modifiedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -720,6 +747,7 @@ class Note extends DataClass implements Insertable<Note> {
           other.title == this.title &&
           other.content == this.content &&
           other.tags == this.tags &&
+          other.weblinks == this.weblinks &&
           other.categoryId == this.categoryId &&
           other.createdAt == this.createdAt &&
           other.modifiedAt == this.modifiedAt);
@@ -730,6 +758,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
   final Value<String> title;
   final Value<String> content;
   final Value<Set<String>> tags;
+  final Value<Set<Weblink>> weblinks;
   final Value<String?> categoryId;
   final Value<DateTime> createdAt;
   final Value<DateTime> modifiedAt;
@@ -739,6 +768,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
     this.title = const Value.absent(),
     this.content = const Value.absent(),
     this.tags = const Value.absent(),
+    this.weblinks = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.modifiedAt = const Value.absent(),
@@ -749,6 +779,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
     required String title,
     required String content,
     this.tags = const Value.absent(),
+    this.weblinks = const Value.absent(),
     this.categoryId = const Value.absent(),
     required DateTime createdAt,
     required DateTime modifiedAt,
@@ -763,6 +794,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
     Expression<String>? title,
     Expression<String>? content,
     Expression<String>? tags,
+    Expression<String>? weblinks,
     Expression<String>? categoryId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? modifiedAt,
@@ -773,6 +805,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
       if (title != null) 'title': title,
       if (content != null) 'content': content,
       if (tags != null) 'tags': tags,
+      if (weblinks != null) 'weblinks': weblinks,
       if (categoryId != null) 'category_id': categoryId,
       if (createdAt != null) 'created_at': createdAt,
       if (modifiedAt != null) 'modified_at': modifiedAt,
@@ -785,6 +818,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
       Value<String>? title,
       Value<String>? content,
       Value<Set<String>>? tags,
+      Value<Set<Weblink>>? weblinks,
       Value<String?>? categoryId,
       Value<DateTime>? createdAt,
       Value<DateTime>? modifiedAt,
@@ -794,6 +828,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
       title: title ?? this.title,
       content: content ?? this.content,
       tags: tags ?? this.tags,
+      weblinks: weblinks ?? this.weblinks,
       categoryId: categoryId ?? this.categoryId,
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? this.modifiedAt,
@@ -817,6 +852,10 @@ class NotesCompanion extends UpdateCompanion<Note> {
       map['tags'] =
           Variable<String>($NotesTable.$convertertags.toSql(tags.value));
     }
+    if (weblinks.present) {
+      map['weblinks'] = Variable<String>(
+          $NotesTable.$converterweblinks.toSql(weblinks.value));
+    }
     if (categoryId.present) {
       map['category_id'] = Variable<String>(categoryId.value);
     }
@@ -839,6 +878,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('tags: $tags, ')
+          ..write('weblinks: $weblinks, ')
           ..write('categoryId: $categoryId, ')
           ..write('createdAt: $createdAt, ')
           ..write('modifiedAt: $modifiedAt, ')
@@ -1787,6 +1827,7 @@ typedef $$NotesTableCreateCompanionBuilder = NotesCompanion Function({
   required String title,
   required String content,
   Value<Set<String>> tags,
+  Value<Set<Weblink>> weblinks,
   Value<String?> categoryId,
   required DateTime createdAt,
   required DateTime modifiedAt,
@@ -1797,6 +1838,7 @@ typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
   Value<String> title,
   Value<String> content,
   Value<Set<String>> tags,
+  Value<Set<Weblink>> weblinks,
   Value<String?> categoryId,
   Value<DateTime> createdAt,
   Value<DateTime> modifiedAt,
@@ -1842,6 +1884,11 @@ class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
   ColumnWithTypeConverterFilters<Set<String>, Set<String>, String> get tags =>
       $composableBuilder(
           column: $table.tags,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<Set<Weblink>, Set<Weblink>, String>
+      get weblinks => $composableBuilder(
+          column: $table.weblinks,
           builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -1892,6 +1939,9 @@ class $$NotesTableOrderingComposer
   ColumnOrderings<String> get tags => $composableBuilder(
       column: $table.tags, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get weblinks => $composableBuilder(
+      column: $table.weblinks, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -1939,6 +1989,9 @@ class $$NotesTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<Set<String>, String> get tags =>
       $composableBuilder(column: $table.tags, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Set<Weblink>, String> get weblinks =>
+      $composableBuilder(column: $table.weblinks, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -1994,6 +2047,7 @@ class $$NotesTableTableManager extends RootTableManager<
             Value<String> title = const Value.absent(),
             Value<String> content = const Value.absent(),
             Value<Set<String>> tags = const Value.absent(),
+            Value<Set<Weblink>> weblinks = const Value.absent(),
             Value<String?> categoryId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> modifiedAt = const Value.absent(),
@@ -2004,6 +2058,7 @@ class $$NotesTableTableManager extends RootTableManager<
             title: title,
             content: content,
             tags: tags,
+            weblinks: weblinks,
             categoryId: categoryId,
             createdAt: createdAt,
             modifiedAt: modifiedAt,
@@ -2014,6 +2069,7 @@ class $$NotesTableTableManager extends RootTableManager<
             required String title,
             required String content,
             Value<Set<String>> tags = const Value.absent(),
+            Value<Set<Weblink>> weblinks = const Value.absent(),
             Value<String?> categoryId = const Value.absent(),
             required DateTime createdAt,
             required DateTime modifiedAt,
@@ -2024,6 +2080,7 @@ class $$NotesTableTableManager extends RootTableManager<
             title: title,
             content: content,
             tags: tags,
+            weblinks: weblinks,
             categoryId: categoryId,
             createdAt: createdAt,
             modifiedAt: modifiedAt,

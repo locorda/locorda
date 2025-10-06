@@ -15,14 +15,22 @@
     rdfs:label "Notes Category CRDT Document Mapping v1" ;
     rdfs:comment "Defines how note categories should merge when conflicts occur during sync." ;
     mc:imports ( mappings:core-v1 ) ;
+    mc:predicateMapping ( <#settings-mappings> ) ;
     mc:classMapping ( [
         a mc:ClassMapping ;
         mc:appliesToClass pnotes:NotesCategory ;
         mc:rule
             [ mc:predicate schema:name ; algo:mergeWith algo:LWW_Register ],
             [ mc:predicate schema:description ; algo:mergeWith algo:LWW_Register ],
-            [ mc:predicate pnotes:categoryColor ; algo:mergeWith algo:LWW_Register ],
-            [ mc:predicate pnotes:categoryIcon ; algo:mergeWith algo:LWW_Register ],
+            [ mc:predicate pnotes:displaySettings ; algo:mergeWith algo:LWW_Register ],
             [ mc:predicate pnotes:archived ; algo:mergeWith algo:LWW_Register ],
             [ mc:predicate schema:dateCreated ; algo:mergeWith algo:LWW_Register ]
     ] ) .
+
+
+<#settings-mappings> a mc:PredicateMapping;
+  # we were a bit lazy and did not assign a RDF class IRI to CategoryDisplaySettings
+  # so we use a PredicateMapping with rules for all predicates used in that blank node
+   mc:rule
+     [ mc:predicate pnotes:categoryColor; algo:mergeWith algo:LWW_Register ], 
+     [ mc:predicate pnotes:categoryIcon; algo:mergeWith algo:LWW_Register ] . 

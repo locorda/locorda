@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 import '../models/note.dart';
+import '../models/weblink.dart';
 import '../models/category.dart' as models;
 import '../services/notes_service.dart';
 import '../services/categories_service.dart';
@@ -28,7 +29,10 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late final TextEditingController _titleController;
   late final TextEditingController _contentController;
   late final TextEditingController _tagController;
+  late final TextEditingController _weblinkUrlController;
+  late final TextEditingController _weblinkTitleController;
   late Set<String> _tags;
+  late Set<Weblink> _weblinks;
   late String? _selectedCategoryId;
   bool _saving = false;
 
@@ -39,7 +43,10 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _contentController =
         TextEditingController(text: widget.note?.content ?? '');
     _tagController = TextEditingController();
+    _weblinkUrlController = TextEditingController();
+    _weblinkTitleController = TextEditingController();
     _tags = Set.from(widget.note?.tags ?? <String>{});
+    _weblinks = Set.from(widget.note?.weblinks ?? <Weblink>{});
     _selectedCategoryId = widget.note?.categoryId;
   }
 
@@ -48,6 +55,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _titleController.dispose();
     _contentController.dispose();
     _tagController.dispose();
+    _weblinkUrlController.dispose();
+    _weblinkTitleController.dispose();
     super.dispose();
   }
 
@@ -57,19 +66,42 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     setState(() => _saving = true);
 
     try {
+      // Auto-add pending weblink if URL field has content
+      final pendingUrl = _weblinkUrlController.text.trim();
+      final finalWeblinks = Set<Weblink>.from(_weblinks);
+      if (pendingUrl.isNotEmpty) {
+        finalWeblinks.add(Weblink(
+          url: pendingUrl,
+          title: _weblinkTitleController.text.trim().isEmpty
+              ? null
+              : _weblinkTitleController.text.trim(),
+        ));
+      }
+
+      // Auto-add pending tag if tag field has content
+      final pendingTag = _tagController.text.trim();
+      final finalTags = Set<String>.from(_tags);
+      if (pendingTag.isNotEmpty) {
+        finalTags.add(pendingTag);
+      }
+
       final note = widget.note?.copyWith(
             title: _titleController.text,
             content: _contentController.text,
-            tags: _tags,
+            tags: finalTags,
             categoryId: Optional(_selectedCategoryId),
+            weblinks: finalWeblinks,
           ) ??
           widget.notesService
               .createNote(
                 title: _titleController.text,
                 content: _contentController.text,
-                tags: _tags,
+                tags: finalTags,
               )
-              .copyWith(categoryId: Optional(_selectedCategoryId));
+              .copyWith(
+                categoryId: Optional(_selectedCategoryId),
+                weblinks: finalWeblinks,
+              );
 
       await widget.notesService.saveNote(note);
 
@@ -102,6 +134,28 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     });
   }
 
+  void _addWeblink() {
+    final url = _weblinkUrlController.text.trim();
+    if (url.isNotEmpty) {
+      setState(() {
+        _weblinks.add(Weblink(
+          url: url,
+          title: _weblinkTitleController.text.trim().isEmpty
+              ? null
+              : _weblinkTitleController.text.trim(),
+        ));
+        _weblinkUrlController.clear();
+        _weblinkTitleController.clear();
+      });
+    }
+  }
+
+  void _removeWeblink(Weblink weblink) {
+    setState(() {
+      _weblinks.remove(weblink);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.note != null;
@@ -122,37 +176,36 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title field
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                border: OutlineInputBorder(),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title field
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
+                ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
               ),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Content field
-            Expanded(
-              child: TextField(
+              // Content field
+              TextField(
                 controller: _contentController,
                 decoration: const InputDecoration(
                   labelText: 'Content',
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
-                maxLines: null,
-                expands: true,
+                maxLines: 10,
+                minLines: 5,
                 textAlignVertical: TextAlignVertical.top,
               ),
-            ),
 
             const SizedBox(height: 16),
 
@@ -179,7 +232,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                           value: category.id,
                           child: Row(
                             children: [
-                              Icon(_getCategoryIcon(category.icon)),
+                              Icon(_getCategoryIcon(category.settings?.icon)),
                               const SizedBox(width: 8),
                               Text(category.name),
                             ],
@@ -250,6 +303,79 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
             const SizedBox(height: 16),
 
+            // Weblinks section
+            const Text(
+              'Weblinks',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Weblink input
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _weblinkUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'URL',
+                      hintText: 'https://example.com',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 1,
+                  child: TextField(
+                    controller: _weblinkTitleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Title (optional)',
+                      hintText: 'Link title',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _addWeblink,
+                  icon: const Icon(Icons.add),
+                  padding: const EdgeInsets.only(top: 8),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Weblinks display
+            if (_weblinks.isNotEmpty) ...[
+              ...(_weblinks.map((weblink) => Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ListTile(
+                      leading: const Icon(Icons.link),
+                      title: Text(weblink.title ?? weblink.url),
+                      subtitle:
+                          weblink.title != null ? Text(weblink.url) : null,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () => _removeWeblink(weblink),
+                      ),
+                      onTap: () {
+                        // Could add URL launcher here
+                      },
+                    ),
+                  ))),
+            ] else ...[
+              const Text(
+                'No weblinks added',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+
+            const SizedBox(height: 16),
+
             // Offline-first info
             Container(
               padding: const EdgeInsets.all(12),
@@ -271,7 +397,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 ],
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

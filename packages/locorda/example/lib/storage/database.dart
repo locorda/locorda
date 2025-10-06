@@ -4,6 +4,7 @@ library;
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import '../models/weblink.dart';
 
 part 'database.g.dart';
 
@@ -26,6 +27,37 @@ class StringSetConverter extends TypeConverter<Set<String>, String> {
   @override
   String toSql(Set<String> value) {
     return json.encode(value.toList());
+  }
+}
+
+/// Type converter for `Set<Weblink>` to/from JSON
+class WeblinkSetConverter extends TypeConverter<Set<Weblink>, String> {
+  const WeblinkSetConverter();
+
+  @override
+  Set<Weblink> fromSql(String fromDb) {
+    if (fromDb.isEmpty) return <Weblink>{};
+    try {
+      final List<dynamic> decoded = json.decode(fromDb);
+      return decoded.map((item) {
+        return Weblink(
+          url: item['url'] as String,
+          title: item['title'] as String?,
+          description: item['description'] as String?,
+        );
+      }).toSet();
+    } catch (e) {
+      return <Weblink>{};
+    }
+  }
+
+  @override
+  String toSql(Set<Weblink> value) {
+    return json.encode(value.map((w) => {
+      'url': w.url,
+      'title': w.title,
+      'description': w.description,
+    }).toList());
   }
 }
 
@@ -73,6 +105,11 @@ class Notes extends Table {
   /// Tags that can be added/removed independently
   TextColumn get tags => text()
       .map(const StringSetConverter())
+      .withDefault(const Constant('[]'))();
+
+  /// Weblinks referenced by this note
+  TextColumn get weblinks => text()
+      .map(const WeblinkSetConverter())
       .withDefault(const Constant('[]'))();
 
   /// Category ID (foreign key)
@@ -137,7 +174,7 @@ class AppDatabase extends _$AppDatabase {
       : super(_openConnection(web: web, native: native));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -187,6 +224,27 @@ class AppDatabase extends _$AppDatabase {
             // Add tags column to notes table in version 5
             await m.database.customStatement('''
               ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]';
+            ''');
+          }
+          if (from < 6) {
+            // Version 6: Recreate note_index_entries table to ensure clean schema
+            // Drop the old table (may have unexpected columns from previous versions)
+            await m.database.customStatement('''
+              DROP TABLE IF EXISTS note_index_entries;
+            ''');
+
+            // Recreate with clean schema
+            await m.createTable(noteIndexEntries);
+
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_note_index_entries_category
+              ON note_index_entries(category_id);
+            ''');
+          }
+          if (from < 7) {
+            // Version 7: Add weblinks column to notes table
+            await m.database.customStatement('''
+              ALTER TABLE notes ADD COLUMN weblinks TEXT NOT NULL DEFAULT '[]';
             ''');
           }
         },
@@ -316,5 +374,9 @@ class CursorDao extends DatabaseAccessor<AppDatabase> with _$CursorDaoMixin {
 QueryExecutor _openConnection(
     {DriftWebOptions? web, DriftNativeOptions? native}) {
   // For web, explicitly configure IndexedDB storage
-  return driftDatabase(name: 'personal_notes_app', web: web, native: native);
+  return driftDatabase(
+    name: 'personal_notes_app',
+    web: web,
+    native: native,
+  );
 }

@@ -182,7 +182,22 @@ class MergeContract {
     return r;
   });
 
-  MergeContract(this._classMappings, this._predicateRules);
+  MergeContract(this._classMappings, this._predicateRules) {
+    final StringBuffer buffer =
+        StringBuffer("\n${'-' * 40}\nMerge Contract:\n${'-' * 40}\n");
+    for (final classMapping in _classMappings.values) {
+      buffer.writeln('Class: ${classMapping.classIri}');
+      for (final propertyRule in classMapping.propertyRules.values) {
+        buffer.writeln(
+            '  Property: ${propertyRule.predicateIri}, mergeWith: ${propertyRule.mergeWith}, stopTraversal: ${propertyRule.stopTraversal}, isIdentifying: ${propertyRule.isIdentifying}, isPathIdentifying: ${propertyRule.isPathIdentifying}');
+      }
+    }
+    for (final predicateRule in _predicateRules.values) {
+      buffer.writeln(
+          'Global Property: ${predicateRule.predicateIri}, mergeWith: ${predicateRule.mergeWith}, stopTraversal: ${predicateRule.stopTraversal}, isIdentifying: ${predicateRule.isIdentifying}, isPathIdentifying: ${predicateRule.isPathIdentifying}');
+    }
+    _log.fine('MergeContract:\n$buffer');
+  }
 
   PredicateMergeRule? getEffectivePredicateRule(
       IriTerm? typeIri, RdfPredicate propertyIri) {

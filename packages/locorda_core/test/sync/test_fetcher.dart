@@ -15,7 +15,7 @@ class TestFetcher implements Fetcher {
   }) : urlToPathMap = urlToPathMap ?? {};
 
   @override
-  Future<String> fetch(String url) async {
+  Future<String> fetch(String url, {String? contentType}) async {
     // Check if we have an explicit mapping for this URL
     if (urlToPathMap.containsKey(url)) {
       final relativePath = urlToPathMap[url]!;

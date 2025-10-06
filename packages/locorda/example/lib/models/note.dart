@@ -1,6 +1,7 @@
 /// Simple Note model with CRDT annotations for offline-first sync.
 library;
 
+import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
@@ -8,6 +9,7 @@ import 'package:locorda_annotations/locorda_annotations.dart';
 import '../vocabulary/personal_notes_vocab.dart';
 import '../utils/optional.dart';
 import 'category.dart';
+import 'weblink.dart';
 
 class NoteCategoryProperty extends RdfProperty {
   const NoteCategoryProperty()
@@ -24,7 +26,11 @@ class NoteCategoryProperty extends RdfProperty {
 /// - LWW-Register for title and content (last writer wins)
 /// - OR-Set for tags (additions and removals merge)
 ///
-@PodResource(PersonalNotesVocab.PersonalNote)
+@PodResource(
+    PersonalNotesVocab.PersonalNote,
+    // by default, the fragment is "it", but we set it explicitly here
+    // to "note" instead for demonstration purposes
+    PodIriStrategy(PodIriConfig('note')))
 class Note {
   /// Unique identifier for this note
   @RdfIriPart()
@@ -60,6 +66,11 @@ class Note {
   @CrdtLwwRegister()
   final DateTime modifiedAt;
 
+  /// Weblinks referenced by this note (identified blank nodes)
+  @RdfProperty(Schema.relatedLink)
+  @CrdtOrSet()
+  final Set<Weblink> weblinks;
+
   /// FIXME: This needs to be persisted in the app DB as well!
   /// catch all triples that are added by other apps/extensions/different app versions
   /// so we don't lose data when round-tripping through our app.
@@ -74,8 +85,10 @@ class Note {
     this.categoryId,
     DateTime? createdAt,
     DateTime? modifiedAt,
+    Set<Weblink>? weblinks,
     RdfGraph? other,
   })  : tags = tags ?? <String>{},
+        weblinks = weblinks ?? <Weblink>{},
         createdAt = createdAt ?? DateTime.now(),
         modifiedAt = modifiedAt ?? DateTime.now(),
         other = other ?? RdfGraph();
@@ -89,6 +102,7 @@ class Note {
     Optional<String>? categoryId,
     DateTime? createdAt,
     DateTime? modifiedAt,
+    Set<Weblink>? weblinks,
   }) {
     return Note(
       id: id ?? this.id,
@@ -98,6 +112,7 @@ class Note {
       categoryId: categoryId != null ? categoryId.value : this.categoryId,
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? DateTime.now(),
+      weblinks: weblinks ?? Set.from(this.weblinks),
       other: other,
     );
   }

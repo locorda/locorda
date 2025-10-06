@@ -15,8 +15,9 @@ import 'package:rdf_mapper/rdf_mapper.dart';
 import 'package:personal_notes_app/models/note.dart' as note;
 import 'package:personal_notes_app/vocabulary/personal_notes_vocab.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
+import 'package:personal_notes_app/models/weblink.dart';
 import 'package:personal_notes_app/models/category.dart';
-import 'package:locorda_core/locorda_core.dart' as locorda_core;
+import 'package:locorda_core/locorda_core.dart';
 
 /// Generated mapper for [note.Note] global resources.
 ///
@@ -58,6 +59,11 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
     final DateTime modifiedAt = reader.require(
       SchemaNoteDigitalDocument.dateModified,
     );
+    final Set<Weblink> weblinks = reader
+        .requireCollection<Set<Weblink>, Weblink>(
+          Schema.relatedLink,
+          UnorderedItemsSetMapper.new,
+        );
 
     // Get unmapped triples as the last reader operation for lossless mapping
     final RdfGraph other = reader.getUnmapped<RdfGraph>(globalUnmapped: true);
@@ -70,6 +76,7 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
       categoryId: categoryId,
       createdAt: createdAt,
       modifiedAt: modifiedAt,
+      weblinks: weblinks,
       other: other,
     );
   }
@@ -101,6 +108,11 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
         )
         .addValue(SchemaNoteDigitalDocument.dateCreated, resource.createdAt)
         .addValue(SchemaNoteDigitalDocument.dateModified, resource.modifiedAt)
+        .addCollection<Set<Weblink>, Weblink>(
+          Schema.relatedLink,
+          resource.weblinks,
+          UnorderedItemsSetMapper.new,
+        )
         .addUnmapped(resource.other)
         .build();
   }

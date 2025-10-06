@@ -15,6 +15,7 @@ import 'package:rdf_mapper/rdf_mapper.dart';
 import 'package:personal_notes_app/models/category.dart' as category;
 import 'package:personal_notes_app/vocabulary/personal_notes_vocab.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
+import 'package:personal_notes_app/models/category_display_settings.dart';
 import 'package:locorda_core/locorda_core.dart' as locorda_core;
 
 /// Generated mapper for [category.Category] global resources.
@@ -42,8 +43,9 @@ class CategoryMapper implements GlobalResourceMapper<category.Category> {
 
     final String name = reader.require(SchemaCreativeWork.name);
     final String? description = reader.optional(SchemaCreativeWork.description);
-    final String? color = reader.optional(PersonalNotesVocab.categoryColor);
-    final String? icon = reader.optional(PersonalNotesVocab.categoryIcon);
+    final CategoryDisplaySettings? settings = reader.optional(
+      PersonalNotesVocab.displaySettings,
+    );
     final DateTime createdAt = reader.require(SchemaCreativeWork.dateCreated);
     final DateTime modifiedAt = reader.require(SchemaCreativeWork.dateModified);
     final bool archived = reader.require(PersonalNotesVocab.archived);
@@ -55,8 +57,7 @@ class CategoryMapper implements GlobalResourceMapper<category.Category> {
       id: id,
       name: name,
       description: description,
-      color: color,
-      icon: icon,
+      settings: settings,
       createdAt: createdAt,
       modifiedAt: modifiedAt,
       archived: archived,
@@ -81,12 +82,9 @@ class CategoryMapper implements GlobalResourceMapper<category.Category> {
               b.addValue(SchemaCreativeWork.description, resource.description),
         )
         .when(
-          resource.color != null,
-          (b) => b.addValue(PersonalNotesVocab.categoryColor, resource.color),
-        )
-        .when(
-          resource.icon != null,
-          (b) => b.addValue(PersonalNotesVocab.categoryIcon, resource.icon),
+          resource.settings != null,
+          (b) =>
+              b.addValue(PersonalNotesVocab.displaySettings, resource.settings),
         )
         .addValue(SchemaCreativeWork.dateCreated, resource.createdAt)
         .addValue(SchemaCreativeWork.dateModified, resource.modifiedAt)

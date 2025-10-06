@@ -346,7 +346,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
                             value: category.id,
                             child: Row(
                               children: [
-                                Icon(_getCategoryIcon(category.icon)),
+                                Icon(_getCategoryIcon(category.settings?.icon)),
                                 const SizedBox(width: 8),
                                 Text(category.name),
                               ],

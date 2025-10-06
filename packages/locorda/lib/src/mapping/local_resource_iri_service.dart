@@ -31,7 +31,7 @@ class LocalResourceIriService {
   bool _isSetupComplete = false;
   Map<Type, PodIriConfig> _registeredTypes = {};
   Set<Type> _referencedTypes = {};
-  late Map<Type, IriTerm> _resourceTypeCache;
+
   final List<ValidationError> _setupErrors = [];
 
   final LocalResourceLocator _resourceLocator;
@@ -159,20 +159,20 @@ class LocalResourceIriService {
     // First validate the configuration
     final validationResult = validate(resourceTypeCache);
 
+    final _resourceConfigCache = <Type, (IriTerm, PodIriConfig)>{};
     // Only proceed with setup completion if validation passes
     if (validationResult.isValid) {
       _isSetupComplete = true;
-      _resourceTypeCache = <Type, IriTerm>{};
 
       // Cache the IRI terms for registered types
       _registeredTypes.forEach((type, config) {
         final iriTerm = resourceTypeCache.getIri(type);
-        _resourceTypeCache[type] = iriTerm;
+        _resourceConfigCache[type] = (iriTerm, config);
       });
     }
     _converter._inner = LocalReferenceConverter(
         resourceLocator: _resourceLocator,
-        resourceTypeCache: resourceTypeCache);
+        resourceConfigCache: _resourceConfigCache);
     return validationResult;
   }
 }
@@ -238,22 +238,27 @@ class _DelegatingReferenceConverter implements ReferenceConverter {
 /// Local IRI mapper for resource references using the same scheme as resources.
 class LocalReferenceConverter implements ReferenceConverter {
   final ResourceLocator _resourceLocator;
-  final ResourceTypeCache _resourceTypeCache;
+  final Map<Type, (IriTerm, PodIriConfig)> _resourceConfigCache;
 
   const LocalReferenceConverter(
       {required ResourceLocator resourceLocator,
-      required ResourceTypeCache resourceTypeCache})
+      required Map<Type, (IriTerm, PodIriConfig)> resourceConfigCache})
       : _resourceLocator = resourceLocator,
-        _resourceTypeCache = resourceTypeCache;
+        _resourceConfigCache = resourceConfigCache;
 
   String fromIri(Type targetType, IriTerm term) {
-    final typeIri = _resourceTypeCache.getIri(targetType);
+    final (typeIri, config) = _resourceConfigCache[targetType]!;
     final result = _resourceLocator.fromIri(typeIri, term);
+    if (result.fragment != config.fragment) {
+      throw ArgumentError(
+          'Resource IRI ${term.value} does not match expected fragment "${config.fragment}" for type $targetType');
+    }
     return result.id;
   }
 
   IriTerm toIri(Type targetType, String value) {
-    final typeIri = _resourceTypeCache.getIri(targetType);
-    return _resourceLocator.toIri(ResourceIdentifier.document(typeIri, value));
+    final (typeIri, config) = _resourceConfigCache[targetType]!;
+    return _resourceLocator
+        .toIri(ResourceIdentifier(typeIri, value, config.fragment));
   }
 }

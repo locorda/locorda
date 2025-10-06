@@ -1,5 +1,4 @@
 import 'package:locorda_core/src/config/validation.dart';
-import 'package:locorda_core/src/generated/algo.dart';
 import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';

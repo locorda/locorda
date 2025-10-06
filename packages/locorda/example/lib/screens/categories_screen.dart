@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 import '../models/category.dart';
+import '../models/category_display_settings.dart';
 import '../services/categories_service.dart';
 
 /// Screen for managing categories with offline-first functionality.
@@ -35,8 +36,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final nameController = TextEditingController(text: category?.name ?? '');
     final descriptionController =
         TextEditingController(text: category?.description ?? '');
-    final colorController = TextEditingController(text: category?.color ?? '');
-    final iconController = TextEditingController(text: category?.icon ?? '');
+    final colorController =
+        TextEditingController(text: category?.settings?.color ?? '');
+    final iconController =
+        TextEditingController(text: category?.settings?.icon ?? '');
 
     await showDialog<bool>(
       context: context,
@@ -97,30 +100,33 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               }
 
               try {
+                final color = colorController.text.trim().isEmpty
+                    ? null
+                    : colorController.text.trim();
+                final icon = iconController.text.trim().isEmpty
+                    ? null
+                    : iconController.text.trim();
+
+                CategoryDisplaySettings? settings;
+                if (color != null || icon != null) {
+                  settings = CategoryDisplaySettings(color: color, icon: icon);
+                }
+
                 final newCategory = isEditing
                     ? category.copyWith(
                         name: name,
                         description: descriptionController.text.trim().isEmpty
                             ? null
                             : descriptionController.text.trim(),
-                        color: colorController.text.trim().isEmpty
-                            ? null
-                            : colorController.text.trim(),
-                        icon: iconController.text.trim().isEmpty
-                            ? null
-                            : iconController.text.trim(),
+                        settings: settings,
                       )
                     : widget.categoriesService.createCategory(
                         name: name,
                         description: descriptionController.text.trim().isEmpty
                             ? null
                             : descriptionController.text.trim(),
-                        color: colorController.text.trim().isEmpty
-                            ? null
-                            : colorController.text.trim(),
-                        icon: iconController.text.trim().isEmpty
-                            ? null
-                            : iconController.text.trim(),
+                        color: color,
+                        icon: icon,
                       );
 
                 await widget.categoriesService.saveCategory(newCategory);
@@ -281,11 +287,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: category.color != null
-                        ? _parseColor(category.color!)
+                    backgroundColor: category.settings?.color != null
+                        ? _parseColor(category.settings!.color!)
                         : Theme.of(context).primaryColor,
                     child: Text(
-                      category.icon ?? category.name[0].toUpperCase(),
+                      category.settings?.icon ?? category.name[0].toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

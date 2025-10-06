@@ -32,3 +32,25 @@ class CrdtOrSet {
 class CrdtImmutable {
   const CrdtImmutable();
 }
+
+/// Annotation to mark a property as identifying for a local resource (blank node).
+///
+/// Used to indicate that a property uniquely identifies a local resource,
+/// allowing the CRDT system to recognize when two blank nodes represent
+/// the same logical entity. This maps to `mc:isIdentifying` in the merge contract.
+///
+/// Example:
+/// ```dart
+/// @RdfLocalResource()
+/// class Weblink {
+///   @RdfProperty(Schema.url)
+///   @McIdentifying()
+///   @CrdtImmutable()
+///   final String url;
+///   // ...
+/// }
+/// ```
+class McIdentifying {
+  const McIdentifying();
+}
+

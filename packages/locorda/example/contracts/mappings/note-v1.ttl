@@ -24,5 +24,13 @@
             [ mc:predicate schema:keywords ; algo:mergeWith algo:OR_Set ],
             [ mc:predicate pnotes:belongsToCategory ; algo:mergeWith algo:LWW_Register ],
             [ mc:predicate schema:dateCreated ; algo:mergeWith algo:LWW_Register ],
-            [ mc:predicate schema:dateModified ; algo:mergeWith algo:LWW_Register ]
+            [ mc:predicate schema:dateModified ; algo:mergeWith algo:LWW_Register ],
+            [ mc:predicate schema:relatedLink ; algo:mergeWith algo:OR_Set ]
+    ] [
+       a mc:ClassMapping ;
+        mc:appliesToClass pnotes:Weblink ;
+        mc:rule
+            [ mc:predicate schema:url ; mc:isIdentifying true ; algo:mergeWith algo:Immutable ],
+            [ mc:predicate schema:name ; algo:mergeWith algo:LWW_Register ],
+            [ mc:predicate schema:description ; algo:mergeWith algo:LWW_Register ]
     ] ) .

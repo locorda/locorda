@@ -28,6 +28,9 @@ class PersonalNotesVocab {
   // ignore: constant_identifier_names
   static const PersonalNote = IriTerm('${baseIri}PersonalNote');
 
+  // ignore: constant_identifier_names
+  static const Weblink = IriTerm('${baseIri}Weblink');
+
   // Properties
 
   /// Indicates that a note belongs to a specific notes category.
@@ -45,4 +48,8 @@ class PersonalNotesVocab {
   /// Indicates that a category is archived (soft deleted).
   /// Domain: NotesCategory, Range: xsd:boolean
   static const archived = IriTerm('${baseIri}archived');
+
+  /// Display settings for a category (single-path-identified blank node).
+  /// Domain: NotesCategory, Range: CategoryDisplaySettings (blank node)
+  static const displaySettings = IriTerm('${baseIri}displaySettings');
 }

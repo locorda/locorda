@@ -6,6 +6,7 @@ import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
 import 'package:locorda_annotations/locorda_annotations.dart';
 import '../vocabulary/personal_notes_vocab.dart';
+import 'category_display_settings.dart';
 
 /// A category for organizing personal notes.
 ///
@@ -32,15 +33,10 @@ class Category {
   @CrdtLwwRegister()
   final String? description;
 
-  /// Color for UI display (hex code, CSS color name, etc.)
-  @RdfProperty(PersonalNotesVocab.categoryColor)
+  /// Display settings for UI presentation (single-path-identified blank node)
+  @RdfProperty(PersonalNotesVocab.displaySettings)
   @CrdtLwwRegister()
-  final String? color;
-
-  /// Icon for UI display (emoji, icon name, etc.)
-  @RdfProperty(PersonalNotesVocab.categoryIcon)
-  @CrdtLwwRegister()
-  final String? icon;
+  final CategoryDisplaySettings? settings;
 
   /// When this category was created
   @RdfProperty(SchemaCreativeWork.dateCreated)
@@ -64,8 +60,7 @@ class Category {
     required this.id,
     required this.name,
     this.description,
-    this.color,
-    this.icon,
+    this.settings,
     DateTime? createdAt,
     DateTime? modifiedAt,
     this.archived = false,
@@ -79,8 +74,7 @@ class Category {
     String? id,
     String? name,
     String? description,
-    String? color,
-    String? icon,
+    CategoryDisplaySettings? settings,
     DateTime? createdAt,
     DateTime? modifiedAt,
     bool? archived,
@@ -89,8 +83,7 @@ class Category {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      color: color ?? this.color,
-      icon: icon ?? this.icon,
+      settings: settings ?? this.settings,
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? this.modifiedAt,
       archived: archived ?? this.archived,

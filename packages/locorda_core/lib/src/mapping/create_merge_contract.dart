@@ -36,9 +36,6 @@ import 'merge_contract.dart';
       e.key: _toPredicateMergeRule(e.value, crdtRegistry)
   };
 
-// FIXME: compute (and validate) the effective resulting rules, meaning that
-// e.g. we need to check if the algorithm is single value and then set the
-// path identifying flag, if not set explicitly.
   return (MergeContract(classMappings, predicateMergeRules), validation);
 }
 

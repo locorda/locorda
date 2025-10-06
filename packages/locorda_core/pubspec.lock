@@ -346,7 +346,7 @@ packages:
     source: hosted
     version: "1.5.0"
   rdf_canonicalization:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: rdf_canonicalization
       sha256: c23109f56b6d286503369af723d3850dbda1594b21e97ad0698f579b4eddeade

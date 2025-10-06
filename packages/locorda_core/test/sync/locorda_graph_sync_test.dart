@@ -72,7 +72,6 @@ void main() {
       final loc = LocalResourceLocator(iriTermFactory: IriTerm.validated);
       final resourceIri = loc.toIri(ResourceIdentifier(
           IriTerm('https://schema.org/Recipe'), 'recipe123', "it"));
-      print(resourceIri);
       expect(
           resourceIri.value,
           equals(
