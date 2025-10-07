@@ -4,10 +4,12 @@ library;
 import 'package:flutter/material.dart';
 import '../models/note.dart';
 import '../models/weblink.dart';
+import '../models/comment.dart';
 import '../models/category.dart' as models;
 import '../services/notes_service.dart';
 import '../services/categories_service.dart';
 import '../utils/optional.dart';
+import '../widgets/comment_section.dart';
 
 class NoteEditorScreen extends StatefulWidget {
   final NotesService notesService;
@@ -33,6 +35,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late final TextEditingController _weblinkTitleController;
   late Set<String> _tags;
   late Set<Weblink> _weblinks;
+  late Set<Comment> _comments;
   late String? _selectedCategoryId;
   bool _saving = false;
 
@@ -47,6 +50,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _weblinkTitleController = TextEditingController();
     _tags = Set.from(widget.note?.tags ?? <String>{});
     _weblinks = Set.from(widget.note?.weblinks ?? <Weblink>{});
+    _comments = Set.from(widget.note?.comments ?? <Comment>{});
     _selectedCategoryId = widget.note?.categoryId;
   }
 
@@ -91,6 +95,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
             tags: finalTags,
             categoryId: Optional(_selectedCategoryId),
             weblinks: finalWeblinks,
+            comments: _comments,
           ) ??
           widget.notesService
               .createNote(
@@ -101,6 +106,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               .copyWith(
                 categoryId: Optional(_selectedCategoryId),
                 weblinks: finalWeblinks,
+                comments: _comments,
               );
 
       await widget.notesService.saveNote(note);
@@ -153,6 +159,18 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   void _removeWeblink(Weblink weblink) {
     setState(() {
       _weblinks.remove(weblink);
+    });
+  }
+
+  void _addComment(Comment comment) {
+    setState(() {
+      _comments.add(comment);
+    });
+  }
+
+  void _removeComment(Comment comment) {
+    setState(() {
+      _comments.remove(comment);
     });
   }
 
@@ -373,6 +391,15 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 style: TextStyle(color: Colors.grey),
               ),
             ],
+
+            const SizedBox(height: 16),
+
+            // Comments section
+            CommentSection(
+              comments: _comments,
+              onAddComment: _addComment,
+              onRemoveComment: _removeComment,
+            ),
 
             const SizedBox(height: 16),
 

@@ -212,7 +212,7 @@ void main() {
         final refIri =
             refMapper.toRdfTerm('note123', MockSerializationContext());
 
-        expect(resourceIri.value, equals(refIri.value));
+        expect(resourceIri.value, equals(refIri.value));            
         expect(
             resourceIri.value,
             equals(

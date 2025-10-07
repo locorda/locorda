@@ -5,6 +5,19 @@
 /// the locorda generator to create proper merge logic.
 library locorda_annotations;
 
-export 'src/crdt_annotations.dart';
-export 'src/pod_resource.dart';
-export 'src/pod_resource_ref.dart';
+export 'src/crdt_annotations.dart'
+    show
+        CrdtFwwRegister,
+        CrdtImmutable,
+        CrdtLwwRegister,
+        CrdtOrSet,
+        McIdentifying;
+export 'src/pod_resource.dart'
+    show
+        PodResource,
+        PodSubResource,
+        PodIriStrategy,
+        FragmentStrategy,
+        resourceIriFactoryKey,
+        resourceIriVar;
+export 'src/pod_resource_ref.dart' show PodResourceRef, resourceRefFactoryKey;

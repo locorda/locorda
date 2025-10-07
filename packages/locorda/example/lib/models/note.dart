@@ -10,6 +10,7 @@ import '../vocabulary/personal_notes_vocab.dart';
 import '../utils/optional.dart';
 import 'category.dart';
 import 'weblink.dart';
+import 'comment.dart';
 
 class NoteCategoryProperty extends RdfProperty {
   const NoteCategoryProperty()
@@ -71,6 +72,11 @@ class Note {
   @CrdtOrSet()
   final Set<Weblink> weblinks;
 
+  /// Comments on this note (IRI-identified sub-resources)
+  @RdfProperty(Schema.comment)
+  @CrdtOrSet()
+  final Set<Comment> comments;
+
   /// FIXME: This needs to be persisted in the app DB as well!
   /// catch all triples that are added by other apps/extensions/different app versions
   /// so we don't lose data when round-tripping through our app.
@@ -86,9 +92,11 @@ class Note {
     DateTime? createdAt,
     DateTime? modifiedAt,
     Set<Weblink>? weblinks,
+    Set<Comment>? comments,
     RdfGraph? other,
   })  : tags = tags ?? <String>{},
         weblinks = weblinks ?? <Weblink>{},
+        comments = comments ?? <Comment>{},
         createdAt = createdAt ?? DateTime.now(),
         modifiedAt = modifiedAt ?? DateTime.now(),
         other = other ?? RdfGraph();
@@ -103,6 +111,7 @@ class Note {
     DateTime? createdAt,
     DateTime? modifiedAt,
     Set<Weblink>? weblinks,
+    Set<Comment>? comments,
   }) {
     return Note(
       id: id ?? this.id,
@@ -113,6 +122,7 @@ class Note {
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? DateTime.now(),
       weblinks: weblinks ?? Set.from(this.weblinks),
+      comments: comments ?? Set.from(this.comments),
       other: other,
     );
   }

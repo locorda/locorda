@@ -31,8 +31,9 @@
 - [x] Implement resource identity
 - [x] Implement (optional) external IRI for better DX 
 - [x] Change 008 proposal slightly again: we really should use the path identification by default
+- [x] Implement something like `IriStrategy(provideAs: "documentIri")` in rdf_mapper_*, so that we can have sub-annotations here that work together smoothly, just marking as PodResource and PodSubResource. But beware: the IRI of the root resource is not 100% what we want, unless we actually have an extra IriStrategy.relative() with separate templates.
 - [ ] LocordaSync: Make sure that all patterns like IRI-Identified Sub-Resources, identified blank nodes and unidentified blank nodes are shown. Ideas: Weblink in Note for (classical) identified blank node, Comment in Note for IRI-Identified sub-content, CategoryDisplaySettings in Category for single-path-identified blank node, and ??? for sets of unidentified blank nodes
-- [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil?
+- [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil? Maybe wait with the answer to after implementation of OR-Set?
 - [ ] Storage Layer: save locorda indices
 - [ ] Implement locorda index files in db and fill/update them on save
 - [ ] Implement saving/loading/merging documents with local storage persistence

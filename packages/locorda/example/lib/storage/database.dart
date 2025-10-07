@@ -2,8 +2,10 @@
 library;
 
 import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+
 import '../models/weblink.dart';
 
 part 'database.g.dart';
@@ -53,11 +55,13 @@ class WeblinkSetConverter extends TypeConverter<Set<Weblink>, String> {
 
   @override
   String toSql(Set<Weblink> value) {
-    return json.encode(value.map((w) => {
-      'url': w.url,
-      'title': w.title,
-      'description': w.description,
-    }).toList());
+    return json.encode(value
+        .map((w) => {
+              'url': w.url,
+              'title': w.title,
+              'description': w.description,
+            })
+        .toList());
   }
 }
 
@@ -86,6 +90,24 @@ class Categories extends Table {
 
   /// Whether this category is archived (soft deleted)
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Comments table
+class Comments extends Table {
+  /// Comment ID (primary key)
+  TextColumn get id => text()();
+
+  /// Note ID (foreign key)
+  TextColumn get noteId => text().references(Notes, #id)();
+
+  /// Comment content
+  TextColumn get content => text()();
+
+  /// Creation timestamp
+  DateTimeColumn get createdAt => dateTime()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -167,14 +189,14 @@ class HydrationCursors extends Table {
 
 /// Main app database class (schema only)
 @DriftDatabase(
-    tables: [Categories, Notes, NoteIndexEntries, HydrationCursors],
-    daos: [CategoryDao, NoteDao, NoteIndexEntryDao, CursorDao])
+    tables: [Categories, Comments, Notes, NoteIndexEntries, HydrationCursors],
+    daos: [CategoryDao, CommentDao, NoteDao, NoteIndexEntryDao, CursorDao])
 class AppDatabase extends _$AppDatabase {
   AppDatabase({DriftWebOptions? web, DriftNativeOptions? native})
       : super(_openConnection(web: web, native: native));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -247,6 +269,15 @@ class AppDatabase extends _$AppDatabase {
               ALTER TABLE notes ADD COLUMN weblinks TEXT NOT NULL DEFAULT '[]';
             ''');
           }
+          if (from < 8) {
+            // Version 8: Add comments table
+            await m.createTable(comments);
+
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_comments_note
+              ON comments(note_id);
+            ''');
+          }
         },
       );
 }
@@ -286,6 +317,32 @@ class CategoryDao extends DatabaseAccessor<AppDatabase>
   /// Delete a category by ID
   Future<void> deleteCategoryById(String id) {
     return (delete(categories)..where((c) => c.id.equals(id))).go();
+  }
+}
+
+/// Data Access Object for Comments
+@DriftAccessor(tables: [Comments])
+class CommentDao extends DatabaseAccessor<AppDatabase> with _$CommentDaoMixin {
+  CommentDao(super.db);
+
+  /// Get all comments for a specific note
+  Future<List<Comment>> getCommentsForNote(String noteId) {
+    return (select(comments)..where((c) => c.noteId.equals(noteId))).get();
+  }
+
+  /// Insert or update a comment
+  Future<void> insertOrUpdateComment(CommentsCompanion companion) {
+    return into(comments).insertOnConflictUpdate(companion);
+  }
+
+  /// Delete a comment by ID
+  Future<void> deleteCommentById(String id) {
+    return (delete(comments)..where((c) => c.id.equals(id))).go();
+  }
+
+  /// Delete all comments for a note
+  Future<void> deleteCommentsForNote(String noteId) {
+    return (delete(comments)..where((c) => c.noteId.equals(noteId))).go();
   }
 }
 

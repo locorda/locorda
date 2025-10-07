@@ -6,7 +6,7 @@
 // ignore_for_file: unused_import, unnecessary_cast, prefer_const_constructors
 // ignore_for_file: unnecessary_brace_in_string_interps, prefer_conditional_assignment
 // ignore_for_file: lines_longer_than_80_chars, avoid_redundant_argument_values
-// ignore_for_file: unused_field
+// ignore_for_file: unused_field, unnecessary_string_interpolations
 
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
@@ -16,6 +16,8 @@ import 'package:personal_notes_app/models/note.dart' as note;
 import 'package:personal_notes_app/vocabulary/personal_notes_vocab.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
 import 'package:personal_notes_app/models/weblink.dart';
+import 'package:personal_notes_app/models/comment.dart';
+import 'package:personal_notes_app/models/comment.rdf_mapper.g.dart' as crmg;
 import 'package:personal_notes_app/models/category.dart';
 import 'package:locorda_core/locorda_core.dart';
 
@@ -64,6 +66,15 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
           Schema.relatedLink,
           UnorderedItemsSetMapper.new,
         );
+    final Set<Comment> comments = reader
+        .requireCollection<Set<Comment>, Comment>(
+          Schema.comment,
+          UnorderedItemsSetMapper.new,
+          itemDeserializer: crmg.CommentMapper(
+            rootResourceIriProvider: () =>
+                throw Exception('Must not call provider for deserialization'),
+          ),
+        );
 
     // Get unmapped triples as the last reader operation for lossless mapping
     final RdfGraph other = reader.getUnmapped<RdfGraph>(globalUnmapped: true);
@@ -77,6 +88,7 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
       createdAt: createdAt,
       modifiedAt: modifiedAt,
       weblinks: weblinks,
+      comments: comments,
       other: other,
     );
   }
@@ -112,6 +124,14 @@ class NoteMapper implements GlobalResourceMapper<note.Note> {
           Schema.relatedLink,
           resource.weblinks,
           UnorderedItemsSetMapper.new,
+        )
+        .addCollection<Set<Comment>, Comment>(
+          Schema.comment,
+          resource.comments,
+          UnorderedItemsSetMapper.new,
+          itemSerializer: crmg.CommentMapper(
+            rootResourceIriProvider: () => subject.value,
+          ),
         )
         .addUnmapped(resource.other)
         .build();

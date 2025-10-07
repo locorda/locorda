@@ -7,11 +7,26 @@ import 'package:locorda_annotations/locorda_annotations.dart';
 import 'package:locorda_core/locorda_core.dart';
 
 const resourceIriFactoryKey = r'$resourceIriFactory';
+const resourceIriVar = r'rootResourceIri';
 
 class PodIriStrategy extends IriStrategy {
   const PodIriStrategy([PodIriConfig? config])
       : super.namedFactory(
-            resourceIriFactoryKey, config ?? const PodIriConfig());
+            resourceIriFactoryKey,
+            config ?? const PodIriConfig(),
+            // exposes the IRI of the Pod Resource as a potential provider to child resources
+            resourceIriVar);
+}
+
+class FragmentStrategy extends IriStrategy {
+  const FragmentStrategy(String fragment)
+      : super.withFragment(
+            // references the parent resource IRI via the variable we expose in PodIriStrategy
+            // so that the subresource IRI can be constructed as {parentResourceIri}#fragment .
+            // Note: any fragment will be removed from the parent resource IRI automatically,
+            // so it is no problem at all if the parent resource IRI already has a fragment.
+            '{+$resourceIriVar}',
+            fragment);
 }
 
 /// Annotation for RDF classes that represent resources stored in Solid Pods.
@@ -102,4 +117,38 @@ class PodResource extends RdfGlobalResource {
   const PodResource(IriTerm? classIri,
       [PodIriStrategy iriStrategy = const PodIriStrategy()])
       : super(classIri, iriStrategy);
+}
+
+class PodSubResource extends RdfGlobalResource {
+  /// Creates a Solid Pod sub-resource annotation.
+  ///
+  /// This annotation is used for RDF classes that represent sub-resources
+  /// within a Solid Pod. Sub-resources are identified using a combination
+  /// of the parent resource's IRI and a fragment identifier specific to
+  /// the sub-resource.
+  ///
+  /// The [classIri] parameter defines the RDF type for this sub-resource class.
+  /// The [iriStrategy] parameter specifies how to construct the IRI for
+  /// instances of this sub-resource, automatically using the parent resource's
+  /// IRI as a base.
+  ///
+  /// Example:
+  /// ```dart
+  /// @PodSubResource(
+  ///   const IriTerm('https://example.org/Comment'),
+  ///   PodSubResourceIriStrategy('#comment-{id}')
+  /// )
+  /// class Comment extends RdfResource {
+  ///   @LwwRegister()
+  ///   late String content;
+  ///
+  ///   @Immutable()
+  ///   late DateTime createdAt;
+  ///
+  ///   @RdfIriPart()
+  ///   late String id; // Unique fragment identifier for this comment
+  /// }
+  /// ```
+  const PodSubResource(IriTerm? classIri, FragmentStrategy iriStrategy)
+      : super(classIri, iriStrategy, registerGlobally: false);
 }

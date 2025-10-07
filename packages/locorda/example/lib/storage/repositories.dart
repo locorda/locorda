@@ -7,6 +7,7 @@ import 'package:locorda/locorda.dart';
 import '../models/category.dart' as models;
 import '../models/category_display_settings.dart' as models;
 import '../models/note.dart' as models;
+import '../models/comment.dart' as models;
 import '../models/note_index_entry.dart' as models;
 import '../models/note_group_key.dart';
 import 'database.dart';
@@ -157,6 +158,7 @@ class CategoryRepository {
 /// Handles both full Note resources and lightweight NoteIndexEntry resources.
 class NoteRepository {
   final NoteDao _noteDao;
+  final CommentDao _commentDao;
   final NoteIndexEntryDao _noteIndexDao;
   final LocordaSync _syncSystem;
   final HydrationSubscription _dataHydrationSubscription;
@@ -168,6 +170,7 @@ class NoteRepository {
   /// Private constructor - use [create] factory method instead
   NoteRepository._(
     this._noteDao,
+    this._commentDao,
     this._noteIndexDao,
     this._syncSystem,
     this._dataHydrationSubscription,
@@ -182,19 +185,21 @@ class NoteRepository {
   /// 3. Returns a fully initialized repository
   static Future<NoteRepository> create(
     NoteDao noteDao,
+    CommentDao commentDao,
     NoteIndexEntryDao noteIndexDao,
     CursorDao cursorDao,
     LocordaSync syncSystem,
   ) async {
     final repository = NoteRepository._(
         noteDao,
+        commentDao,
         noteIndexDao,
         syncSystem,
         // Data hydration for full Note resources
         await syncSystem.hydrateStreaming<models.Note>(
           getCurrentCursor: () => cursorDao.getCursor(_resourceType),
-          onUpdate: (note) => _handleNoteUpdate(noteDao, note),
-          onDelete: (note) => _handleNoteDelete(noteDao, note),
+          onUpdate: (note) => _handleNoteUpdate(noteDao, commentDao, note),
+          onDelete: (note) => _handleNoteDelete(noteDao, commentDao, note),
           onCursorUpdate: (cursor) =>
               cursorDao.storeCursor(_resourceType, cursor),
         ),
@@ -214,14 +219,22 @@ class NoteRepository {
 
   /// Handle note update from sync storage
   static Future<void> _handleNoteUpdate(
-      NoteDao noteDao, models.Note note) async {
+      NoteDao noteDao, CommentDao commentDao, models.Note note) async {
     final companion = _noteToDriftCompanion(note);
     await noteDao.insertOrUpdateNote(companion);
+
+    // Update comments - delete old ones and insert new ones
+    await commentDao.deleteCommentsForNote(note.id);
+    for (final comment in note.comments) {
+      final commentCompanion = _commentToDriftCompanion(comment, note.id);
+      await commentDao.insertOrUpdateComment(commentCompanion);
+    }
   }
 
   /// Handle note deletion from sync storage
   static Future<void> _handleNoteDelete(
-      NoteDao noteDao, models.Note note) async {
+      NoteDao noteDao, CommentDao commentDao, models.Note note) async {
+    await commentDao.deleteCommentsForNote(note.id);
     await noteDao.deleteNoteById(note.id);
   }
 
@@ -242,12 +255,16 @@ class NoteRepository {
   Future<models.Note?> getNote(String id) async {
     final note = await _syncSystem.ensure<models.Note>(id, loadFromLocal: (id) async {
       final driftNote = await _noteDao.getNoteById(id);
-      return driftNote != null ? _noteFromDrift(driftNote) : null;
+      if (driftNote == null) return null;
+
+      // Load comments for this note
+      final driftComments = await _commentDao.getCommentsForNote(id);
+      return _noteFromDrift(driftNote, driftComments);
     });
 
-    // Debug: Check if weblinks are present
+    // Debug: Check if weblinks and comments are present
     if (note != null) {
-      print('📝 Loaded note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}');
+      print('📝 Loaded note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}, comments=${note.comments.length}');
     }
 
     return note;
@@ -256,7 +273,7 @@ class NoteRepository {
   /// Save a note (insert or update) with sync coordination
   Future<void> saveNote(models.Note note) async {
     // Debug: Check what we're saving
-    print('💾 Saving note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}');
+    print('💾 Saving note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}, comments=${note.comments.length}');
 
     // Use sync system - local storage will be updated via hydration stream
     await _syncSystem.save<models.Note>(note);
@@ -272,12 +289,13 @@ class NoteRepository {
   }
 
   /// Convert Drift Note to app Note model
-  models.Note _noteFromDrift(Note drift) => models.Note(
+  models.Note _noteFromDrift(Note drift, List<Comment> driftComments) => models.Note(
         id: drift.id,
         title: drift.title,
         content: drift.content,
         tags: drift.tags,
         weblinks: drift.weblinks,
+        comments: driftComments.map(_commentFromDrift).toSet(),
         categoryId: drift.categoryId,
         createdAt: drift.createdAt,
         modifiedAt: drift.modifiedAt,
@@ -294,6 +312,23 @@ class NoteRepository {
         categoryId: Value(note.categoryId),
         createdAt: Value(note.createdAt),
         modifiedAt: Value(note.modifiedAt),
+      );
+
+  /// Convert Drift Comment to app Comment model
+  models.Comment _commentFromDrift(Comment drift) => models.Comment(
+        id: drift.id,
+        content: drift.content,
+        createdAt: drift.createdAt,
+      );
+
+  /// Convert app Comment model to Drift CommentsCompanion
+  static CommentsCompanion _commentToDriftCompanion(
+          models.Comment comment, String noteId) =>
+      CommentsCompanion(
+        id: Value(comment.id),
+        noteId: Value(noteId),
+        content: Value(comment.content),
+        createdAt: Value(comment.createdAt),
       );
 
   /// Convert Drift NoteIndexEntry to app NoteIndexEntry model

@@ -6,13 +6,14 @@
 // ignore_for_file: unused_import, unnecessary_cast, prefer_const_constructors
 // ignore_for_file: unnecessary_brace_in_string_interps, prefer_conditional_assignment
 // ignore_for_file: lines_longer_than_80_chars, avoid_redundant_argument_values
-// ignore_for_file: unused_field
+// ignore_for_file: unused_field, unnecessary_string_interpolations
 
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
 
 // Other imports
 import 'package:personal_notes_app/models/weblink.dart' as weblink;
+import 'package:personal_notes_app/vocabulary/personal_notes_vocab.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
 
 /// Generated mapper for [weblink.Weblink] global resources.
@@ -24,7 +25,7 @@ class WeblinkMapper implements LocalResourceMapper<weblink.Weblink> {
   const WeblinkMapper();
 
   @override
-  IriTerm? get typeIri => null;
+  IriTerm? get typeIri => PersonalNotesVocab.Weblink;
 
   @override
   weblink.Weblink fromRdfResource(
