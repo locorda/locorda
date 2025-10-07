@@ -77,9 +77,8 @@ class Note {
   @CrdtOrSet()
   final Set<Comment> comments;
 
-  /// FIXME: This needs to be persisted in the app DB as well!
-  /// catch all triples that are added by other apps/extensions/different app versions
-  /// so we don't lose data when round-tripping through our app.
+  /// Catch-all for unmapped triples added by other apps/extensions/versions.
+  /// Persisted as Turtle in the database for lossless RDF round-tripping.
   @RdfUnmappedTriples(globalUnmapped: true)
   final RdfGraph other;
 

@@ -5,10 +5,14 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:logging/logging.dart';
+import 'package:rdf_core/rdf_core.dart';
 
 import '../models/weblink.dart';
 
 part 'database.g.dart';
+
+final _log = Logger('AppDatabase');
 
 /// Type converter for `Set<String>` to/from JSON
 class StringSetConverter extends TypeConverter<Set<String>, String> {
@@ -62,6 +66,37 @@ class WeblinkSetConverter extends TypeConverter<Set<Weblink>, String> {
               'description': w.description,
             })
         .toList());
+  }
+}
+
+/// Type converter for `RdfGraph` to/from Turtle format
+class RdfGraphConverter extends TypeConverter<RdfGraph, String> {
+  const RdfGraphConverter();
+
+  @override
+  RdfGraph fromSql(String fromDb) {
+    if (fromDb.isEmpty) return RdfGraph();
+    try {
+      final codec = turtle;
+      return codec.decode(fromDb);
+    } catch (e, stack) {
+      _log.severe('Error parsing RDF graph from Turtle: $e', e, stack);
+      // Return empty graph on parse error
+      return RdfGraph();
+    }
+  }
+
+  @override
+  String toSql(RdfGraph value) {
+    if (value.isEmpty) return '';
+    try {
+      final codec = turtle;
+      return codec.encode(value);
+    } catch (e, stack) {
+      _log.severe('Error serializing RDF graph to Turtle: $e', e, stack);
+      // Return empty string on encoding error
+      return '';
+    }
   }
 }
 
@@ -134,6 +169,10 @@ class Notes extends Table {
       .map(const WeblinkSetConverter())
       .withDefault(const Constant('[]'))();
 
+  /// Other unmapped triples from RDF (for lossless round-tripping)
+  TextColumn get otherTriples =>
+      text().map(const RdfGraphConverter()).withDefault(const Constant(''))();
+
   /// Category ID (foreign key)
   TextColumn get categoryId => text().nullable().references(Categories, #id)();
 
@@ -196,7 +235,7 @@ class AppDatabase extends _$AppDatabase {
       : super(_openConnection(web: web, native: native));
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -276,6 +315,12 @@ class AppDatabase extends _$AppDatabase {
             await m.database.customStatement('''
               CREATE INDEX IF NOT EXISTS idx_comments_note
               ON comments(note_id);
+            ''');
+          }
+          if (from < 9) {
+            // Version 9: Add otherTriples column for lossless RDF round-tripping
+            await m.database.customStatement('''
+              ALTER TABLE notes ADD COLUMN other_triples TEXT NOT NULL DEFAULT '';
             ''');
           }
         },

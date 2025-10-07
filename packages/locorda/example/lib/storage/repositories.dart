@@ -4,6 +4,7 @@ library;
 import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:locorda/locorda.dart';
+import 'package:logging/logging.dart';
 import '../models/category.dart' as models;
 import '../models/category_display_settings.dart' as models;
 import '../models/note.dart' as models;
@@ -11,6 +12,8 @@ import '../models/comment.dart' as models;
 import '../models/note_index_entry.dart' as models;
 import '../models/note_group_key.dart';
 import 'database.dart';
+
+final _log = Logger('CategoryRepository');
 
 /// Repository for Category business logic operations.
 ///
@@ -253,7 +256,8 @@ class NoteRepository {
 
   /// Get a specific note by ID
   Future<models.Note?> getNote(String id) async {
-    final note = await _syncSystem.ensure<models.Note>(id, loadFromLocal: (id) async {
+    final note =
+        await _syncSystem.ensure<models.Note>(id, loadFromLocal: (id) async {
       final driftNote = await _noteDao.getNoteById(id);
       if (driftNote == null) return null;
 
@@ -264,7 +268,8 @@ class NoteRepository {
 
     // Debug: Check if weblinks and comments are present
     if (note != null) {
-      print('📝 Loaded note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}, comments=${note.comments.length}');
+      _log.info(
+          '📝 Loaded note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}, comments=${note.comments.length}');
     }
 
     return note;
@@ -273,7 +278,8 @@ class NoteRepository {
   /// Save a note (insert or update) with sync coordination
   Future<void> saveNote(models.Note note) async {
     // Debug: Check what we're saving
-    print('💾 Saving note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}, comments=${note.comments.length}');
+    _log.info(
+        '💾 Saving note ${note.id}: tags=${note.tags.length}, weblinks=${note.weblinks.length}, comments=${note.comments.length}');
 
     // Use sync system - local storage will be updated via hydration stream
     await _syncSystem.save<models.Note>(note);
@@ -289,7 +295,8 @@ class NoteRepository {
   }
 
   /// Convert Drift Note to app Note model
-  models.Note _noteFromDrift(Note drift, List<Comment> driftComments) => models.Note(
+  models.Note _noteFromDrift(Note drift, List<Comment> driftComments) =>
+      models.Note(
         id: drift.id,
         title: drift.title,
         content: drift.content,
@@ -299,6 +306,7 @@ class NoteRepository {
         categoryId: drift.categoryId,
         createdAt: drift.createdAt,
         modifiedAt: drift.modifiedAt,
+        other: drift.otherTriples,
       );
 
   /// Convert app Note model to Drift NotesCompanion
@@ -309,6 +317,7 @@ class NoteRepository {
         content: Value(note.content),
         tags: Value(note.tags),
         weblinks: Value(note.weblinks),
+        otherTriples: Value(note.other),
         categoryId: Value(note.categoryId),
         createdAt: Value(note.createdAt),
         modifiedAt: Value(note.modifiedAt),

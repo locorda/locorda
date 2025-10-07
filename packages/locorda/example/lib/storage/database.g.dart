@@ -478,6 +478,13 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
               requiredDuringInsert: false,
               defaultValue: const Constant('[]'))
           .withConverter<Set<Weblink>>($NotesTable.$converterweblinks);
+  @override
+  late final GeneratedColumnWithTypeConverter<RdfGraph, String> otherTriples =
+      GeneratedColumn<String>('other_triples', aliasedName, false,
+              type: DriftSqlType.string,
+              requiredDuringInsert: false,
+              defaultValue: const Constant(''))
+          .withConverter<RdfGraph>($NotesTable.$converterotherTriples);
   static const VerificationMeta _categoryIdMeta =
       const VerificationMeta('categoryId');
   @override
@@ -500,8 +507,17 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
       'modified_at', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, title, content, tags, weblinks, categoryId, createdAt, modifiedAt];
+  List<GeneratedColumn> get $columns => [
+        id,
+        title,
+        content,
+        tags,
+        weblinks,
+        otherTriples,
+        categoryId,
+        createdAt,
+        modifiedAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -569,6 +585,9 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
       weblinks: $NotesTable.$converterweblinks.fromSql(attachedDatabase
           .typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}weblinks'])!),
+      otherTriples: $NotesTable.$converterotherTriples.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}other_triples'])!),
       categoryId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}category_id']),
       createdAt: attachedDatabase.typeMapping
@@ -587,6 +606,8 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
       const StringSetConverter();
   static TypeConverter<Set<Weblink>, String> $converterweblinks =
       const WeblinkSetConverter();
+  static TypeConverter<RdfGraph, String> $converterotherTriples =
+      const RdfGraphConverter();
 }
 
 class Note extends DataClass implements Insertable<Note> {
@@ -605,6 +626,9 @@ class Note extends DataClass implements Insertable<Note> {
   /// Weblinks referenced by this note
   final Set<Weblink> weblinks;
 
+  /// Other unmapped triples from RDF (for lossless round-tripping)
+  final RdfGraph otherTriples;
+
   /// Category ID (foreign key)
   final String? categoryId;
 
@@ -619,6 +643,7 @@ class Note extends DataClass implements Insertable<Note> {
       required this.content,
       required this.tags,
       required this.weblinks,
+      required this.otherTriples,
       this.categoryId,
       required this.createdAt,
       required this.modifiedAt});
@@ -635,6 +660,10 @@ class Note extends DataClass implements Insertable<Note> {
       map['weblinks'] =
           Variable<String>($NotesTable.$converterweblinks.toSql(weblinks));
     }
+    {
+      map['other_triples'] = Variable<String>(
+          $NotesTable.$converterotherTriples.toSql(otherTriples));
+    }
     if (!nullToAbsent || categoryId != null) {
       map['category_id'] = Variable<String>(categoryId);
     }
@@ -650,6 +679,7 @@ class Note extends DataClass implements Insertable<Note> {
       content: Value(content),
       tags: Value(tags),
       weblinks: Value(weblinks),
+      otherTriples: Value(otherTriples),
       categoryId: categoryId == null && nullToAbsent
           ? const Value.absent()
           : Value(categoryId),
@@ -667,6 +697,7 @@ class Note extends DataClass implements Insertable<Note> {
       content: serializer.fromJson<String>(json['content']),
       tags: serializer.fromJson<Set<String>>(json['tags']),
       weblinks: serializer.fromJson<Set<Weblink>>(json['weblinks']),
+      otherTriples: serializer.fromJson<RdfGraph>(json['otherTriples']),
       categoryId: serializer.fromJson<String?>(json['categoryId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       modifiedAt: serializer.fromJson<DateTime>(json['modifiedAt']),
@@ -681,6 +712,7 @@ class Note extends DataClass implements Insertable<Note> {
       'content': serializer.toJson<String>(content),
       'tags': serializer.toJson<Set<String>>(tags),
       'weblinks': serializer.toJson<Set<Weblink>>(weblinks),
+      'otherTriples': serializer.toJson<RdfGraph>(otherTriples),
       'categoryId': serializer.toJson<String?>(categoryId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'modifiedAt': serializer.toJson<DateTime>(modifiedAt),
@@ -693,6 +725,7 @@ class Note extends DataClass implements Insertable<Note> {
           String? content,
           Set<String>? tags,
           Set<Weblink>? weblinks,
+          RdfGraph? otherTriples,
           Value<String?> categoryId = const Value.absent(),
           DateTime? createdAt,
           DateTime? modifiedAt}) =>
@@ -702,6 +735,7 @@ class Note extends DataClass implements Insertable<Note> {
         content: content ?? this.content,
         tags: tags ?? this.tags,
         weblinks: weblinks ?? this.weblinks,
+        otherTriples: otherTriples ?? this.otherTriples,
         categoryId: categoryId.present ? categoryId.value : this.categoryId,
         createdAt: createdAt ?? this.createdAt,
         modifiedAt: modifiedAt ?? this.modifiedAt,
@@ -713,6 +747,9 @@ class Note extends DataClass implements Insertable<Note> {
       content: data.content.present ? data.content.value : this.content,
       tags: data.tags.present ? data.tags.value : this.tags,
       weblinks: data.weblinks.present ? data.weblinks.value : this.weblinks,
+      otherTriples: data.otherTriples.present
+          ? data.otherTriples.value
+          : this.otherTriples,
       categoryId:
           data.categoryId.present ? data.categoryId.value : this.categoryId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -729,6 +766,7 @@ class Note extends DataClass implements Insertable<Note> {
           ..write('content: $content, ')
           ..write('tags: $tags, ')
           ..write('weblinks: $weblinks, ')
+          ..write('otherTriples: $otherTriples, ')
           ..write('categoryId: $categoryId, ')
           ..write('createdAt: $createdAt, ')
           ..write('modifiedAt: $modifiedAt')
@@ -737,8 +775,8 @@ class Note extends DataClass implements Insertable<Note> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, title, content, tags, weblinks, categoryId, createdAt, modifiedAt);
+  int get hashCode => Object.hash(id, title, content, tags, weblinks,
+      otherTriples, categoryId, createdAt, modifiedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -748,6 +786,7 @@ class Note extends DataClass implements Insertable<Note> {
           other.content == this.content &&
           other.tags == this.tags &&
           other.weblinks == this.weblinks &&
+          other.otherTriples == this.otherTriples &&
           other.categoryId == this.categoryId &&
           other.createdAt == this.createdAt &&
           other.modifiedAt == this.modifiedAt);
@@ -759,6 +798,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
   final Value<String> content;
   final Value<Set<String>> tags;
   final Value<Set<Weblink>> weblinks;
+  final Value<RdfGraph> otherTriples;
   final Value<String?> categoryId;
   final Value<DateTime> createdAt;
   final Value<DateTime> modifiedAt;
@@ -769,6 +809,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
     this.content = const Value.absent(),
     this.tags = const Value.absent(),
     this.weblinks = const Value.absent(),
+    this.otherTriples = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.modifiedAt = const Value.absent(),
@@ -780,6 +821,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
     required String content,
     this.tags = const Value.absent(),
     this.weblinks = const Value.absent(),
+    this.otherTriples = const Value.absent(),
     this.categoryId = const Value.absent(),
     required DateTime createdAt,
     required DateTime modifiedAt,
@@ -795,6 +837,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
     Expression<String>? content,
     Expression<String>? tags,
     Expression<String>? weblinks,
+    Expression<String>? otherTriples,
     Expression<String>? categoryId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? modifiedAt,
@@ -806,6 +849,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
       if (content != null) 'content': content,
       if (tags != null) 'tags': tags,
       if (weblinks != null) 'weblinks': weblinks,
+      if (otherTriples != null) 'other_triples': otherTriples,
       if (categoryId != null) 'category_id': categoryId,
       if (createdAt != null) 'created_at': createdAt,
       if (modifiedAt != null) 'modified_at': modifiedAt,
@@ -819,6 +863,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
       Value<String>? content,
       Value<Set<String>>? tags,
       Value<Set<Weblink>>? weblinks,
+      Value<RdfGraph>? otherTriples,
       Value<String?>? categoryId,
       Value<DateTime>? createdAt,
       Value<DateTime>? modifiedAt,
@@ -829,6 +874,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
       content: content ?? this.content,
       tags: tags ?? this.tags,
       weblinks: weblinks ?? this.weblinks,
+      otherTriples: otherTriples ?? this.otherTriples,
       categoryId: categoryId ?? this.categoryId,
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? this.modifiedAt,
@@ -856,6 +902,10 @@ class NotesCompanion extends UpdateCompanion<Note> {
       map['weblinks'] = Variable<String>(
           $NotesTable.$converterweblinks.toSql(weblinks.value));
     }
+    if (otherTriples.present) {
+      map['other_triples'] = Variable<String>(
+          $NotesTable.$converterotherTriples.toSql(otherTriples.value));
+    }
     if (categoryId.present) {
       map['category_id'] = Variable<String>(categoryId.value);
     }
@@ -879,6 +929,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
           ..write('content: $content, ')
           ..write('tags: $tags, ')
           ..write('weblinks: $weblinks, ')
+          ..write('otherTriples: $otherTriples, ')
           ..write('categoryId: $categoryId, ')
           ..write('createdAt: $createdAt, ')
           ..write('modifiedAt: $modifiedAt, ')
@@ -2106,6 +2157,7 @@ typedef $$NotesTableCreateCompanionBuilder = NotesCompanion Function({
   required String content,
   Value<Set<String>> tags,
   Value<Set<Weblink>> weblinks,
+  Value<RdfGraph> otherTriples,
   Value<String?> categoryId,
   required DateTime createdAt,
   required DateTime modifiedAt,
@@ -2117,6 +2169,7 @@ typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
   Value<String> content,
   Value<Set<String>> tags,
   Value<Set<Weblink>> weblinks,
+  Value<RdfGraph> otherTriples,
   Value<String?> categoryId,
   Value<DateTime> createdAt,
   Value<DateTime> modifiedAt,
@@ -2181,6 +2234,11 @@ class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
   ColumnWithTypeConverterFilters<Set<Weblink>, Set<Weblink>, String>
       get weblinks => $composableBuilder(
           column: $table.weblinks,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<RdfGraph, RdfGraph, String> get otherTriples =>
+      $composableBuilder(
+          column: $table.otherTriples,
           builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -2255,6 +2313,10 @@ class $$NotesTableOrderingComposer
   ColumnOrderings<String> get weblinks => $composableBuilder(
       column: $table.weblinks, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get otherTriples => $composableBuilder(
+      column: $table.otherTriples,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -2305,6 +2367,10 @@ class $$NotesTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<Set<Weblink>, String> get weblinks =>
       $composableBuilder(column: $table.weblinks, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<RdfGraph, String> get otherTriples =>
+      $composableBuilder(
+          column: $table.otherTriples, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2382,6 +2448,7 @@ class $$NotesTableTableManager extends RootTableManager<
             Value<String> content = const Value.absent(),
             Value<Set<String>> tags = const Value.absent(),
             Value<Set<Weblink>> weblinks = const Value.absent(),
+            Value<RdfGraph> otherTriples = const Value.absent(),
             Value<String?> categoryId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> modifiedAt = const Value.absent(),
@@ -2393,6 +2460,7 @@ class $$NotesTableTableManager extends RootTableManager<
             content: content,
             tags: tags,
             weblinks: weblinks,
+            otherTriples: otherTriples,
             categoryId: categoryId,
             createdAt: createdAt,
             modifiedAt: modifiedAt,
@@ -2404,6 +2472,7 @@ class $$NotesTableTableManager extends RootTableManager<
             required String content,
             Value<Set<String>> tags = const Value.absent(),
             Value<Set<Weblink>> weblinks = const Value.absent(),
+            Value<RdfGraph> otherTriples = const Value.absent(),
             Value<String?> categoryId = const Value.absent(),
             required DateTime createdAt,
             required DateTime modifiedAt,
@@ -2415,6 +2484,7 @@ class $$NotesTableTableManager extends RootTableManager<
             content: content,
             tags: tags,
             weblinks: weblinks,
+            otherTriples: otherTriples,
             categoryId: categoryId,
             createdAt: createdAt,
             modifiedAt: modifiedAt,

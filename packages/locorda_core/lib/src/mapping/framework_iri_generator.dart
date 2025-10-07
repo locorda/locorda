@@ -39,12 +39,6 @@ class FrameworkIriGenerator {
   /// ```
   IriTerm generateCanonicalBlankNodeIri(
       IriTerm documentIri, IdentifiedBlankNode identifiedBlankNode) {
-    // FIXME: the hash will be different if the document Iri is different
-    // that sounds logical and normal, but the problem is that
-    // we may have different IRIs between local and remote.
-    // For example using the solid pod backend will use the pod url
-    // as base for the actual, final IRIs. What does that mean in practice for us?
-
     // Step 1 & 2: Build identification graph and assign deterministic labels
     final result = _buildIdentificationGraphWithLabels(identifiedBlankNode);
 
