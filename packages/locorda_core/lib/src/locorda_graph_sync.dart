@@ -6,17 +6,17 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt/crdt_types.dart';
+import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
+import 'package:locorda_core/src/index/index_manager.dart';
+import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/installation_service.dart'
     show InstallationService, InstallationIdFactory;
-import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
-import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
-import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
-import 'package:locorda_core/src/mapping/metadata_generator.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
@@ -29,323 +29,45 @@ final _log = Logger('LocordaGraphSync');
 
 typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
 
-/// Extracts document IRI from a resource IRI by removing the fragment identifier.
-///
-/// Validates that the resource IRI has a proper fragment identifier (e.g., #it)
-/// and returns the document IRI (the part before the fragment).
-///
-/// Example:
-/// - Input: `https://example.org/data/recipe#it`
-/// - Output: `https://example.org/data/recipe`
-///
-/// Throws [ArgumentError] if the resource IRI doesn't have a fragment identifier.
-/// TODO: Add support for blank node handling - currently only handles IriTerm resources
-IriTerm _extractDocumentIri(IriTerm resourceIri) {
-  final iriValue = resourceIri.value;
-  final fragmentIndex = iriValue.indexOf('#');
-
-  if (fragmentIndex == -1) {
-    throw ArgumentError(
-        'Resource IRI must have a fragment identifier (e.g., #it). '
-        'Got: $iriValue');
-  }
-
-  if (fragmentIndex == iriValue.length - 1) {
-    throw ArgumentError('Resource IRI fragment identifier cannot be empty. '
-        'Got: $iriValue');
-  }
-
-  final documentIriValue = iriValue.substring(0, fragmentIndex);
-  return IriTerm(documentIriValue);
-}
-
-void _validateResourceGraph(
-  IriTerm documentIri,
-  IriTerm primaryResourceIri,
-  IriTerm resourceType,
-  RdfGraph resourceGraph,
-) {
-  // Validate that resourceGraph doesn't contain triples with documentIri as subject
-  final hasDocumentTriples = resourceGraph.hasTriples(subject: documentIri);
-  if (hasDocumentTriples) {
-    throw ArgumentError('Resource graph contains triple(s) with document IRI '
-        '$documentIri as subject. The document IRI is reserved for CRDT framework '
-        'metadata and must not be used in resource data. Resource data should use '
-        'fragment identifiers (e.g., ${documentIri.value}#it).');
-  }
-
-  // Validate that the primary resource actually exists in the resource graph with the correct type
-  final hasPrimaryResourceTriples = resourceGraph.hasTriples(
-      subject: primaryResourceIri, predicate: Rdf.type, object: resourceType);
-  if (!hasPrimaryResourceTriples) {
-    throw ArgumentError(
-        'Primary resource IRI ($primaryResourceIri) not found in resource graph '
-        'or does not have the expected type ($resourceType)');
-  }
-
-  final documentIriValue = documentIri.value;
-
-  // Validate all resource IRIs are a proper fragment of the document IRI
-  final iriSubjects = resourceGraph.subjects.whereType<IriTerm>().toSet();
-  for (final iriSubject in iriSubjects) {
-    final iriSubjectValue = iriSubject.value;
-    if (!iriSubjectValue.startsWith('$documentIriValue#')) {
-      throw ArgumentError(
-          'Resource IRI ($iriSubjectValue) must be a fragment of the '
-          'document IRI ($documentIriValue). Expected format: ${documentIriValue}#fragmentId');
-    }
-    if (iriSubjectValue.startsWith(
-        '$documentIriValue#${FrameworkIriGenerator.fragmentPrefix}')) {
-      throw ArgumentError(
-          'Resource IRI ($iriSubjectValue) must not start with reserved prefix #lcrd- in fragment identifier. '
-          'This prefix is reserved for CRDT framework metadata.');
-    }
-  }
-}
-
-final _defaultManagedDocumentLevelPredicates = <IriTerm>{
-  Rdf.type,
-  SyncManagedDocument.managedResourceType,
-  SyncManagedDocument.foafPrimaryTopic,
-  SyncManagedDocument.isGovernedBy,
-  SyncManagedDocument.crdtHasClockEntry,
-  SyncManagedDocument.crdtClockHash,
-  SyncManagedDocument.crdtCreatedAt,
-  SyncManagedDocument.crdtDeletedAt,
-  SyncManagedDocument.hasBlankNodeMapping,
-  SyncManagedDocument.hasStatement
-};
-
-/// Constructs a complete CRDT-managed document with framework metadata.
-///
-/// Takes the resource graph and wraps it with all required CRDT framework metadata:
-/// - sync:ManagedDocument type declaration
-/// - sync:managedResourceType pointing to the resource type
-/// - sync:isGovernedBy linking to merge contract
-/// - CRDT clock entries with logical and physical times
-/// - Clock hash for efficient change detection
-/// - CRDT metadata (tombstones, etc.) from change detection
-///
-/// The resulting document contains both the original resource triples and
-/// all the framework metadata needed for CRDT synchronization.
-RdfGraph _constructCrdtDocument(
-  IriTerm documentIri,
-  RdfGraph? oldFrameworkGraph,
-  List<Node> crdtMetadata,
-  List<RdfObject> governedByFiles,
-  IriTerm primaryResourceIri,
-  IriTerm resourceType,
-  RdfGraph resourceGraph,
-  RdfObject createdAt,
-  CurrentCrdtClock clock,
-  IdentifiedBlankNodes<IriTerm> blankNodeMappings,
-) {
-  final allTriples = <Triple>[];
-
-  // 1. Add sync:ManagedDocument type declaration
-  allTriples.add(Triple(
-    documentIri,
-    Rdf.type,
-    SyncManagedDocument.classIri,
-  ));
-
-  // 2. Add managed resource type
-  allTriples.add(Triple(
-    documentIri,
-    SyncManagedDocument.managedResourceType,
-    resourceType,
-  ));
-
-  // 3. Add primary topic reference (the main resource this document describes)
-  allTriples.add(Triple(
-    documentIri,
-    SyncManagedDocument.foafPrimaryTopic,
-    primaryResourceIri,
-  ));
-
-  // 4. make sure the merge contracts are included
-  allTriples.addRdfList(
-      documentIri, SyncManagedDocument.isGovernedBy, governedByFiles);
-
-  // 5. Add HLC clock entry
-  allTriples.addNodes(
-      documentIri, SyncManagedDocument.crdtHasClockEntry, clock.fullClock);
-
-  // 6. Generate and add clock hash
-  allTriples.add(Triple(
-      documentIri, SyncManagedDocument.crdtClockHash, LiteralTerm(clock.hash)));
-
-  // 7. Add creation timestamp (OR-Set semantics for document lifecycle)
-
-  allTriples.add(Triple(
-    documentIri,
-    SyncManagedDocument.crdtCreatedAt,
-    createdAt,
-  ));
-
-  // 8. Add blank node mappings for identified blank nodes
-  // Create framework-reserved fragment identifiers and map them to blank nodes
-  allTriples.addAll(toBlankNodeMappingTriples(blankNodeMappings, documentIri));
-
-  // 9. add old/foreign framework triples
-  final allManagedDocumentLevelPredicates = {
-    ..._defaultManagedDocumentLevelPredicates,
-    ...allTriples.where((t) => t.subject == documentIri).map((t) => t.predicate)
-  };
-  final additionalGraph =
-      oldFrameworkGraph?.subgraph(documentIri, filter: (t, depth) {
-    if (t.subject != documentIri) {
-      // We only filter triples with the document as subject, everything else is included
-      // once we reached it via the non-skipped triples
-      return TraversalDecision.include;
-    }
-    // Really important: do not skip any existing statements from the old framework graph, we need to copy them over!
-    return t.predicate != SyncManagedDocument.hasStatement &&
-            allManagedDocumentLevelPredicates.contains(t.predicate)
-        ? TraversalDecision.skip
-        : TraversalDecision.include;
-  });
-  if (additionalGraph != null) {
-    allTriples.addAll(additionalGraph.triples);
-  }
-
-// FIXME: test cases for non-identified blank nodes
-// FIXME: are identified blank nodes correctly preserved if they were referenced from two places and removed from one?
-
-  // 10. Add CRDT metadata (tombstones, counters, etc.)
-  for (final node in crdtMetadata) {
-    final (iri, graph) = node;
-    allTriples.add(Triple(documentIri, SyncManagedDocument.hasStatement, iri));
-    allTriples.addAll(graph.triples);
-  }
-
-  // 11. Add all original resource triples
-  allTriples.addAll(resourceGraph.triples);
-
-  return allTriples.toRdfGraph();
-}
-
-Iterable<Triple> toBlankNodeMappingTriples(
-    IdentifiedBlankNodes<IriTerm> blankNodeMappings,
-    IriTerm documentIri) sync* {
-  for (final entry in blankNodeMappings.identifiedMap.entries) {
-    final blankNode = entry.key;
-    final canonicalIris = entry.value;
-
-    for (final canonicalIri in canonicalIris) {
-      // Add sync:hasBlankNodeMapping link from document to mapping
-      yield Triple(
-        documentIri,
-        SyncManagedDocument.hasBlankNodeMapping,
-        canonicalIri,
-      );
-
-      // Add the mapping itself: canonicalIri sync:blankNode _:blankNode
-      yield Triple(
-        canonicalIri,
-        Sync.blankNode,
-        blankNode,
-      );
-      // Optimization: do not add the type for the mapping - it is not strictly necessary
-      /*
-      // Add type for the mapping
-      yield Triple(
-        canonicalIri,
-        Rdf.type,
-        SyncBlankNodeMapping.classIri,
-      );
-      */
-    }
-  }
-}
-
-List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
-    IriTerm documentIri, SyncGraphConfig config, IriTerm resourceType) {
-  final oldIsGovernedByFiles = oldFrameworkGraph?.getListObjects<IriTerm>(
-          documentIri, SyncManagedDocument.isGovernedBy) ??
-      const <IriTerm>[];
-  final ourGovernedByFile = IriTerm.validated(
-      config.getResourceConfig(resourceType).crdtMapping.toString());
-  return oldIsGovernedByFiles.contains(ourGovernedByFile)
-      ? oldIsGovernedByFiles
-      : ([...oldIsGovernedByFiles, ourGovernedByFile]);
-}
-
-({RdfGraph appGraph, RdfGraph frameworkGraph}) _splitDocument(
-    RdfGraph document, IriTerm documentIri, MergeContract mergeContract) {
-  // We have to split the document into application data and framework metadata.
-
-  final types = <RdfSubject, IriTerm?>{};
-  final frameworkGraph =
-      document.subgraph(documentIri, filter: (triple, depth) {
-    final type = types.putIfAbsent(triple.subject,
-        () => document.findSingleObject<IriTerm>(triple.subject, Rdf.type));
-
-    final isStopTraversal =
-        mergeContract.isStopTraversalPredicate(type, triple.predicate);
-    return isStopTraversal
-        ? TraversalDecision.includeButDontDescend
-        : TraversalDecision.include;
-  });
-
-  return (
-    appGraph: document.without(frameworkGraph),
-    frameworkGraph: frameworkGraph
-  );
-}
-
 /// Main facade for the locorda system.
 ///
 /// Provides a simple, high-level API for offline-first applications with
 /// optional Solid Pod synchronization. Handles RDF mapping, storage,
 /// and sync operations transparently.
 class LocordaGraphSync {
-  final Storage _storage;
   // ignore: unused_field
-  final Backend? _backend; // TODO: Use for Remote synchronization
+  final Backend _backend; // TODO: Use for Remote synchronization
+  final IndexManager _indexManager;
   final SyncGraphConfig _config;
-  final MergeContractLoader _mergeContractLoader;
-  final CrdtTypeRegistry _crdtTypeRegistry;
-  final FrameworkIriGenerator _iriGenerator;
+  final CrdtDocumentManager _crdtDocumentManager;
   final IriTranslator _iriTranslator;
   final HydrationStreamManager _streamManager;
   final GroupIndexGraphSubscriptionManager _groupIndexManager;
-  late final IdentifiedBlankNodeBuilder _identifiedBlankNodeBuilder =
-      IdentifiedBlankNodeBuilder(iriGenerator: _iriGenerator);
-  late final MetadataGenerator _metadataGenerator =
-      MetadataGenerator(frameworkIriGenerator: _iriGenerator);
-  late final HydrationEmitter _emitter = HydrationEmitter(
-    streamManager: _streamManager,
-  );
-
-  // Factory functions for configurable time and clock generation
-  final HlcService _hlcService;
+  late final HydrationEmitter _emitter;
 
   LocordaGraphSync._({
-    required Storage storage,
     required Backend backend,
+    required IndexManager indexManager,
     required SyncGraphConfig config,
-    required MergeContractLoader mergeContractLoader,
-    required HlcService hlcService,
     required ResourceLocator resourceLocator,
-    required PhysicalTimestampFactory physicalTimestampFactory,
-    required IriTermFactory iriTermFactory,
-    required CrdtTypeRegistry crdtTypeRegistry,
-  })  : _storage = storage,
-        _backend = backend,
+    required CrdtDocumentManager crdtDocumentManager,
+  })  : _backend = backend,
+        _indexManager = indexManager,
         _config = config,
-        _mergeContractLoader = mergeContractLoader,
-        _crdtTypeRegistry = crdtTypeRegistry,
-        _hlcService = hlcService,
         _streamManager = HydrationStreamManager(),
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
           config: config,
         ),
-        _iriGenerator = FrameworkIriGenerator(iriTermFactory: iriTermFactory),
         _iriTranslator = IriTranslator(
           resourceLocator: resourceLocator,
           resourceConfigs: config.resources,
-        );
+        ),
+        _crdtDocumentManager = crdtDocumentManager {
+    _emitter = HydrationEmitter(
+      streamManager: _streamManager,
+      iriTranslator: _iriTranslator,
+    );
+  }
 
   /// Set up the CRDT sync system with resource-focused configuration.
   ///
@@ -384,7 +106,31 @@ class LocordaGraphSync {
               localName: 'lcrd-installation-index',
               itemFetchPolicy: ItemFetchPolicy.onRequest)
         ],
-      )
+      ),
+      ResourceGraphConfig(
+          typeIri: IdxShard.classIri,
+          crdtMapping:
+              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/shard-v1'),
+          // No indices for shards
+          indices: []),
+      ResourceGraphConfig(
+          typeIri: IdxFullIndex.classIri,
+          crdtMapping:
+              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
+          // No indices for indices
+          indices: []),
+      ResourceGraphConfig(
+          typeIri: IdxGroupIndexTemplate.classIri,
+          crdtMapping:
+              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
+          // No indices for indices
+          indices: []),
+      ResourceGraphConfig(
+          typeIri: IdxGroupIndex.classIri,
+          crdtMapping:
+              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
+          // No indices for indices
+          indices: []),
     ]);
 
     // Validate configuration before proceeding
@@ -400,11 +146,12 @@ class LocordaGraphSync {
     final localResourceLocator =
         LocalResourceLocator(iriTermFactory: iriFactory);
     // Initialize installation service
-    final installationService = await InstallationService.initialize(
+    final installationService = await InstallationService.create(
       storage: storage,
       resourceLocator: localResourceLocator,
       installationIdFactory: installationIdFactory,
       iriTermFactory: iriFactory,
+      physicalTimestampFactory: physicalTimestampFactory,
     );
 
     // Create HlcService with installation IRI and localId
@@ -423,47 +170,39 @@ class LocordaGraphSync {
             iriFactory: iriFactory),
         crdtTypeRegistry);
 
-    final sync = LocordaGraphSync._(
-        storage: storage,
-        backend: backend,
-        config: effectiveConfig,
-        mergeContractLoader: CachingMergeContractLoader(mergeContractLoader),
-        physicalTimestampFactory: physicalTimestampFactory,
-        hlcService: hlcService,
-        iriTermFactory: iriFactory,
-        resourceLocator: localResourceLocator,
-        crdtTypeRegistry: crdtTypeRegistry);
+    final crdtDocumentManager = CrdtDocumentManager(
+      storage: storage,
+      config: effectiveConfig,
+      physicalTimestampFactory: physicalTimestampFactory,
+      resourceLocator: localResourceLocator,
+      mergeContractLoader: CachingMergeContractLoader(mergeContractLoader),
+      crdtTypeRegistry: crdtTypeRegistry,
+      hlcService: hlcService,
+      iriTermFactory: iriFactory,
+    );
 
-    if (!installationService.installationDocumentSaved) {
-      final iri = installationService.installationIri;
-      final now = physicalTimestampFactory();
-      final installationDocument = RdfGraph.fromTriples([
-        Triple(iri, Rdf.type, CrdtClientInstallation.classIri),
-        // Created timestamp
-        Triple(
-          iri,
-          CrdtClientInstallation.createdAt,
-          LiteralTermExtensions.dateTime(now),
-        ),
-        // Last active timestamp
-        Triple(
-          iri,
-          CrdtClientInstallation.lastActiveAt,
-          LiteralTermExtensions.dateTime(now),
-        ),
-        // Default max inactivity period (6 months)
-        Triple(
-          iri,
-          CrdtClientInstallation.maxInactivityPeriod,
-          LiteralTerm(
-            'P6M',
-            datatype: iriFactory('http://www.w3.org/2001/XMLSchema#duration'),
-          ),
-        ),
-      ]);
-      await sync.save(CrdtClientInstallation.classIri, installationDocument);
-      await installationService.markInstallationDocumentSaved();
-    }
+    final shardManager = const ShardManager();
+    // Initialize indices after installation document is created
+    final indexManager = IndexManager(
+      crdtDocumentManager: crdtDocumentManager,
+      rdfGenerator: IndexRdfGenerator(
+          resourceLocator: localResourceLocator, shardManager: shardManager),
+      storage: storage,
+      installationIri: installationService.installationIri,
+      resourceLocator: localResourceLocator,
+    );
+
+    await indexManager.initializeIndices(effectiveConfig);
+    await installationService.ensureDocumentSaved(
+        crdtDocumentManager, indexManager);
+
+    final sync = LocordaGraphSync._(
+        backend: backend,
+        indexManager: indexManager,
+        config: effectiveConfig,
+        resourceLocator: localResourceLocator,
+        crdtDocumentManager: crdtDocumentManager);
+
     return sync;
   }
 
@@ -548,189 +287,72 @@ class LocordaGraphSync {
   /// 3. Hydration stream automatically emits update
   /// 4. Schedule async Pod sync
   Future<void> save(IriTerm type, RdfGraph appData) async {
-    RdfGraph? oldDocument;
-    RdfGraph? crdtDocument;
-    // 0. Translate external IRIs to internal format if documentIriTemplate is configured
+    // 1. Translate external IRIs to internal format if documentIriTemplate is configured
     final internalAppData = _iriTranslator.translateGraphToInternal(appData);
 
+    // 2. compute the shards in which this resource belongs
+    final shards = _indexManager.determineShards(type, internalAppData);
+
+    // 3. save (with CRDT processing, diffing etc)
+    final saved =
+        await _crdtDocumentManager.save(type, internalAppData, shards);
+    if (saved == null) {
+      // nothing changed, nothing to do
+      return;
+    }
+
+    final resourceIri = saved.resourceIri as IriTerm;
+    final crdtDocument = saved.crdtDocument;
+    final documentIri = saved.documentIri;
+
+    // 4. Update the Index Shards
+    final allShards = crdtDocument.getMultiValueObjects<IriTerm>(
+        documentIri, SyncManagedDocument.idxBelongsToIndexShard);
+
+    // Extract clock hash from the saved document
+    final clockHashLiteral = crdtDocument.findSingleObject<LiteralTerm>(
+        documentIri, SyncManagedDocument.crdtClockHash);
+    final clockHash = clockHashLiteral?.value;
+    if (clockHash == null) {
+      throw StateError(
+          'Saved document $documentIri is missing crdt:clockHash, cannot update indices.');
+    }
+
+    final indexData = await _indexManager.updateIndices(
+        type, resourceIri, clockHash, internalAppData, allShards);
+
     try {
-      // Validate input parameters
-      if (internalAppData.isEmpty) {
-        throw ArgumentError('Cannot save empty graph');
-      }
+      // 5. Emit the hydration events - first the actual data
+      _emitter.emitForType(type, _toHydrationResult(saved));
 
+      // 6. Now we emit the index items.
       final resourceConfig = _config.getResourceConfig(type);
-
-      // 1. Extract resource and document IRIs (with validation)
-      late final IriTerm resourceIri;
-      late final IriTerm documentIri;
-
-      try {
-        resourceIri = internalAppData.getIdentifier(type);
-        documentIri = _extractDocumentIri(resourceIri);
-      } on ArgumentError catch (e) {
-        _log.severe('Invalid resource configuration for type $type: $e');
-        rethrow;
-      } on StateError catch (e) {
-        _log.severe(
-            'Multiple or no resources of type $type found in graph: $e');
-        throw ArgumentError(
-            'Graph must contain exactly one resource of type $type');
+      for (var index in resourceConfig.indices) {
+        final rootIri = _indexManager.getIndexOrTemplateIri(index);
+        final idxItemSaveResult = indexData[rootIri];
+        if (idxItemSaveResult == null) {
+          _log.warning(
+              'No index item generated for index ${index.localName} of type $type, skipping emission.');
+          continue;
+        }
+        _emitter.emitForIndex(
+            type, index, _toHydrationResult(idxItemSaveResult));
       }
-
-      // Validate resource graph structure
-      _validateResourceGraph(documentIri, resourceIri, type, internalAppData);
-
-      _log.fine('Saving resource $resourceIri to document $documentIri');
-
-      // 2. Load existing document from storage (if any)
-      StoredDocument? existingStoredDocument;
-      try {
-        existingStoredDocument = await _storage.getDocument(documentIri);
-      } catch (e) {
-        _log.warning('Failed to load existing document $documentIri: $e');
-        // Continue with save - treat as new document
-      }
-      oldDocument = existingStoredDocument?.document;
-
-      final governedByFiles =
-          _computeIsGovernedBy(oldDocument, documentIri, _config, type);
-
-      // load the governing documents / merge contracts for correct document splitting
-      final mergeContract = await _mergeContractLoader.load(governedByFiles);
-
-      final (appGraph: oldAppData, frameworkGraph: oldFrameworkGraph) =
-          oldDocument == null
-              ? (appGraph: null, frameworkGraph: null)
-              : _splitDocument(oldDocument, documentIri, mergeContract);
-
-      // 3. Generate latest clock
-      final oldClock = oldDocument == null
-          ? null
-          : _extractCrdtClock(oldDocument, documentIri);
-      final clock = oldClock == null
-          ? _hlcService.newClock(documentIri)
-          : _hlcService.incrementClock(documentIri, oldClock);
-      final physicalTimestamp = clock.physicalTime;
-
-      // 4. Detect property changes between old and new graphs and generate CRDT metadata
-      final appBlankNodes =
-          _identifiedBlankNodeBuilder.computeCanonicalBlankNodes(
-              documentIri, internalAppData, mergeContract);
-      final oldAppBlankNodes = oldAppData == null
-          ? IdentifiedBlankNodes.empty<IriTerm>()
-          : _identifiedBlankNodeBuilder.computeCanonicalBlankNodes(
-              documentIri, oldAppData, mergeContract);
-      final crdtMetadata = _generateCrdtMetadataForChanges(
-        documentIri,
-        internalAppData,
-        appBlankNodes,
-        oldAppData,
-        oldAppBlankNodes,
-        mergeContract,
-        clock,
-      );
-      final propertyChanges = crdtMetadata.propertyChanges;
-      if (propertyChanges.isEmpty) {
-        _log.info(
-            'No property changes detected for $resourceIri, skipping save');
-        return;
-      }
-      final createdAt = oldFrameworkGraph?.findSingleObject<LiteralTerm>(
-              documentIri, SyncManagedDocument.crdtCreatedAt) ??
-          LiteralTermExtensions.dateTime(DateTime.fromMillisecondsSinceEpoch(
-              physicalTimestamp,
-              isUtc: true));
-      // 5. Construct complete CRDT document with framework metadata
-      crdtDocument = _constructCrdtDocument(
-        documentIri,
-        oldFrameworkGraph,
-        crdtMetadata.metadataGraph,
-        governedByFiles,
-        resourceIri,
-        type,
-        internalAppData,
-        createdAt,
-        clock,
-        appBlankNodes,
-      );
-
-      final updatedAtTimestamp = physicalTimestamp;
-      // 6. Create document metadata for storage
-      final documentMetadata = DocumentMetadata(
-        ourPhysicalClock: physicalTimestamp,
-        updatedAt: updatedAtTimestamp, // Storage will update this
-      );
-
-      // 7. Save to storage atomically (document + metadata + property changes)
-      late final SaveDocumentResult saveResult;
-      try {
-        saveResult = await _storage.saveDocument(
-          documentIri,
-          type,
-          crdtDocument,
-          documentMetadata,
-          propertyChanges,
-        );
-      } catch (e) {
-        _log.severe('Failed to save document $documentIri to storage: $e');
-        rethrow; // Don't emit hydration event if storage failed
-      }
-
-      // 8. Emit hydration event to update application state
-      try {
-        // FIXME: The emitter currently does the deriving of index items,
-        // but this must be done here and each index has its own cursor
-
-        // FIXME: is this the correct place for translating to external IRIs,
-        // should it be done in the emitter?
-        // Translate back to external IRIs for application consumption
-        final externalAppData =
-            _iriTranslator.translateGraphToExternal(internalAppData);
-        final externalResourceIri =
-            _iriTranslator.internalToExternal(resourceIri);
-
-        _emitter.emit(
-          HydrationResult<IdentifiedGraph>(
-            items: [(externalResourceIri, externalAppData)],
-            deletedItems: [],
-            originalCursor: saveResult.previousCursor,
-            nextCursor: saveResult.currentCursor,
-            hasMore: false,
-          ),
-          resourceConfig,
-        );
-      } catch (e) {
-        _log.warning('Failed to emit hydration event for $resourceIri: $e');
-        // Don't fail the entire save operation for hydration emission failures
-      }
-
-      _log.info(
-          'Successfully saved document $documentIri with ${propertyChanges.length} property changes');
-    } on UnidentifiedBlankNodeException catch (e, stackTrace) {
-      _log.severe('Save operation failed for type $type', e, stackTrace);
-      final blankNode = e.blankNode;
-      throwIfUsedIn(stackTrace, "Old Doument", oldDocument, blankNode);
-      throwIfUsedIn(stackTrace, "New App Data", internalAppData, blankNode);
-      throwIfUsedIn(stackTrace, "New Doument", crdtDocument, blankNode);
-      rethrow;
-    } catch (e, stackTrace) {
-      _log.severe('Save operation failed for type $type', e, stackTrace);
-      rethrow;
+    } catch (e) {
+      _log.warning('Failed to emit hydration event for $resourceIri: $e');
+      // Don't fail the entire save operation for hydration emission failures
     }
   }
 
-  void throwIfUsedIn(StackTrace stackTrace, String context,
-      RdfGraph? oldDocument, BlankNodeTerm blankNode) {
-    if (oldDocument != null) {
-      final subjectTriples = oldDocument.findTriples(subject: blankNode);
-      final objectTriples = oldDocument.findTriples(object: blankNode);
-      if (subjectTriples.isNotEmpty || objectTriples.isNotEmpty) {
-        final ex = UnidentifiedBlankNodeWithContextException(blankNode, context,
-            subjectTriples.toList(), objectTriples.toList());
-        Error.throwWithStackTrace(ex, stackTrace);
-      }
-    }
+  HydrationResult<IdentifiedGraph> _toHydrationResult(
+      DocumentSaveResult saveResult) {
+    return HydrationResult<IdentifiedGraph>(
+      items: [(saveResult.resourceIri as IriTerm, saveResult.appData)],
+      deletedItems: [],
+      originalCursor: saveResult.previousCursor,
+      nextCursor: saveResult.currentCursor,
+      hasMore: false,
+    );
   }
 
   /// Ensures a resource is available locally, fetching it from the remote source if necessary.
@@ -845,7 +467,9 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
 
     // Emit data change with external IRI for application consumption
-    _emitter.emit(
+    // FIXME: what about indices?
+    _emitter.emitForType(
+        typeIri,
         HydrationResult<IdentifiedGraph>(
           items: [],
           deletedItems: [
@@ -857,8 +481,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
           originalCursor: null,
           nextCursor: timestamp,
           hasMore: false,
-        ),
-        resourceConfig);
+        ));
   }
 
   /// Load changes from sync storage since the given cursor.
@@ -1001,352 +624,9 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
 
   /// Close the sync system and free resources.
   Future<void> close() async {
+    await _crdtDocumentManager.close();
     await _streamManager.close();
-    await _storage.close();
   }
-
-  CrdtClock _extractCrdtClock(RdfGraph oldGraph, IriTerm documentIri) {
-    final clockEntries = oldGraph
-        .findTriples(
-            subject: documentIri,
-            predicate: SyncManagedDocument.crdtHasClockEntry)
-        .map((t) => t.object as RdfSubject);
-    return clockEntries.map((clockEntrySubject) {
-      final graph = oldGraph.matching(subject: clockEntrySubject);
-      return (clockEntrySubject, graph);
-    }).toList();
-  }
-
-  Iterable<IdentifiedRdfSubject> _getIdentifiedSubjects(
-          RdfGraph graph, IdentifiedBlankNodes<IriTerm> blankNodes) =>
-      graph.subjects.map((subject) {
-        if (subject is IriTerm) {
-          return IdentifiedIriSubject(subject);
-        } else if (subject is BlankNodeTerm) {
-          if (blankNodes.hasIdentifiedNodes(subject)) {
-            return IdentifiedBlankNodeSubject(
-                subject, blankNodes.getIdentifiedNodes(subject));
-          }
-        }
-        return null; // Unidentified blank node
-      }).whereType<IdentifiedRdfSubject>();
-
-  _CrdtMetadataResult _generateCrdtMetadataForChanges(
-      IriTerm documentIri,
-      RdfGraph appData,
-      IdentifiedBlankNodes<IriTerm> appBlankNodes,
-      RdfGraph? oldAppGraph,
-      IdentifiedBlankNodes<IriTerm> oldAppBlankNodes,
-      MergeContract mergeContract,
-      CurrentCrdtClock clock) {
-    final metadataGraphs = <Node>[];
-    final propertyChanges = <PropertyChange>[];
-
-    // Get all identifiable subjects from both graphs
-    final identifiedSubjects =
-        _getIdentifiedSubjects(appData, appBlankNodes).toSet();
-    final oldIdentifiedSubjects = oldAppGraph == null
-        ? const <IdentifiedRdfSubject>{}
-        : _getIdentifiedSubjects(oldAppGraph, oldAppBlankNodes).toSet();
-
-    // Partition subjects into added, deleted, and common
-    final addedSubjects = identifiedSubjects.difference(oldIdentifiedSubjects);
-    final deletedSubjects =
-        oldIdentifiedSubjects.difference(identifiedSubjects);
-    final commonSubjects = {
-      for (final subject in identifiedSubjects)
-        if (oldIdentifiedSubjects.contains(subject))
-          subject: oldIdentifiedSubjects.lookup(subject)!
-    };
-    final context = CrdtMergeContext(
-        iriGenerator: _iriGenerator, metadataGenerator: _metadataGenerator);
-
-    // Process deleted subjects - add resource tombstones
-    for (final deletedSubject in deletedSubjects) {
-      _log.fine('Deleted subject detected: ${deletedSubject.subject} ');
-      metadataGraphs.addAll(_metadataGenerator.createResourceMetadata(
-          documentIri,
-          IdTerm.create(deletedSubject.subject, oldAppBlankNodes),
-          (metadataSubject) => [
-                Triple(
-                    metadataSubject,
-                    SyncManagedDocument.crdtDeletedAt,
-                    LiteralTermExtensions.dateTimeFromMillisecondsSinceEpoch(
-                        clock.physicalTime))
-              ]));
-    }
-
-    // Process added subjects - generate initial value metadata
-    for (final addedSubject in addedSubjects) {
-      final subjectTerm = addedSubject.subject;
-      var subjectTriples = appData.matching(subject: subjectTerm);
-      final predicates = subjectTriples.predicates;
-      final resourceType =
-          appData.findSingleObject<IriTerm>(subjectTerm, Rdf.type);
-
-      for (final predicate in predicates) {
-        final values =
-            subjectTriples.getMultiValueObjects(subjectTerm, predicate);
-
-        // Get CRDT algorithm for this property
-        final crdtType =
-            _getCrdtAlgorithm(mergeContract, resourceType, predicate);
-
-        // Generate initial value metadata
-        final metadataGraph = crdtType.initialValue(
-          documentIri: documentIri,
-          appData: appData,
-          blankNodes: appBlankNodes,
-          subject: subjectTerm,
-          predicate: predicate,
-          values: values.cast<RdfObject>(),
-          mergeContext: context,
-        );
-
-        metadataGraphs.addAll(metadataGraph);
-
-        // Record property change using canonical IRI (for identified blank nodes) or IRI
-        for (final propertyChangeIri in addedSubject.propertyChangeIris) {
-          propertyChanges.add(PropertyChange(
-            resourceIri: propertyChangeIri,
-            propertyIri: predicate,
-            changedAtMs: clock.physicalTime,
-            changeLogicalClock: clock.logicalTime,
-          ));
-        }
-      }
-    }
-
-    // Process common subjects - detect changes and generate change metadata
-    for (final entry in commonSubjects.entries) {
-      final subjectTerm = entry.key.subject;
-      final oldSubjectTerm = entry.value.subject;
-
-      final newTriples = appData.matching(subject: subjectTerm);
-      final oldTriples = oldAppGraph!.matching(subject: oldSubjectTerm);
-
-      final newPropertiesByPredicate = newTriples.predicates;
-      final oldPropertiesByPredicate = oldTriples.predicates;
-
-      final resourceType =
-          appData.findSingleObject<IriTerm>(subjectTerm, Rdf.type);
-
-      // Get all predicates from both old and new
-      final allPredicates = {
-        ...newPropertiesByPredicate,
-        ...oldPropertiesByPredicate
-      };
-
-      for (final predicate in allPredicates) {
-        final newValues =
-            newTriples.getMultiValueObjects(subjectTerm, predicate);
-        final oldValues =
-            oldTriples.getMultiValueObjects(oldSubjectTerm, predicate);
-
-        // Check if values changed (considering blank node deep equality)
-        if (_valuesEqual(oldValues, newValues, oldAppGraph, appData,
-            oldAppBlankNodes, appBlankNodes)) {
-          continue; // No change
-        }
-
-        // Get CRDT algorithm for this property
-        final crdtType =
-            _getCrdtAlgorithm(mergeContract, resourceType, predicate);
-
-        // Generate change metadata
-        final metadataGraph = crdtType.localValueChange(
-          documentIri: documentIri,
-          oldAppData: oldAppGraph,
-          oldBlankNodes: oldAppBlankNodes,
-          oldSubject: oldSubjectTerm,
-          newAppData: appData,
-          newBlankNodes: appBlankNodes,
-          newSubject: subjectTerm,
-          predicate: predicate,
-          oldValues: oldValues,
-          newValues: newValues,
-          mergeContext: context,
-        );
-
-        metadataGraphs.addAll(metadataGraph);
-
-        // Record property change using canonical IRI (for identified blank nodes) or IRI
-        for (final propertyChangeIri in entry.key.propertyChangeIris) {
-          propertyChanges.add(PropertyChange(
-            resourceIri: propertyChangeIri,
-            propertyIri: predicate,
-            changedAtMs: clock.physicalTime,
-            changeLogicalClock: clock.logicalTime,
-          ));
-        }
-        _log.fine('Property change detected on $subjectTerm for $predicate');
-      }
-    }
-
-    return _CrdtMetadataResult(
-      metadataGraph: metadataGraphs,
-      propertyChanges: propertyChanges,
-    );
-  }
-
-  CrdtType _getCrdtAlgorithm(MergeContract mergeContract, IriTerm? resourceType,
-      RdfPredicate predicate) {
-    // Get CRDT algorithm for this property
-    final rule =
-        mergeContract.getEffectivePredicateRule(resourceType, predicate);
-    final algorithmIri = rule?.mergeWith;
-    if (algorithmIri == null) {
-      if (rule == null) {
-        _log.warning(
-            'No predicate rule found for $predicate on $resourceType, using ${CrdtTypeRegistry.fallback.iri.value}.');
-      } else {
-        _log.fine(
-            'No merge algorithm found in rule for $predicate on $resourceType, using ${CrdtTypeRegistry.fallback.iri.value}.');
-      }
-    }
-    return _crdtTypeRegistry.getType(algorithmIri);
-  }
-
-  /// Check if two value lists are equal, considering deep equality for blank nodes
-  bool _valuesEqual(
-      List<RdfTerm> oldValues,
-      List<RdfTerm> newValues,
-      RdfGraph oldGraph,
-      RdfGraph newGraph,
-      IdentifiedBlankNodes oldBlankNodes,
-      IdentifiedBlankNodes newBlankNodes) {
-    if (oldValues.length != newValues.length) {
-      return false;
-    }
-
-    // For each old value, try to find a matching new value
-    final matchedNewValues = <RdfTerm>{};
-
-    for (final oldValue in oldValues) {
-      bool found = false;
-
-      for (final newValue in newValues) {
-        if (matchedNewValues.contains(newValue)) {
-          continue; // Already matched to another old value
-        }
-
-        if (_valueEquals(oldValue, newValue, oldGraph, newGraph, oldBlankNodes,
-            newBlankNodes)) {
-          matchedNewValues.add(newValue);
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        return false; // Old value has no match in new values
-      }
-    }
-
-    return true;
-  }
-
-  /// Check if two RDF values are equal, considering deep equality for blank nodes
-  bool _valueEquals(
-      RdfTerm oldValue,
-      RdfTerm newValue,
-      RdfGraph oldGraph,
-      RdfGraph newGraph,
-      IdentifiedBlankNodes oldBlankNodes,
-      IdentifiedBlankNodes newBlankNodes) {
-    // Simple case: same term
-    if (oldValue == newValue) {
-      return true;
-    }
-
-    // For blank nodes, check if they're identified and equal
-    if (oldValue is BlankNodeTerm && newValue is BlankNodeTerm) {
-      final oldIdentifiers = oldBlankNodes.hasIdentifiedNodes(oldValue)
-          ? oldBlankNodes.getIdentifiedNodes(oldValue)
-          : null;
-      final newIdentifiers = newBlankNodes.hasIdentifiedNodes(newValue)
-          ? newBlankNodes.getIdentifiedNodes(newValue)
-          : null;
-
-      // If both are identified, check if they share any identifier
-      if (oldIdentifiers != null && newIdentifiers != null) {
-        if (oldIdentifiers.any((oldId) => newIdentifiers.contains(oldId))) {
-          return true; // Identified as the same blank node
-        }
-      }
-
-      // For non-identified blank nodes, do deep structural comparison
-      return _deepBlankNodeEquals(
-          oldValue, newValue, oldGraph, newGraph, oldBlankNodes, newBlankNodes);
-    }
-
-    return false;
-  }
-
-  /// Perform deep structural comparison of blank nodes
-  bool _deepBlankNodeEquals(
-      BlankNodeTerm oldBlankNode,
-      BlankNodeTerm newBlankNode,
-      RdfGraph oldGraph,
-      RdfGraph newGraph,
-      IdentifiedBlankNodes oldBlankNodes,
-      IdentifiedBlankNodes newBlankNodes,
-      [Set<BlankNodeTerm>? visited]) {
-    visited ??= {};
-
-    // Prevent infinite recursion
-    if (visited.contains(oldBlankNode)) {
-      return true; // Assume equal if we're in a cycle
-    }
-    visited.add(oldBlankNode);
-
-    final oldTriples = oldGraph.matching(subject: oldBlankNode);
-    final newTriples = newGraph.matching(subject: newBlankNode);
-
-    final oldProps = oldTriples.predicates;
-    final newProps = newTriples.predicates;
-
-    // Must have same predicates
-    if (!_isEqualSet(oldProps, newProps)) {
-      return false;
-    }
-
-    // Check each predicate's values
-    for (final predicate in oldProps) {
-      final oldValues = oldGraph.getMultiValueObjects(oldBlankNode, predicate);
-      final newValues = newGraph.getMultiValueObjects(newBlankNode, predicate);
-
-      if (!_valuesEqual(oldValues, newValues, oldGraph, newGraph, oldBlankNodes,
-          newBlankNodes)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-}
-
-bool _isEqualSet<T>(Set<T> set, Set<T> set2) {
-  if (set.length != set2.length) {
-    return false;
-  }
-  for (final item in set) {
-    if (!set2.contains(item)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/// Result of CRDT metadata generation containing metadata triples and property changes
-class _CrdtMetadataResult {
-  final List<Node> metadataGraph;
-  final List<PropertyChange> propertyChanges;
-
-  _CrdtMetadataResult({
-    required this.metadataGraph,
-    required this.propertyChanges,
-  });
 }
 
 class _HydrationStreamSubscription implements HydrationSubscription {

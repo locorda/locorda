@@ -30,6 +30,17 @@ class HydrationResult<T> {
     required this.hasMore,
   });
 
+  HydrationResult<V> convert<V>(
+    V Function(T) itemConverter,
+  ) =>
+      HydrationResult(
+        items: items.map(itemConverter).toList(),
+        deletedItems: deletedItems.map(itemConverter).toList(),
+        originalCursor: originalCursor,
+        nextCursor: nextCursor,
+        hasMore: hasMore,
+      );
+
   @override
   String toString() {
     return 'HydrationResult('

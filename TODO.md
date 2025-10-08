@@ -32,8 +32,7 @@
 - [x] Implement (optional) external IRI for better DX 
 - [x] Change 008 proposal slightly again: we really should use the path identification by default
 - [x] Implement something like `IriStrategy(provideAs: "documentIri")` in rdf_mapper_*, so that we can have sub-annotations here that work together smoothly, just marking as PodResource and PodSubResource. But beware: the IRI of the root resource is not 100% what we want, unless we actually have an extra IriStrategy.relative() with separate templates.
-- [ ] LocordaSync: Make sure that all patterns like IRI-Identified Sub-Resources, identified blank nodes and unidentified blank nodes are shown. Ideas: Weblink in Note for (classical) identified blank node, Comment in Note for IRI-Identified sub-content, CategoryDisplaySettings in Category for single-path-identified blank node, and ??? for sets of unidentified blank nodes
-- [ ] LWW-Register: how can we remove values/set to nul? (mis)use rdf:nil? Maybe wait with the answer to after implementation of OR-Set?
+- [x] LocordaSync: Make sure that all patterns like IRI-Identified Sub-Resources, identified blank nodes and unidentified blank nodes are shown. Ideas: Weblink in Note for (classical) identified blank node, Comment in Note for IRI-Identified sub-content, CategoryDisplaySettings in Category for single-path-identified blank node
 - [ ] Storage Layer: save locorda indices
 - [ ] Implement locorda index files in db and fill/update them on save
 - [ ] Implement saving/loading/merging documents with local storage persistence
@@ -41,6 +40,8 @@
   - Need CRDT merging logic and actual storage operations => CRDT merging is not part of pure persistence
   - This unblocks the example app's core functionality
 - [ ] rdf_vocabulary_to_dart: failed to load RDF graph for graphs marked as skipped must not be an error, build must not be marked as "failed" due to this
+
+- [ ] LWW-Register: how can we remove values/set to null? => should work "automatically". But maybe we want a save test for this to see that it works correctly
 
 ### Priority 2: SyncManager with Status Stream
 - [ ] Create SyncManager with status stream and automatic sync triggering
@@ -55,6 +56,7 @@
   - Needed for efficient data organization and sync
 
 ### Priority 4: Backend Implementations
+- [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
 - [ ] Implement in-memory backend for testing and development
   - Simpler to implement than Solid backend
   - Enables testing without external dependencies

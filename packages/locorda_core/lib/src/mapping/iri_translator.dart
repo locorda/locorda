@@ -31,6 +31,7 @@ class IriTranslator {
       }
     }
   }
+  bool get canTranslate => _prefixToType.isNotEmpty;
 
   /// Translates an external IRI to internal IRI
   ///
@@ -41,6 +42,10 @@ class IriTranslator {
   /// - Input: https://example.com/categories/work#it
   /// - Output: tag:locorda.org,2025:l:aHR0...#it
   IriTerm externalToInternal(IriTerm externalIri) {
+    if (!canTranslate) {
+      return externalIri;
+    }
+    // Extract IRI value
     final iriValue = externalIri.value;
 
     // Extract fragment if present
@@ -83,6 +88,9 @@ class IriTranslator {
   /// - Input: tag:locorda.org,2025:l:aHR0...#it
   /// - Output: https://example.com/categories/work#it
   IriTerm internalToExternal(IriTerm internalIri) {
+    if (!canTranslate) {
+      return internalIri;
+    }
     // Check if this is a local IRI
     if (!LocalResourceLocator.isLocalIri(internalIri)) {
       return internalIri;
@@ -119,7 +127,7 @@ class IriTranslator {
   ///
   /// Converts all subject, predicate, and object IRIs that match configured templates
   RdfGraph translateGraphToInternal(RdfGraph externalGraph) {
-    if (_prefixToType.isEmpty) {
+    if (!canTranslate) {
       return externalGraph;
     }
     final triples = externalGraph.triples.map((triple) {
@@ -147,7 +155,7 @@ class IriTranslator {
   ///
   /// Converts all subject, predicate, and object IRIs that have templates configured
   RdfGraph translateGraphToExternal(RdfGraph internalGraph) {
-    if (_prefixToType.isEmpty) {
+    if (!canTranslate) {
       return internalGraph;
     }
     final triples = internalGraph.triples.map((triple) {

@@ -2,6 +2,8 @@
 
 This directory contains RDF document templates used during Pod initialization and as reference examples for the CRDT synchronization framework.
 
+**NOTE: this is optional, you may simply use this for reference and are not required to actually use those templates**
+
 ## Template Files
 
 ### Core Framework Templates

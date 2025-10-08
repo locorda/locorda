@@ -25,6 +25,19 @@ extension RdfGraphExtensions on RdfGraph {
     return null;
   }
 
+  T? findFirstObject<T extends RdfObject>(
+      RdfSubject subject, RdfPredicate predicate) {
+    final triples = findTriples(subject: subject, predicate: predicate);
+    if (triples.isEmpty) {
+      return null;
+    }
+    final obj = triples.first.object;
+    if (obj is T) {
+      return obj;
+    }
+    return null;
+  }
+
   /**
    * Gets a list of RdfObjects from a rdf:List structure (e.g. rdf:first, rdf:rest, rdf:nil)
    */
@@ -149,6 +162,10 @@ extension LiteralTermExtensions on LiteralTerm {
     return int.parse(value);
   }
 
+  int? get tryIntegerValue {
+    return int.tryParse(value);
+  }
+
   bool get isString {
     return datatype == Xsd.string || datatype == Rdf.langString;
   }
@@ -195,6 +212,13 @@ extension LiteralTermExtensions on LiteralTerm {
 }
 
 extension TripleListExtensions on List<Triple> {
+  void addMultiple(
+      RdfSubject subject, RdfPredicate predicate, Iterable<RdfObject> objects) {
+    for (final object in objects) {
+      add(Triple(subject, predicate, object));
+    }
+  }
+
   void addRdfList(
       RdfSubject subject, RdfPredicate predicate, List<RdfObject> items) {
     if (items.isEmpty) {
@@ -220,7 +244,8 @@ extension TripleListExtensions on List<Triple> {
     add(Triple(subject, predicate, blankNodes.first));
   }
 
-  void addNodes(RdfSubject subject, RdfPredicate predicate, List<Node> nodes) {
+  void addNodes(
+      RdfSubject subject, RdfPredicate predicate, Iterable<Node> nodes) {
     for (final node in nodes) {
       {
         final (objectTerm, graph) = node;

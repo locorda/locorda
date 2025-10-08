@@ -12,6 +12,8 @@
     "https://example.org/test/mappings/recipe-v1-invalid-lww-multiple": "shared/mappings/recipe-v1-invalid-lww-multiple.ttl",
     "https://example.org/test/mappings/category-v1": "shared/mappings/category-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl",
+    "https://w3id.org/solid-crdt-sync/mappings/shard-v1": "../../../../../spec/mappings/shard-v1.ttl",
+    "https://w3id.org/solid-crdt-sync/mappings/index-v1": "../../../../../spec/mappings/index-v1.ttl",
     "https://w3id.org/solid-crdt-sync/mappings/client-installation-v1": "../../../../../spec/mappings/client-installation-v1.ttl"
   },
   "test_suites": [

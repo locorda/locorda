@@ -1,11 +1,15 @@
 /// Service for managing installation identity and lifecycle.
 library;
 
+import 'package:locorda_core/src/crdt_document_manager.dart';
+import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/hlc_service.dart';
+import 'package:locorda_core/src/index/index_manager.dart';
+import 'package:locorda_core/src/mapping/resource_locator.dart';
+import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:uuid/uuid.dart';
-import 'package:locorda_core/src/storage/storage_interface.dart';
-import 'package:locorda_core/src/mapping/resource_locator.dart';
-import 'package:locorda_core/src/generated/crdt/classes/clientinstallation.dart';
 
 /// Factory function for generating installation IDs.
 ///
@@ -31,13 +35,19 @@ class InstallationService {
   final IriTerm installationIri;
   final String installationLocalId;
   final bool installationDocumentSaved;
+  final IriTermFactory _iriFactory;
+  final PhysicalTimestampFactory _physicalTimestampFactory;
 
   InstallationService._({
     required Storage storage,
     required this.installationIri,
     required this.installationLocalId,
     required this.installationDocumentSaved,
-  }) : _storage = storage;
+    required IriTermFactory iriTermFactory,
+    required PhysicalTimestampFactory physicalTimestampFactory,
+  })  : _storage = storage,
+        _iriFactory = iriTermFactory,
+        _physicalTimestampFactory = physicalTimestampFactory;
 
   /// Initialize installation service by loading or creating installation identity.
   ///
@@ -49,11 +59,12 @@ class InstallationService {
   /// On subsequent runs:
   /// - Loads existing installation IRI from settings
   /// - Loads installation document saved flag
-  static Future<InstallationService> initialize({
+  static Future<InstallationService> create({
     required Storage storage,
     required LocalResourceLocator resourceLocator,
     InstallationIdFactory? installationIdFactory,
     IriTermFactory iriTermFactory = IriTerm.validated,
+    required PhysicalTimestampFactory physicalTimestampFactory,
   }) async {
     installationIdFactory ??= () => const Uuid().v4();
     // Load settings in single request
@@ -95,11 +106,12 @@ class InstallationService {
         settings[InstallationSettings.installationDocumentSaved] == 'true';
 
     return InstallationService._(
-      storage: storage,
-      installationIri: installationIri,
-      installationLocalId: installationLocalId,
-      installationDocumentSaved: installationDocumentSaved,
-    );
+        storage: storage,
+        installationIri: installationIri,
+        installationLocalId: installationLocalId,
+        installationDocumentSaved: installationDocumentSaved,
+        iriTermFactory: iriTermFactory,
+        physicalTimestampFactory: physicalTimestampFactory);
   }
 
   /// Mark installation document as saved.
@@ -111,5 +123,43 @@ class InstallationService {
       InstallationSettings.installationDocumentSaved,
       'true',
     );
+  }
+
+  Future<void> ensureDocumentSaved(CrdtDocumentManager crdtDocumentManager,
+      IndexManager indexManager) async {
+    // Initialize installation document if needed
+    if (!installationDocumentSaved) {
+      final iri = installationIri;
+      final now = _physicalTimestampFactory();
+      final clientInstallation = RdfGraph.fromTriples([
+        Triple(iri, Rdf.type, CrdtClientInstallation.classIri),
+        // Created timestamp
+        Triple(
+          iri,
+          CrdtClientInstallation.createdAt,
+          LiteralTermExtensions.dateTime(now),
+        ),
+        // Last active timestamp
+        Triple(
+          iri,
+          CrdtClientInstallation.lastActiveAt,
+          LiteralTermExtensions.dateTime(now),
+        ),
+        // Default max inactivity period (6 months)
+        Triple(
+          iri,
+          CrdtClientInstallation.maxInactivityPeriod,
+          LiteralTerm(
+            'P6M',
+            datatype: _iriFactory('http://www.w3.org/2001/XMLSchema#duration'),
+          ),
+        ),
+      ]);
+      final shards = indexManager.determineShards(
+          CrdtClientInstallation.classIri, clientInstallation);
+      await crdtDocumentManager.save(
+          CrdtClientInstallation.classIri, clientInstallation, shards);
+      await markInstallationDocumentSaved();
+    }
   }
 }

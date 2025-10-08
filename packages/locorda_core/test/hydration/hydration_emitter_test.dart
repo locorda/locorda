@@ -1,34 +1,30 @@
 import 'dart:async';
 
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/config/sync_graph_config.dart';
 import 'package:locorda_core/src/hydration/hydration_emitter.dart';
 import 'package:locorda_core/src/hydration/hydration_stream_manager.dart';
 import 'package:locorda_core/src/hydration/type_local_name_key.dart';
+import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
-typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
-
-// Test implementation of HydrationStreamManager
+/// Test implementation of HydrationStreamManager that tracks emissions
 class TestHydrationStreamManager implements HydrationStreamManager {
-  final List<String> emittedKeys = [];
-  final List<HydrationResult<IdentifiedGraph>> emittedResults = [];
+  final List<_EmittedData> emittedData = [];
   final Set<TypeOrIndexKey> _existingControllers = {};
 
   @override
   void emitToStream(
       TypeOrIndexKey key, HydrationResult<IdentifiedGraph> result) {
-    emittedKeys.add(key.toString());
-    emittedResults.add(result);
+    emittedData.add(_EmittedData(key, result));
   }
 
   @override
   StreamController<HydrationResult<IdentifiedGraph>> getOrCreateController(
       IriTerm type,
       [String? indexName]) {
-    final key = TypeOrIndexKey(type, indexName);
-    _existingControllers.add(key);
-    return StreamController<HydrationResult<IdentifiedGraph>>.broadcast();
+    throw UnimplementedError('Not needed for these tests');
   }
 
   @override
@@ -39,364 +35,448 @@ class TestHydrationStreamManager implements HydrationStreamManager {
   @override
   Future<void> close() async {}
 
-  void clear() {
-    emittedKeys.clear();
-    emittedResults.clear();
-    _existingControllers.clear();
-  }
-
   void addController(TypeOrIndexKey key) {
     _existingControllers.add(key);
   }
+
+  void clear() {
+    emittedData.clear();
+  }
+}
+
+class _EmittedData {
+  final TypeOrIndexKey key;
+  final HydrationResult<IdentifiedGraph> result;
+
+  _EmittedData(this.key, this.result);
 }
 
 void main() {
   group('HydrationEmitter', () {
     late TestHydrationStreamManager streamManager;
     late HydrationEmitter emitter;
+    late IriTranslator iriTranslator;
 
     // Test vocabulary
-    final testTypeIri = const IriTerm('https://example.org/TestNote');
-    final titlePredicate = const IriTerm('https://schema.org/name');
-    final contentPredicate = const IriTerm('https://example.org/content');
+    final testTypeIri = IriTerm('https://example.org/TestNote');
+    final titlePredicate = IriTerm('https://schema.org/name');
+    final contentPredicate = IriTerm('https://example.org/content');
+
+    // Internal/External IRI pairs for translation
+    final internalResourceIri = IriTerm('http://internal.local/notes/123');
 
     setUp(() {
       streamManager = TestHydrationStreamManager();
+
+      // Set up IRI translator with mapping
+      iriTranslator = IriTranslator(
+        resourceLocator: LocalResourceLocator(
+          iriTermFactory: IriTerm.validated,
+        ),
+        resourceConfigs: [
+          ResourceGraphConfig(
+            typeIri: testTypeIri,
+            crdtMapping: Uri.parse('http://example.org/mapping'),
+            indices: [],
+          ),
+        ],
+      );
+
       emitter = HydrationEmitter(
         streamManager: streamManager,
+        iriTranslator: iriTranslator,
       );
     });
 
-    test('should emit to resource stream only when no indices', () {
-      // Config without indices
-      final config = ResourceGraphConfig(
-        typeIri: testTypeIri,
-        crdtMapping: Uri.parse('http://example.org/mapping'),
-        indices: [],
-      );
+    group('emitForType', () {
+      test('should emit result to resource stream with null index name',
+          () async {
+        final resourceGraph = RdfGraph.fromTriples([
+          Triple(
+              internalResourceIri, titlePredicate, LiteralTerm.string('Test')),
+          Triple(internalResourceIri, contentPredicate,
+              LiteralTerm.string('Content')),
+        ]);
 
-      final resourceSubject = const IriTerm('https://example.org/notes/test');
-      final resourceGraph = RdfGraph(triples: [
-        Triple(resourceSubject, titlePredicate, LiteralTerm.string('Test')),
-        Triple(
-            resourceSubject, contentPredicate, LiteralTerm.string('Content')),
-      ]);
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [(internalResourceIri, resourceGraph)],
+          deletedItems: [],
+          originalCursor: 'cursor1',
+          nextCursor: 'cursor2',
+          hasMore: false,
+        );
 
-      final result = HydrationResult<IdentifiedGraph>(
-        items: [(resourceSubject, resourceGraph)],
-        deletedItems: [],
-        originalCursor: 'cursor1',
-        nextCursor: 'cursor2',
-        hasMore: false,
-      );
+        emitter.emitForType(testTypeIri, result);
 
-      emitter.emit(result, config);
+        // Verify emission
+        expect(streamManager.emittedData, hasLength(1));
 
-      // Should emit only to resource stream
-      expect(streamManager.emittedKeys, hasLength(1));
-      expect(streamManager.emittedKeys.first, contains(testTypeIri.value));
-      expect(
-          streamManager.emittedKeys.first, contains('null')); // No index name
-      expect(streamManager.emittedResults.first, equals(result));
-    });
+        final emission = streamManager.emittedData.first;
+        expect(emission.key.typeIri, equals(testTypeIri));
+        expect(emission.key.indexName, isNull);
 
-    test(
-        'should emit to both resource and index streams when index stream exists',
-        () {
-      // Set up index configuration
-      final indexItem = IndexItemGraphConfig({
-        IdxShardEntry.resource,
-        titlePredicate,
-      });
-      final index = FullIndexGraphConfig(
-        localName: 'title-index',
-        item: indexItem,
-      );
+        // Verify result structure
+        expect(emission.result.items, hasLength(1));
+        expect(emission.result.deletedItems, isEmpty);
+        expect(emission.result.originalCursor, equals('cursor1'));
+        expect(emission.result.nextCursor, equals('cursor2'));
+        expect(emission.result.hasMore, isFalse);
 
-      final config = ResourceGraphConfig(
-        typeIri: testTypeIri,
-        crdtMapping: Uri.parse('http://example.org/mapping'),
-        indices: [index],
-      );
-
-      // Add index controller to stream manager
-      final indexKey = TypeOrIndexKey(testTypeIri, 'title-index');
-      streamManager.addController(indexKey);
-
-      final resourceSubject = const IriTerm('https://example.org/notes/test');
-      final resourceGraph = RdfGraph(triples: [
-        Triple(
-            resourceSubject, titlePredicate, LiteralTerm.string('Test Title')),
-        Triple(
-            resourceSubject, contentPredicate, LiteralTerm.string('Content')),
-      ]);
-
-      final result = HydrationResult<IdentifiedGraph>(
-        items: [(resourceSubject, resourceGraph)],
-        deletedItems: [],
-        originalCursor: 'cursor1',
-        nextCursor: 'cursor2',
-        hasMore: false,
-      );
-
-      emitter.emit(result, config);
-
-      // Should emit to both streams
-      expect(streamManager.emittedKeys, hasLength(2));
-
-      // Check resource stream emission
-      expect(streamManager.emittedKeys[0], contains(testTypeIri.value));
-      expect(streamManager.emittedKeys[0], contains('null'));
-      expect(streamManager.emittedResults[0], equals(result));
-
-      // Check index stream emission
-      expect(streamManager.emittedKeys[1], contains(testTypeIri.value));
-      expect(streamManager.emittedKeys[1], contains('title-index'));
-
-      final indexResult = streamManager.emittedResults[1];
-      expect(indexResult.items, hasLength(1));
-      expect(indexResult.originalCursor, equals('cursor1'));
-      expect(indexResult.nextCursor, equals('cursor2'));
-
-      // Verify index item contains filtered properties
-      final (indexSubject, indexGraph) = indexResult.items.first;
-      final indexTriples = indexGraph.triples.toList();
-      expect(indexTriples.any((t) => t.predicate == titlePredicate), isTrue);
-      expect(indexTriples.any((t) => t.predicate == IdxShardEntry.resource),
-          isTrue);
-      expect(indexTriples.any((t) => t.predicate == contentPredicate),
-          isFalse); // Filtered out
-    });
-
-    test('should handle deletions in index conversion', () {
-      final indexItem = IndexItemGraphConfig({
-        IdxShardEntry.resource,
-        titlePredicate,
-      });
-      final index = FullIndexGraphConfig(
-        localName: 'title-index',
-        item: indexItem,
-      );
-
-      final config = ResourceGraphConfig(
-        typeIri: testTypeIri,
-        crdtMapping: Uri.parse('http://example.org/mapping'),
-        indices: [index],
-      );
-
-      final indexKey = TypeOrIndexKey(testTypeIri, 'title-index');
-      streamManager.addController(indexKey);
-
-      final deletedSubject = const IriTerm('https://example.org/notes/deleted');
-      final deletedGraph = RdfGraph(triples: [
-        Triple(deletedSubject, titlePredicate,
-            LiteralTerm.string('Deleted Title')),
-        Triple(deletedSubject, contentPredicate,
-            LiteralTerm.string('Deleted Content')),
-      ]);
-
-      final result = HydrationResult<IdentifiedGraph>(
-        items: [],
-        deletedItems: [(deletedSubject, deletedGraph)],
-        originalCursor: 'cursor1',
-        nextCursor: 'cursor2',
-        hasMore: false,
-      );
-
-      emitter.emit(result, config);
-
-      // Check index deletion conversion
-      expect(streamManager.emittedKeys, hasLength(2));
-      final indexResult = streamManager.emittedResults[1];
-      expect(indexResult.deletedItems, hasLength(1));
-      expect(indexResult.items, isEmpty);
-
-      // Verify deleted index item structure
-      final (deletedIndexSubject, deletedIndexGraph) =
-          indexResult.deletedItems.first;
-      final indexTriples = deletedIndexGraph.triples.toList();
-      expect(indexTriples.any((t) => t.predicate == titlePredicate), isTrue);
-      expect(indexTriples.any((t) => t.predicate == IdxShardEntry.resource),
-          isTrue);
-    });
-
-    test('should skip index emission when no stream controller exists', () {
-      final indexItem = IndexItemGraphConfig({
-        IdxShardEntry.resource,
-        titlePredicate,
-      });
-      final index = FullIndexGraphConfig(
-        localName: 'unregistered-index',
-        item: indexItem,
-      );
-
-      final config = ResourceGraphConfig(
-        typeIri: testTypeIri,
-        crdtMapping: Uri.parse('http://example.org/mapping'),
-        indices: [index],
-      );
-
-      // Don't add the index controller to stream manager
-
-      final resourceSubject = const IriTerm('https://example.org/notes/test');
-      final resourceGraph = RdfGraph(triples: [
-        Triple(resourceSubject, titlePredicate, LiteralTerm.string('Test')),
-        Triple(
-            resourceSubject, contentPredicate, LiteralTerm.string('Content')),
-      ]);
-
-      final result = HydrationResult<IdentifiedGraph>(
-        items: [(resourceSubject, resourceGraph)],
-        deletedItems: [],
-        originalCursor: null,
-        nextCursor: null,
-        hasMore: false,
-      );
-
-      emitter.emit(result, config);
-
-      // Should emit only to resource stream (no controller for index)
-      expect(streamManager.emittedKeys, hasLength(1));
-      expect(streamManager.emittedKeys.first, contains(testTypeIri.value));
-      expect(streamManager.emittedKeys.first, contains('null'));
-    });
-
-    test('should handle index with null item', () {
-      final index = FullIndexGraphConfig(
-        localName: 'null-item-index',
-        item: null,
-      );
-
-      final config = ResourceGraphConfig(
-        typeIri: testTypeIri,
-        crdtMapping: Uri.parse('http://example.org/mapping'),
-        indices: [index],
-      );
-
-      final resourceSubject = const IriTerm('https://example.org/notes/test');
-      final resourceGraph = RdfGraph(triples: [
-        Triple(resourceSubject, titlePredicate, LiteralTerm.string('Test')),
-        Triple(
-            resourceSubject, contentPredicate, LiteralTerm.string('Content')),
-      ]);
-
-      final result = HydrationResult<IdentifiedGraph>(
-        items: [(resourceSubject, resourceGraph)],
-        deletedItems: [],
-        originalCursor: null,
-        nextCursor: null,
-        hasMore: false,
-      );
-
-      // Should not throw and should only emit to resource stream
-      expect(() => emitter.emit(result, config), returnsNormally);
-      expect(streamManager.emittedKeys, hasLength(1));
-    });
-
-    test('should handle multiple indices', () {
-      final titleIndexItem = IndexItemGraphConfig({
-        IdxShardEntry.resource,
-        titlePredicate,
-      });
-      final contentIndexItem = IndexItemGraphConfig({
-        IdxShardEntry.resource,
-        contentPredicate,
+        // Verify IRI translation happened (internal -> external)
+        final (emittedIri, _) = emission.result.items.first;
+        expect(emittedIri, equals(internalResourceIri));
       });
 
-      final titleIndex = FullIndexGraphConfig(
-        localName: 'title-index',
-        item: titleIndexItem,
-      );
+      test('should emit multiple items in batch', () async {
+        final resource1Iri = IriTerm('http://internal.local/notes/1');
+        final resource2Iri = IriTerm('http://internal.local/notes/2');
 
-      final contentIndex = FullIndexGraphConfig(
-        localName: 'content-index',
-        item: contentIndexItem,
-      );
+        final graph1 = RdfGraph.fromTriples([
+          Triple(resource1Iri, titlePredicate, LiteralTerm.string('Note 1')),
+        ]);
 
-      final config = ResourceGraphConfig(
-        typeIri: testTypeIri,
-        crdtMapping: Uri.parse('http://example.org/mapping'),
-        indices: [titleIndex, contentIndex],
-      );
+        final graph2 = RdfGraph.fromTriples([
+          Triple(resource2Iri, titlePredicate, LiteralTerm.string('Note 2')),
+        ]);
 
-      // Register only title index controller
-      final titleKey = TypeOrIndexKey(testTypeIri, 'title-index');
-      streamManager.addController(titleKey);
-      // contentIndex controller not added
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [
+            (resource1Iri, graph1),
+            (resource2Iri, graph2),
+          ],
+          deletedItems: [],
+          originalCursor: null,
+          nextCursor: 'cursor1',
+          hasMore: true,
+        );
 
-      final resourceSubject = const IriTerm('https://example.org/notes/test');
-      final resourceGraph = RdfGraph(triples: [
-        Triple(
-            resourceSubject, titlePredicate, LiteralTerm.string('Test Title')),
-        Triple(resourceSubject, contentPredicate,
-            LiteralTerm.string('Test Content')),
-      ]);
+        emitter.emitForType(testTypeIri, result);
 
-      final result = HydrationResult<IdentifiedGraph>(
-        items: [(resourceSubject, resourceGraph)],
-        deletedItems: [],
-        originalCursor: null,
-        nextCursor: null,
-        hasMore: false,
-      );
+        expect(streamManager.emittedData, hasLength(1));
+        expect(streamManager.emittedData.first.result.items, hasLength(2));
+        expect(streamManager.emittedData.first.result.hasMore, isTrue);
+      });
 
-      emitter.emit(result, config);
+      test('should emit deleted items', () async {
+        final deletedIri = IriTerm('http://internal.local/notes/deleted');
+        final deletedGraph = RdfGraph.fromTriples([]);
 
-      // Should emit to resource stream + title index only
-      expect(streamManager.emittedKeys, hasLength(2));
-      expect(streamManager.emittedKeys[0], contains(testTypeIri.value));
-      expect(streamManager.emittedKeys[0], contains('null'));
-      expect(streamManager.emittedKeys[1], contains(testTypeIri.value));
-      expect(streamManager.emittedKeys[1], contains('title-index'));
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [],
+          deletedItems: [(deletedIri, deletedGraph)],
+          originalCursor: 'cursor1',
+          nextCursor: 'cursor2',
+          hasMore: false,
+        );
+
+        emitter.emitForType(testTypeIri, result);
+
+        expect(streamManager.emittedData, hasLength(1));
+        expect(streamManager.emittedData.first.result.items, isEmpty);
+        expect(
+            streamManager.emittedData.first.result.deletedItems, hasLength(1));
+
+        final (deletedEmittedIri, _) =
+            streamManager.emittedData.first.result.deletedItems.first;
+        expect(deletedEmittedIri, equals(deletedIri));
+      });
+
+      test('should emit empty result', () async {
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [],
+          deletedItems: [],
+          originalCursor: 'cursor1',
+          nextCursor: null,
+          hasMore: false,
+        );
+
+        emitter.emitForType(testTypeIri, result);
+
+        expect(streamManager.emittedData, hasLength(1));
+        expect(streamManager.emittedData.first.result.items, isEmpty);
+        expect(streamManager.emittedData.first.result.deletedItems, isEmpty);
+        expect(streamManager.emittedData.first.result.nextCursor, isNull);
+      });
     });
 
-    test('should preserve all HydrationResult fields in conversion', () {
-      final indexItem = IndexItemGraphConfig({
-        IdxShardEntry.resource,
-        titlePredicate,
+    group('emitForIndex', () {
+      test('should emit result to index stream when controller exists',
+          () async {
+        final indexConfig = FullIndexGraphConfig(
+          localName: 'title-index',
+          item: IndexItemGraphConfig({
+            IdxShardEntry.resource,
+            titlePredicate,
+          }),
+        );
+
+        // Register controller for this index
+        streamManager.addController(TypeOrIndexKey(testTypeIri, 'title-index'));
+
+        final resourceGraph = RdfGraph.fromTriples([
+          Triple(
+              internalResourceIri, titlePredicate, LiteralTerm.string('Test')),
+        ]);
+
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [(internalResourceIri, resourceGraph)],
+          deletedItems: [],
+          originalCursor: 'cursor1',
+          nextCursor: 'cursor2',
+          hasMore: false,
+        );
+
+        emitter.emitForIndex(testTypeIri, indexConfig, result);
+
+        // Verify emission
+        expect(streamManager.emittedData, hasLength(1));
+
+        final emission = streamManager.emittedData.first;
+        expect(emission.key.typeIri, equals(testTypeIri));
+        expect(emission.key.indexName, equals('title-index'));
+        expect(emission.result.items, hasLength(1));
       });
-      final index = FullIndexGraphConfig(
-        localName: 'title-index',
-        item: indexItem,
-      );
 
-      final config = ResourceGraphConfig(
-        typeIri: testTypeIri,
-        crdtMapping: Uri.parse('http://example.org/mapping'),
-        indices: [index],
-      );
+      test('should skip emission when no controller exists for index',
+          () async {
+        final indexConfig = FullIndexGraphConfig(
+          localName: 'title-index',
+          item: IndexItemGraphConfig({
+            IdxShardEntry.resource,
+            titlePredicate,
+          }),
+        );
 
-      final indexKey = TypeOrIndexKey(testTypeIri, 'title-index');
-      streamManager.addController(indexKey);
+        // No controller registered
 
-      final itemSubject = const IriTerm('https://example.org/notes/item');
-      final itemGraph = RdfGraph(triples: [
-        Triple(itemSubject, titlePredicate, LiteralTerm.string('Item')),
-        Triple(itemSubject, contentPredicate, LiteralTerm.string('Content')),
-      ]);
+        final resourceGraph = RdfGraph.fromTriples([
+          Triple(
+              internalResourceIri, titlePredicate, LiteralTerm.string('Test')),
+        ]);
 
-      final deletedSubject = const IriTerm('https://example.org/notes/deleted');
-      final deletedGraph = RdfGraph(triples: [
-        Triple(deletedSubject, titlePredicate, LiteralTerm.string('Deleted')),
-        Triple(deletedSubject, contentPredicate, LiteralTerm.string('Content')),
-      ]);
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [(internalResourceIri, resourceGraph)],
+          deletedItems: [],
+          originalCursor: 'cursor1',
+          nextCursor: 'cursor2',
+          hasMore: false,
+        );
 
-      final result = HydrationResult<IdentifiedGraph>(
-        items: [(itemSubject, itemGraph)],
-        deletedItems: [(deletedSubject, deletedGraph)],
-        originalCursor: 'original-cursor',
-        nextCursor: 'next-cursor',
-        hasMore: true,
-      );
+        emitter.emitForIndex(testTypeIri, indexConfig, result);
 
-      emitter.emit(result, config);
+        // Should not emit anything
+        expect(streamManager.emittedData, isEmpty);
+      });
 
-      final indexResult = streamManager.emittedResults[1];
-      expect(indexResult.originalCursor, equals('original-cursor'));
-      expect(indexResult.nextCursor, equals('next-cursor'));
-      expect(indexResult.hasMore, equals(true));
-      expect(indexResult.items, hasLength(1));
-      expect(indexResult.deletedItems, hasLength(1));
+      test('should skip emission when index has no item config', () async {
+        final indexConfig = FullIndexGraphConfig(
+          localName: 'title-index',
+          item: null, // No item config
+        );
+
+        // Register controller
+        streamManager.addController(TypeOrIndexKey(testTypeIri, 'title-index'));
+
+        final resourceGraph = RdfGraph.fromTriples([
+          Triple(
+              internalResourceIri, titlePredicate, LiteralTerm.string('Test')),
+        ]);
+
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [(internalResourceIri, resourceGraph)],
+          deletedItems: [],
+          originalCursor: 'cursor1',
+          nextCursor: 'cursor2',
+          hasMore: false,
+        );
+
+        emitter.emitForIndex(testTypeIri, indexConfig, result);
+
+        // Should not emit anything
+        expect(streamManager.emittedData, isEmpty);
+      });
+
+      test('should emit to multiple different indices', () async {
+        final titleIndexConfig = FullIndexGraphConfig(
+          localName: 'title-index',
+          item: IndexItemGraphConfig({
+            IdxShardEntry.resource,
+            titlePredicate,
+          }),
+        );
+
+        final contentIndexConfig = FullIndexGraphConfig(
+          localName: 'content-index',
+          item: IndexItemGraphConfig({
+            IdxShardEntry.resource,
+            contentPredicate,
+          }),
+        );
+
+        // Register both controllers
+        streamManager.addController(TypeOrIndexKey(testTypeIri, 'title-index'));
+        streamManager
+            .addController(TypeOrIndexKey(testTypeIri, 'content-index'));
+
+        final resourceGraph = RdfGraph.fromTriples([
+          Triple(
+              internalResourceIri, titlePredicate, LiteralTerm.string('Test')),
+          Triple(internalResourceIri, contentPredicate,
+              LiteralTerm.string('Content')),
+        ]);
+
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [(internalResourceIri, resourceGraph)],
+          deletedItems: [],
+          originalCursor: 'cursor1',
+          nextCursor: 'cursor2',
+          hasMore: false,
+        );
+
+        // Emit to both indices
+        emitter.emitForIndex(testTypeIri, titleIndexConfig, result);
+        emitter.emitForIndex(testTypeIri, contentIndexConfig, result);
+
+        // Verify both emissions
+        expect(streamManager.emittedData, hasLength(2));
+
+        final titleEmission = streamManager.emittedData[0];
+        expect(titleEmission.key.indexName, equals('title-index'));
+
+        final contentEmission = streamManager.emittedData[1];
+        expect(contentEmission.key.indexName, equals('content-index'));
+      });
+
+      test('should emit index result with deleted items', () async {
+        final indexConfig = FullIndexGraphConfig(
+          localName: 'title-index',
+          item: IndexItemGraphConfig({
+            IdxShardEntry.resource,
+            titlePredicate,
+          }),
+        );
+
+        streamManager.addController(TypeOrIndexKey(testTypeIri, 'title-index'));
+
+        final deletedIri = IriTerm('http://internal.local/notes/deleted');
+        final deletedGraph = RdfGraph.fromTriples([]);
+
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [],
+          deletedItems: [(deletedIri, deletedGraph)],
+          originalCursor: 'cursor1',
+          nextCursor: 'cursor2',
+          hasMore: false,
+        );
+
+        emitter.emitForIndex(testTypeIri, indexConfig, result);
+
+        expect(streamManager.emittedData, hasLength(1));
+        expect(
+            streamManager.emittedData.first.result.deletedItems, hasLength(1));
+        expect(streamManager.emittedData.first.result.items, isEmpty);
+      });
+    });
+
+    group('IRI Translation', () {
+      test('should apply IRI translation to items', () async {
+        // Use a mock translator that changes IRIs
+        final mockTranslator = _MockIriTranslator();
+        final emitterWithMock = HydrationEmitter(
+          streamManager: streamManager,
+          iriTranslator: mockTranslator,
+        );
+
+        final internalIri = IriTerm('http://internal.local/test');
+        final graph = RdfGraph.fromTriples([
+          Triple(internalIri, titlePredicate, LiteralTerm.string('Test')),
+        ]);
+
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [(internalIri, graph)],
+          deletedItems: [],
+          originalCursor: null,
+          nextCursor: null,
+          hasMore: false,
+        );
+
+        emitterWithMock.emitForType(testTypeIri, result);
+
+        expect(streamManager.emittedData, hasLength(1));
+
+        final (translatedIri, translatedGraph) =
+            streamManager.emittedData.first.result.items.first;
+
+        // Verify translation was called
+        expect(translatedIri.value, contains('TRANSLATED'));
+        expect(mockTranslator.internalToExternalCalled, isTrue);
+        expect(mockTranslator.translateGraphCalled, isTrue);
+      });
+
+      test('should apply IRI translation to deleted items', () async {
+        final mockTranslator = _MockIriTranslator();
+        final emitterWithMock = HydrationEmitter(
+          streamManager: streamManager,
+          iriTranslator: mockTranslator,
+        );
+
+        final internalIri = IriTerm('http://internal.local/deleted');
+        final graph = RdfGraph.fromTriples([]);
+
+        final result = HydrationResult<IdentifiedGraph>(
+          items: [],
+          deletedItems: [(internalIri, graph)],
+          originalCursor: null,
+          nextCursor: null,
+          hasMore: false,
+        );
+
+        emitterWithMock.emitForType(testTypeIri, result);
+
+        expect(streamManager.emittedData, hasLength(1));
+
+        final (translatedIri, _) =
+            streamManager.emittedData.first.result.deletedItems.first;
+
+        expect(translatedIri.value, contains('TRANSLATED'));
+        expect(mockTranslator.internalToExternalCalled, isTrue);
+      });
     });
   });
+}
+
+/// Mock IRI translator for testing translation behavior
+class _MockIriTranslator implements IriTranslator {
+  bool internalToExternalCalled = false;
+  bool translateGraphCalled = false;
+
+  @override
+  bool get canTranslate => true;
+
+  @override
+  IriTerm internalToExternal(IriTerm internal) {
+    internalToExternalCalled = true;
+    return IriTerm('${internal.value}-TRANSLATED');
+  }
+
+  @override
+  RdfGraph translateGraphToExternal(RdfGraph graph) {
+    translateGraphCalled = true;
+    // Simple translation: add suffix to all subjects
+    final translatedTriples = graph.triples.map((triple) {
+      final newSubject = triple.subject is IriTerm
+          ? IriTerm('${(triple.subject as IriTerm).value}-TRANSLATED')
+          : triple.subject;
+      return Triple(newSubject, triple.predicate, triple.object);
+    }).toList();
+    return RdfGraph.fromTriples(translatedTriples);
+  }
+
+  @override
+  IriTerm externalToInternal(IriTerm external) =>
+      throw UnimplementedError('Not needed for these tests');
+
+  @override
+  RdfGraph translateGraphToInternal(RdfGraph graph) =>
+      throw UnimplementedError('Not needed for these tests');
 }

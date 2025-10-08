@@ -33,12 +33,12 @@ ns1:lcrd-ibn-md5-9110880a000d224b944a75c68db15db9 sync:blankNode _:b2 .
 ns1:lcrd-stmt-md5-5825a174c38216f90a32ec3852c78b6a rdf:object ns1:lcrd-ibn-md5-51dc75a18bbb06dbed4aff41b14f42b2;
     rdf:predicate schema:provider;
     rdf:subject ns1:lcrd-ibn-md5-9110880a000d224b944a75c68db15db9;
-    cm:deletedAt "2024-01-01T00:00:00.002Z"^^xsd:dateTime .
+    cm:deletedAt "2024-01-01T00:00:00.006Z"^^xsd:dateTime .
 
 ns1:lcrd-stmt-md5-cd1d2310a69f01b476c46e29bbe76ee3 rdf:object ns1:lcrd-ibn-md5-6b633c1a88c70726482b0594f2a562b8;
     rdf:predicate schema:provider;
     rdf:subject ns1:lcrd-ibn-md5-9110880a000d224b944a75c68db15db9;
-    cm:deletedAt "2024-01-01T00:00:00.002Z"^^xsd:dateTime .
+    cm:deletedAt "2024-01-01T00:00:00.006Z"^^xsd:dateTime .
 
 _:b1 a schema:Ingredient;
     schema:amount "2";

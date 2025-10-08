@@ -6,6 +6,7 @@ import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/util/lru_cache.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -30,10 +31,10 @@ class DocumentMappingDependencyExtractor implements DependencyExtractor {
 
 class CachingMergeContractLoader implements MergeContractLoader {
   final MergeContractLoader _inner;
-  final LinkedHashMap<String, Future<MergeContract>> _cache = LinkedHashMap();
-  final int maxCacheSize;
+  final LRUCache<String, Future<MergeContract>> _cache;
 
-  CachingMergeContractLoader(this._inner, {this.maxCacheSize = 50});
+  CachingMergeContractLoader(this._inner, {int maxCacheSize = 50})
+      : _cache = LRUCache(maxCacheSize: maxCacheSize);
 
   String _cacheKey(List<IriTerm> iris) => iris.length == 1
       ? iris.first.value
@@ -45,9 +46,7 @@ class CachingMergeContractLoader implements MergeContractLoader {
 
     // Check if already in cache (and move to end for LRU)
     if (_cache.containsKey(key)) {
-      final future = _cache.remove(key)!;
-      _cache[key] = future;
-      return future;
+      return _cache[key]!;
     }
 
     // Load and cache the result
@@ -58,12 +57,6 @@ class CachingMergeContractLoader implements MergeContractLoader {
     });
 
     _cache[key] = future;
-
-    // Evict oldest entry if cache is full
-    if (_cache.length > maxCacheSize) {
-      final oldestKey = _cache.keys.first;
-      _cache.remove(oldestKey);
-    }
 
     return future;
   }
