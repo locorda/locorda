@@ -12,6 +12,7 @@ import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_property_resolver.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -29,6 +30,9 @@ class IndexManager {
   final CrdtDocumentManager _documentManager;
   final IndexRdfGenerator _rdfGenerator;
   final IndexPropertyResolver _propertyResolver;
+  final Storage _storage;
+  final ShardManager _shardManager;
+  final SyncGraphConfig _config;
 
   final IriTerm _installationIri;
   final ResourceLocator _resourceLocator;
@@ -39,9 +43,13 @@ class IndexManager {
     required Storage storage,
     required IriTerm installationIri,
     required ResourceLocator resourceLocator,
+    required SyncGraphConfig config,
   })  : _documentManager = crdtDocumentManager,
         _rdfGenerator = rdfGenerator,
         _propertyResolver = IndexPropertyResolver(storage: storage),
+        _storage = storage,
+        _shardManager = const ShardManager(),
+        _config = config,
         _installationIri = installationIri,
         _resourceLocator = resourceLocator;
 
@@ -78,20 +86,17 @@ class IndexManager {
     IriTerm resourceType,
   ) async {
     // Generate local ID from config
-    final indexResourceIri = _rdfGenerator.generateFullIndexIri(config);
+    final indexResourceIri =
+        _rdfGenerator.generateFullIndexIri(config, resourceType);
     final indexDocumentIri = indexResourceIri.getDocumentIri();
 
     if (await _documentManager.hasDocument(indexDocumentIri)) {
       // Index already exists, skip creation
       return;
     }
-    // Extract local ID from index document IRI for shard generation
-    final indexIdentifier =
-        _resourceLocator.fromIri(IdxFullIndex.classIri, indexDocumentIri);
 
     // Create initial shard
     final (shardResourceIri, shardGraph) = _rdfGenerator.generateShard(
-      indexLocalId: indexIdentifier.id,
       totalShards: 1,
       shardNumber: 0,
       configVersion: '1_0_0',
@@ -134,9 +139,8 @@ class IndexManager {
     GroupIndexGraphConfig config,
     IriTerm resourceType,
   ) async {
-    final templateResourceIri = _rdfGenerator.generateGroupIndexTemplateIri(
-      config,
-    );
+    final templateResourceIri =
+        _rdfGenerator.generateGroupIndexTemplateIri(config, resourceType);
     if (await _documentManager
         .hasDocument(templateResourceIri.getDocumentIri())) {
       // Template already exists, skip creation
@@ -161,9 +165,112 @@ class IndexManager {
     );
   }
 
-  Iterable<IriTerm> determineShards(IriTerm type, RdfGraph internalAppData) {
-    // FIXME: Implement shard determination logic based on index configs!
-    return const [];
+  /// Determines which shards a resource of the given type should belong to.
+  ///
+  /// According to LOCORDA-SPECIFICATION.md section 6.4 "Resource Creation Workflow":
+  /// 1. Identify all matching index shards based on resource type
+  /// 2. For FullIndex: Calculate shard based on resource IRI hash
+  /// 3. For GroupIndexTemplate: Determine group membership (not implemented yet)
+  ///
+  /// This method currently handles FullIndex only.
+  ///
+  /// Parameters:
+  /// - [type]: The RDF type of the resource (e.g., schema:Recipe)
+  /// - [resourceIri]: The IRI of the resource being indexed
+  /// - [internalAppData]: The resource's semantic data (for group determination in future)
+  ///
+  /// Returns: Iterable of shard IRIs the resource should be indexed in
+  Future<Iterable<IriTerm>> determineShards(
+    IriTerm type,
+    IriTerm resourceIri,
+    RdfGraph internalAppData,
+  ) async {
+    final shards = <IriTerm>[];
+
+    // Get all index configurations for this resource type from config
+    final resourceConfig = _getResourceConfig(type);
+    if (resourceConfig == null) {
+      _log.warning('No resource config found for type $type');
+      return shards;
+    }
+
+    // Process each index configuration
+    for (final indexConfig in resourceConfig.indices) {
+      switch (indexConfig) {
+        case FullIndexGraphConfig():
+          final indexShards = await _determineShardsForFullIndex(
+              indexConfig, resourceIri, type);
+          shards.addAll(indexShards);
+
+        case GroupIndexGraphConfig():
+          throw UnimplementedError(
+            'GroupIndexTemplate shard determination not yet implemented. '
+            'This will be handled in the next step.',
+          );
+      }
+    }
+
+    return shards;
+  }
+
+  /// Gets the resource configuration for a given type from the sync config.
+  ResourceGraphConfig? _getResourceConfig(IriTerm type) {
+    try {
+      return _config.getResourceConfig(type);
+    } on ArgumentError {
+      return null;
+    }
+  }
+
+  /// Determines which shard(s) a resource belongs to for a FullIndex.
+  ///
+  /// Process per SHARDING.md:
+  /// 1. Load the FullIndex document from storage
+  /// 2. Parse its sharding configuration (numberOfShards, configVersion)
+  /// 3. Calculate shard number using MD5 hash modulo algorithm
+  /// 4. Find the matching shard IRI from the index's hasShard list
+  ///
+  /// Returns: List of shard IRIs (should be exactly one for FullIndex)
+  Future<List<IriTerm>> _determineShardsForFullIndex(
+    FullIndexGraphConfig config,
+    IriTerm resourceIri,
+    IriTerm typeIri,
+  ) async {
+    // Generate the index IRI from config
+    final indexResourceIri =
+        _rdfGenerator.generateFullIndexIri(config, typeIri);
+    final indexDocumentIri = indexResourceIri.getDocumentIri();
+
+    // Load the index document from storage
+    final storedDoc = await _storage.getDocument(indexDocumentIri);
+    if (storedDoc == null) {
+      _log.warning('Index document not found: $indexDocumentIri');
+      return [];
+    }
+
+    // Parse sharding configuration from the index
+    final shardingConfig =
+        _shardManager.parseShardingConfig(storedDoc.document, indexResourceIri);
+    if (shardingConfig == null) {
+      _log.warning(
+          'Could not parse sharding config from index: $indexResourceIri');
+      return [];
+    }
+
+    // Calculate which shard number this resource belongs to
+    final shardNumber = _shardManager.determineShardNumber(
+      resourceIri,
+      numberOfShards: shardingConfig.numberOfShards,
+    );
+
+    // Generate the expected shard name
+    final shardIri = _rdfGenerator.generateShardIri(
+        shardingConfig.numberOfShards,
+        shardNumber,
+        shardingConfig.configVersion,
+        indexResourceIri);
+
+    return [shardIri];
   }
 
   /// Updates all index shards to reflect the current state of a resource.
@@ -346,11 +453,8 @@ class IndexManager {
     return headerProperties.isEmpty ? null : headerProperties;
   }
 
-  IriTerm getIndexOrTemplateIri(CrdtIndexGraphConfig index) => switch (index) {
-        FullIndexGraphConfig _ => _rdfGenerator.generateFullIndexIri(index),
-        GroupIndexGraphConfig() =>
-          _rdfGenerator.generateGroupIndexTemplateIri(index)
-      };
+  IriTerm getIndexOrTemplateIri(CrdtIndexGraphConfig index, IriTerm typeIri) =>
+      _rdfGenerator.generateIndexOrTemplateIri(index, typeIri);
 }
 
 /// Extension to expose internal helper methods for testing.

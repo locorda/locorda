@@ -1,7 +1,9 @@
 @prefix cm: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
 @prefix mappings: <https://example.org/test/mappings/> .
 @prefix ns1: <tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#> .
+@prefix ns2: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZnVsbC1iNTc1MDJjMi9zaGFyZC1tb2QtbWQ1LTEtMC12MV8wXzA=#> .
 @prefix pn: <https://example.org/vocab/personal-notes#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix sc: <http://schema.org/> .
@@ -13,6 +15,7 @@
     cm:clockHash "b022849a73a02022c3c54bec8f58a1c3";
     cm:createdAt "2024-01-15T10:00:00.000Z"^^xsd:dateTime;
     cm:hasClockEntry ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54;
+    idx:belongsToIndexShard ns2:shard;
     sync:hasBlankNodeMapping ns1:lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066;
     sync:isGovernedBy (mappings:category-v1);
     sync:managedResourceType pn:NotesCategory .

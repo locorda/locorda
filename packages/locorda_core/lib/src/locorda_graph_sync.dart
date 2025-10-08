@@ -190,6 +190,7 @@ class LocordaGraphSync {
       storage: storage,
       installationIri: installationService.installationIri,
       resourceLocator: localResourceLocator,
+      config: effectiveConfig,
     );
 
     await indexManager.initializeIndices(effectiveConfig);
@@ -290,10 +291,14 @@ class LocordaGraphSync {
     // 1. Translate external IRIs to internal format if documentIriTemplate is configured
     final internalAppData = _iriTranslator.translateGraphToInternal(appData);
 
-    // 2. compute the shards in which this resource belongs
-    final shards = _indexManager.determineShards(type, internalAppData);
+    // 2. Extract resource IRI to determine shards
+    final resourceIri = internalAppData.getIdentifier(type);
 
-    // 3. save (with CRDT processing, diffing etc)
+    // 3. Compute the shards in which this resource belongs
+    final shards =
+        await _indexManager.determineShards(type, resourceIri, internalAppData);
+
+    // 4. save (with CRDT processing, diffing etc)
     final saved =
         await _crdtDocumentManager.save(type, internalAppData, shards);
     if (saved == null) {
@@ -301,7 +306,6 @@ class LocordaGraphSync {
       return;
     }
 
-    final resourceIri = saved.resourceIri as IriTerm;
     final crdtDocument = saved.crdtDocument;
     final documentIri = saved.documentIri;
 
@@ -328,7 +332,7 @@ class LocordaGraphSync {
       // 6. Now we emit the index items.
       final resourceConfig = _config.getResourceConfig(type);
       for (var index in resourceConfig.indices) {
-        final rootIri = _indexManager.getIndexOrTemplateIri(index);
+        final rootIri = _indexManager.getIndexOrTemplateIri(index, type);
         final idxItemSaveResult = indexData[rootIri];
         if (idxItemSaveResult == null) {
           _log.warning(

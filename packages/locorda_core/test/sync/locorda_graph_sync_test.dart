@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_canonicalization/rdf_canonicalization.dart';
@@ -216,12 +219,12 @@ Future<void> _executeSaveTest(
       testAssetsDir, expectedJson['installation'] as String?);
   final expectedPropertyChanges = _parseExpectedPropertyChanges(expectedJson);
 
-  final stored = await storage.getDocument(documentIri);
+  final storedDataDocument = await storage.getDocument(documentIri);
 
-  if (stored == null) {
+  if (storedDataDocument == null) {
     fail('No document stored for $documentIri');
   }
-  _expectEqualGraphs(stored.document, expectedStoredGraph);
+  _expectEqualGraphs(storedDataDocument.document, expectedStoredGraph);
 
   // Verify property changes if expected
   if (expectedPropertyChanges != null) {
@@ -243,6 +246,20 @@ Future<void> _executeSaveTest(
       fail('No installation document stored for $installationIri');
     }
     _expectEqualGraphs(storedInstallation.document, expectedInstallation);
+  }
+
+  // Verify index documents if expected
+  final expectedIndexDocs = expectedJson['index_documents'] as List<dynamic>?;
+  if (expectedIndexDocs != null) {
+    await _verifyIndexDocuments(
+        expectedIndexDocs, testAssetsDir, storage, testData.config);
+  }
+
+  // Verify shard documents if expected
+  final expectedShardDocs = expectedJson['shard_documents'] as List<dynamic>?;
+  if (expectedShardDocs != null) {
+    await _verifyShardDocuments(expectedShardDocs, testAssetsDir, storage,
+        testData.config, storedDataDocument);
   }
 }
 
@@ -349,6 +366,110 @@ void _expectEqualPropertyChanges(
 
 String formatChangedProperty(PropertyChange exp) =>
     'resource=${exp.resourceIri.value}, property=${(exp.propertyIri as IriTerm).value}, clock=${exp.changeLogicalClock}, timestamp=${exp.changedAtMs}';
+
+/// Verify index documents match expected graphs
+Future<void> _verifyIndexDocuments(
+  List<dynamic> expectedIndexDocs,
+  Directory testAssetsDir,
+  TestStorage storage,
+  SyncGraphConfig config,
+) async {
+  for (final indexDocJson in expectedIndexDocs) {
+    final indexMap = indexDocJson as Map<String, dynamic>;
+    final localName = indexMap['localName'] as String;
+    final expectedGraphPath = indexMap['expected_graph'] as String;
+
+    // Generate index IRI based on type and localName
+    final indexRdfGenerator = _createIndexRdfGenerator();
+    final (idx, resourceTypeIri) =
+        _findIndexConfigByLocalName(config, localName)!;
+    final indexResourceIri =
+        indexRdfGenerator.generateIndexOrTemplateIri(idx, resourceTypeIri);
+    final indexDocumentIri = indexResourceIri.getDocumentIri();
+
+    // Get actual stored document
+    final storedIndex = await storage.getDocument(indexDocumentIri);
+    if (storedIndex == null) {
+      fail('No index document stored for $indexDocumentIri');
+    }
+
+    // Load expected graph
+    final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+
+    _expectEqualGraphs(storedIndex.document, expectedGraph);
+  }
+}
+
+(CrdtIndexGraphConfig, IriTerm resourceTypeIri)? _findIndexConfigByLocalName(
+    SyncGraphConfig config, String localName) {
+  for (var resource in config.resources) {
+    for (var index in resource.indices) {
+      if (index.localName == localName) {
+        return (index, resource.typeIri);
+      }
+    }
+  }
+  return null;
+}
+
+IndexRdfGenerator _createIndexRdfGenerator(
+    [ShardManager shardManager = const ShardManager()]) {
+  final resourceLocator =
+      LocalResourceLocator(iriTermFactory: IriTerm.validated);
+  final indexRdfGenerator = IndexRdfGenerator(
+    resourceLocator: resourceLocator,
+    shardManager: shardManager,
+  );
+  return indexRdfGenerator;
+}
+
+/// Verify shard documents match expected graphs
+Future<void> _verifyShardDocuments(
+  List<dynamic> expectedShardDocs,
+  Directory testAssetsDir,
+  TestStorage storage,
+  SyncGraphConfig config,
+  StoredDocument storedDataDocument,
+) async {
+  for (final shardDocJson in expectedShardDocs) {
+    final shardMap = shardDocJson as Map<String, dynamic>;
+    final indexLocalName = shardMap['index_localName'] as String;
+    final shardTotal = shardMap['shard_total'] as int;
+    final shardNumber = shardMap['shard_number'] as int;
+    final shardVersion = shardMap['shard_version'] as String;
+    final expectedGraphPath = shardMap['expected_graph'] as String;
+
+    // Generate shard IRI
+    final indexRdfGenerator = _createIndexRdfGenerator();
+    final (idx, resourceTypeIri) =
+        _findIndexConfigByLocalName(config, indexLocalName)!;
+
+    // FIXME: Implement for group indices as well - but there we also need to determine the actual group
+    final indexResourceIri = indexRdfGenerator.generateFullIndexIri(
+        idx as FullIndexGraphConfig, resourceTypeIri);
+
+    final shardResourceIri = indexRdfGenerator.generateShardIri(
+        shardTotal, shardNumber, shardVersion, indexResourceIri);
+
+    // Calculate index hash
+
+    final shardDocumentIri = shardResourceIri.getDocumentIri();
+
+    // Get actual stored shard document
+    final storedShard = await storage.getDocument(shardDocumentIri);
+    if (storedShard == null) {
+      final rl = LocalResourceLocator(iriTermFactory: IriTerm.validated)
+          .fromIri(IdxShard.classIri, shardDocumentIri);
+      fail(
+          'No shard document stored for  ${rl.id} ${rl.fragment} ${rl.typeIri.value} - $shardDocumentIri');
+    }
+
+    // Load expected graph
+    final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+
+    _expectEqualGraphs(storedShard.document, expectedGraph);
+  }
+}
 
 /// Execute a save error test - expects an exception to be thrown
 Future<void> _executeSaveErrorTest(

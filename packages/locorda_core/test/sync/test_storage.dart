@@ -1,4 +1,6 @@
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 /// Simple in-memory storage for testing.
@@ -84,6 +86,7 @@ class TestStorage implements Storage {
     // Simple implementation - filter by updatedAt > cursor
     final cursorTimestamp = cursor != null ? int.parse(cursor) : 0;
     final filtered = _documents.values
+        .where((doc) => _isType(doc, typeIri))
         .where((doc) => doc.metadata.updatedAt > cursorTimestamp)
         .toList()
       ..sort((a, b) => a.metadata.updatedAt.compareTo(b.metadata.updatedAt));
@@ -96,6 +99,12 @@ class TestStorage implements Storage {
     return DocumentsResult(documents: page, nextCursor: nextCursor);
   }
 
+  bool _isType(StoredDocument doc, IriTerm typeIri) {
+    final managedResourceType = doc.document.findSingleObject<IriTerm>(
+        doc.documentIri, SyncManagedDocument.managedResourceType);
+    return managedResourceType == typeIri;
+  }
+
   @override
   Future<DocumentsResult> getDocumentsChangedByUsSince(
       IriTerm typeIri, String? cursor,
@@ -103,6 +112,7 @@ class TestStorage implements Storage {
     // Simple implementation - filter by ourPhysicalClock > cursor
     final cursorTimestamp = cursor != null ? int.parse(cursor) : 0;
     final filtered = _documents.values
+        .where((doc) => _isType(doc, typeIri))
         .where((doc) => doc.metadata.ourPhysicalClock > cursorTimestamp)
         .toList()
       ..sort((a, b) =>

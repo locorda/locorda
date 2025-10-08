@@ -66,7 +66,7 @@ class LocalResourceLocator implements ResourceLocator {
 
     if (remoteTypeIri != typeIri.value) {
       throw ArgumentError(
-          'Resource IRI ${resourceIri.value} does not match type IRI ${typeIri.value}');
+          'Resource IRI ${resourceIri.value} with type ${remoteTypeIri} does not match type IRI ${typeIri.value}');
     }
 
     final localId = utf8.decode(base64Url.decode(encodedLocalId));

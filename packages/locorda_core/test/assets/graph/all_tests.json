@@ -30,7 +30,22 @@
           "input_resource": "test_cases/save/01_first_save/input_resource.ttl",
           "expected": {
             "stored_graph": "test_cases/save/01_first_save/expected_stored_graph.ttl",
-            "installation": "test_cases/save/01_first_save/expected_installation.ttl"
+            "installation": "test_cases/save/01_first_save/expected_installation.ttl",
+            "index_documents": [
+              {
+                "localName": "recipe-index",
+                "expected_graph": "test_cases/save/01_first_save/expected_index.ttl"
+              }
+            ],
+            "shard_documents": [
+              {
+                "index_localName": "recipe-index",
+                "shard_number": 0,
+                "shard_total": 1,
+                "shard_version": "1_0_0",
+                "expected_graph": "test_cases/save/01_first_save/expected_shard.ttl"
+              }
+            ]
           },
           "action_ts": {
             "save": "2024-01-01T02:00:00Z"

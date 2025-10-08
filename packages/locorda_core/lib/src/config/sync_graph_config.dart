@@ -19,6 +19,7 @@ sealed class CrdtIndexGraphConfig extends CrdtIndexConfigBase {
 class FullIndexGraphConfig extends FullIndexConfigBase
     implements CrdtIndexGraphConfig {
   final IndexItemGraphConfig? item;
+
   const FullIndexGraphConfig(
       {required super.localName, this.item, super.itemFetchPolicy})
       : super(item: item);

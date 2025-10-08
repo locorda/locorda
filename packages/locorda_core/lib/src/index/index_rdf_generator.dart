@@ -79,6 +79,7 @@ class IndexRdfGenerator {
     triples.add(
         Triple(resourceIri, IdxFullIndex.shardingAlgorithm, shardingAlgorithm));
     triples.addAll(_generateShardingAlgorithm(
+      config,
       shardingAlgorithm,
       numberOfShards: 1,
       configVersion: '1_0_0',
@@ -111,14 +112,25 @@ class IndexRdfGenerator {
     return triples.toRdfGraph();
   }
 
-  IriTerm generateFullIndexIri(FullIndexGraphConfig config) {
-    final hash = generateHash(config.localName);
+  IriTerm generateIndexOrTemplateIri(
+          CrdtIndexGraphConfig index, IriTerm typeIri) =>
+      switch (index) {
+        FullIndexGraphConfig _ => generateFullIndexIri(index, typeIri),
+        GroupIndexGraphConfig() => generateGroupIndexTemplateIri(index, typeIri)
+      };
+
+  IriTerm generateFullIndexIri(
+    FullIndexGraphConfig config,
+    IriTerm typeIri,
+  ) {
+    final hash = generateHash(
+        typeIri, config.shardingAlgorithmClass, config.hashAlgorithmClass);
 
     final localId = 'index-full-$hash/index';
 
     // Generate internal IRI using ResourceLocator
     return _resourceLocator
-        .toIri(ResourceIdentifier(IdxFullIndex.classIri, localId, 'it'));
+        .toIri(ResourceIdentifier(IdxFullIndex.classIri, localId, 'index'));
   }
 
   /// Generates RDF graph for a GroupIndexTemplate resource.
@@ -146,6 +158,7 @@ class IndexRdfGenerator {
     triples.add(Triple(resourceIri, IdxGroupIndexTemplate.shardingAlgorithm,
         shardingAlgorithm));
     triples.addAll(_generateShardingAlgorithm(
+      config,
       shardingAlgorithm,
       numberOfShards: 1,
       configVersion: '1_0_0',
@@ -215,15 +228,17 @@ class IndexRdfGenerator {
     return triples.toRdfGraph();
   }
 
-  IriTerm generateGroupIndexTemplateIri(GroupIndexGraphConfig config) {
+  IriTerm generateGroupIndexTemplateIri(
+      GroupIndexGraphConfig config, IriTerm typeIri) {
     // Generate local ID from config
-    final hash = generateHash(config.localName);
+    final hash = generateHash(
+        typeIri, config.shardingAlgorithmClass, config.hashAlgorithmClass);
 
-    final localId = 'group-template-$hash/template';
+    final localId = 'index-grouped-$hash/index';
 
     // Generate internal IRI using ResourceLocator
-    return _resourceLocator.toIri(
-        ResourceIdentifier(IdxGroupIndexTemplate.classIri, localId, 'it'));
+    return _resourceLocator.toIri(ResourceIdentifier(
+        IdxGroupIndexTemplate.classIri, localId, 'groupIndexTemplate'));
   }
 
   /// Generates RDF graph for an empty Shard resource.
@@ -238,14 +253,13 @@ class IndexRdfGenerator {
   /// - shard number 0
   /// - version 1_2_0
   (IriTerm resourceIri, RdfGraph graph) generateShard({
-    required String indexLocalId,
     required int totalShards,
     required int shardNumber,
     required String configVersion,
     required IriTerm indexResourceIri,
   }) {
-    IriTerm resourceIri =
-        generateShardIri(totalShards, shardNumber, configVersion, indexLocalId);
+    IriTerm resourceIri = generateShardIri(
+        totalShards, shardNumber, configVersion, indexResourceIri);
 
     return (
       resourceIri,
@@ -260,26 +274,45 @@ class IndexRdfGenerator {
   }
 
   IriTerm generateShardIri(int totalShards, int shardNumber,
-      String configVersion, String indexLocalId) {
+      String configVersion, IriTerm indexResourceIri) {
+    // Extract local ID from index document IRI for shard generation
+    final indexIdentifier = _resourceLocator.fromIri(
+        IdxFullIndex.classIri, indexResourceIri.getDocumentIri());
+
     final shardName = _shardManager.generateShardName(
         totalShards: totalShards,
         shardNumber: shardNumber,
         configVersion: configVersion);
-    final shardLocalId = '$indexLocalId/$shardName';
+    final indexId = indexIdentifier.id;
+    final split = indexId.split('/');
+    if (split.length != 2) {
+      throw ArgumentError(
+          'Index IRI document part must have exactly two segments separated by /. Got: $indexId');
+    }
+
+    final shardLocalId = '${split[0]}/$shardName';
 
     // Generate internal IRI using ResourceLocator
-    final resourceIri = _resourceLocator
-        .toIri(ResourceIdentifier(IdxShard.classIri, shardLocalId, 'it'));
-    return resourceIri;
+    return _resourceLocator
+        .toIri(ResourceIdentifier(IdxShard.classIri, shardLocalId, 'shard'));
   }
 
   /// Generates sharding algorithm blank node triples.
   List<Triple> _generateShardingAlgorithm(
+    CrdtIndexConfigBase idxConfig,
     BlankNodeTerm algorithmNode, {
     required int numberOfShards,
     required String configVersion,
     int autoScaleThreshold = 1000,
   }) {
+    if (idxConfig.shardingAlgorithmClass != IdxModuloHashSharding.classIri) {
+      throw ArgumentError(
+          'Sharding algorithm generation currently only supports ${IdxModuloHashSharding.classIri}.');
+    }
+    if (idxConfig.hashAlgorithmClass != 'md5') {
+      throw ArgumentError(
+          'Hash algorithm generation currently only supports md5.');
+    }
     return [
       Triple(algorithmNode, Rdf.type, IdxModuloHashSharding.classIri),
       Triple(algorithmNode, IdxModuloHashSharding.hashAlgorithm,
@@ -312,11 +345,17 @@ class IndexRdfGenerator {
     });
   }
 
-  /// Generates a short hash from a string for use in IRIs.
+  /// Generates a short hash from structural index properties for use in IRIs.
   ///
-  /// Uses first 8 characters of MD5 hash (32-bit hex).
-  String generateHash(String input) {
-    final bytes = utf8.encode(input);
+  /// Computes MD5 hash of the canonical serialization of structural properties
+  /// (indexedClassIRI|shardingAlgorithmClass|hashAlgorithm) and returns the
+  /// first 8 hex characters.
+  ///
+  /// This ensures deterministic, convergent index naming across installations.
+  String generateHash(IriTerm typeIri, IriTerm shardingAlgorithmClass,
+      String hashAlgorithmClass) {
+    final bytes = utf8.encode(
+        '${typeIri.value}|${shardingAlgorithmClass.fragment}|$hashAlgorithmClass');
     final digest = md5.convert(bytes);
     return digest.toString().substring(0, 8);
   }

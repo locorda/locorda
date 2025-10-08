@@ -155,8 +155,8 @@ class InstallationService {
           ),
         ),
       ]);
-      final shards = indexManager.determineShards(
-          CrdtClientInstallation.classIri, clientInstallation);
+      final shards = await indexManager.determineShards(
+          CrdtClientInstallation.classIri, iri, clientInstallation);
       await crdtDocumentManager.save(
           CrdtClientInstallation.classIri, clientInstallation, shards);
       await markInstallationDocumentSaved();

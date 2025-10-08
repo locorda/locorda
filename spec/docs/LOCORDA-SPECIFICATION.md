@@ -1279,9 +1279,9 @@ Both FullIndex and GroupIndex instances use **sharding** for performance optimiz
 Multiple CRDT-enabled applications automatically converge on shared indices through deterministic structure-derived naming, eliminating coordination overhead while ensuring compatibility.
 
 **Deterministic Naming Pattern:**
-- **FullIndex:** `index-full-${SHA256(indexedClassIRI|shardingAlgorithmClass|hashAlgorithm)}/index`
-- **GroupIndexTemplate:** `index-grouped-${SHA256(groupingRuleProperties|indexedClassIRI|shardingAlgorithmClass|hashAlgorithm)}/index`
-- **Hash computation:** SHA256 with pipe separators (`|`) between all structural inputs
+- **FullIndex:** `index-full-${MD5(indexedClassIRI|shardingAlgorithmClass|hashAlgorithm)}/index`
+- **GroupIndexTemplate:** `index-grouped-${MD5(groupingRuleProperties|indexedClassIRI|shardingAlgorithmClass|hashAlgorithm)}/index`
+- **Hash computation:** First 8 hex characters of MD5 hash with pipe separators (`|`) between all structural inputs
 - **Full IRI usage:** Hash computation uses complete IRIs, not prefixed forms
 - **Directory structure:** Hash-derived directory name + consistent `index` document
 - **GroupingRuleProperties serialization:** Each GroupingRuleProperty serialized as `sourceProperty|transformList|hierarchyLevel|missingValue`, where transformList uses canonical transform format (see below), multiple properties sorted using the same ordering rules as path generation (hierarchy level first, then lexicographic IRI ordering for properties without explicit levels) and concatenated with `&` separator
@@ -1463,7 +1463,7 @@ Rather than expensive discovery scanning, the framework maintains a dedicated in
 The following examples demonstrate concrete RDF structures for different types of indices, showing how the indexing architecture works in practice with real data.
 
 **Example 1: A `GroupIndexTemplate` at `https://example.org/indices/shopping-entries/index-grouped-e5f6g7h8/index`**
-This resource is the "rulebook" for all shopping list entry groups in our meal planning application. The name hash is derived from SHA256 of the canonical transform format shown in section 5.3.5. Note that it has no `idx:indexedProperty` because shopping entries are typically loaded in full groups, requiring only Hybrid Logical Clock hashes for change detection.
+This resource is the "rulebook" for all shopping list entry groups in our meal planning application. The name hash is derived from MD5 of the canonical transform format shown in section 5.3.5. Note that it has no `idx:indexedProperty` because shopping entries are typically loaded in full groups, requiring only Hybrid Logical Clock hashes for change detection.
 
 ```turtle
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
@@ -1553,7 +1553,7 @@ This document contains entries pointing to shopping list data resources from Aug
 ```
 
 **Example 4: A Recipe Index for OnDemand Sync at `https://example.org/indices/recipes/index-full-a1b2c3d4/index`**
-This is a `FullIndex` for a recipe collection, configured for OnDemand synchronization to enable recipe browsing. The name hash is derived from SHA256(https://schema.org/Recipe|ModuloHashSharding|md5).
+This is a `FullIndex` for a recipe collection, configured for OnDemand synchronization to enable recipe browsing. The name hash is derived from MD5(https://schema.org/Recipe|ModuloHashSharding|md5).
 
 ```turtle
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .

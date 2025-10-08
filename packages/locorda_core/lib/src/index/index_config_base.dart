@@ -5,6 +5,7 @@
 /// and idx:FullIndex RDF resources on the Solid Pod.
 library;
 
+import 'package:locorda_core/src/generated/_index.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 enum ItemFetchPolicy {
@@ -32,6 +33,10 @@ abstract class IndexItemConfigBase {
 /// The Dart type being indexed (e.g., Note - the source data type) is inferred from the ResourceConfig
 /// which contains this index configuration.
 abstract class CrdtIndexConfigBase {
+  IriTerm get shardingAlgorithmClass => IdxModuloHashSharding
+      .classIri; // Always use the same sharding algorithm for full indices
+  String get hashAlgorithmClass => 'md5'; // Always use the same hash algorithm
+
   /// Local name for referencing this index within the app (not used in Remote Storage structure).
   /// Must be unique per index item type
   /// across all resources (e.g., if multiple resources use NoteIndexEntry,
