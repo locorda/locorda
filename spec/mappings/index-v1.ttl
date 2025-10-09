@@ -59,10 +59,12 @@
      [ mc:predicate idx:groupTemplate; algo:mergeWith algo:Immutable ] .  # Template for group IRI construction
 
 # GroupingRuleProperty configuration within grouping rules
+# Identification key: (sourceProperty, hierarchyLevel) - both required for unique identification
 <#grouping-rule-property> a mc:ClassMapping;
    mc:appliesToClass idx:GroupingRuleProperty;
    mc:rule
-     [ mc:predicate idx:sourceProperty; algo:mergeWith algo:Immutable ],  # Source property to extract from
+     [ mc:predicate idx:sourceProperty; algo:mergeWith algo:Immutable; mc:isIdentifying true ],  # Source property to extract from (identifying)
+     [ mc:predicate idx:hierarchyLevel; algo:mergeWith algo:Immutable; mc:isIdentifying true ],  # Hierarchy level (identifying, default: 1)
      [ mc:predicate idx:transform; algo:mergeWith algo:Immutable ],       # Transform list (part of grouping identity)
      [ mc:predicate idx:missingValue; algo:mergeWith algo:LWW_Register ] . # Default value for missing properties
 

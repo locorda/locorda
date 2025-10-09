@@ -293,7 +293,13 @@ class LocordaGraphSync {
 
     // 2. Extract resource IRI to determine shards
     final resourceIri = internalAppData.getIdentifier(type);
+    if (!LocalResourceLocator.isLocalIri(resourceIri)) {
+      throw ArgumentError('''
+Cannot save resource with non-local IRI $resourceIri. Only local IRIs are supported for save(). 
 
+Use the 'documentIriTemplate' property of the resource configuration to configure automatic IRI translation from your IRI to the internal format on save().
+''');
+    }
     // 3. Compute the shards in which this resource belongs
     final shards =
         await _indexManager.determineShards(type, resourceIri, internalAppData);

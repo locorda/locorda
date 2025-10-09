@@ -39,8 +39,8 @@
   - Currently `save()` just emits hydration events without storage persistence
   - Need CRDT merging logic and actual storage operations => Real CRDT merging is not part of local document persistence
   - This unblocks the example app's core functionality
-- [ ] Implement IndexManager.determineShards for FullIndex 
-- [ ] Implement IndexManager.determineShards for GroupIndexTemplate - this implies creation of group indexes
+- [x] Implement IndexManager.determineShards for FullIndex 
+- [x] Implement IndexManager.determineShards for GroupIndexTemplate - this implies creation of group indexes. 
 - [ ] More tests in all_tests.json, especially for testing the shard and index handling
 
 ### Priority 2: SyncManager with Status Stream

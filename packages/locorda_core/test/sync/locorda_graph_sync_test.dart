@@ -7,10 +7,10 @@ import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
-import 'package:rdf_canonicalization/rdf_canonicalization.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
+import '../util/rdf_test_utils.dart';
 import 'test_backend.dart';
 import 'test_fetcher.dart';
 import 'test_physical_timestamp_factory.dart';
@@ -55,6 +55,7 @@ void main() {
           // Execute test based on suite type
           switch (suiteName) {
             case 'save':
+            case 'group_index':
               await _executeSaveTest(testJson, testAssetsDir, urlToPathMap,
                   testBaseTimestamp, baseInstallationId);
               break;
@@ -84,8 +85,7 @@ void main() {
 
 RdfGraph? _readGraphFromPath(Directory testAssetsDir, String? path) {
   if (path == null) return null;
-  final content = File('${testAssetsDir.path}/$path').readAsStringSync();
-  return turtle.decode(content);
+  return readGraphFromFile(testAssetsDir, path);
 }
 
 typedef TestData = ({
@@ -270,19 +270,7 @@ IriTranslator _createIriTranslator(TestData testData) {
 }
 
 void _expectEqualGraphs(RdfGraph actual, RdfGraph expected) {
-  var actualCanonical = canonicalizeGraph(actual);
-  var expectedCanonical = canonicalizeGraph(expected);
-  if (actualCanonical != expectedCanonical) {
-    // For easier debugging, print the actual and expected graphs in Turtle
-    var actualTurtle = turtle.encode(actual);
-    var expectedTurtle = turtle.encode(expected);
-    print('-' * 80);
-    print(actualTurtle);
-    print('-' * 80);
-    expect(actualTurtle, equals(expectedTurtle));
-    // This should have failed by now, but just in case:
-    expect(actualCanonical, equals(expectedCanonical));
-  }
+  expectEqualGraphs(actual, expected);
 }
 
 void setTime(String? ts, TestPhysicalTimestampFactory timestampFactory) {
@@ -448,8 +436,8 @@ Future<void> _verifyShardDocuments(
     final indexResourceIri = indexRdfGenerator.generateFullIndexIri(
         idx as FullIndexGraphConfig, resourceTypeIri);
 
-    final shardResourceIri = indexRdfGenerator.generateShardIri(
-        shardTotal, shardNumber, shardVersion, indexResourceIri);
+    final shardResourceIri = indexRdfGenerator.generateShardIri(shardTotal,
+        shardNumber, shardVersion, indexResourceIri, IdxFullIndex.classIri);
 
     // Calculate index hash
 

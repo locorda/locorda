@@ -1,0 +1,1036 @@
+{
+  "version": "1.0",
+  "base": {
+    "timestamp": "2024-01-01T00:00:00Z",
+    "installation_id": "test-installation-group-idx"
+  },
+  "urlToPathMap": {
+    "https://w3id.org/solid-crdt-sync/mappings/index-v1": "../../../../../../spec/mappings/index-v1.ttl"
+  },
+  "description": "Test suite for GroupIndexTemplate generation, parsing, and round-trip consistency",
+  "test_suites": [
+    {
+      "suite": "generate_template_rdf",
+      "description": "Tests for generating GroupIndexTemplate RDF from Dart configuration",
+      "tests": [
+        {
+          "id": "generate_01",
+          "title": "Simple single-property grouping template",
+          "description": "Generate GroupIndexTemplate RDF for single property (meal:requiredForDate) with regex transform to YYYY-MM format. Validates basic template structure, indexed class, sharding config, and single grouping property with transform.",
+          "typeIri": "https://example.org/vocab/meal#ShoppingListEntry",
+          "config": {
+            "localName": "shopping-entries",
+            "groupingProperties": [
+              {
+                "predicate": "https://example.org/vocab/meal#requiredForDate",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-([0-9]{2})-([0-9]{2})$",
+                    "replacement": "${1}-${2}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "template_graph": "test_cases/generate/01_simple_shopping/expected_template.ttl"
+          }
+        },
+        {
+          "id": "generate_02",
+          "title": "Hierarchical two-level grouping template",
+          "description": "Generate GroupIndexTemplate RDF for hierarchical grouping by dateCreated (year/month). Validates two grouping properties at different hierarchy levels with separate transforms.",
+          "typeIri": "https://schema.org/Note",
+          "config": {
+            "localName": "notes-by-date",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/dateCreated",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              },
+              {
+                "predicate": "https://schema.org/dateCreated",
+                "hierarchyLevel": 2,
+                "transforms": [
+                  {
+                    "pattern": "^[0-9]{4}-([0-9]{2})-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "template_graph": "test_cases/generate/02_hierarchical_notes/expected_template.ttl"
+          }
+        },
+        {
+          "id": "generate_03",
+          "title": "Multi-value property with missing value default",
+          "description": "Generate GroupIndexTemplate RDF for multi-value property (keywords) with missing value default ('uncategorized'). Validates missingValue handling for properties that may be absent.",
+          "typeIri": "https://schema.org/Recipe",
+          "config": {
+            "localName": "recipes-by-keyword",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/keywords",
+                "hierarchyLevel": 1,
+                "missingValue": "uncategorized"
+              }
+            ]
+          },
+          "expected": {
+            "template_graph": "test_cases/generate/03_recipe_missing_value/expected_template.ttl"
+          }
+        },
+        {
+          "id": "generate_04",
+          "title": "Multiple transforms on single property",
+          "description": "Generate GroupIndexTemplate RDF for property with multiple sequential transforms (normalize date format, then extract year-month). Validates ordered transform list handling.",
+          "typeIri": "https://schema.org/Event",
+          "config": {
+            "localName": "events-by-date",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/startDate",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})/([0-9]{2})/([0-9]{2})$",
+                    "replacement": "${1}-${2}-${3}"
+                  },
+                  {
+                    "pattern": "^([0-9]{4})-([0-9]{2})-[0-9]{2}$",
+                    "replacement": "${1}-${2}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "template_graph": "test_cases/generate/04_multiple_transforms/expected_template.ttl"
+          }
+        },
+        {
+          "id": "generate_05",
+          "title": "Three-level hierarchy with same source property",
+          "description": "Generate GroupIndexTemplate RDF for three-level hierarchy (year/month/day) all derived from same dateCreated property. Validates deep hierarchies with shared source.",
+          "typeIri": "https://schema.org/BlogPosting",
+          "config": {
+            "localName": "posts-by-full-date",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/datePublished",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              },
+              {
+                "predicate": "https://schema.org/datePublished",
+                "hierarchyLevel": 2,
+                "transforms": [
+                  {
+                    "pattern": "^[0-9]{4}-([0-9]{2})-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              },
+              {
+                "predicate": "https://schema.org/datePublished",
+                "hierarchyLevel": 3,
+                "transforms": [
+                  {
+                    "pattern": "^[0-9]{4}-[0-9]{2}-([0-9]{2})$",
+                    "replacement": "${1}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "template_graph": "test_cases/generate/05_three_level_hierarchy/expected_template.ttl"
+          }
+        },
+        {
+          "id": "generate_06",
+          "title": "Multiple distinct properties at same hierarchy level",
+          "description": "Generate GroupIndexTemplate RDF for multiple distinct properties (author and category) both at hierarchy level 1. Validates multi-dimensional grouping without hierarchy.",
+          "typeIri": "https://schema.org/Article",
+          "config": {
+            "localName": "articles-by-author-and-category",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/author",
+                "hierarchyLevel": 1
+              },
+              {
+                "predicate": "https://schema.org/articleSection",
+                "hierarchyLevel": 1
+              }
+            ]
+          },
+          "expected": {
+            "template_graph": "test_cases/generate/06_multiple_distinct_properties/expected_template.ttl"
+          }
+        },
+        {
+          "id": "generate_07",
+          "title": "Special characters in transform patterns",
+          "description": "Generate GroupIndexTemplate RDF with regex patterns containing special JSON characters (quotes, backslashes) that require proper escaping in canonical format. Validates JSON escape handling.",
+          "typeIri": "https://schema.org/Product",
+          "config": {
+            "localName": "products-by-category",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/category",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^\"([^\"]+)\"$",
+                    "replacement": "${1}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "template_graph": "test_cases/generate/07_special_characters/expected_template.ttl"
+          }
+        }
+      ]
+    },
+    {
+      "suite": "parse_template_rdf",
+      "description": "Tests for parsing GroupIndexTemplate RDF back to Dart structures",
+      "tests": [
+        {
+          "id": "parse_01",
+          "title": "Parse simple shopping template",
+          "description": "Parse GroupIndexTemplate RDF with single property and transform. Validates extraction of predicate, hierarchyLevel, and RegexTransform.",
+          "template_graph": "test_cases/parse/01_simple_shopping/template.ttl",
+          "expected": {
+            "indexedClass": "https://example.org/vocab/meal#ShoppingListEntry",
+            "groupingPropertiesCount": 1,
+            "properties": [
+              {
+                "predicate": "https://example.org/vocab/meal#requiredForDate",
+                "hierarchyLevel": 1,
+                "transformsCount": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-([0-9]{2})-([0-9]{2})$",
+                    "replacement": "${1}-${2}"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "parse_02",
+          "title": "Parse hierarchical notes template",
+          "description": "Parse GroupIndexTemplate RDF with two-level hierarchy. Validates correct hierarchy level extraction and property ordering.",
+          "template_graph": "test_cases/parse/02_hierarchical_notes/template.ttl",
+          "expected": {
+            "indexedClass": "https://schema.org/Note",
+            "groupingPropertiesCount": 2,
+            "properties": [
+              {
+                "predicate": "https://schema.org/dateCreated",
+                "hierarchyLevel": 1,
+                "transformsCount": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              },
+              {
+                "predicate": "https://schema.org/dateCreated",
+                "hierarchyLevel": 2,
+                "transformsCount": 1,
+                "transforms": [
+                  {
+                    "pattern": "^[0-9]{4}-([0-9]{2})-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "parse_03",
+          "title": "Parse recipe template with missing value",
+          "description": "Parse GroupIndexTemplate RDF with missingValue. Validates extraction of default value for absent properties.",
+          "template_graph": "test_cases/parse/03_recipe_missing_value/template.ttl",
+          "expected": {
+            "indexedClass": "https://schema.org/Recipe",
+            "groupingPropertiesCount": 1,
+            "properties": [
+              {
+                "predicate": "https://schema.org/keywords",
+                "hierarchyLevel": 1,
+                "missingValue": "uncategorized",
+                "transformsCount": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "parse_04",
+          "title": "Parse template with empty transform list",
+          "description": "Parse GroupIndexTemplate RDF where transform list exists but is empty (rdf:nil). Validates handling of explicit empty lists vs null.",
+          "template_graph": "test_cases/parse/04_empty_transform_list/template.ttl",
+          "expected": {
+            "indexedClass": "https://schema.org/Person",
+            "groupingPropertiesCount": 1,
+            "properties": [
+              {
+                "predicate": "https://schema.org/familyName",
+                "hierarchyLevel": 1,
+                "transformsCount": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "parse_05",
+          "title": "Parse template with multiple properties and mixed features",
+          "description": "Parse complex template with multiple properties, some with transforms, some with missingValue, different hierarchy levels. Validates comprehensive parsing.",
+          "template_graph": "test_cases/parse/05_mixed_features/template.ttl",
+          "expected": {
+            "indexedClass": "https://schema.org/Task",
+            "groupingPropertiesCount": 3,
+            "properties": [
+              {
+                "predicate": "https://schema.org/assignee",
+                "hierarchyLevel": 1,
+                "missingValue": "unassigned",
+                "transformsCount": 0
+              },
+              {
+                "predicate": "https://schema.org/status",
+                "hierarchyLevel": 1,
+                "transformsCount": 0
+              },
+              {
+                "predicate": "https://schema.org/dateCreated",
+                "hierarchyLevel": 2,
+                "transformsCount": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              }
+            ],
+            "note": "Properties are returned sorted by hierarchy level, then by predicate IRI"
+          }
+        }
+      ]
+    },
+    {
+      "suite": "iri_generation",
+      "description": "Tests for deterministic IRI generation from configurations",
+      "tests": [
+        {
+          "id": "iri_01",
+          "title": "Identical configs produce identical IRIs",
+          "description": "Two identical GroupIndexGraphConfigs with same properties, transforms, and hierarchy levels should generate the exact same template IRI.",
+          "typeIri": "https://schema.org/Recipe",
+          "configs": [
+            {
+              "localName": "first-config",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/name",
+                  "hierarchyLevel": 1
+                }
+              ]
+            },
+            {
+              "localName": "second-config",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/name",
+                  "hierarchyLevel": 1
+                }
+              ]
+            }
+          ],
+          "expected": {
+            "iris_are_identical": true
+          }
+        },
+        {
+          "id": "iri_02",
+          "title": "Different properties produce different IRIs",
+          "description": "Configs with different source properties should generate different template IRIs.",
+          "typeIri": "https://schema.org/Recipe",
+          "configs": [
+            {
+              "localName": "config-by-name",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/name",
+                  "hierarchyLevel": 1
+                }
+              ]
+            },
+            {
+              "localName": "config-by-category",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/category",
+                  "hierarchyLevel": 1
+                }
+              ]
+            }
+          ],
+          "expected": {
+            "iris_are_identical": false
+          }
+        },
+        {
+          "id": "iri_03",
+          "title": "Different transforms produce different IRIs",
+          "description": "Same source property but different regex transforms should generate different template IRIs.",
+          "typeIri": "https://schema.org/Event",
+          "configs": [
+            {
+              "localName": "by-year",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/startDate",
+                  "hierarchyLevel": 1,
+                  "transforms": [
+                    {
+                      "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                      "replacement": "${1}"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "localName": "by-year-month",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/startDate",
+                  "hierarchyLevel": 1,
+                  "transforms": [
+                    {
+                      "pattern": "^([0-9]{4})-([0-9]{2})-[0-9]{2}$",
+                      "replacement": "${1}-${2}"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "expected": {
+            "iris_are_identical": false
+          }
+        },
+        {
+          "id": "iri_04",
+          "title": "Different hierarchy levels produce different IRIs",
+          "description": "Same property and transform but different hierarchy level should generate different template IRIs.",
+          "typeIri": "https://schema.org/Note",
+          "configs": [
+            {
+              "localName": "level-1",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/dateCreated",
+                  "hierarchyLevel": 1,
+                  "transforms": [
+                    {
+                      "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                      "replacement": "${1}"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "localName": "level-2",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/dateCreated",
+                  "hierarchyLevel": 2,
+                  "transforms": [
+                    {
+                      "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                      "replacement": "${1}"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "expected": {
+            "iris_are_identical": false
+          }
+        },
+        {
+          "id": "iri_05",
+          "title": "Property order does not affect IRI generation",
+          "description": "Same properties in different order should generate identical IRIs (canonical format sorts properties before hashing).",
+          "typeIri": "https://schema.org/Article",
+          "configs": [
+            {
+              "localName": "author-then-category",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/author",
+                  "hierarchyLevel": 1
+                },
+                {
+                  "predicate": "https://schema.org/category",
+                  "hierarchyLevel": 1
+                }
+              ]
+            },
+            {
+              "localName": "category-then-author",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/category",
+                  "hierarchyLevel": 1
+                },
+                {
+                  "predicate": "https://schema.org/author",
+                  "hierarchyLevel": 1
+                }
+              ]
+            }
+          ],
+          "expected": {
+            "iris_are_identical": true,
+            "note": "Properties are sorted in canonical format before hashing, so order in config does not affect IRI"
+          }
+        },
+        {
+          "id": "iri_06",
+          "title": "Different missingValue produces different IRIs",
+          "description": "Same property but different missingValue should generate different template IRIs.",
+          "typeIri": "https://schema.org/Task",
+          "configs": [
+            {
+              "localName": "unassigned",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/assignee",
+                  "hierarchyLevel": 1,
+                  "missingValue": "unassigned"
+                }
+              ]
+            },
+            {
+              "localName": "no-assignee",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/assignee",
+                  "hierarchyLevel": 1,
+                  "missingValue": "no-assignee"
+                }
+              ]
+            }
+          ],
+          "expected": {
+            "iris_are_identical": false
+          }
+        },
+        {
+          "id": "iri_07",
+          "title": "Local name does not affect IRI",
+          "description": "Identical configs with different localNames should produce identical IRIs (localName is not part of canonical serialization).",
+          "typeIri": "https://schema.org/Recipe",
+          "configs": [
+            {
+              "localName": "recipes-alpha",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/recipeCategory",
+                  "hierarchyLevel": 1
+                }
+              ]
+            },
+            {
+              "localName": "recipes-beta",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/recipeCategory",
+                  "hierarchyLevel": 1
+                }
+              ]
+            }
+          ],
+          "expected": {
+            "iris_are_identical": true
+          }
+        }
+      ]
+    },
+    {
+      "suite": "roundtrip",
+      "description": "Tests for full round-trip: Config → RDF → Parse → IRI consistency",
+      "tests": [
+        {
+          "id": "roundtrip_01",
+          "title": "Simple single-property round-trip",
+          "description": "Config → generate RDF → parse back → regenerate IRI should produce identical IRI.",
+          "typeIri": "https://schema.org/Recipe",
+          "config": {
+            "localName": "original",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/name",
+                "hierarchyLevel": 1
+              }
+            ]
+          },
+          "expected": {
+            "iri_matches_after_roundtrip": true
+          }
+        },
+        {
+          "id": "roundtrip_02",
+          "title": "Property with transform round-trip",
+          "description": "Config with regex transform → RDF → parse → regenerate should preserve transform and produce identical IRI.",
+          "typeIri": "https://schema.org/Event",
+          "config": {
+            "localName": "events",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/startDate",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-([0-9]{2})-([0-9]{2})$",
+                    "replacement": "${1}-${2}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "iri_matches_after_roundtrip": true
+          }
+        },
+        {
+          "id": "roundtrip_03",
+          "title": "Hierarchical properties round-trip",
+          "description": "Multi-level hierarchy → RDF → parse → regenerate should preserve all levels and produce identical IRI.",
+          "typeIri": "https://schema.org/Note",
+          "config": {
+            "localName": "notes",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/dateCreated",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              },
+              {
+                "predicate": "https://schema.org/dateCreated",
+                "hierarchyLevel": 2,
+                "transforms": [
+                  {
+                    "pattern": "^[0-9]{4}-([0-9]{2})-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "iri_matches_after_roundtrip": true
+          }
+        },
+        {
+          "id": "roundtrip_04",
+          "title": "Property with missingValue round-trip",
+          "description": "Config with missingValue → RDF → parse → regenerate should preserve missingValue and produce identical IRI.",
+          "typeIri": "https://schema.org/Task",
+          "config": {
+            "localName": "tasks",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/assignee",
+                "hierarchyLevel": 1,
+                "missingValue": "unassigned"
+              }
+            ]
+          },
+          "expected": {
+            "iri_matches_after_roundtrip": true
+          }
+        },
+        {
+          "id": "roundtrip_05",
+          "title": "Complex multi-property with mixed features round-trip",
+          "description": "Config with multiple properties, transforms, missingValue, and hierarchy levels → RDF → parse → regenerate should preserve everything and produce identical IRI.",
+          "typeIri": "https://schema.org/Article",
+          "config": {
+            "localName": "articles",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/author",
+                "hierarchyLevel": 1,
+                "missingValue": "anonymous"
+              },
+              {
+                "predicate": "https://schema.org/datePublished",
+                "hierarchyLevel": 2,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              },
+              {
+                "predicate": "https://schema.org/articleSection",
+                "hierarchyLevel": 1
+              }
+            ]
+          },
+          "expected": {
+            "iri_matches_after_roundtrip": true
+          }
+        },
+        {
+          "id": "roundtrip_06",
+          "title": "Special characters in transform round-trip",
+          "description": "Config with regex containing JSON special characters → RDF (JSON-escaped) → parse (unescape) → regenerate should preserve pattern exactly and produce identical IRI.",
+          "typeIri": "https://schema.org/Product",
+          "config": {
+            "localName": "products",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/category",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^\"([^\"]+)\"$",
+                    "replacement": "${1}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "iri_matches_after_roundtrip": true
+          }
+        },
+        {
+          "id": "roundtrip_07",
+          "title": "Different localName after round-trip still produces same IRI",
+          "description": "Config → RDF → parse → create new config with different localName → regenerate should still produce identical IRI (localName not in canonical format).",
+          "typeIri": "https://schema.org/Recipe",
+          "config": {
+            "localName": "original-name",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/recipeCategory",
+                "hierarchyLevel": 1
+              }
+            ]
+          },
+          "config_after_parse": {
+            "localName": "different-name"
+          },
+          "expected": {
+            "iri_matches_after_roundtrip": true,
+            "note": "LocalName change should not affect IRI since it's not part of canonical serialization"
+          }
+        }
+      ]
+    },
+    {
+      "suite": "cross_installation",
+      "description": "Tests validating that different installations converge on same index names",
+      "tests": [
+        {
+          "id": "cross_01",
+          "title": "Two installations create same template from identical config",
+          "description": "Installation A and Installation B independently generate GroupIndexTemplate from identical config. Both should produce same template IRI, enabling automatic convergence.",
+          "installations": [
+            {
+              "id": "installation-a",
+              "config": {
+                "localName": "shopping-list-a",
+                "groupingProperties": [
+                  {
+                    "predicate": "https://example.org/vocab/meal#requiredForDate",
+                    "hierarchyLevel": 1,
+                    "transforms": [
+                      {
+                        "pattern": "^([0-9]{4})-([0-9]{2})-([0-9]{2})$",
+                        "replacement": "${1}-${2}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "installation-b",
+              "config": {
+                "localName": "shopping-list-b",
+                "groupingProperties": [
+                  {
+                    "predicate": "https://example.org/vocab/meal#requiredForDate",
+                    "hierarchyLevel": 1,
+                    "transforms": [
+                      {
+                        "pattern": "^([0-9]{4})-([0-9]{2})-([0-9]{2})$",
+                        "replacement": "${1}-${2}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "typeIri": "https://example.org/vocab/meal#ShoppingListEntry",
+          "expected": {
+            "all_template_iris_identical": true
+          }
+        },
+        {
+          "id": "cross_02",
+          "title": "Installation B reads template created by Installation A",
+          "description": "Installation A creates and publishes GroupIndexTemplate. Installation B discovers it, parses RDF, and regenerates identical IRI. Both installations now use same index.",
+          "typeIri": "https://schema.org/Note",
+          "installation_a": {
+            "id": "installation-a",
+            "action": "create",
+            "config": {
+              "localName": "notes-by-year",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/dateCreated",
+                  "hierarchyLevel": 1,
+                  "transforms": [
+                    {
+                      "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                      "replacement": "${1}"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "installation_b": {
+            "id": "installation-b",
+            "action": "parse_and_regenerate",
+            "discovers_template": "from_installation_a"
+          },
+          "expected": {
+            "installation_b_generates_same_iri": true,
+            "automatic_convergence": true
+          }
+        },
+        {
+          "id": "cross_03",
+          "title": "Three installations with different localNames converge",
+          "description": "Three installations independently create configs with same grouping rules but different localNames. All should converge on identical template IRI.",
+          "installations": [
+            {
+              "id": "installation-alpha",
+              "config": {
+                "localName": "alpha-recipes",
+                "groupingProperties": [
+                  {
+                    "predicate": "https://schema.org/recipeCategory",
+                    "hierarchyLevel": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "installation-beta",
+              "config": {
+                "localName": "beta-recipes",
+                "groupingProperties": [
+                  {
+                    "predicate": "https://schema.org/recipeCategory",
+                    "hierarchyLevel": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "installation-gamma",
+              "config": {
+                "localName": "gamma-recipes",
+                "groupingProperties": [
+                  {
+                    "predicate": "https://schema.org/recipeCategory",
+                    "hierarchyLevel": 1
+                  }
+                ]
+              }
+            }
+          ],
+          "typeIri": "https://schema.org/Recipe",
+          "expected": {
+            "all_template_iris_identical": true,
+            "convergence_without_coordination": true
+          }
+        }
+      ]
+    },
+    {
+      "suite": "canonical_format",
+      "description": "Tests validating canonical serialization format correctness",
+      "tests": [
+        {
+          "id": "canonical_01",
+          "title": "Properties sorted alphabetically in canonical format",
+          "description": "Grouping properties should be sorted by predicate IRI in canonical serialization for deterministic hashing.",
+          "typeIri": "https://schema.org/Article",
+          "config": {
+            "localName": "articles",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/name",
+                "hierarchyLevel": 1
+              },
+              {
+                "predicate": "https://schema.org/author",
+                "hierarchyLevel": 1
+              }
+            ]
+          },
+          "expected": {
+            "canonical_order": [
+              "https://schema.org/author|[]|1|",
+              "https://schema.org/name|[]|1|"
+            ]
+          }
+        },
+        {
+          "id": "canonical_02",
+          "title": "JSON escaping in transform patterns",
+          "description": "Regex patterns with quotes and backslashes should be JSON-escaped in canonical format.",
+          "typeIri": "https://schema.org/Product",
+          "config": {
+            "localName": "products",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/name",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^\"test\"$",
+                    "replacement": "result"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "canonical_format_contains": "\\\"test\\\""
+          }
+        },
+        {
+          "id": "canonical_03",
+          "title": "Empty transform list vs no transforms",
+          "description": "Property with no transforms should serialize as empty list [] in canonical format, same as explicit empty transform list.",
+          "typeIri": "https://schema.org/Person",
+          "configs": [
+            {
+              "localName": "no-transforms",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/familyName",
+                  "hierarchyLevel": 1
+                }
+              ]
+            },
+            {
+              "localName": "empty-transforms",
+              "groupingProperties": [
+                {
+                  "predicate": "https://schema.org/familyName",
+                  "hierarchyLevel": 1,
+                  "transforms": []
+                }
+              ]
+            }
+          ],
+          "expected": {
+            "canonical_formats_identical": true,
+            "both_contain": "https://schema.org/familyName|[]|1|"
+          }
+        },
+        {
+          "id": "canonical_04",
+          "title": "Missing value serialization",
+          "description": "Property with missingValue should include it in canonical format after hierarchy level.",
+          "typeIri": "https://schema.org/Task",
+          "config": {
+            "localName": "tasks",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/assignee",
+                "hierarchyLevel": 1,
+                "missingValue": "unassigned"
+              }
+            ]
+          },
+          "expected": {
+            "canonical_format": "https://schema.org/assignee|[]|1|unassigned"
+          }
+        },
+        {
+          "id": "canonical_05",
+          "title": "Transform with IRI prefix in canonical format",
+          "description": "Transform should serialize as <IRI>{\"pattern\":\"...\",\"replacement\":\"...\"} in canonical format.",
+          "typeIri": "https://schema.org/Event",
+          "config": {
+            "localName": "events",
+            "groupingProperties": [
+              {
+                "predicate": "https://schema.org/startDate",
+                "hierarchyLevel": 1,
+                "transforms": [
+                  {
+                    "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}$",
+                    "replacement": "${1}"
+                  }
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "canonical_contains": "<https://w3id.org/solid-crdt-sync/vocab/idx#RegexTransform>",
+            "canonical_contains_json": "{\"pattern\":\"^([0-9]{4})-[0-9]{2}-[0-9]{2}$\",\"replacement\":\"${1}\"}"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -203,7 +203,7 @@ class OrSet implements CrdtType {
     for (final value in values) {
       if (value is BlankNodeTerm) {
         if (!blankNodes.hasIdentifiedNodes(value)) {
-          throw ArgumentError('$lbl cannot be unidentifed blank nodes: $value');
+          throw UnidentifiedBlankNodeException(value, lbl);
         }
       }
     }

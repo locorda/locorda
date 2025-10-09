@@ -1126,9 +1126,9 @@ The `idx:` vocabulary provides the building blocks for both indexing approaches:
 * **`idx:shardingAlgorithm`:** Specifies the sharding algorithm configuration
 * **`idx:GroupingRule`:** Class defining how resources are assigned to groups
 * **`idx:GroupingRuleProperty`:** Individual property specification within a GroupingRule
-* **`idx:sourceProperty`:** Property to extract grouping value from (in GroupingRuleProperty)
+* **`idx:sourceProperty`:** Property to extract grouping value from (in GroupingRuleProperty, identifying)
 * **`idx:transform`:** Optional regex transform for value normalization (in GroupingRuleProperty) - see [Group Indexing Specification](GROUP-INDEXING.md)
-* **`idx:hierarchyLevel`:** Optional hierarchy level for multi-property grouping (in GroupingRuleProperty)
+* **`idx:hierarchyLevel`:** Hierarchy level for multi-property grouping (in GroupingRuleProperty, identifying, use "1" when you don't care)
 * **`idx:missingValue`:** Default value when property is absent (in GroupingRuleProperty)
 * **`idx:ModuloHashSharding`:** Class specifying hash-based shard distribution
 
@@ -1168,7 +1168,7 @@ idx:groupedBy [
         idx:replacement "${1}-${2}"
       ]
     ) ;
-    idx:hierarchyLevel 1;               # Optional hierarchy level (default: 1)
+    idx:hierarchyLevel 1;               # Hierarchy level (usually 1, part of identification key)
     idx:missingValue "default"          # Optional default if property absent
   ];
   # No groupTemplate - paths generated deterministically

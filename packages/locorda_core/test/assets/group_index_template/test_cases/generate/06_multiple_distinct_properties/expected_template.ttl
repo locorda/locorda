@@ -1,0 +1,10 @@
+@prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
+@prefix installations: <https://example.org/installations/> .
+@prefix ns1: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0dyb3VwSW5kZXhUZW1wbGF0ZQ==:aW5kZXgtZ3JvdXBlZC1hYWMzZTA0Ni9pbmRleA==#> .
+@prefix schema: <https://schema.org/> .
+
+ns1:groupIndexTemplate a idx:GroupIndexTemplate;
+    idx:groupedBy [ a idx:GroupingRule ; idx:property [ a idx:GroupingRuleProperty ; idx:sourceProperty schema:author ; idx:hierarchyLevel 1 ], [ a idx:GroupingRuleProperty ; idx:sourceProperty schema:articleSection ; idx:hierarchyLevel 1 ] ];
+    idx:indexesClass schema:Article;
+    idx:readBy installations:test;
+    idx:shardingAlgorithm [ a idx:ModuloHashSharding ; idx:hashAlgorithm "md5" ; idx:numberOfShards 1 ; idx:configVersion "1_0_0" ; idx:autoScaleThreshold 1000 ] .

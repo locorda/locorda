@@ -1,0 +1,35 @@
+@base <https://example.org/indices/> .
+@prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix : <#> .
+
+# Simple single-property grouping template
+# Indexes: ShoppingListEntry
+# Groups by: meal:requiredForDate transformed to YYYY-MM format
+
+:it a idx:GroupIndexTemplate ;
+    idx:indexesClass <https://example.org/vocab/meal#ShoppingListEntry> ;
+    idx:shardingAlgorithm [
+        a idx:ModuloHashSharding ;
+        idx:hashAlgorithm "md5" ;
+        idx:numberOfShards 1 ;
+        idx:configVersion "1_0_0" ;
+        idx:autoScaleThreshold 1000
+    ] ;
+    idx:groupedBy [
+        a idx:GroupingRule ;
+        idx:property [
+            a idx:GroupingRuleProperty ;
+            idx:sourceProperty <https://example.org/vocab/meal#requiredForDate> ;
+            idx:hierarchyLevel 1 ;
+            idx:transform (
+                [
+                    a idx:RegexTransform ;
+                    idx:pattern "^([0-9]{4})-([0-9]{2})-([0-9]{2})$" ;
+                    idx:replacement "${1}-${2}"
+                ]
+            )
+        ]
+    ] ;
+    idx:readBy <https://example.org/installations/test-123> .

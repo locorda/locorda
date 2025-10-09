@@ -1,0 +1,11 @@
+@prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
+@prefix installations: <https://example.org/installations/> .
+@prefix ns1: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0dyb3VwSW5kZXhUZW1wbGF0ZQ==:aW5kZXgtZ3JvdXBlZC05N2UyNDNjNS9pbmRleA==#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <https://schema.org/> .
+
+ns1:groupIndexTemplate a idx:GroupIndexTemplate;
+    idx:groupedBy [ a idx:GroupingRule ; idx:property [ a idx:GroupingRuleProperty ; idx:sourceProperty schema:dateCreated ; idx:hierarchyLevel 1 ; idx:transform ([ a idx:RegexTransform ; idx:pattern "^([0-9]{4})-[0-9]{2}-[0-9]{2}$" ; idx:replacement "${1}" ]) ], [ a idx:GroupingRuleProperty ; idx:sourceProperty schema:dateCreated ; idx:hierarchyLevel 2 ; idx:transform ([ a idx:RegexTransform ; idx:pattern "^[0-9]{4}-([0-9]{2})-[0-9]{2}$" ; idx:replacement "${1}" ]) ] ];
+    idx:indexesClass schema:Note;
+    idx:readBy installations:test;
+    idx:shardingAlgorithm [ a idx:ModuloHashSharding ; idx:hashAlgorithm "md5" ; idx:numberOfShards 1 ; idx:configVersion "1_0_0" ; idx:autoScaleThreshold 1000 ] .

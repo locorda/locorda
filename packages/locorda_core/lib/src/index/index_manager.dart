@@ -10,6 +10,7 @@ import 'package:crypto/crypto.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/index/group_key_generator.dart';
 import 'package:locorda_core/src/index/index_property_resolver.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
@@ -101,6 +102,7 @@ class IndexManager {
       shardNumber: 0,
       configVersion: '1_0_0',
       indexResourceIri: indexResourceIri,
+      indexTypeIri: IdxFullIndex.classIri,
     );
 
     // Generate index RDF
@@ -170,14 +172,13 @@ class IndexManager {
   /// According to LOCORDA-SPECIFICATION.md section 6.4 "Resource Creation Workflow":
   /// 1. Identify all matching index shards based on resource type
   /// 2. For FullIndex: Calculate shard based on resource IRI hash
-  /// 3. For GroupIndexTemplate: Determine group membership (not implemented yet)
-  ///
-  /// This method currently handles FullIndex only.
+  /// 3. For GroupIndexTemplate: Determine group membership using GroupKeyGenerator,
+  ///    create GroupIndex instances if needed, then calculate shard per group
   ///
   /// Parameters:
   /// - [type]: The RDF type of the resource (e.g., schema:Recipe)
   /// - [resourceIri]: The IRI of the resource being indexed
-  /// - [internalAppData]: The resource's semantic data (for group determination in future)
+  /// - [internalAppData]: The resource's semantic data (for group determination)
   ///
   /// Returns: Iterable of shard IRIs the resource should be indexed in
   Future<Iterable<IriTerm>> determineShards(
@@ -203,10 +204,9 @@ class IndexManager {
           shards.addAll(indexShards);
 
         case GroupIndexGraphConfig():
-          throw UnimplementedError(
-            'GroupIndexTemplate shard determination not yet implemented. '
-            'This will be handled in the next step.',
-          );
+          final groupIndexShards = await _determineShardsForGroupIndex(
+              indexConfig, resourceIri, type, internalAppData);
+          shards.addAll(groupIndexShards);
       }
     }
 
@@ -268,9 +268,177 @@ class IndexManager {
         shardingConfig.numberOfShards,
         shardNumber,
         shardingConfig.configVersion,
-        indexResourceIri);
+        indexResourceIri,
+        IdxFullIndex.classIri);
 
     return [shardIri];
+  }
+
+  /// Determines which shard(s) a resource belongs to for a GroupIndexTemplate.
+  ///
+  /// Process per LOCORDA-SPECIFICATION.md section 5.3:
+  /// 1. Generate group keys from resource properties using GroupKeyGenerator
+  /// 2. For each group key:
+  ///    a. Generate GroupIndex IRI from template IRI + group key
+  ///    b. Check if GroupIndex exists, create if needed
+  ///    c. Load GroupIndex and parse sharding configuration
+  ///    d. Calculate shard number using resource IRI hash
+  ///    e. Generate shard IRI
+  ///
+  /// Returns: List of shard IRIs (one or more, depending on group membership)
+  Future<List<IriTerm>> _determineShardsForGroupIndex(
+    GroupIndexGraphConfig config,
+    IriTerm resourceIri,
+    IriTerm typeIri,
+    RdfGraph internalAppData,
+  ) async {
+    final shards = <IriTerm>[];
+
+    // Generate the GroupIndexTemplate IRI
+    final templateIri =
+        _rdfGenerator.generateGroupIndexTemplateIri(config, typeIri);
+
+    // Generate group keys from resource properties
+    final groupKeyGenerator = GroupKeyGenerator(config);
+    final triples = internalAppData.triples.toList();
+    final groupKeys = groupKeyGenerator.generateGroupKeys(triples);
+
+    // If no group keys, resource doesn't belong to any group (missing required properties)
+    if (groupKeys.isEmpty) {
+      _log.fine(
+          'Resource $resourceIri has no group keys for template $templateIri');
+      return shards;
+    }
+
+    // Process each group key
+    for (final groupKey in groupKeys) {
+      // Generate GroupIndex IRI
+      final groupIndexIri =
+          _rdfGenerator.generateGroupIndexIri(templateIri, groupKey);
+      final groupIndexDocumentIri = groupIndexIri.getDocumentIri();
+
+      // Check if GroupIndex exists, create if needed
+      if (!(await _documentManager.hasDocument(groupIndexDocumentIri))) {
+        _log.info(
+            'Creating GroupIndex for group "$groupKey" at $groupIndexDocumentIri');
+        await _createGroupIndex(
+          config,
+          typeIri,
+          templateIri,
+          groupKey,
+          groupIndexIri,
+        );
+      }
+
+      // Load the GroupIndex document
+      final storedDoc = await _storage.getDocument(groupIndexDocumentIri);
+      if (storedDoc == null) {
+        _log.warning('GroupIndex document not found: $groupIndexDocumentIri');
+        continue;
+      }
+
+      // Parse sharding configuration from the GroupIndex
+      final shardingConfig =
+          _shardManager.parseShardingConfig(storedDoc.document, groupIndexIri);
+      if (shardingConfig == null) {
+        _log.warning(
+            'Could not parse sharding config from GroupIndex: $groupIndexIri');
+        continue;
+      }
+
+      // Calculate which shard number this resource belongs to
+      final shardNumber = _shardManager.determineShardNumber(
+        resourceIri,
+        numberOfShards: shardingConfig.numberOfShards,
+      );
+
+      // Generate the shard IRI (relative to GroupIndex, not template)
+      final shardIri = _rdfGenerator.generateShardIri(
+        shardingConfig.numberOfShards,
+        shardNumber,
+        shardingConfig.configVersion,
+        groupIndexIri,
+        IdxGroupIndex.classIri,
+      );
+
+      shards.add(shardIri);
+    }
+
+    return shards;
+  }
+
+  /// Creates a new GroupIndex instance for a specific group.
+  ///
+  /// Creates the GroupIndex document and its initial shard(s) based on the
+  /// template's sharding configuration.
+  Future<void> _createGroupIndex(
+    GroupIndexGraphConfig config,
+    IriTerm typeIri,
+    IriTerm templateIri,
+    String groupKey,
+    IriTerm groupIndexIri,
+  ) async {
+    // Generate initial shard
+    final (shardResourceIri, shardGraph) = _rdfGenerator.generateShard(
+      totalShards: 1, // Start with single shard per group
+      shardNumber: 0,
+      configVersion: '1_0_0',
+      indexResourceIri: groupIndexIri,
+      indexTypeIri: IdxGroupIndex.classIri,
+    );
+
+    // Generate GroupIndex RDF
+    final groupIndexGraph = _generateGroupIndex(
+      config: config,
+      resourceType: typeIri,
+      resourceIri: groupIndexIri,
+      templateIri: templateIri,
+      shards: [shardResourceIri],
+    );
+
+    // Save shard document first (same pattern as FullIndex)
+    if (!(await _documentManager
+        .hasDocument(shardResourceIri.getDocumentIri()))) {
+      await _documentManager.save(
+        IdxShard.classIri,
+        shardGraph,
+        // shards are not tracked in other indices
+        const [],
+      );
+    }
+
+    // Save GroupIndex document
+    await _documentManager.save(
+      IdxGroupIndex.classIri,
+      groupIndexGraph,
+      // GroupIndex documents are not tracked in other indices
+      const [],
+    );
+  }
+
+  /// Generates RDF graph for a GroupIndex resource.
+  ///
+  /// Similar to FullIndex but links back to GroupIndexTemplate via idx:basedOn
+  RdfGraph _generateGroupIndex({
+    required GroupIndexGraphConfig config,
+    required IriTerm resourceType,
+    required IriTerm resourceIri,
+    required IriTerm templateIri,
+    required Iterable<IriTerm> shards,
+  }) {
+    final triples = <Triple>[
+      // Type declaration
+      Triple(resourceIri, Rdf.type, IdxGroupIndex.classIri),
+
+      // Link back to template
+      Triple(resourceIri, IdxGroupIndex.basedOn, templateIri),
+
+      // Shards
+      ...shards
+          .map((shard) => Triple(resourceIri, IdxGroupIndex.hasShard, shard)),
+    ];
+
+    return triples.toRdfGraph();
   }
 
   /// Updates all index shards to reflect the current state of a resource.

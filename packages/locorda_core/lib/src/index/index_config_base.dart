@@ -146,7 +146,7 @@ class GroupingProperty {
   /// extracts "2025-08" from date values like "2025-08-15".
   ///
   /// Note that the transforms are applied in order, so multiple transforms can be
-  /// chained together for more complex extraction logic.
+  /// chained together for more complex extraction logic - the first matching regex wins.
   ///
   /// Also note that the transforms operate on the RDF representation of the property value - not on the dart object.
   /// For literals, transforms operate on the lexical value (without language tag or datatype);

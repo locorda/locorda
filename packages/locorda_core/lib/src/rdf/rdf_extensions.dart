@@ -25,6 +25,19 @@ extension RdfGraphExtensions on RdfGraph {
     return null;
   }
 
+  T singleObject<T extends RdfObject>(
+      RdfSubject subject, RdfPredicate predicate) {
+    final triples = findTriples(subject: subject, predicate: predicate);
+    if (triples.isEmpty) {
+      throw StateError('Expected exactly one triple');
+    }
+    final obj = triples.single.object;
+    if (obj is T) {
+      return obj;
+    }
+    throw StateError('Unexpected object type');
+  }
+
   T? findFirstObject<T extends RdfObject>(
       RdfSubject subject, RdfPredicate predicate) {
     final triples = findTriples(subject: subject, predicate: predicate);

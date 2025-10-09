@@ -1,0 +1,22 @@
+{
+  "resources": [
+    {
+      "typeIri": "https://schema.org/Recipe",
+      "documentIriTemplate": "https://example.org/recipes/{id}",
+      "crdtMapping": "https://example.org/test/mappings/recipe-v1",
+      "indices": [
+        {
+          "type": "GroupIndex",
+          "localName": "recipes-by-category",
+          "itemFetchPolicy": "prefetch",
+          "groupingProperties": [
+            {
+              "predicate": "https://schema.org/recipeCategory",
+              "hierarchyLevel": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+@base <https://example.org/indices/> .
+@prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <https://schema.org/> .
+@prefix : <#> .
+
+# Template with explicit empty transform list
+:it a idx:GroupIndexTemplate ;
+    idx:indexesClass schema:Person ;
+    idx:shardingAlgorithm [
+        a idx:ModuloHashSharding ;
+        idx:hashAlgorithm "md5" ;
+        idx:numberOfShards 1 ;
+        idx:configVersion "1_0_0" ;
+        idx:autoScaleThreshold 1000
+    ] ;
+    idx:groupedBy [
+        a idx:GroupingRule ;
+        idx:property [
+            a idx:GroupingRuleProperty ;
+            idx:sourceProperty schema:familyName ;
+            idx:hierarchyLevel 1 ;
+            idx:transform ()
+        ]
+    ] .

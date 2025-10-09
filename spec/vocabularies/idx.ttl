@@ -151,7 +151,7 @@ idx:transform a rdf:Property;
 
 idx:hierarchyLevel a rdf:Property;
     rdfs:label "hierarchy level";
-    rdfs:comment "Optional hierarchy level for multi-property grouping (default: 1). Properties with explicit levels create nested directory structures sorted by level. Properties without levels are joined with '-' separator after lexicographic IRI ordering.";
+    rdfs:comment "Hierarchy level for multi-property grouping. Properties are sorted by level to create nested directory structures. Together with idx:sourceProperty, forms the identification key for GroupingRuleProperty blank nodes. Use 1 when you do not know which value to use.";
     rdfs:domain idx:GroupingRuleProperty;
     rdfs:range xsd:integer .
 

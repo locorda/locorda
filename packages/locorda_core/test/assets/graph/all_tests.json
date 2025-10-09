@@ -836,8 +836,8 @@
           "typeIri": "https://schema.org/Recipe",
           "input_resource": "test_cases/save_error/01_orset_unidentified_blank_nodes/input_resource.ttl",
           "expected": {
-            "error_type": "ArgumentError",
-            "error_message_pattern": "cannot be unidentifed blank nodes"
+            "error_type": "UnidentifiedBlankNodeWithContextException",
+            "error_message_pattern": "could not be identified"
           },
           "action_ts": {
             "save": "2024-01-01T02:00:00Z"
@@ -853,6 +853,33 @@
           "expected": {
             "error_type": "SyncConfigValidationException",
             "error_message_pattern": "Found 2 blank nodes at the same path that would be treated as the same entity during synchronization."
+          },
+          "action_ts": {
+            "save": "2024-01-01T02:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "suite": "group_index",
+      "description": "Tests for Group Index generation during save operations",
+      "tests": [
+        {
+          "id": "save_31",
+          "title": "First save with group index - creates template and group",
+          "description": "Saving a resource with group index configuration should create the resource, the group index template, and the specific group index document for the resource's category value.",
+          "config": "shared/configs/group_index_config.json",
+          "typeIri": "https://schema.org/Recipe",
+          "input_resource": "test_cases/save/31_group_index_first_save/input_resource.ttl",
+          "expected": {
+            "stored_graph": "test_cases/save/31_group_index_first_save/expected_stored_graph.ttl",
+            "installation": "test_cases/save/31_group_index_first_save/expected_installation.ttl",
+            "index_documents": [
+              {
+                "localName": "recipes-by-category",
+                "expected_graph": "test_cases/save/31_group_index_first_save/expected_group_index_template.ttl"
+              }
+            ]
           },
           "action_ts": {
             "save": "2024-01-01T02:00:00Z"

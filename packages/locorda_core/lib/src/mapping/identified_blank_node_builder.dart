@@ -153,12 +153,13 @@ class IdentifiedBlankNodes<T> {
 
 class UnidentifiedBlankNodeException implements Exception {
   final BlankNodeTerm blankNode;
+  final String? message;
 
-  UnidentifiedBlankNodeException(this.blankNode);
+  UnidentifiedBlankNodeException(this.blankNode, [this.message]);
 
   @override
   String toString() =>
-      'UnidentifiedBlankNodeException: The blank node $blankNode could not be identified.';
+      'UnidentifiedBlankNodeException:${message == null ? '' : ' $message'} The blank node $blankNode could not be identified.';
 }
 
 class UnidentifiedBlankNodeWithContextException implements Exception {
