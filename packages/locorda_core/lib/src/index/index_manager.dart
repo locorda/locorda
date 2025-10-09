@@ -330,19 +330,29 @@ class IndexManager {
         );
       }
 
-      // Load the GroupIndex document
+      // Load the GroupIndex document to verify it exists
       final storedDoc = await _storage.getDocument(groupIndexDocumentIri);
       if (storedDoc == null) {
+        // FIXME: maybe throw?
         _log.warning('GroupIndex document not found: $groupIndexDocumentIri');
         continue;
       }
 
-      // Parse sharding configuration from the GroupIndex
+      // Parse sharding configuration from the TEMPLATE, not the GroupIndex
+      // GroupIndex only has idx:basedOn and idx:hasShard - sharding config is in template
+      final templateDocumentIri = templateIri.getDocumentIri();
+      final templateDoc = await _storage.getDocument(templateDocumentIri);
+      if (templateDoc == null) {
+        _log.warning(
+            'GroupIndexTemplate document not found: $templateDocumentIri');
+        continue;
+      }
+
       final shardingConfig =
-          _shardManager.parseShardingConfig(storedDoc.document, groupIndexIri);
+          _shardManager.parseShardingConfig(templateDoc.document, templateIri);
       if (shardingConfig == null) {
         _log.warning(
-            'Could not parse sharding config from GroupIndex: $groupIndexIri');
+            'Could not parse sharding config from GroupIndexTemplate: $templateIri');
         continue;
       }
 

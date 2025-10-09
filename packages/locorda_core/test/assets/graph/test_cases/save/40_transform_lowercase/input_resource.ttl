@@ -1,0 +1,8 @@
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/recipes/uppercase-cake#it>
+    a schema:Recipe ;
+    schema:name "UPPERCASE Cake" ;
+    schema:recipeCategory "DESSERTS" ;
+    schema:recipeIngredient "Flour" , "Sugar" .
+    # Category should be transformed to lowercase "desserts" for shard path

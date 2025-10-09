@@ -10,16 +10,19 @@ import 'package:crypto/crypto.dart';
 /// providing automatic conversion of unsafe group keys to deterministic, collision-resistant
 /// hash-based alternatives while preserving human-readable keys when possible.
 class FilesystemSafety {
-  // Conservative whitelist pattern - works on all platforms
-  static final RegExp _safePattern = RegExp(r'^[a-zA-Z0-9._-]+$');
+  // Conservative whitelist pattern - only lowercase after normalization
+  static final RegExp _safePattern = RegExp(r'^[a-z0-9._-]+$');
 
   // Maximum length for preserved human-readable keys
   static const int _maxSafeLength = 50;
 
   /// Makes a group key safe for filesystem use according to the specification.
   ///
+  /// **Case Normalization:** All keys are converted to lowercase first to ensure
+  /// consistent grouping and avoid case-sensitivity issues across filesystems.
+  ///
   /// **Safe Key Preservation:** Keys meeting all criteria are preserved unchanged:
-  /// - Contains only safe characters: letters, digits, periods, underscores, hyphens
+  /// - Contains only safe characters: lowercase letters, digits, periods, underscores, hyphens
   /// - Length ≤ 50 characters
   /// - Does not start with period (hidden file prevention)
   /// - Not a reserved name (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
@@ -30,27 +33,32 @@ class FilesystemSafety {
   /// This ensures deterministic, collision-resistant transformation while maintaining
   /// compact file paths suitable for all platforms.
   static String makeSafe(String groupKey) {
-    // Preserve safe keys unchanged
-    if (_isSafe(groupKey)) {
-      return groupKey;
+    // Step 1: Convert to lowercase for case normalization
+    final lowercaseKey = groupKey.toLowerCase();
+
+    // Step 2: Check if lowercase key is safe
+    if (_isSafe(lowercaseKey)) {
+      return lowercaseKey;
     }
 
-    // Generate hash with character count prefix
-    final bytes = utf8.encode(groupKey);
+    // Step 3: Generate hash with character count prefix (using original case for hash input)
+    final bytes = utf8.encode(lowercaseKey);
     final digest = md5.convert(bytes);
     final hexHash = digest.toString();
-    return '${groupKey.length}_$hexHash';
+    return '${lowercaseKey.length}_$hexHash';
   }
 
   /// Checks if a group key meets all safety criteria.
   ///
+  /// NOTE: This method expects the key to already be lowercase normalized.
+  ///
   /// Returns true only if the key:
-  /// - Contains only safe characters (alphanumeric, period, underscore, hyphen)
+  /// - Contains only safe characters (lowercase letters, digits, period, underscore, hyphen)
   /// - Is within the maximum safe length
   /// - Does not start with a period (to avoid hidden files)
   /// - Is not a reserved Windows filename
   static bool _isSafe(String groupKey) {
-    // Must contain only safe characters
+    // Must contain only safe characters (lowercase only after normalization)
     if (!_safePattern.hasMatch(groupKey)) {
       return false;
     }

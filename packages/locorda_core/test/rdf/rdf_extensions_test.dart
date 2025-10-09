@@ -1,5 +1,6 @@
 import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/util/structure_validation_logger.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
@@ -76,16 +77,18 @@ void main() {
       });
 
       test('returns null when object is wrong type', () {
-        final subject = IriTerm('https://example.com/subject');
-        final predicate = IriTerm('https://example.com/predicate');
-        final literal = LiteralTerm('value');
+        RdfExpectations.runWith(RdfExpectations.lenient(), () {
+          final subject = IriTerm('https://example.com/subject');
+          final predicate = IriTerm('https://example.com/predicate');
+          final literal = LiteralTerm('value');
 
-        final graph = RdfGraph.fromTriples([
-          Triple(subject, predicate, literal),
-        ]);
+          final graph = RdfGraph.fromTriples([
+            Triple(subject, predicate, literal),
+          ]);
 
-        final result = graph.findSingleObject<IriTerm>(subject, predicate);
-        expect(result, isNull);
+          final result = graph.findSingleObject<IriTerm>(subject, predicate);
+          expect(result, isNull);
+        });
       });
 
       test('throws when multiple triples exist for same subject-predicate', () {
@@ -694,6 +697,86 @@ void main() {
 
         expect(graph.triples, isEmpty);
       });
+    });
+  });
+
+  group('RdfExpectations', () {
+    test('strict mode (default) throws on violations', () {
+      final graph = RdfGraph.fromTriples([]);
+      final subject = IriTerm('https://example.com/subject');
+      final predicate = IriTerm('https://example.com/predicate');
+
+      expect(
+        () => graph.expectSingleObject<IriTerm>(subject, predicate),
+        throwsStateError,
+      );
+    });
+
+    test('lenient mode logs but does not throw', () {
+      RdfExpectations.runWith(
+        const RdfExpectations.lenient(),
+        () {
+          final graph = RdfGraph.fromTriples([]);
+          final subject = IriTerm('https://example.com/subject');
+          final predicate = IriTerm('https://example.com/predicate');
+
+          // Should not throw, just return null
+          final result = graph.expectSingleObject<IriTerm>(subject, predicate);
+          expect(result, isNull);
+        },
+      );
+    });
+
+    test('criticalOnly mode throws only on critical violations', () {
+      RdfExpectations.runWith(
+        const RdfExpectations.criticalOnly(),
+        () {
+          final graph = RdfGraph.fromTriples([]);
+          final subject = IriTerm('https://example.com/subject');
+          final predicate = IriTerm('https://example.com/predicate');
+
+          // Major severity: should not throw in criticalOnly mode
+          final result = graph.expectSingleObject<IriTerm>(subject, predicate);
+          expect(result, isNull);
+
+          // Critical severity: should throw even in criticalOnly mode
+          expect(
+            () => graph.expectSingleObject<IriTerm>(
+              subject,
+              predicate,
+              severity: ExpectationSeverity.critical,
+            ),
+            throwsStateError,
+          );
+        },
+      );
+    });
+
+    test('runWith restores previous instance after execution', () {
+      final originalDefault = RdfExpectations.defaultInstance;
+
+      RdfExpectations.runWith(
+        const RdfExpectations.lenient(),
+        () {
+          expect(RdfExpectations.defaultInstance.strictnessLevel, isNull);
+        },
+      );
+
+      expect(RdfExpectations.defaultInstance, same(originalDefault));
+    });
+
+    test('runWith restores previous instance even on exception', () {
+      final originalDefault = RdfExpectations.defaultInstance;
+
+      expect(
+        () => RdfExpectations.runWith(
+          const RdfExpectations.lenient(),
+          () => throw Exception('test'),
+        ),
+        throwsException,
+      );
+
+      expect(RdfExpectations.defaultInstance, same(originalDefault));
     });
   });
 }

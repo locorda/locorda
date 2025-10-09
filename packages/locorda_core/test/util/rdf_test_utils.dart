@@ -23,7 +23,7 @@ RdfGraph readGraphFromFile(Directory testAssetsDir, String relativePath) {
 /// Compares two RDF graphs using RDF canonicalization.
 ///
 /// If the graphs differ, prints both in Turtle format for easier debugging.
-void expectEqualGraphs(RdfGraph actual, RdfGraph expected) {
+void expectEqualGraphs(String name, RdfGraph actual, RdfGraph expected) {
   final actualCanonical = canonicalizeGraph(actual);
   final expectedCanonical = canonicalizeGraph(expected);
 
@@ -32,7 +32,7 @@ void expectEqualGraphs(RdfGraph actual, RdfGraph expected) {
     // the expected file easier, print the actual graph in Turtle
     final actualTurtle = turtle.encode(actual);
     final expectedTurtle = turtle.encode(expected);
-    print('-' * 40);
+    print('-' * 4 + name + ' - Graphs differ ' + '-' * 4);
     print(actualTurtle);
     print('-' * 40);
 

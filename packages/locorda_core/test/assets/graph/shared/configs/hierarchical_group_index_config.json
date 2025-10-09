@@ -1,0 +1,40 @@
+{
+  "resources": [
+    {
+      "typeIri": "https://schema.org/Recipe",
+      "documentIriTemplate": "https://example.org/recipes/{id}",
+      "crdtMapping": "https://example.org/test/mappings/recipe-v1",
+      "indices": [
+        {
+          "type": "GroupIndex",
+          "localName": "recipes-by-date",
+          "itemFetchPolicy": "prefetch",
+          "groupingProperties": [
+            {
+              "predicate": "https://schema.org/dateCreated",
+              "hierarchyLevel": 1,
+              "transforms": [
+                {
+                  "type": "RegexTransform",
+                  "pattern": "^([0-9]{4})-[0-9]{2}-[0-9]{2}.*",
+                  "replacement": "${1}"
+                }
+              ]
+            },
+            {
+              "predicate": "https://schema.org/dateCreated",
+              "hierarchyLevel": 2,
+              "transforms": [
+                {
+                  "type": "RegexTransform",
+                  "pattern": "^[0-9]{4}-([0-9]{2})-[0-9]{2}.*",
+                  "replacement": "${1}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

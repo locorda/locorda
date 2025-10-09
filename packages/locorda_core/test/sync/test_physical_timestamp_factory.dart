@@ -1,27 +1,27 @@
 /// Test implementation of PhysicalTimestampFactory with controlled, deterministic timestamps.
 ///
-/// Supports two modes:
-/// 1. Auto-increment mode: Auto-increments milliseconds from a base timestamp (legacy)
-/// 2. Explicit mode: Returns explicitly set timestamps via setTimestamp()
+/// Provides auto-incrementing timestamps starting from a base timestamp.
+/// Each call to call() returns baseTimestamp + counter milliseconds, where counter
+/// increments with each call.
+///
+/// The base timestamp can be updated at any time via setTimestamp(), allowing tests
+/// to control the timeline for different phases (e.g., preparation vs. actual test execution).
 class TestPhysicalTimestampFactory {
   int _counter = 0;
-  final DateTime baseTimestamp;
-  DateTime? _explicitTimestamp;
+  DateTime get baseTimestamp => _explicitTimestamp;
+  DateTime _explicitTimestamp;
 
-  TestPhysicalTimestampFactory({required this.baseTimestamp});
+  TestPhysicalTimestampFactory({required DateTime baseTimestamp})
+      : _explicitTimestamp = baseTimestamp;
 
-  /// Set an explicit timestamp for the next call().
-  /// This overrides the auto-increment behavior for one call.
+  /// Set a new base timestamp and reset the counter to 0.
+  /// Subsequent calls to call() will start incrementing from this new base at 0ms.
   void setTimestamp(DateTime timestamp) {
     _explicitTimestamp = timestamp;
+    _counter = 0;
   }
 
   DateTime call() {
-    if (_explicitTimestamp != null) {
-      final result = _explicitTimestamp!;
-      _explicitTimestamp = null;
-      return result;
-    }
     return baseTimestamp.add(Duration(milliseconds: _counter++));
   }
 }

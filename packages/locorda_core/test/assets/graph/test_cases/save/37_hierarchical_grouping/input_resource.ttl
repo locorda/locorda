@@ -1,0 +1,8 @@
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/recipes/winter-soup#it>
+    a schema:Recipe ;
+    schema:name "Winter Vegetable Soup" ;
+    schema:dateCreated "2024-01-15T10:30:00Z" ;
+    schema:recipeCategory "Soups" ;
+    schema:recipeIngredient "Carrots" , "Potatoes" , "Onions" , "Celery" .

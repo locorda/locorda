@@ -27,8 +27,7 @@ class HlcService {
 
   HlcService({
     required String installationLocalId,
-    PhysicalTimestampFactory physicalTimestampFactory =
-        defaultPhysicalTimestampFactory,
+    required PhysicalTimestampFactory physicalTimestampFactory,
   })  : _installationLocalId = installationLocalId,
         _physicalTimestampFactory = physicalTimestampFactory;
 

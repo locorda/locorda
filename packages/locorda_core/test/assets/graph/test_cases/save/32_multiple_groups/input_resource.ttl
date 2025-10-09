@@ -1,0 +1,7 @@
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/recipes/quick-tiramisu#it>
+    a schema:Recipe ;
+    schema:name "Quick Tiramisu" ;
+    schema:recipeCategory "Desserts" , "Quick Meals" ;
+    schema:recipeIngredient "Mascarpone" , "Ladyfingers" , "Coffee" , "Cocoa" .

@@ -7,6 +7,7 @@ library;
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/util/structure_validation_logger.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 /// Parses GroupIndexTemplate RDF to extract grouping configuration.
@@ -38,15 +39,10 @@ class GroupIndexTemplateParser {
     final propertyNodes = graph.getMultiValueObjects<RdfSubject>(
         groupingRule, IdxGroupingRule.property);
 
-    if (propertyNodes.isEmpty) {
-      throw ArgumentError(
-        'GroupingRule has no properties (expected at least one)',
-      );
-    }
-
     // Parse each property
     final properties = propertyNodes
         .map((propNode) => _parseGroupingProperty(graph, propNode))
+        .nonNulls
         .toList();
 
     // Sort by hierarchy level, then by predicate IRI (same as generation)
@@ -56,26 +52,42 @@ class GroupIndexTemplateParser {
       return a.predicate.value.compareTo(b.predicate.value);
     });
 
+    if (properties.isEmpty) {
+      expectationFailed(
+          "GroupingRule has no properties (expected at least one)",
+          subject: groupingRule,
+          predicate: IdxGroupingRule.property,
+          graph: graph);
+      return null;
+    }
     return properties;
   }
 
   /// Parses a single GroupingRuleProperty node.
-  GroupingProperty _parseGroupingProperty(RdfGraph graph, RdfSubject propNode) {
-    // Extract sourceProperty (required)
-    final sourceProperty = graph.singleObject<IriTerm>(
-        propNode, IdxGroupingRuleProperty.sourceProperty);
+  GroupingProperty? _parseGroupingProperty(
+      RdfGraph graph, RdfSubject propNode) {
+    // Extract sourceProperty (required) - CRITICAL because GroupingProperty is unusable without it
+    final sourceProperty = graph.expectSingleObject<IriTerm>(
+        propNode, IdxGroupingRuleProperty.sourceProperty,
+        severity: ExpectationSeverity.critical);
+
+    if (sourceProperty == null) {
+      return null; // Cannot proceed without sourceProperty
+    }
 
     // Extract hierarchyLevel (defaults to 1 if not present in RDF, even though it's required in RDF)
     // Together with sourceProperty, forms the identification key for the blank node
+    // MINOR because we have a sensible default
     final hierarchyLevel = graph
-            .findFirstObject<LiteralTerm>(
-                propNode, IdxGroupingRuleProperty.hierarchyLevel)
+            .expectSingleObject<LiteralTerm>(
+                propNode, IdxGroupingRuleProperty.hierarchyLevel,
+                severity: ExpectationSeverity.minor)
             ?.integerValue ??
         1;
 
     // Extract missingValue (optional)
     final missingValue = graph
-        .findFirstObject<LiteralTerm>(
+        .findSingleObject<LiteralTerm>(
             propNode, IdxGroupingRuleProperty.missingValue)
         ?.value;
 

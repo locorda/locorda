@@ -1,0 +1,8 @@
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/recipes/recipe123#it>
+    a schema:Recipe ;
+    schema:name "Chocolate Cake" ;
+    schema:recipeCategory "Desserts" ;
+    schema:recipeIngredient "Chocolate" , "Cream" .
+    # Identical to stored_graph_before - should be no-op

@@ -128,7 +128,10 @@ Future<void> _executeGenerateTest(
     final expectedGraph = readGraphFromFile(testAssetsDir, expectedPath);
 
     // Compare graphs using RDF canonicalization
-    expectEqualGraphs(graph, expectedGraph);
+    expectEqualGraphs(
+        "${testJson['id'] as String} - template_graph $expectedGraph",
+        graph,
+        expectedGraph);
   }
 }
 

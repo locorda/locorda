@@ -1,0 +1,7 @@
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/recipes/newrecipe456#it>
+    a schema:Recipe ;
+    schema:name "New Tiramisu Recipe" ;
+    schema:recipeCategory "Desserts" ;
+    schema:recipeIngredient "Mascarpone" , "Coffee" , "Ladyfingers" .

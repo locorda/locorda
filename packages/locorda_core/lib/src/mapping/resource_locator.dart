@@ -76,6 +76,32 @@ class LocalResourceLocator implements ResourceLocator {
     return ResourceIdentifier(typeIri, localId, fragment);
   }
 
+  ResourceIdentifier fromIriNoType(IriTerm resourceIri) {
+    // Split off fragment if present
+    final iriValue = resourceIri.value;
+    final fragmentIndex = iriValue.indexOf('#');
+    final documentIriValue =
+        fragmentIndex >= 0 ? iriValue.substring(0, fragmentIndex) : iriValue;
+    final fragment =
+        fragmentIndex >= 0 ? iriValue.substring(fragmentIndex + 1) : null;
+
+    if (!documentIriValue.startsWith(prefix)) {
+      throw ArgumentError(
+          'Resource IRI ${resourceIri.value} does not belong to base IRI $prefix');
+    }
+
+    final encoded = documentIriValue.substring(prefix.length);
+    final [encodedTypeIri, encodedLocalId] = encoded.split(':');
+    final remoteTypeIri =
+        IriTerm.validated(utf8.decode(base64Url.decode(encodedTypeIri)));
+
+    final localId = utf8.decode(base64Url.decode(encodedLocalId));
+    if (fragment == null) {
+      return ResourceIdentifier.document(remoteTypeIri, localId);
+    }
+    return ResourceIdentifier(remoteTypeIri, localId, fragment);
+  }
+
   static bool isLocalIri(IriTerm subjectIri) {
     return subjectIri.value.startsWith(prefix);
   }

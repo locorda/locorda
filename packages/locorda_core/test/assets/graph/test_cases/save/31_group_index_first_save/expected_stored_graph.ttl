@@ -1,7 +1,9 @@
 @prefix cm: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
 @prefix mappings: <https://example.org/test/mappings/> .
 @prefix ns1: <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#> .
+@prefix ns2: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZ3JvdXBlZC1mNjE1YmU5MC9ncm91cHMvZGVzc2VydHMvc2hhcmQtbW9kLW1kNS0xLTAtdjFfMF8w#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix schema: <https://schema.org/> .
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
@@ -9,9 +11,10 @@
 
 <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=> a sync:ManagedDocument;
     foaf:primaryTopic ns1:it;
-    cm:clockHash "6f60daa555840ab13bb905b1ae37b1a8";
-    cm:createdAt "2024-01-01T00:00:00.006Z"^^xsd:dateTime;
+    cm:clockHash "c59587de9a40329ec78466d4d9f2c87b";
+    cm:createdAt "2024-01-01T02:00:00.002Z"^^xsd:dateTime;
     cm:hasClockEntry ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54;
+    idx:belongsToIndexShard ns2:shard;
     sync:isGovernedBy (mappings:recipe-v1);
     sync:managedResourceType schema:Recipe .
 
@@ -21,4 +24,4 @@ ns1:it a schema:Recipe;
     schema:recipeIngredient "Flour", "Sugar", "Cocoa" .
 
 ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54 cm:logicalTime 1;
-    cm:physicalTime 1704067200006 .
+    cm:physicalTime 1704074400002 .

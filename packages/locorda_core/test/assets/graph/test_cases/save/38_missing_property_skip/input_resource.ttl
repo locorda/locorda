@@ -1,0 +1,7 @@
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/recipes/mystery-dish#it>
+    a schema:Recipe ;
+    schema:name "Mystery Dish" ;
+    schema:recipeIngredient "Secret ingredient" , "More secrets" .
+    # Note: No recipeCategory property - should be skipped from index

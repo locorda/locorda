@@ -1,0 +1,7 @@
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/recipes/random-recipe#it>
+    a schema:Recipe ;
+    schema:name "Random Recipe" ;
+    schema:recipeIngredient "This" , "That" , "Whatever" .
+    # Note: No recipeCategory - should use default value "Uncategorized"

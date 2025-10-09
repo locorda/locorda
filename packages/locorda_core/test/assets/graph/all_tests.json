@@ -26,801 +26,951 @@
           "title": "First save of new resource",
           "description": "Saving a new resource when no data exists in storage should add all triples with CRDT metadata",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "input_resource": "test_cases/save/01_first_save/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/01_first_save/expected_stored_graph.ttl",
-            "installation": "test_cases/save/01_first_save/expected_installation.ttl",
-            "index_documents": [
-              {
-                "localName": "recipe-index",
-                "expected_graph": "test_cases/save/01_first_save/expected_index.ttl"
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/01_first_save/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/01_first_save/expected_stored_graph.ttl",
+                "installation": "test_cases/save/01_first_save/expected_installation.ttl",
+                "index_documents": [
+                  {
+                    "localName": "recipe-index",
+                    "expected_graph": "test_cases/save/01_first_save/expected_index.ttl"
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipe-index",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/01_first_save/expected_shard.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
               }
-            ],
-            "shard_documents": [
-              {
-                "index_localName": "recipe-index",
-                "shard_number": 0,
-                "shard_total": 1,
-                "shard_version": "1_0_0",
-                "expected_graph": "test_cases/save/01_first_save/expected_shard.ttl"
-              }
-            ]
-          },
-          "action_ts": {
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_02",
           "title": "Update existing resource - LWW property change",
           "description": "Updating a LWW-Register property (name) should increment clock and replace old value",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/02_update_lww/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/02_update_lww/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/02_update_lww/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/name",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/02_update_lww/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/02_update_lww/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/02_update_lww/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_03",
           "title": "Update existing resource - OR-Set add elements",
           "description": "Adding elements to an OR-Set property (recipeIngredient) should preserve existing elements and add new ones",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/03_orset_add/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/03_orset_add/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/03_orset_add/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/03_orset_add/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/03_orset_add/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/03_orset_add/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_04",
           "title": "Update existing resource - OR-Set remove element",
           "description": "Removing an element from an OR-Set property should generate tombstone metadata and remove the element",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/04_orset_remove/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/04_orset_remove/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/04_orset_remove/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/04_orset_remove/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/04_orset_remove/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/04_orset_remove/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_05",
           "title": "Update multiple properties simultaneously",
           "description": "Updating both LWW (name) and OR-Set (recipeIngredient) properties in single save should increment clock once and handle both CRDT types",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/05_multiple_properties/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/05_multiple_properties/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/05_multiple_properties/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/name",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/05_multiple_properties/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/05_multiple_properties/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/05_multiple_properties/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
               },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_06",
           "title": "No-op save (identical data)",
           "description": "Saving identical data should detect no changes, skip save, and leave document unchanged",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/06_noop/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/06_noop/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/06_noop/expected_stored_graph.ttl",
-            "property_changes": []
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/06_noop/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/06_noop/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/06_noop/expected_stored_graph.ttl",
+                "property_changes": []
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
         },
         {
           "id": "save_07",
           "title": "Nested resources with fragment identifiers",
           "description": "Saving a resource with nested fragment-identified resources should handle both resources and their properties correctly",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "input_resource": "test_cases/save/07_nested_fragments/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/07_nested_fragments/expected_stored_graph.ttl"
-          },
-          "action_ts": {
-            "save": "2024-01-01T02:00:00Z"
-          }
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/07_nested_fragments/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/07_nested_fragments/expected_stored_graph.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
         },
         {
           "id": "save_08",
           "title": "Update nested resource properties",
           "description": "Updating properties of a nested fragment-identified resource should track changes for the nested resource",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/08_update_nested/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/08_update_nested/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/08_update_nested/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
-                "property_iri": "https://schema.org/calories",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/08_update_nested/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/08_update_nested/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/08_update_nested/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
+                    "property_iri": "https://schema.org/calories",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
+                    "property_iri": "https://schema.org/fatContent",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
               },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
-                "property_iri": "https://schema.org/fatContent",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_09",
           "title": "Remove nested resource entirely",
           "description": "Removing a nested fragment-identified resource should generate resource deletion tombstone",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/09_remove_nested/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/09_remove_nested/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/09_remove_nested/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/nutrition",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/09_remove_nested/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/09_remove_nested/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/09_remove_nested/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/nutrition",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_10",
           "title": "Add new nested resource",
           "description": "Adding a new nested fragment-identified resource should track changes for both the parent and nested resource",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/10_add_nested/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/10_add_nested/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/10_add_nested/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/nutrition",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/10_add_nested/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/10_add_nested/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/10_add_nested/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/nutrition",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
+                    "property_iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
+                    "property_iri": "https://schema.org/calories",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
+                    "property_iri": "https://schema.org/fatContent",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
               },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
-                "property_iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
-                "property_iri": "https://schema.org/calories",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
-                "property_iri": "https://schema.org/fatContent",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_11",
           "title": "Foreign clock entries preserved on update",
           "description": "When updating a document with clock entries from other installations, those foreign clock entries should be preserved",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/11_foreign_clock_preserved/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/11_foreign_clock_preserved/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/11_foreign_clock_preserved/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/name",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/11_foreign_clock_preserved/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/11_foreign_clock_preserved/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/11_foreign_clock_preserved/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_12",
           "title": "First save with identified blank nodes",
           "description": "Saving a resource with identified blank nodes should generate canonical fragment IRIs and create sync:hasBlankNodeMapping entries",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "input_resource": "test_cases/save/12_blank_node_first_save/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/12_blank_node_first_save/expected_stored_graph.ttl"
-          },
-          "action_ts": {
-            "save": "2024-01-01T02:00:00Z"
-          }
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/12_blank_node_first_save/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/12_blank_node_first_save/expected_stored_graph.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
         },
         {
           "id": "save_13",
           "title": "Update preserves identified blank node mappings",
           "description": "Updating a resource with existing identified blank node mappings should preserve those mappings and not create duplicates",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/13_blank_node_preserved/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/13_blank_node_preserved/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/13_blank_node_preserved/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/name",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/13_blank_node_preserved/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/13_blank_node_preserved/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/13_blank_node_preserved/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_14",
           "title": "Update identified blank node properties",
           "description": "Changing properties of an identified blank node should track the change and preserve the canonical mapping",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/14_update_blank_node_property/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/14_update_blank_node_property/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/14_update_blank_node_property/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-74f4d0cc07fa8ce00b8856defa9a0e31",
-                "property_iri": "https://schema.org/amount",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/14_update_blank_node_property/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/14_update_blank_node_property/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/14_update_blank_node_property/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-74f4d0cc07fa8ce00b8856defa9a0e31",
+                    "property_iri": "https://schema.org/amount",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_15",
           "title": "Add new identified blank node to existing set",
           "description": "Adding a new identified blank node to an OR-Set should create a new mapping and track the property change",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/15_add_blank_node/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/15_add_blank_node/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/15_add_blank_node/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/15_add_blank_node/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/15_add_blank_node/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/15_add_blank_node/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                    "property_iri": "https://schema.org/amount",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                    "property_iri": "https://schema.org/unit",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                    "property_iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                    "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
               },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
-                "property_iri": "https://schema.org/amount",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
-                "property_iri": "https://schema.org/unit",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
-                "property_iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
-                "property_iri": "https://schema.org/name",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_16",
           "title": "Remove identified blank node from set",
           "description": "Removing an identified blank node from an OR-Set should generate a tombstone using the canonical IRI and preserve the mapping",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/16_remove_blank_node/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/16_remove_blank_node/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/16_remove_blank_node/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/16_remove_blank_node/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/16_remove_blank_node/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/16_remove_blank_node/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_17",
           "title": "Update with existing property tombstones preserved",
           "description": "Updating a resource that has existing property tombstones should preserve those tombstones while making new changes",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/17_update_with_property_tombstones/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/17_update_with_property_tombstones/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/17_update_with_property_tombstones/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/name",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 3
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/17_update_with_property_tombstones/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/17_update_with_property_tombstones/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/17_update_with_property_tombstones/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 3
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 3
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/prepTime",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 3
+                  }
+                ]
               },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 3
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/prepTime",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 3
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_18",
           "title": "Delete properties with existing tombstones preserved",
           "description": "Deleting properties should create new tombstones while preserving existing ones",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/18_delete_with_existing_tombstones/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/18_delete_with_existing_tombstones/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/18_delete_with_existing_tombstones/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 3
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/18_delete_with_existing_tombstones/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/18_delete_with_existing_tombstones/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/18_delete_with_existing_tombstones/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 3
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/cookTime",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 3
+                  }
+                ]
               },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/cookTime",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 3
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_19",
           "title": "Update with existing resource-level tombstone preserved",
           "description": "Updating a resource that has resource-level tombstones (from deleted nested resources) should preserve those tombstones",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/19_update_with_resource_tombstone/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/19_update_with_resource_tombstone/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/19_update_with_resource_tombstone/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/name",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 4
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/19_update_with_resource_tombstone/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/19_update_with_resource_tombstone/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/19_update_with_resource_tombstone/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 4
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 4
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/cookTime",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 4
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/prepTime",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 4
+                  }
+                ]
               },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 4
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/cookTime",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 4
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/prepTime",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 4
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_20",
           "title": "First save with non-identified blank node",
           "description": "Saving a resource with a non-identified blank node (missing identifying properties) should keep it as a blank node without creating a canonical IRI mapping",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "input_resource": "test_cases/save/20_non_identified_blank_node_first_save/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/20_non_identified_blank_node_first_save/expected_stored_graph.ttl"
-          },
-          "action_ts": {
-            "save": "2024-01-01T02:00:00Z"
-          }
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/20_non_identified_blank_node_first_save/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/20_non_identified_blank_node_first_save/expected_stored_graph.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
         },
         {
           "id": "save_21",
           "title": "Update non-identified blank node with LWW-Register",
           "description": "Updating a non-identified blank node value in LWW-Register should replace the old blank node with a new one (LWW semantics, no tombstone)",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/21_non_identified_blank_node_update/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/21_non_identified_blank_node_update/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/21_non_identified_blank_node_update/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/nutrition",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/21_non_identified_blank_node_update/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/21_non_identified_blank_node_update/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/21_non_identified_blank_node_update/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/nutrition",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_22",
           "title": "Shared blank node referenced from multiple paths",
           "description": "When a blank node (supplier) is referenced from two different resources (tomato and basil) and one reference is removed (basil's provider property), the shared blank node should remain since it's still referenced by the other resource (tomato). Note that the property value tombstones need to be added for each known ID of the blank node, so we actually expect two property value tombstones and not one.",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/22_multiple_refs_identified_remove_one/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/22_multiple_refs_identified_remove_one/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/22_multiple_refs_identified_remove_one/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
-                "property_iri": "https://schema.org/provider",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/22_multiple_refs_identified_remove_one/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/22_multiple_refs_identified_remove_one/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/22_multiple_refs_identified_remove_one/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                    "property_iri": "https://schema.org/provider",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_23",
           "title": "Shared unidentified blank node referenced from multiple identified resources",
           "description": "When an unidentified blank node (supplier with no identifying properties) is referenced from two identified resources (tomato and basil ingredients, identified by name) and one reference is removed (basil's provider property), the removal is handled via LWW-Register semantics. The shared unidentified supplier blank node remains since it's still referenced by tomato. No tombstone is created because LWW-Register replaces the value with absence.",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/23_multiple_refs_unidentified_remove_one/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/23_multiple_refs_unidentified_remove_one/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/23_multiple_refs_unidentified_remove_one/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
-                "property_iri": "https://schema.org/provider",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/23_multiple_refs_unidentified_remove_one/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/23_multiple_refs_unidentified_remove_one/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/23_multiple_refs_unidentified_remove_one/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
+                    "property_iri": "https://schema.org/provider",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_24",
           "title": "Chain of unidentified blank nodes, leaf deleted",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
-                "property_iri": "https://schema.org/recipeIngredient",
-                "changed_at": "2024-01-01T02:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeIngredient",
+                    "changed_at": "2024-01-01T02:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T00:00:00Z"
+                },
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-01T00:00:00Z"
-            },
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_25",
           "title": "No-op save with identified blank nodes and tombstones",
           "description": "Re-saving identical data with deep structure of identified blank nodes (ingredients and supplier) including existing tombstones. Should be a complete no-op with no property changes or clock increments.",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/25_no_op_identified_blank_nodes/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/25_no_op_identified_blank_nodes/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/25_no_op_identified_blank_nodes/expected_stored_graph.ttl",
-            "property_changes": []
-          },
-          "action_ts": {
-            "save": "2024-01-01T02:00:00Z"
-          }
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/25_no_op_identified_blank_nodes/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/25_no_op_identified_blank_nodes/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/25_no_op_identified_blank_nodes/expected_stored_graph.ttl",
+                "property_changes": []
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
         },
         {
           "id": "save_26",
           "title": "No-op save with mixed identified and unidentified blank nodes",
           "description": "Re-saving identical data with identified ingredients and unidentified supplier. Should be a complete no-op with no property changes or clock increments.",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/26_no_op_mixed_identified_unidentified/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/26_no_op_mixed_identified_unidentified/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/26_no_op_mixed_identified_unidentified/expected_stored_graph.ttl",
-            "property_changes": []
-          },
-          "action_ts": {
-            "save": "2024-01-01T02:00:00Z"
-          }
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/26_no_op_mixed_identified_unidentified/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/26_no_op_mixed_identified_unidentified/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/26_no_op_mixed_identified_unidentified/expected_stored_graph.ttl",
+                "property_changes": []
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
         },
         {
           "id": "save_27",
           "title": "No-op save with all unidentified blank nodes",
           "description": "Re-saving identical data with all unidentified blank nodes (ingredients and supplier). Should be a complete no-op with no property changes or clock increments.",
           "config": "shared/configs/basic_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "stored_graph_before": "test_cases/save/27_no_op_all_unidentified/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/27_no_op_all_unidentified/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/27_no_op_all_unidentified/expected_stored_graph.ttl",
-            "property_changes": []
-          },
-          "action_ts": {
-            "save": "2024-01-01T02:00:00Z"
-          }
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/27_no_op_all_unidentified/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/27_no_op_all_unidentified/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/27_no_op_all_unidentified/expected_stored_graph.ttl",
+                "property_changes": []
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
         },
         {
           "id": "save_28",
           "title": "First save with path-identified blank node",
           "description": "Saving a new NotesCategory resource with a path-identified displaySettings blank node. The blank node should be assigned a canonical IRI based on its parent path (pnotes:displaySettings from the category resource).",
           "config": "shared/configs/category_config.json",
-          "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
-          "input_resource": "test_cases/save/28_path_identified_first_save/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/28_path_identified_first_save/expected_stored_graph.ttl",
-            "installation": "test_cases/save/28_path_identified_first_save/expected_installation.ttl"
-          },
-          "action_ts": {
-            "save": "2024-01-15T10:00:00Z"
-          }
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
+              "input_resource": "test_cases/save/28_path_identified_first_save/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/28_path_identified_first_save/expected_stored_graph.ttl",
+                "installation": "test_cases/save/28_path_identified_first_save/expected_installation.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-15T10:00:00Z"
+              }
+            }
+          ]
         },
         {
           "id": "save_29",
           "title": "Update path-identified blank node properties",
           "description": "Updating properties within a path-identified blank node. The blank node keeps the same canonical IRI (based on parent path), but its LWW properties are updated with new clocks.",
           "config": "shared/configs/category_config.json",
-          "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
-          "stored_graph_before": "test_cases/save/29_path_identified_update/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/29_path_identified_update/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/29_path_identified_update/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
-                "property_iri": "https://example.org/vocab/personal-notes#sortOrder",
-                "changed_at": "2024-01-15T12:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
+              "stored_graph_before": "test_cases/save/29_path_identified_update/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/29_path_identified_update/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/29_path_identified_update/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
+                    "property_iri": "https://example.org/vocab/personal-notes#sortOrder",
+                    "changed_at": "2024-01-15T12:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
+                    "property_iri": "https://example.org/vocab/personal-notes#defaultView",
+                    "changed_at": "2024-01-15T12:00:00Z",
+                    "logical_clock": 2
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
+                    "property_iri": "https://example.org/vocab/personal-notes#showArchived",
+                    "changed_at": "2024-01-15T12:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
               },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
-                "property_iri": "https://example.org/vocab/personal-notes#defaultView",
-                "changed_at": "2024-01-15T12:00:00Z",
-                "logical_clock": 2
-              },
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
-                "property_iri": "https://example.org/vocab/personal-notes#showArchived",
-                "changed_at": "2024-01-15T12:00:00Z",
-                "logical_clock": 2
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-15T10:00:00Z"
+                },
+                "save": "2024-01-15T12:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-15T10:00:00Z"
-            },
-            "save": "2024-01-15T12:00:00Z"
-          }
+            }
+          ]
         },
         {
           "id": "save_30",
           "title": "Delete path-identified blank node via LWW",
           "description": "Removing the displaySettings property (LWW-Register) implicitly deletes the path-identified blank node. Creates deletion tombstones for both the parent property and all blank node properties.",
           "config": "shared/configs/category_config.json",
-          "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
-          "stored_graph_before": "test_cases/save/30_path_identified_delete/stored_graph_before.ttl",
-          "input_resource": "test_cases/save/30_path_identified_delete/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/30_path_identified_delete/expected_stored_graph.ttl",
-            "property_changes": [
-              {
-                "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#it",
-                "property_iri": "https://example.org/vocab/personal-notes#displaySettings",
-                "changed_at": "2024-01-15T14:00:00Z",
-                "logical_clock": 2
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
+              "stored_graph_before": "test_cases/save/30_path_identified_delete/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/30_path_identified_delete/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/30_path_identified_delete/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#it",
+                    "property_iri": "https://example.org/vocab/personal-notes#displaySettings",
+                    "changed_at": "2024-01-15T14:00:00Z",
+                    "logical_clock": 2
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-15T12:00:00Z"
+                },
+                "save": "2024-01-15T14:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "prepare": {
-              "save": "2024-01-15T12:00:00Z"
-            },
-            "save": "2024-01-15T14:00:00Z"
-          }
+            }
+          ]
         }
       ]
     },
@@ -869,21 +1019,454 @@
           "title": "First save with group index - creates template and group",
           "description": "Saving a resource with group index configuration should create the resource, the group index template, and the specific group index document for the resource's category value.",
           "config": "shared/configs/group_index_config.json",
-          "typeIri": "https://schema.org/Recipe",
-          "input_resource": "test_cases/save/31_group_index_first_save/input_resource.ttl",
-          "expected": {
-            "stored_graph": "test_cases/save/31_group_index_first_save/expected_stored_graph.ttl",
-            "installation": "test_cases/save/31_group_index_first_save/expected_installation.ttl",
-            "index_documents": [
-              {
-                "localName": "recipes-by-category",
-                "expected_graph": "test_cases/save/31_group_index_first_save/expected_group_index_template.ttl"
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/31_group_index_first_save/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/31_group_index_first_save/expected_stored_graph.ttl",
+                "installation": "test_cases/save/31_group_index_first_save/expected_installation.ttl",
+                "index_documents": [
+                  {
+                    "localName": "recipes-by-category",
+                    "expected_graph": "test_cases/save/31_group_index_first_save/expected_group_index_template.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
               }
-            ]
-          },
-          "action_ts": {
-            "save": "2024-01-01T02:00:00Z"
-          }
+            }
+          ]
+        },
+        {
+          "id": "save_32",
+          "title": "Item in multiple groups (OR-Set property with multiple values)",
+          "description": "Recipe with recipeCategory=['Dessert', 'Quick Meals'] should create entries in both group index shards and list both in belongsToIndexShard.",
+          "config": "shared/configs/group_index_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/32_multiple_groups/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/32_multiple_groups/expected_stored_graph.ttl",
+                "installation": "test_cases/save/32_multiple_groups/expected_installation.ttl",
+                "index_documents": [
+                  {
+                    "localName": "recipes-by-category",
+                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_template.ttl"
+                  }
+                ],
+                "group_index_documents": [
+                  {
+                    "template_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_desserts.ttl"
+                  },
+                  {
+                    "template_localName": "recipes-by-category",
+                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
+                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_quick_meals.ttl"
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/32_multiple_groups/expected_shard_desserts.ttl"
+                  },
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/32_multiple_groups/expected_shard_quick_meals.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_33",
+          "title": "Update group membership - change category value",
+          "description": "Updating recipe category from 'Dessert' to 'Main Course' should remove from old shard (tombstone), add to new shard, and update belongsToIndexShard reference.",
+          "config": "shared/configs/group_index_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/33_update_group_membership/input_resource_initial.ttl",
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            },
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/33_update_group_membership/input_resource.ttl",
+              "action_ts": {
+                "save": "2024-01-01T04:00:00Z"
+              },
+              "expected": {
+                "stored_graph": "test_cases/save/33_update_group_membership/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeCategory",
+                    "changed_at": "2024-01-01T04:00:00.002Z",
+                    "logical_clock": 2
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/33_update_group_membership/expected_shard_dessert_after.ttl"
+                  },
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "11_07ebfdc1c615e5711a349104712f9126",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/33_update_group_membership/expected_shard_main_course.ttl"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_34",
+          "title": "Add group membership in OR-Set",
+          "description": "Adding 'Quick Meals' to existing category ['Dessert'] should add entry to second shard while preserving first, and update belongsToIndexShard to list both shards.",
+          "config": "shared/configs/group_index_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/34_add_group_membership/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/34_add_group_membership/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/34_add_group_membership/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeCategory",
+                    "changed_at": "2024-01-01T04:00:00Z",
+                    "logical_clock": 2
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/34_add_group_membership/expected_shard_dessert.ttl"
+                  },
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/34_add_group_membership/expected_shard_quick_meals.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T02:00:00Z"
+                },
+                "save": "2024-01-01T04:00:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_35",
+          "title": "Remove group membership from OR-Set",
+          "description": "Removing 'Quick Meals' from category ['Dessert', 'Quick Meals'] should tombstone entry in second shard, preserve first shard, and update belongsToIndexShard to list only remaining shard.",
+          "config": "shared/configs/group_index_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/35_remove_group_membership/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/35_remove_group_membership/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/35_remove_group_membership/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
+                    "property_iri": "https://schema.org/recipeCategory",
+                    "changed_at": "2024-01-01T04:00:00Z",
+                    "logical_clock": 3
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/35_remove_group_membership/expected_shard_dessert.ttl"
+                  },
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/35_remove_group_membership/expected_shard_quick_meals_after.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T02:00:00Z"
+                },
+                "save": "2024-01-01T04:00:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_36",
+          "title": "Foreign shard discovery and update",
+          "description": "Application only knows GroupIndexTemplate through config. When saving recipe with category='Dessert', must: 1) Read template, 2) Evaluate grouping rules, 3) Construct shard IRI dynamically, 4) Read existing shard if present OR create new, 5) Add/update entry. Tests dynamic shard discovery without pre-existing shard references.",
+          "config": "shared/configs/group_index_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/36_foreign_shard_discovery/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/36_foreign_shard_discovery/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph.ttl",
+                "property_changes": [
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:bmV3cmVjaXBlNDU2#it",
+                    "property_iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:bmV3cmVjaXBlNDU2#it",
+                    "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:bmV3cmVjaXBlNDU2#it",
+                    "property_iri": "https://schema.org/recipeCategory",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_dessert.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T02:00:00Z"
+                },
+                "save": "2024-01-01T06:00:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_37",
+          "title": "Hierarchical grouping - multi-level date extraction",
+          "description": "Using composite identification key (sourceProperty + hierarchyLevel) to extract year and month from dateCreated, creating nested shard path like 'recipes-by-date/2024/01/shard-0.ttl'.",
+          "config": "shared/configs/hierarchical_group_index_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/37_hierarchical_grouping/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/37_hierarchical_grouping/expected_stored_graph.ttl",
+                "installation": "test_cases/save/37_hierarchical_grouping/expected_installation.ttl",
+                "index_documents": [
+                  {
+                    "localName": "recipes-by-date",
+                    "expected_graph": "test_cases/save/37_hierarchical_grouping/expected_group_index_template.ttl"
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-date",
+                    "group_path": "2024/01",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/37_hierarchical_grouping/expected_shard_2024_01.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-15T10:00:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_38",
+          "title": "Missing property value with skip strategy",
+          "description": "Recipe without recipeCategory property should be skipped from group index (not create any shard entry) when missingValue strategy is 'skip'.",
+          "config": "shared/configs/group_index_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/38_missing_property_skip/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/38_missing_property_skip/expected_stored_graph.ttl",
+                "installation": "test_cases/save/38_missing_property_skip/expected_installation.ttl",
+                "index_documents": [
+                  {
+                    "localName": "recipes-by-category",
+                    "expected_graph": "test_cases/save/38_missing_property_skip/expected_group_index_template.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_39",
+          "title": "Missing property value with default value strategy",
+          "description": "Recipe without recipeCategory property should use default value 'Uncategorized' from grouping rule missingValue configuration and create entry in that shard.",
+          "config": "shared/configs/group_index_with_default_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/39_missing_property_default/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/39_missing_property_default/expected_stored_graph.ttl",
+                "installation": "test_cases/save/39_missing_property_default/expected_installation.ttl",
+                "index_documents": [
+                  {
+                    "localName": "recipes-by-category",
+                    "expected_graph": "test_cases/save/39_missing_property_default/expected_group_index_template.ttl"
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "Uncategorized",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/39_missing_property_default/expected_shard_uncategorized.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_40",
+          "title": "Property transformation - lowercase",
+          "description": "Recipe with category 'DESSERT' (uppercase) should be transformed to lowercase 'dessert' for shard path via transform configuration.",
+          "config": "shared/configs/group_index_with_transform_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/40_transform_lowercase/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/40_transform_lowercase/expected_stored_graph.ttl",
+                "installation": "test_cases/save/40_transform_lowercase/expected_installation.ttl",
+                "index_documents": [
+                  {
+                    "localName": "recipes-by-category",
+                    "expected_graph": "test_cases/save/40_transform_lowercase/expected_group_index_template.ttl"
+                  }
+                ],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/40_transform_lowercase/expected_shard_dessert.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "id": "save_41",
+          "title": "No-op save with group index - no group changes",
+          "description": "Re-saving recipe with identical category value should not update group index shard (performance optimization). Document update should only touch resource storage, not index shards.",
+          "config": "shared/configs/group_index_config.json",
+          "steps": [
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
+              "stored_graph_before": "test_cases/save/41_noop_group_index/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/41_noop_group_index/input_resource.ttl",
+              "expected": {
+                "stored_graph": "test_cases/save/41_noop_group_index/expected_stored_graph.ttl",
+                "property_changes": [],
+                "shard_documents": [
+                  {
+                    "index_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/41_noop_group_index/expected_shard_dessert_unchanged.ttl"
+                  }
+                ]
+              },
+              "action_ts": {
+                "prepare": {
+                  "save": "2024-01-01T02:00:00Z"
+                },
+                "save": "2024-01-01T04:00:00Z"
+              }
+            }
+          ]
         }
       ]
     }

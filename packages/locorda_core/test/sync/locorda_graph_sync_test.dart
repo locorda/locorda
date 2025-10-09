@@ -56,8 +56,8 @@ void main() {
           switch (suiteName) {
             case 'save':
             case 'group_index':
-              await _executeSaveTest(testJson, testAssetsDir, urlToPathMap,
-                  testBaseTimestamp, baseInstallationId);
+              await _executeSaveTestWithSteps(testJson, testAssetsDir,
+                  urlToPathMap, testBaseTimestamp, baseInstallationId);
               break;
             case 'save_error':
               await _executeSaveErrorTest(testJson, testAssetsDir, urlToPathMap,
@@ -88,83 +88,95 @@ RdfGraph? _readGraphFromPath(Directory testAssetsDir, String? path) {
   return readGraphFromFile(testAssetsDir, path);
 }
 
-typedef TestData = ({
-  IriTerm externalDocumentIri,
-  Map<String, dynamic> expectedJson,
-  IriTerm typeIri,
-  RdfGraph? storedGraphBefore,
-  RdfGraph inputResource,
-  Map<String, dynamic>? actionTs,
-  SyncGraphConfig config
-});
-Future<TestData> _prepare(
+/// Executes a save test with support for multiple sequential steps.
+/// Each step can have its own input, action timestamps, and expectations.
+Future<void> _executeSaveTestWithSteps(
     Map<String, dynamic> testJson,
     Directory testAssetsDir,
     Map<String, String> urlToPathMap,
     DateTime baseTimestamp,
     String? baseInstallationId) async {
-  // Load configuration
+  final testId = testJson['id'] as String;
   final config = _loadConfig(testAssetsDir, testJson['config'] as String);
+  final storage = TestStorage();
+  final iriTranslator = IriTranslator(
+      resourceLocator: LocalResourceLocator(iriTermFactory: IriTerm.validated),
+      resourceConfigs: config.resources);
 
-  // Get type IRI from test JSON
-  final typeIri = IriTerm(testJson['typeIri'] as String);
+  final steps = testJson['steps'] as List<dynamic>;
 
-  // Load TTL files
-  final storedGraphBefore = _readGraphFromPath(
-      testAssetsDir, testJson['stored_graph_before'] as String?);
+  for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+    final stepJson = steps[stepIndex] as Map<String, dynamic>;
+
+    await _executeStep(
+      testId: testId,
+      stepIndex: stepIndex,
+      stepJson: stepJson,
+      testAssetsDir: testAssetsDir,
+      urlToPathMap: urlToPathMap,
+      baseTimestamp: baseTimestamp,
+      baseInstallationId: baseInstallationId,
+      config: config,
+      storage: storage,
+      iriTranslator: iriTranslator,
+    );
+  }
+}
+
+/// Executes a single step within a multi-step test.
+Future<void> _executeStep({
+  required String testId,
+  required int stepIndex,
+  required Map<String, dynamic> stepJson,
+  required Directory testAssetsDir,
+  required Map<String, String> urlToPathMap,
+  required DateTime baseTimestamp,
+  required String? baseInstallationId,
+  required SyncGraphConfig config,
+  required TestStorage storage,
+  required IriTranslator iriTranslator,
+}) async {
+  // make sure to reset property changes for next step
+  storage.resetPropertyChanges();
+
+  final action = stepJson['action'] as String;
+
+  if (action != 'save') {
+    fail('Unknown action: $action');
+  }
+
+  // Get type IRI from step
+  final typeIri = IriTerm(stepJson['typeIri'] as String);
+
+  // Load input resource
   final inputResource =
-      _readGraphFromPath(testAssetsDir, testJson['input_resource'] as String)!;
+      _readGraphFromPath(testAssetsDir, stepJson['input_resource'] as String)!;
 
-  final expectedJson = testJson['expected'] as Map<String, dynamic>;
+  // Load stored_graph_before if specified
+  final storedGraphBefore = _readGraphFromPath(
+      testAssetsDir, stepJson['stored_graph_before'] as String?);
 
   // Load action timestamps if provided
-  final actionTs = testJson['action_ts'] as Map<String, dynamic>?;
+  final actionTs = stepJson['action_ts'] as Map<String, dynamic>?;
 
-  // Extract document IRI - use stored_graph_before if available (which has internal IRIs),
-  // otherwise use input_resource (which has external IRIs that will be translated)
-  final documentIri = inputResource.subjects
+  // Extract document IRI from input
+  final externalDocumentIri = inputResource.subjects
       .whereType<IriTerm>()
       .map((s) => s.getDocumentIri())
       .toSet()
       .single;
 
-  return (
-    externalDocumentIri: documentIri,
-    expectedJson: expectedJson,
-    typeIri: typeIri,
-    storedGraphBefore: storedGraphBefore,
-    inputResource: inputResource,
-    actionTs: actionTs,
-    config: config
-  );
-}
-
-Future<void> _executeSave(
-    TestData testData,
-    TestStorage storage,
-    Directory testAssetsDir,
-    Map<String, String> urlToPathMap,
-    DateTime baseTimestamp,
-    String? baseInstallationId,
-    IriTranslator iriTranslator) async {
+  // Execute the save action
   final timestampFactory =
       TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
-  final (
-    externalDocumentIri: documentIri,
-    expectedJson: _,
-    typeIri: typeIri,
-    storedGraphBefore: storedGraphBefore,
-    inputResource: inputResource,
-    actionTs: actionTs,
-    config: config
-  ) = testData;
+
   if (storedGraphBefore != null) {
     // Set timestamp for prepare.save if specified
     setTime(actionTs?['prepare']?['save'], timestampFactory);
     final now = timestampFactory();
 
     storage.saveDocument(
-        iriTranslator.externalToInternal(documentIri),
+        iriTranslator.externalToInternal(externalDocumentIri),
         typeIri,
         storedGraphBefore,
         DocumentMetadata(
@@ -195,45 +207,63 @@ Future<void> _executeSave(
   setTime(actionTs?['save'], timestampFactory);
 
   await sync.save(typeIri, inputResource);
+
+  // Verify expectations if provided
+  final expectedJson = stepJson['expected'] as Map<String, dynamic>?;
+  if (expectedJson != null) {
+    await _verifyExpectations(
+      testId: testId,
+      stepIndex: stepIndex,
+      expectedJson: expectedJson,
+      testAssetsDir: testAssetsDir,
+      storage: storage,
+      config: config,
+      iriTranslator: iriTranslator,
+      externalDocumentIri: externalDocumentIri,
+      typeIri: typeIri,
+    );
+  }
 }
 
-Future<void> _executeSaveTest(
-    Map<String, dynamic> testJson,
-    Directory testAssetsDir,
-    Map<String, String> urlToPathMap,
-    DateTime baseTimestamp,
-    String? baseInstallationId) async {
-  final testData = await _prepare(
-      testJson, testAssetsDir, urlToPathMap, baseTimestamp, baseInstallationId);
-  final storage = TestStorage();
-  final iriTranslator = _createIriTranslator(testData);
-  await _executeSave(testData, storage, testAssetsDir, urlToPathMap,
-      baseTimestamp, baseInstallationId, iriTranslator);
+/// Verifies all expectations for a step.
+Future<void> _verifyExpectations({
+  required String testId,
+  required int stepIndex,
+  required Map<String, dynamic> expectedJson,
+  required Directory testAssetsDir,
+  required TestStorage storage,
+  required SyncGraphConfig config,
+  required IriTranslator iriTranslator,
+  required IriTerm externalDocumentIri,
+  required IriTerm typeIri,
+}) async {
+  final documentIri = iriTranslator.externalToInternal(externalDocumentIri);
 
-  final expectedJson = testData.expectedJson;
-  final documentIri =
-      iriTranslator.externalToInternal(testData.externalDocumentIri);
-  final expectedStoredGraph = _readGraphFromPath(
-      testAssetsDir, expectedJson['stored_graph'] as String)!;
-  final expectedInstallation = _readGraphFromPath(
-      testAssetsDir, expectedJson['installation'] as String?);
-  final expectedPropertyChanges = _parseExpectedPropertyChanges(expectedJson);
-
-  final storedDataDocument = await storage.getDocument(documentIri);
-
-  if (storedDataDocument == null) {
-    fail('No document stored for $documentIri');
+  // Verify stored graph if expected
+  final expectedStoredGraphPath = expectedJson['stored_graph'] as String?;
+  if (expectedStoredGraphPath != null) {
+    final expectedStoredGraph =
+        _readGraphFromPath(testAssetsDir, expectedStoredGraphPath)!;
+    final storedDataDocument = await storage.getDocument(documentIri);
+    if (storedDataDocument == null) {
+      fail(await _failMissing(storage, typeIri, documentIri));
+    }
+    _expectEqualGraphs("$testId [step $stepIndex] - stored_graph",
+        storedDataDocument.document, expectedStoredGraph);
   }
-  _expectEqualGraphs(storedDataDocument.document, expectedStoredGraph);
 
   // Verify property changes if expected
+  final expectedPropertyChanges = _parseExpectedPropertyChanges(expectedJson);
   if (expectedPropertyChanges != null) {
     final actualPropertyChanges = await storage.getPropertyChanges(documentIri);
     _expectEqualPropertyChanges(actualPropertyChanges, expectedPropertyChanges);
   }
 
   // Verify installation document if expected
-  if (expectedInstallation != null) {
+  final expectedInstallationPath = expectedJson['installation'] as String?;
+  if (expectedInstallationPath != null) {
+    final expectedInstallation =
+        _readGraphFromPath(testAssetsDir, expectedInstallationPath)!;
     final settings = await storage.getSettings(['installation_iri']);
     final installationIriStr = settings['installation_iri'];
     if (installationIriStr == null) {
@@ -243,39 +273,48 @@ Future<void> _executeSaveTest(
     final storedInstallation = await storage.getDocument(installationIri);
 
     if (storedInstallation == null) {
-      fail('No installation document stored for $installationIri');
+      fail(await _failMissing(
+          storage, CrdtClientInstallation.classIri, installationIri));
     }
-    _expectEqualGraphs(storedInstallation.document, expectedInstallation);
+    _expectEqualGraphs("$testId [step $stepIndex]", storedInstallation.document,
+        expectedInstallation);
   }
 
   // Verify index documents if expected
   final expectedIndexDocs = expectedJson['index_documents'] as List<dynamic>?;
   if (expectedIndexDocs != null) {
     await _verifyIndexDocuments(
-        expectedIndexDocs, testAssetsDir, storage, testData.config);
+        testId, expectedIndexDocs, testAssetsDir, storage, config);
+  }
+
+  // Verify group index documents if expected
+  final expectedGroupIndexDocs =
+      expectedJson['group_index_documents'] as List<dynamic>?;
+  if (expectedGroupIndexDocs != null) {
+    await _verifyGroupIndexDocuments(
+        testId, expectedGroupIndexDocs, testAssetsDir, storage, config);
   }
 
   // Verify shard documents if expected
   final expectedShardDocs = expectedJson['shard_documents'] as List<dynamic>?;
   if (expectedShardDocs != null) {
-    await _verifyShardDocuments(expectedShardDocs, testAssetsDir, storage,
-        testData.config, storedDataDocument);
+    final storedDataDocument = await storage.getDocument(documentIri);
+    if (storedDataDocument == null) {
+      fail(await _failMissing(storage, typeIri, documentIri));
+    }
+    await _verifyShardDocuments(testId, expectedShardDocs, testAssetsDir,
+        storage, config, storedDataDocument);
   }
 }
 
-IriTranslator _createIriTranslator(TestData testData) {
-  return IriTranslator(
-      resourceLocator: LocalResourceLocator(iriTermFactory: IriTerm.validated),
-      resourceConfigs: testData.config.resources);
-}
-
-void _expectEqualGraphs(RdfGraph actual, RdfGraph expected) {
-  expectEqualGraphs(actual, expected);
+void _expectEqualGraphs(String name, RdfGraph actual, RdfGraph expected) {
+  expectEqualGraphs(name, actual, expected);
 }
 
 void setTime(String? ts, TestPhysicalTimestampFactory timestampFactory) {
   if (ts != null) {
-    timestampFactory.setTimestamp(DateTime.parse(ts));
+    final dateTime = DateTime.parse(ts);
+    timestampFactory.setTimestamp(dateTime);
   }
 }
 
@@ -353,10 +392,11 @@ void _expectEqualPropertyChanges(
 }
 
 String formatChangedProperty(PropertyChange exp) =>
-    'resource=${exp.resourceIri.value}, property=${(exp.propertyIri as IriTerm).value}, clock=${exp.changeLogicalClock}, timestamp=${exp.changedAtMs}';
+    'resource=${exp.resourceIri.debug}, property=${(exp.propertyIri as IriTerm).value}, clock=${exp.changeLogicalClock}, timestamp=${exp.changedAtMs}';
 
 /// Verify index documents match expected graphs
 Future<void> _verifyIndexDocuments(
+  String testId,
   List<dynamic> expectedIndexDocs,
   Directory testAssetsDir,
   TestStorage storage,
@@ -378,13 +418,68 @@ Future<void> _verifyIndexDocuments(
     // Get actual stored document
     final storedIndex = await storage.getDocument(indexDocumentIri);
     if (storedIndex == null) {
-      fail('No index document stored for $indexDocumentIri');
+      fail(await _failMissing(
+          storage,
+          switch (idx) {
+            FullIndexGraphConfig _ => IdxFullIndex.classIri,
+            GroupIndexGraphConfig _ => IdxGroupIndex.classIri
+          },
+          indexDocumentIri));
     }
 
     // Load expected graph
     final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
 
-    _expectEqualGraphs(storedIndex.document, expectedGraph);
+    _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
+        storedIndex.document, expectedGraph);
+  }
+}
+
+/// Verify GroupIndex documents match expected graphs
+Future<void> _verifyGroupIndexDocuments(
+  String testId,
+  List<dynamic> expectedGroupIndexDocs,
+  Directory testAssetsDir,
+  TestStorage storage,
+  SyncGraphConfig config,
+) async {
+  for (final groupIndexDocJson in expectedGroupIndexDocs) {
+    final groupIndexMap = groupIndexDocJson as Map<String, dynamic>;
+    final templateLocalName = groupIndexMap['template_localName'] as String;
+    final groupPath = groupIndexMap['group_path'] as String;
+    final expectedGraphPath = groupIndexMap['expected_graph'] as String;
+
+    // Generate GroupIndex IRI from template and group path
+    final indexRdfGenerator = _createIndexRdfGenerator();
+    final (idx, resourceTypeIri) =
+        _findIndexConfigByLocalName(config, templateLocalName)!;
+
+    if (idx is! GroupIndexGraphConfig) {
+      fail(
+          'Expected GroupIndexGraphConfig for template $templateLocalName, got ${idx.runtimeType}');
+    }
+
+    // Generate template IRI first
+    final templateIri =
+        indexRdfGenerator.generateGroupIndexTemplateIri(idx, resourceTypeIri);
+
+    // Then generate GroupIndex IRI for this specific group
+    final groupIndexIri =
+        indexRdfGenerator.generateGroupIndexIri(templateIri, groupPath);
+    final groupIndexDocumentIri = groupIndexIri.getDocumentIri();
+
+    // Get actual stored document
+    final storedGroupIndex = await storage.getDocument(groupIndexDocumentIri);
+    if (storedGroupIndex == null) {
+      fail(await _failMissing(
+          storage, IdxGroupIndex.classIri, groupIndexDocumentIri));
+    }
+
+    // Load expected graph
+    final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+
+    _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
+        storedGroupIndex.document, expectedGraph);
   }
 }
 
@@ -413,6 +508,7 @@ IndexRdfGenerator _createIndexRdfGenerator(
 
 /// Verify shard documents match expected graphs
 Future<void> _verifyShardDocuments(
+  String testId,
   List<dynamic> expectedShardDocs,
   Directory testAssetsDir,
   TestStorage storage,
@@ -426,18 +522,37 @@ Future<void> _verifyShardDocuments(
     final shardNumber = shardMap['shard_number'] as int;
     final shardVersion = shardMap['shard_version'] as String;
     final expectedGraphPath = shardMap['expected_graph'] as String;
+    final groupPath =
+        shardMap['group_path'] as String?; // For GroupIndex shards
 
     // Generate shard IRI
     final indexRdfGenerator = _createIndexRdfGenerator();
     final (idx, resourceTypeIri) =
         _findIndexConfigByLocalName(config, indexLocalName)!;
 
-    // FIXME: Implement for group indices as well - but there we also need to determine the actual group
-    final indexResourceIri = indexRdfGenerator.generateFullIndexIri(
-        idx as FullIndexGraphConfig, resourceTypeIri);
+    final IriTerm indexResourceIri;
+    final IriTerm indexClassIri;
 
-    final shardResourceIri = indexRdfGenerator.generateShardIri(shardTotal,
-        shardNumber, shardVersion, indexResourceIri, IdxFullIndex.classIri);
+    if (idx is FullIndexGraphConfig) {
+      indexResourceIri =
+          indexRdfGenerator.generateFullIndexIri(idx, resourceTypeIri);
+      indexClassIri = IdxFullIndex.classIri;
+    } else if (idx is GroupIndexGraphConfig) {
+      if (groupPath == null) {
+        fail('group_path is required for GroupIndex shards');
+      }
+      // First generate template IRI, then group index IRI
+      final templateIri =
+          indexRdfGenerator.generateGroupIndexTemplateIri(idx, resourceTypeIri);
+      indexResourceIri =
+          indexRdfGenerator.generateGroupIndexIri(templateIri, groupPath);
+      indexClassIri = IdxGroupIndex.classIri;
+    } else {
+      fail('Unsupported index config type: ${idx.runtimeType}');
+    }
+
+    final shardResourceIri = indexRdfGenerator.generateShardIri(
+        shardTotal, shardNumber, shardVersion, indexResourceIri, indexClassIri);
 
     // Calculate index hash
 
@@ -446,17 +561,27 @@ Future<void> _verifyShardDocuments(
     // Get actual stored shard document
     final storedShard = await storage.getDocument(shardDocumentIri);
     if (storedShard == null) {
-      final rl = LocalResourceLocator(iriTermFactory: IriTerm.validated)
-          .fromIri(IdxShard.classIri, shardDocumentIri);
-      fail(
-          'No shard document stored for  ${rl.id} ${rl.fragment} ${rl.typeIri.value} - $shardDocumentIri');
+      fail(await _failMissing(storage, IdxShard.classIri, shardDocumentIri));
     }
 
     // Load expected graph
     final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
 
-    _expectEqualGraphs(storedShard.document, expectedGraph);
+    _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
+        storedShard.document, expectedGraph);
   }
+}
+
+Future<String> _failMissing(
+    TestStorage storage, IriTerm typeIri, IriTerm shardDocumentIri) async {
+  final all =
+      await storage.getDocumentsModifiedSince(typeIri, null, limit: 100);
+  final existing = all.documents
+      .map((d) => '${d.documentIri.debug} - ${d.documentIri.value}')
+      .join('\n');
+  final failMsg =
+      'No ${typeIri.localName} document stored for  ${shardDocumentIri.debug} - $shardDocumentIri\nExisting documents:\n$existing';
+  return failMsg;
 }
 
 /// Execute a save error test - expects an exception to be thrown
@@ -466,17 +591,53 @@ Future<void> _executeSaveErrorTest(
     Map<String, String> urlToPathMap,
     DateTime baseTimestamp,
     String? baseInstallationId) async {
-  final testData = await _prepare(
-      testJson, testAssetsDir, urlToPathMap, baseTimestamp, baseInstallationId);
-  final expectedJson = testData.expectedJson;
+  // Load configuration
+  final config = _loadConfig(testAssetsDir, testJson['config'] as String);
+
+  // Get type IRI
+  final typeIri = IriTerm(testJson['typeIri'] as String);
+
+  // Load input resource
+  final inputResource =
+      _readGraphFromPath(testAssetsDir, testJson['input_resource'] as String)!;
+
+  // Get expected error details
+  final expectedJson = testJson['expected'] as Map<String, dynamic>;
   final expectedErrorType = expectedJson['error_type'] as String;
   final expectedErrorMessagePattern =
       expectedJson['error_message_pattern'] as String?;
+
+  // Load action timestamps if provided
+  final actionTs = testJson['action_ts'] as Map<String, dynamic>?;
+
   final storage = TestStorage();
-  final iriTranslator = _createIriTranslator(testData);
+
   try {
-    await _executeSave(testData, storage, testAssetsDir, urlToPathMap,
-        baseTimestamp, baseInstallationId, iriTranslator);
+    // Execute save (should throw)
+    final timestampFactory =
+        TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
+
+    final fetcher = TestFetcher(
+      testAssetsDir: testAssetsDir,
+      urlToPathMap: urlToPathMap,
+    );
+
+    final installationIdFactory =
+        baseInstallationId != null ? () => baseInstallationId : null;
+
+    final sync = await LocordaGraphSync.setup(
+        backend: TestBackend(),
+        storage: storage,
+        config: config,
+        fetcher: fetcher,
+        physicalTimestampFactory: timestampFactory,
+        installationIdFactory: installationIdFactory);
+
+    // Set timestamp for save action if specified
+    setTime(actionTs?['save'], timestampFactory);
+
+    await sync.save(typeIri, inputResource);
+
     fail('Expected $expectedErrorType to be thrown, but save succeeded');
   } catch (e) {
     // Verify error type

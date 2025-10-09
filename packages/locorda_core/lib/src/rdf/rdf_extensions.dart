@@ -1,5 +1,7 @@
+import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/rdf/xsd.dart';
+import 'package:locorda_core/src/util/structure_validation_logger.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 typedef Node = (RdfSubject node, RdfGraph triples);
@@ -12,43 +14,64 @@ extension RdfGraphExtensions on RdfGraph {
     return localIdTriple.subject as IriTerm;
   }
 
+  /// Returns single value if present, null if absent. No structural expectation.
+  /// Use when the property is genuinely optional in the data model.
   T? findSingleObject<T extends RdfObject>(
-      RdfSubject subject, RdfPredicate predicate) {
+          RdfSubject subject, RdfPredicate predicate) =>
+      _findSingleObject(subject, predicate, expectSingle: false);
+
+  /// Expects exactly one value, but returns null if absent/invalid.
+  /// Use when the property SHOULD be present according to spec/schema,
+  /// but you want to handle its absence gracefully.
+  T? expectSingleObject<T extends RdfObject>(
+          RdfSubject subject, RdfPredicate predicate,
+          {ExpectationSeverity severity = ExpectationSeverity.major}) =>
+      _findSingleObject(subject, predicate,
+          expectSingle: true, severity: severity);
+
+  T? _findSingleObject<T extends RdfObject>(
+      RdfSubject subject, RdfPredicate predicate,
+      {required bool expectSingle,
+      ExpectationSeverity severity = ExpectationSeverity.major}) {
     final triples = findTriples(subject: subject, predicate: predicate);
-    if (triples.isEmpty) {
+    final it = triples.iterator;
+
+    if (!it.moveNext()) {
+      if (expectSingle) {
+        expectationFailed(
+          "Missing required single-valued property",
+          subject: subject,
+          predicate: predicate,
+          graph: this,
+          severity: severity,
+        );
+      }
       return null;
     }
-    final obj = triples.single.object;
-    if (obj is T) {
-      return obj;
-    }
-    return null;
-  }
+    final first = it.current;
 
-  T singleObject<T extends RdfObject>(
-      RdfSubject subject, RdfPredicate predicate) {
-    final triples = findTriples(subject: subject, predicate: predicate);
-    if (triples.isEmpty) {
-      throw StateError('Expected exactly one triple');
+    if (it.moveNext()) {
+      expectationFailed(
+        "Multiple values for property that should have at most one",
+        subject: subject,
+        predicate: predicate,
+        graph: this,
+        severity: severity,
+      );
+      // In lenient mode: take first value
     }
-    final obj = triples.single.object;
-    if (obj is T) {
-      return obj;
-    }
-    throw StateError('Unexpected object type');
-  }
 
-  T? findFirstObject<T extends RdfObject>(
-      RdfSubject subject, RdfPredicate predicate) {
-    final triples = findTriples(subject: subject, predicate: predicate);
-    if (triples.isEmpty) {
+    if (first.object is! T) {
+      expectationFailed(
+        "Unexpected object type ${first.object.runtimeType}, expected $T",
+        subject: subject,
+        predicate: predicate,
+        graph: this,
+        severity: severity,
+      );
       return null;
     }
-    final obj = triples.first.object;
-    if (obj is T) {
-      return obj;
-    }
-    return null;
+    return first.object as T;
   }
 
   /**
@@ -94,6 +117,22 @@ extension RdfGraphExtensions on RdfGraph {
 }
 
 extension IriTermExtensions on IriTerm {
+  String get debug {
+    try {
+      final rl = LocalResourceLocator(iriTermFactory: IriTerm.new);
+      final r = rl.fromIriNoType(this);
+      final type =
+          r.typeIri.value.startsWith('https://w3id.org/solid-crdt-sync/vocab/')
+              ? r.typeIri.value
+                  .substring('https://w3id.org/solid-crdt-sync/vocab/'.length)
+                  .replaceAll('#', ':')
+              : r.typeIri.value;
+      return '<${type} | ${r.id}${r.fragment != null ? ' | ${r.fragment!}' : ''}>';
+    } catch (_) {
+      return value;
+    }
+  }
+
   String get localName {
     final hashIndex = value.lastIndexOf('#');
     if (hashIndex != -1 && hashIndex <= value.length - 1) {

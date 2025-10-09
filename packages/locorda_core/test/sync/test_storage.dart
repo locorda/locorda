@@ -79,6 +79,10 @@ class TestStorage implements Storage {
         .toList();
   }
 
+  void resetPropertyChanges() {
+    _propertyChanges.clear();
+  }
+
   @override
   Future<DocumentsResult> getDocumentsModifiedSince(
       IriTerm typeIri, String? cursor,

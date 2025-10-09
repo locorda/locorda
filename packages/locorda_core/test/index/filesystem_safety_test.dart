@@ -4,27 +4,33 @@ import 'package:test/test.dart';
 void main() {
   group('FilesystemSafety', () {
     group('safe key preservation', () {
-      test('preserves safe alphanumeric keys', () {
-        final safeKeys = [
-          'work',
-          '2024-08',
-          'project_alpha',
-          'v1.2.3',
-          'ABC123',
-          'test-file',
-          'my_project',
-          '123',
-          'a',
-          'Z',
-          'item.backup',
-          'file-2024-08-15',
-        ];
+      test('converts to lowercase and preserves safe keys', () {
+        final testCases = {
+          // Already lowercase - preserved
+          'work': 'work',
+          '2024-08': '2024-08',
+          'project_alpha': 'project_alpha',
+          'v1.2.3': 'v1.2.3',
+          'test-file': 'test-file',
+          'my_project': 'my_project',
+          '123': '123',
+          'a': 'a',
+          'item.backup': 'item.backup',
+          'file-2024-08-15': 'file-2024-08-15',
+          // Mixed/uppercase - converted to lowercase
+          'ABC123': 'abc123',
+          'Z': 'z',
+          'Work': 'work',
+          'Dessert': 'dessert',
+          'QuickMeals': 'quickmeals',
+          'Project_Alpha': 'project_alpha',
+        };
 
-        for (final key in safeKeys) {
-          final result = FilesystemSafety.makeSafe(key);
-          expect(result, equals(key),
-              reason: 'Safe key should be preserved: $key');
-        }
+        testCases.forEach((input, expected) {
+          final result = FilesystemSafety.makeSafe(input);
+          expect(result, equals(expected),
+              reason: 'Key "$input" should become "$expected"');
+        });
       });
 
       test('preserves keys at maximum safe length', () {
@@ -262,19 +268,28 @@ void main() {
 
     group('edge cases and boundary conditions', () {
       test('handles single characters correctly', () {
-        final singleChars = ['a', 'Z', '1', '_', '-', '.'];
+        final testCases = {
+          'a': 'a', // lowercase preserved
+          'Z': 'z', // uppercase converted to lowercase
+          '1': '1', // digit preserved
+          '_': '_', // underscore preserved
+          '-': '-', // hyphen preserved
+          '.': null, // period is reserved - will be hashed
+        };
 
-        for (final char in singleChars) {
-          final result = FilesystemSafety.makeSafe(char);
+        testCases.forEach((input, expected) {
+          final result = FilesystemSafety.makeSafe(input);
 
-          if (char == '.') {
-            // Special case: '.' is reserved
-            expect(result, matches(r'^1_[0-9a-f]{32}$'));
+          if (expected == null) {
+            // Special case: '.' is reserved and should be hashed
+            expect(result, matches(r'^1_[0-9a-f]{32}$'),
+                reason: 'Reserved character "$input" should be hashed');
           } else {
-            // Should be preserved
-            expect(result, equals(char));
+            // Should be preserved (after lowercase conversion if needed)
+            expect(result, equals(expected),
+                reason: 'Character "$input" should become "$expected"');
           }
-        }
+        });
       });
 
       test('handles boundary lengths correctly', () {

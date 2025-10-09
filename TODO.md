@@ -54,7 +54,10 @@
   - Complete group subscription and index creation logic
   - Currently stubbed in `configureGroupIndexSubscription()`
   - Needed for efficient data organization and sync
-- [ ] Implement Re-Sharding as per the specification
+- [ ] Implement shard splitting/resharding when shards reach maxSize limits (Implement Re-Sharding as per the specification)
+  - Increment shard number for overflow
+  - Update shardTotal in index/template
+  - Migrate entries to correct shards based on new distribution
 
 ### Priority 4: Backend Implementations
 - [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
@@ -75,6 +78,7 @@
 - [ ] merge-contract: RdfGraphFetcher caching with etag support (HTTP best practices, benefits all RDF loading)
 - [ ] merge-contract: Local database caching (persistence across app restarts)
 - [ ] rdf_vocabulary_to_dart: failed to load RDF graph for graphs marked as skipped must not be an error, build must not be marked as "failed" due to this
+- [ ] I think we need some concept to switch between strict and lenient for document structure errors - sometimes we throw exceptions on structural errors, sometimes we only log and continue. A consistent tooling would be great here, that allows us to run in either strict or lenient mode - ideally not as static utility, but that is probably unrealistic, so a static utility would be better than nothing still.
 
 ## Later
 - [ ] Implement namespace in Resource Identity => maybe later

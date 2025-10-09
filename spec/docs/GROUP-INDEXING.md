@@ -392,6 +392,12 @@ Group keys serve as filesystem path components and must be safe across all platf
 
 **Cross-Platform Compatibility:** Group keys must work on Windows, Linux, macOS, and web filesystems without conflicts or errors.
 
+**Case Normalization:** All group keys are automatically converted to lowercase to ensure consistent grouping and avoid case-sensitivity issues:
+- **Prevents fragmentation:** `Dessert`, `dessert`, and `DESSERT` all map to the same group
+- **Filesystem compatibility:** Avoids conflicts on case-insensitive filesystems (macOS HFS+/APFS, Windows NTFS default)
+- **User experience:** Eliminates confusion from inconsistent capitalization in user inputs
+- **Applied before safety checks:** Lowercase conversion happens before character whitelisting and hashing
+
 **Path Component Safety:** Each group key becomes a directory or file name and must avoid:
 - Filesystem-reserved characters: `< > : " / \ | ? * \x00-\x1F`
 - Platform-reserved names: `CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9` (Windows)
@@ -400,11 +406,15 @@ Group keys serve as filesystem path components and must be safe across all platf
 
 ### Automatic Safety Enforcement
 
-The framework applies filesystem safety automatically during group key generation:
+The framework applies filesystem safety automatically during group key generation in the following order:
+
+1. **Lowercase conversion:** Convert entire key to lowercase
+2. **Safety validation:** Check if lowercase key meets preservation criteria
+3. **Hash fallback:** Apply MD5 hashing if safety criteria not met
 
 #### Safe Key Preservation
-Keys are preserved unchanged when they meet all criteria:
-- **Character whitelist:** Only `[a-zA-Z0-9._-]` characters
+Keys are preserved (after lowercase conversion) when they meet all criteria:
+- **Character whitelist:** Only `[a-z0-9._-]` characters (lowercase only after normalization)
 - **Length limit:** 50 characters or fewer
 - **Name safety:** Not `.`, `..`, or hidden (starting with `.`)
 
@@ -417,7 +427,15 @@ Keys that fail safety checks are automatically converted using MD5:
 
 ### Implementation Examples
 
-**Safe keys (preserved):**
+**Case normalization (applied first):**
+```
+"Work" → "work"
+"DESSERT" → "dessert"
+"QuickMeals" → "quickmeals"
+"Project_Alpha" → "project_alpha"
+```
+
+**Safe keys (preserved after lowercase):**
 ```
 "work" → "work"
 "2024-08" → "2024-08"
@@ -425,19 +443,26 @@ Keys that fail safety checks are automatically converted using MD5:
 "v1.2.3" → "v1.2.3"
 ```
 
-**Unsafe keys (hashed):**
+**Unsafe keys (hashed after lowercase):**
 ```
-"contains/slash" → "14_5d41402abc4b2a76b9719d911017c592"
-"very-long-category-name-exceeding-fifty-characters" → "52_c4ca4238a0b923820dcc509a6f75849b"
-"http://example.org/resource" → "26_098f6bcd4621d373cade4e832627b4f6"
-"unicode-café-résumé" → "18_9bb58f26192e4ba00f01e2e7b136bbd8"
+"Contains/Slash" → lowercase: "contains/slash" → "14_5d41402abc4b2a76b9719d911017c592"
+"VERY-LONG-CATEGORY-NAME-EXCEEDING-FIFTY-CHARACTERS" → lowercase: "very-long..." → "52_c4ca4238a0b923820dcc509a6f75849b"
+"http://example.org/Resource" → lowercase: "http://example.org/resource" → "26_098f6bcd4621d373cade4e832627b4f6"
+"Unicode-Café-Résumé" → lowercase: "unicode-café-résumé" → "18_9bb58f26192e4ba00f01e2e7b136bbd8"
 ```
 
-**Hierarchical paths:**
+**Hierarchical paths (all lowercase):**
 ```
 Safe: work/2024-08/high-priority
 Mixed: work/14_5d41402abc4b2a76b9719d911017c592/high-priority
 Unsafe: 4_abc123def456/26_def456789abc/13_789abcdef012
+```
+
+**Case normalization impact:**
+```
+"Work/2024-08/High-Priority" → "work/2024-08/high-priority"
+"DESSERT" → "dessert"
+"Quick Meals" → "quick meals" → "11_1234567890abcdef..." (hashed due to space)
 ```
 
 ### Benefits

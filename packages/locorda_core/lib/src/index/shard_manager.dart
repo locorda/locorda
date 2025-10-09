@@ -6,12 +6,12 @@
 /// - Parsing shard configuration from RDF
 library;
 
+import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
 import 'package:locorda_core/src/generated/_index.dart';
-import 'package:locorda_core/src/generated/idx.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
-import 'dart:convert';
 
 /// Manages shard-level operations for index sharding.
 ///
@@ -80,32 +80,26 @@ class ShardManager {
   ShardingConfig? parseShardingConfig(
       RdfGraph indexGraph, RdfSubject indexSubject) {
     // Find sharding algorithm blank node
-    final shardingAlgTriples = indexGraph
-        .findTriples(subject: indexSubject, predicate: Idx.shardingAlgorithm)
-        .toList();
+    final algorithmNode = indexGraph.findSingleObject<RdfSubject>(
+        indexSubject, Idx.shardingAlgorithm);
 
-    if (shardingAlgTriples.isEmpty) {
-      return null;
-    }
-
-    final algorithmNode = shardingAlgTriples.first.object;
-    if (algorithmNode is! RdfSubject) {
+    if (algorithmNode == null) {
       return null;
     }
 
     // Extract configuration values
     final int? numberOfShards = indexGraph
-        .findFirstObject<LiteralTerm>(
+        .findSingleObject<LiteralTerm>(
             algorithmNode, IdxModuloHashSharding.numberOfShards)
         ?.tryIntegerValue;
 
     final String? configVersion = indexGraph
-        .findFirstObject<LiteralTerm>(
+        .findSingleObject<LiteralTerm>(
             algorithmNode, IdxModuloHashSharding.configVersion)
         ?.value;
 
     final int? autoScaleThreshold = indexGraph
-        .findFirstObject<LiteralTerm>(
+        .findSingleObject<LiteralTerm>(
             algorithmNode, IdxModuloHashSharding.autoScaleThreshold)
         ?.tryIntegerValue;
 
