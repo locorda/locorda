@@ -2,13 +2,9 @@
 library;
 
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
-import 'package:locorda_core/src/index/index_manager.dart';
-import 'package:locorda_core/src/mapping/resource_locator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
-import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:uuid/uuid.dart';
 

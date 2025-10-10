@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/config/sync_graph_config.dart';
 import 'package:locorda_core/src/hydration/hydration_emitter.dart';
 import 'package:locorda_core/src/hydration/hydration_stream_manager.dart';
 import 'package:locorda_core/src/hydration/type_local_name_key.dart';
