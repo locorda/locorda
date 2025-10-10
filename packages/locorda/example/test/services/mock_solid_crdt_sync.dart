@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 import 'package:locorda/locorda.dart';
+import 'package:locorda_core/locorda_core.dart';
 
 class _MockHydrationSubscription implements HydrationSubscription {
   @override
@@ -15,9 +16,21 @@ class _MockHydrationSubscription implements HydrationSubscription {
   bool get isActive => true;
 }
 
+class _MockSyncManager extends SyncManager {
+  _MockSyncManager()
+      : super(
+          syncFunction: () async {},
+          autoSyncConfig: const AutoSyncConfig.disabled(),
+        );
+}
+
 /// Simple mock implementation for testing
 class MockLocordaSync implements LocordaSync {
   final List<dynamic> savedObjects = [];
+  final _syncManager = _MockSyncManager();
+
+  @override
+  SyncManager get syncManager => _syncManager;
 
   @override
   Future<void> save<T>(T object) async {

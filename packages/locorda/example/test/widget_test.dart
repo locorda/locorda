@@ -16,6 +16,7 @@ import 'package:solid_auth/solid_auth.dart';
 
 import 'services/mock_category_repository.dart';
 import 'services/mock_note_repository.dart';
+import 'services/mock_solid_crdt_sync.dart';
 
 void main() {
   testWidgets('Personal Notes App starts up', (WidgetTester tester) async {
@@ -32,6 +33,9 @@ void main() {
       frontendRedirectUrl: Uri.parse('https://test.example.com/redirect'),
     );
 
+    // Create mock sync system
+    final mockSyncSystem = MockLocordaSync();
+
     // Build our app with mock services
     await tester.pumpWidget(
       MaterialApp(
@@ -44,6 +48,7 @@ void main() {
           notesService: mockNotesService,
           categoriesService: mockCategoriesService,
           solidAuth: mockSolidAuth,
+          syncSystem: mockSyncSystem,
         ),
       ),
     );

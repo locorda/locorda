@@ -1,5 +1,6 @@
 import 'package:locorda_core/src/config/sync_config_base.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
+import 'package:locorda_core/src/sync/sync_manager.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 class IndexItemGraphConfig extends IndexItemConfigBase {
@@ -209,7 +210,10 @@ class ResourceGraphConfig extends ResourceConfigBase {
 class SyncGraphConfig extends SyncConfigBase {
   final List<ResourceGraphConfig> resources;
 
-  SyncGraphConfig({required this.resources}) : super(resources: resources);
+  SyncGraphConfig({
+    required this.resources,
+    super.autoSyncConfig = const AutoSyncConfig.disabled(),
+  }) : super(resources: resources);
 
   factory SyncGraphConfig.fromJson(Map<String, dynamic> json) {
     final resourcesJson = json['resources'] as List<dynamic>;
@@ -217,7 +221,16 @@ class SyncGraphConfig extends SyncConfigBase {
         .map((r) => ResourceGraphConfig.fromJson(r as Map<String, dynamic>))
         .toList();
 
-    return SyncGraphConfig(resources: resources);
+    // Parse auto sync config if present
+    final autoSyncJson = json['autoSync'] as Map<String, dynamic>?;
+    final autoSyncConfig = autoSyncJson != null
+        ? AutoSyncConfig.fromJson(autoSyncJson)
+        : const AutoSyncConfig.disabled();
+
+    return SyncGraphConfig(
+      resources: resources,
+      autoSyncConfig: autoSyncConfig,
+    );
   }
 
   ResourceGraphConfig getResourceConfig(IriTerm type) {
@@ -229,6 +242,9 @@ class SyncGraphConfig extends SyncConfigBase {
   SyncGraphConfig withResourcesAdded(List<ResourceGraphConfig> newResources) {
     final updatedResources = List<ResourceGraphConfig>.from(resources)
       ..addAll(newResources);
-    return SyncGraphConfig(resources: updatedResources);
+    return SyncGraphConfig(
+      resources: updatedResources,
+      autoSyncConfig: autoSyncConfig,
+    );
   }
 }

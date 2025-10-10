@@ -57,7 +57,10 @@ class SyncConfig extends SyncConfigBase {
   @override
   final List<ResourceConfig> resources;
 
-  SyncConfig({required this.resources}) : super(resources: resources);
+  SyncConfig({
+    required this.resources,
+    super.autoSyncConfig = const AutoSyncConfig.disabled(),
+  }) : super(resources: resources);
 
   ResourceConfig? getResourceConfig(Type type) {
     return resources.where((r) => r.type == type).firstOrNull;

@@ -1,0 +1,107 @@
+/// Sync state model for reactive sync status updates.
+library;
+
+/// Current status of the sync operation.
+enum SyncStatus {
+  /// No sync is in progress, waiting for trigger.
+  idle,
+
+  /// Sync operation is currently in progress.
+  syncing,
+
+  /// Last sync completed successfully.
+  success,
+
+  /// Last sync failed with an error.
+  error,
+}
+
+/// Immutable state representing the current sync status.
+///
+/// This class is broadcast via [SyncManager.statusStream] to allow
+/// UI components to reactively update based on sync state changes.
+class SyncState {
+  /// Current sync status.
+  final SyncStatus status;
+
+  /// Timestamp of the last successful sync, null if never synced.
+  final DateTime? lastSyncTime;
+
+  /// Human-readable error message if status is [SyncStatus.error].
+  final String? errorMessage;
+
+  /// The exception that caused the error, if status is [SyncStatus.error].
+  final Exception? error;
+
+  const SyncState({
+    required this.status,
+    this.lastSyncTime,
+    this.errorMessage,
+    this.error,
+  });
+
+  /// Initial idle state with no previous sync.
+  const SyncState.idle()
+      : status = SyncStatus.idle,
+        lastSyncTime = null,
+        errorMessage = null,
+        error = null;
+
+  /// Create a syncing state.
+  const SyncState.syncing({this.lastSyncTime})
+      : status = SyncStatus.syncing,
+        errorMessage = null,
+        error = null;
+
+  /// Create a success state with the current timestamp.
+  SyncState.success()
+      : status = SyncStatus.success,
+        lastSyncTime = DateTime.now(),
+        errorMessage = null,
+        error = null;
+
+  /// Create an error state with error details.
+  SyncState.error({
+    required this.errorMessage,
+    this.error,
+    this.lastSyncTime,
+  }) : status = SyncStatus.error;
+
+  /// Copy this state with updated fields.
+  SyncState copyWith({
+    SyncStatus? status,
+    DateTime? lastSyncTime,
+    String? errorMessage,
+    Exception? error,
+  }) {
+    return SyncState(
+      status: status ?? this.status,
+      lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      errorMessage: errorMessage ?? this.errorMessage,
+      error: error ?? this.error,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SyncState &&
+          runtimeType == other.runtimeType &&
+          status == other.status &&
+          lastSyncTime == other.lastSyncTime &&
+          errorMessage == other.errorMessage &&
+          error == other.error;
+
+  @override
+  int get hashCode =>
+      status.hashCode ^
+      lastSyncTime.hashCode ^
+      errorMessage.hashCode ^
+      error.hashCode;
+
+  @override
+  String toString() {
+    return 'SyncState(status: $status, lastSyncTime: $lastSyncTime, '
+        'errorMessage: $errorMessage, error: $error)';
+  }
+}

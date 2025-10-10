@@ -6,3 +6,4 @@ library locorda_solid_ui;
 
 // Sync status UI
 export 'src/sync/sync_status_widget.dart';
+export 'src/sync/sync_refresh_indicator.dart';

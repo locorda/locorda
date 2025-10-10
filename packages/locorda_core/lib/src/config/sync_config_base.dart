@@ -6,6 +6,7 @@
 library;
 
 import 'package:locorda_core/src/index/index_config_base.dart';
+import 'package:locorda_core/src/sync/sync_manager.dart';
 
 /// Configuration for a single resource type in the sync system.
 ///
@@ -32,8 +33,12 @@ class SyncConfigBase {
   /// All resource configurations for the application.
   final List<ResourceConfigBase> resources;
 
+  /// Configuration for automatic synchronization behavior.
+  final AutoSyncConfig autoSyncConfig;
+
   const SyncConfigBase({
     required this.resources,
+    this.autoSyncConfig = const AutoSyncConfig.disabled(),
   });
 
   /// Get all index configurations across all resources.

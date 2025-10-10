@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locorda_core/locorda_core.dart';
 import 'package:logging/logging.dart';
 import 'package:solid_auth/solid_auth.dart';
 
@@ -26,15 +27,20 @@ class SolidStatusWidget extends StatefulWidget {
   final SolidProviderService providerService;
 
   /// Optional callback for manual sync trigger.
+  /// If not provided and syncManager is provided, will use syncManager.sync()
   final VoidCallback? onManualSync;
 
-  /// Whether the system is currently syncing.
+  /// Optional sync manager for reactive sync status updates.
+  /// If provided, isSyncing/hasError/errorMessage props are ignored.
+  final SyncManager? syncManager;
+
+  /// Whether the system is currently syncing (only used if syncManager is null).
   final bool isSyncing;
 
-  /// Whether there's a sync error.
+  /// Whether there's a sync error (only used if syncManager is null).
   final bool hasError;
 
-  /// Custom error message to display.
+  /// Custom error message to display (only used if syncManager is null).
   final String? errorMessage;
 
   const SolidStatusWidget({
@@ -42,6 +48,7 @@ class SolidStatusWidget extends StatefulWidget {
     required this.solidAuth,
     required this.providerService,
     this.onManualSync,
+    this.syncManager,
     this.isSyncing = false,
     this.hasError = false,
     this.errorMessage,
@@ -53,6 +60,7 @@ class SolidStatusWidget extends StatefulWidget {
 
 class _SolidStatusWidgetState extends State<SolidStatusWidget> {
   bool _isAuthenticated = false;
+  SyncState? _syncState;
 
   @override
   void initState() {
@@ -155,13 +163,13 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
             ),
             if (_isAuthenticated) ...[
               const Divider(),
-              if (widget.onManualSync != null)
+              if (widget.onManualSync != null || widget.syncManager != null)
                 ListTile(
                   leading: const Icon(Icons.sync),
                   title: Text(l10n.syncNow),
                   onTap: () {
                     Navigator.pop(context);
-                    widget.onManualSync?.call();
+                    _triggerSync();
                   },
                 ),
               ListTile(
@@ -181,8 +189,30 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // If syncManager is provided, use StreamBuilder for reactive updates
+    if (widget.syncManager != null) {
+      return StreamBuilder<SyncState>(
+        stream: widget.syncManager!.statusStream,
+        initialData: widget.syncManager!.currentState,
+        builder: (context, snapshot) {
+          _syncState = snapshot.data ?? const SyncState.idle();
+          return _buildIcon(context);
+        },
+      );
+    }
+
+    // Otherwise use the static props
+    return _buildIcon(context);
+  }
+
+  Widget _buildIcon(BuildContext context) {
     final l10n = SolidAuthLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+
+    // Get sync status from either syncManager stream or static props
+    final bool isSyncing = _syncState?.status == SyncStatus.syncing || widget.isSyncing;
+    final bool hasError = _syncState?.status == SyncStatus.error || widget.hasError;
+    final String? errorMessage = _syncState?.errorMessage ?? widget.errorMessage;
 
     // Determine the current status
     Widget icon;
@@ -194,12 +224,12 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
       icon = Icon(Icons.cloud_off, color: colorScheme.onSurfaceVariant);
       tooltip = l10n.notConnected;
       onPressed = _showLoginScreen;
-    } else if (widget.hasError) {
+    } else if (hasError) {
       // Connected but has error
       icon = Icon(Icons.cloud_off, color: colorScheme.error);
-      tooltip = widget.errorMessage ?? l10n.syncError;
-      onPressed = widget.onManualSync ?? _showStatusMenu;
-    } else if (widget.isSyncing) {
+      tooltip = errorMessage ?? l10n.syncError;
+      onPressed = _triggerSync;
+    } else if (isSyncing) {
       // Connected and syncing
       icon = SizedBox(
         width: 20,
@@ -223,5 +253,13 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
       icon: icon,
       tooltip: tooltip,
     );
+  }
+
+  Future<void> _triggerSync() async {
+    if (widget.syncManager != null) {
+      await widget.syncManager!.sync();
+    } else {
+      widget.onManualSync?.call();
+    }
   }
 }

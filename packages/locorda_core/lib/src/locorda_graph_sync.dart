@@ -43,7 +43,11 @@ class LocordaGraphSync {
   final IriTranslator _iriTranslator;
   final HydrationStreamManager _streamManager;
   final GroupIndexGraphSubscriptionManager _groupIndexManager;
+  final SyncManager _syncManager;
   late final HydrationEmitter _emitter;
+
+  /// Access the sync manager for manual sync triggering and status monitoring.
+  SyncManager get syncManager => _syncManager;
 
   LocordaGraphSync._({
     required Backend backend,
@@ -62,7 +66,16 @@ class LocordaGraphSync {
           resourceLocator: resourceLocator,
           resourceConfigs: config.resources,
         ),
-        _crdtDocumentManager = crdtDocumentManager {
+        _crdtDocumentManager = crdtDocumentManager,
+        _syncManager = SyncManager(
+          syncFunction: () async {
+            // TODO: Implement actual sync logic here
+            // For now, this is a placeholder that will be implemented in Priority 4
+            _log.info('Sync triggered (not yet implemented)');
+            await Future.delayed(Duration(milliseconds: 100));
+          },
+          autoSyncConfig: config.autoSyncConfig,
+        ) {
     _emitter = HydrationEmitter(
       streamManager: _streamManager,
       iriTranslator: _iriTranslator,
@@ -479,8 +492,10 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   /// 5. Schedule async Pod sync
   Future<void> deleteDocument(IriTerm typeIri, IriTerm externalIri) async {
     // Translate external IRI to internal format
+    // ignore: unused_local_variable
     final internalIri = _iriTranslator.externalToInternal(externalIri);
 
+    // ignore: unused_local_variable
     final resourceConfig = _config.getResourceConfig(typeIri);
     // Basic implementation to maintain hydration stream contract
     // TODO: Add proper CRDT deletion processing and storage persistence
@@ -645,6 +660,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
 
   /// Close the sync system and free resources.
   Future<void> close() async {
+    await _syncManager.dispose();
     await _crdtDocumentManager.close();
     await _streamManager.close();
   }

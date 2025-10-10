@@ -2,8 +2,10 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:locorda/locorda.dart';
 import 'package:solid_auth/solid_auth.dart';
 import 'package:locorda_solid_auth/locorda_solid_auth.dart';
+import 'package:locorda_solid_ui/locorda_ui.dart';
 
 import '../models/note_index_entry.dart';
 import '../models/category.dart' as models;
@@ -17,12 +19,14 @@ class NotesListScreen extends StatefulWidget {
   final NotesService notesService;
   final CategoriesService categoriesService;
   final SolidAuth solidAuth;
+  final LocordaSync syncSystem;
 
   const NotesListScreen({
     super.key,
     required this.notesService,
     required this.categoriesService,
     required this.solidAuth,
+    required this.syncSystem,
   });
 
   @override
@@ -118,25 +122,6 @@ class _NotesListScreenState extends State<NotesListScreen> {
 
     if (picked != null) {
       await _selectMonth(NoteGroupKey.fromDate(picked));
-    }
-  }
-
-  Future<void> _manualSync() async {
-    try {
-      // TODO: Trigger manual sync with the sync system
-      // await widget.syncSystem.sync();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sync completed')),
-        );
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sync failed: $error')),
-        );
-      }
     }
   }
 
@@ -368,49 +353,70 @@ class _NotesListScreenState extends State<NotesListScreen> {
           SolidStatusWidget(
             solidAuth: widget.solidAuth,
             providerService: DefaultSolidProviderService(),
-            onManualSync: _manualSync,
-            // TODO: Connect to actual sync state
-            isSyncing: false,
-            hasError: false,
+            syncManager: widget.syncSystem.syncManager,
           ),
         ],
       ),
-      body: StreamBuilder<List<NoteIndexEntry>>(
-        stream: widget.notesService.filteredNoteIndexEntries,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text('Error: ${snapshot.error}'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Force refresh by changing filter
-                      final currentFilter =
-                          widget.notesService.currentCategoryFilter;
-                      widget.notesService.setCategoryFilter(null);
-                      widget.notesService.setCategoryFilter(currentFilter);
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
+      body: SyncRefreshIndicator(
+        syncManager: widget.syncSystem.syncManager,
+        onSyncComplete: () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Sync completed'),
+                duration: Duration(seconds: 1),
               ),
             );
           }
-
-          final noteEntries = snapshot.data ?? [];
-          return noteEntries.isEmpty
-              ? _buildEmptyState()
-              : _buildNotesList(noteEntries);
         },
+        onSyncError: (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Sync failed: $error'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: StreamBuilder<List<NoteIndexEntry>>(
+          stream: widget.notesService.filteredNoteIndexEntries,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text('Error: ${snapshot.error}'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Force refresh by changing filter
+                        final currentFilter =
+                            widget.notesService.currentCategoryFilter;
+                        widget.notesService.setCategoryFilter(null);
+                        widget.notesService.setCategoryFilter(currentFilter);
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final noteEntries = snapshot.data ?? [];
+            return noteEntries.isEmpty
+                ? _buildEmptyState()
+                : _buildNotesList(noteEntries);
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createNote,

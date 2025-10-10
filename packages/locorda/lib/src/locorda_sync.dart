@@ -35,6 +35,15 @@ class LocordaSync {
   late final GroupKeyConverter _groupKeyConverter;
   final ResourceLocator _localResourceLocator;
 
+  /// Access the sync manager for manual sync triggering and status monitoring.
+  ///
+  /// Use this to:
+  /// - Trigger manual sync: `syncManager.sync()`
+  /// - Monitor sync status: `syncManager.statusStream`
+  /// - Access current state: `syncManager.currentState`
+  /// - Control automatic sync: `syncManager.enableAutoSync()` / `disableAutoSync()`
+  SyncManager get syncManager => _syncSystem.syncManager;
+
   LocordaSync._({
     required LocordaGraphSync locordaGraphSync,
     required RdfMapper mapper,

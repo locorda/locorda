@@ -106,5 +106,7 @@ export 'src/storage/storage_interface.dart'
 // NOTE: CRDT annotations have been moved to locorda_annotations package
 // Use that package for @CrdtLwwRegister, @CrdtOrSet, etc. annotations
 
-// Sync engine
+// Sync engine and manager
 export 'src/sync/sync_engine.dart' show SyncEngine;
+export 'src/sync/sync_manager.dart' show SyncManager, AutoSyncConfig;
+export 'src/sync/sync_state.dart' show SyncState, SyncStatus;

@@ -198,8 +198,8 @@ class _AppInitializerState extends State<AppInitializer>
       // Initialize repositories with database DAOs, cursor DAO, and sync system, hydrating existing data
       final categoryRepo = await CategoryRepository.create(
           appDb.categoryDao, appDb.cursorDao, syncSys);
-      final noteRepo = await NoteRepository.create(
-          appDb.noteDao, appDb.commentDao, appDb.noteIndexEntryDao, appDb.cursorDao, syncSys);
+      final noteRepo = await NoteRepository.create(appDb.noteDao,
+          appDb.commentDao, appDb.noteIndexEntryDao, appDb.cursorDao, syncSys);
 
       // Initialize services with repositories
       final notesSvc = NotesService(noteRepo);
@@ -282,6 +282,7 @@ class _AppInitializerState extends State<AppInitializer>
       notesService: notesService!,
       categoriesService: categoriesService!,
       solidAuth: solidAuth!,
+      syncSystem: syncSystem!,
     );
   }
 }

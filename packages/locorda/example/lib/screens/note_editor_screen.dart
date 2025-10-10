@@ -207,7 +207,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                   labelText: 'Title',
                   border: OutlineInputBorder(),
                 ),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
               ),
 
               const SizedBox(height: 16),
@@ -225,205 +226,205 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 textAlignVertical: TextAlignVertical.top,
               ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Category selection
-            StreamBuilder<List<models.Category>>(
-              stream: widget.categoriesService.getAllCategories(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                }
-                final categories = snapshot.data ?? [];
-                return DropdownButtonFormField<String?>(
-                  initialValue: _selectedCategoryId,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('No Category'),
-                    ),
-                    ...categories.map((category) => DropdownMenuItem<String>(
-                          value: category.id,
-                          child: Row(
-                            children: [
-                              Icon(_getCategoryIcon(category.settings?.icon)),
-                              const SizedBox(width: 8),
-                              Text(category.name),
-                            ],
-                          ),
-                        )),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCategoryId = value;
-                    });
-                  },
-                );
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // Tags section
-            const Text(
-              'Tags',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Tag input
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _tagController,
+              // Category selection
+              StreamBuilder<List<models.Category>>(
+                stream: widget.categoriesService.getAllCategories(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  }
+                  final categories = snapshot.data ?? [];
+                  return DropdownButtonFormField<String?>(
+                    initialValue: _selectedCategoryId,
                     decoration: const InputDecoration(
-                      hintText: 'Add a tag...',
+                      labelText: 'Category',
                       border: OutlineInputBorder(),
                     ),
-                    onSubmitted: (_) => _addTag(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _addTag,
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Tags display
-            if (_tags.isNotEmpty) ...[
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: _tags
-                    .map((tag) => Chip(
-                          label: Text(tag),
-                          deleteIcon: const Icon(Icons.close, size: 18),
-                          onDeleted: () => _removeTag(tag),
-                        ))
-                    .toList(),
-              ),
-            ] else ...[
-              const Text(
-                'No tags added',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
-
-            const SizedBox(height: 16),
-
-            // Weblinks section
-            const Text(
-              'Weblinks',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Weblink input
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: _weblinkUrlController,
-                    decoration: const InputDecoration(
-                      labelText: 'URL',
-                      hintText: 'https://example.com',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 1,
-                  child: TextField(
-                    controller: _weblinkTitleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Title (optional)',
-                      hintText: 'Link title',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _addWeblink,
-                  icon: const Icon(Icons.add),
-                  padding: const EdgeInsets.only(top: 8),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Weblinks display
-            if (_weblinks.isNotEmpty) ...[
-              ...(_weblinks.map((weblink) => Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      leading: const Icon(Icons.link),
-                      title: Text(weblink.title ?? weblink.url),
-                      subtitle:
-                          weblink.title != null ? Text(weblink.url) : null,
-                      trailing: IconButton(
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () => _removeWeblink(weblink),
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('No Category'),
                       ),
-                      onTap: () {
-                        // Could add URL launcher here
-                      },
-                    ),
-                  ))),
-            ] else ...[
+                      ...categories.map((category) => DropdownMenuItem<String>(
+                            value: category.id,
+                            child: Row(
+                              children: [
+                                Icon(_getCategoryIcon(category.settings?.icon)),
+                                const SizedBox(width: 8),
+                                Text(category.name),
+                              ],
+                            ),
+                          )),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategoryId = value;
+                      });
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Tags section
               const Text(
-                'No weblinks added',
-                style: TextStyle(color: Colors.grey),
+                'Tags',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
-            ],
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
-            // Comments section
-            CommentSection(
-              comments: _comments,
-              onAddComment: _addComment,
-              onRemoveComment: _removeComment,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Offline-first info
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withAlpha(50),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withAlpha(100)),
-              ),
-              child: const Row(
+              // Tag input
+              Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                  SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      'Changes are saved locally and will sync automatically when connected to your Solid Pod.',
-                      style: TextStyle(fontSize: 12, color: Colors.blue),
+                    child: TextField(
+                      controller: _tagController,
+                      decoration: const InputDecoration(
+                        hintText: 'Add a tag...',
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (_) => _addTag(),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _addTag,
+                    icon: const Icon(Icons.add),
                   ),
                 ],
               ),
-            ),
+
+              const SizedBox(height: 12),
+
+              // Tags display
+              if (_tags.isNotEmpty) ...[
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: _tags
+                      .map((tag) => Chip(
+                            label: Text(tag),
+                            deleteIcon: const Icon(Icons.close, size: 18),
+                            onDeleted: () => _removeTag(tag),
+                          ))
+                      .toList(),
+                ),
+              ] else ...[
+                const Text(
+                  'No tags added',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+
+              const SizedBox(height: 16),
+
+              // Weblinks section
+              const Text(
+                'Weblinks',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Weblink input
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: _weblinkUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'URL',
+                        hintText: 'https://example.com',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 1,
+                    child: TextField(
+                      controller: _weblinkTitleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Title (optional)',
+                        hintText: 'Link title',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _addWeblink,
+                    icon: const Icon(Icons.add),
+                    padding: const EdgeInsets.only(top: 8),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Weblinks display
+              if (_weblinks.isNotEmpty) ...[
+                ...(_weblinks.map((weblink) => Card(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        leading: const Icon(Icons.link),
+                        title: Text(weblink.title ?? weblink.url),
+                        subtitle:
+                            weblink.title != null ? Text(weblink.url) : null,
+                        trailing: IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          onPressed: () => _removeWeblink(weblink),
+                        ),
+                        onTap: () {
+                          // Could add URL launcher here
+                        },
+                      ),
+                    ))),
+              ] else ...[
+                const Text(
+                  'No weblinks added',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+
+              const SizedBox(height: 16),
+
+              // Comments section
+              CommentSection(
+                comments: _comments,
+                onAddComment: _addComment,
+                onRemoveComment: _removeComment,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Offline-first info
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withAlpha(50),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.withAlpha(100)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Changes are saved locally and will sync automatically when connected to your Solid Pod.',
+                        style: TextStyle(fontSize: 12, color: Colors.blue),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
