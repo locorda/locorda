@@ -13,8 +13,7 @@
             {
               "predicate": "https://schema.org/recipeCategory",
               "hierarchyLevel": 1,
-              "missingValueStrategy": "useDefault",
-              "defaultValue": "Uncategorized"
+              "missingValue": "Uncategorized"
             }
           ]
         }

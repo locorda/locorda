@@ -12,12 +12,7 @@
           "groupingProperties": [
             {
               "predicate": "https://schema.org/recipeCategory",
-              "hierarchyLevel": 1,
-              "transforms": [
-                {
-                  "type": "LowercaseTransform"
-                }
-              ]
+              "hierarchyLevel": 1
             }
           ]
         }
