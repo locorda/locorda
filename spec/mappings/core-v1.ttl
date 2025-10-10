@@ -21,7 +21,7 @@
    mc:appliesToClass sync:ManagedDocument;
    mc:rule
      [ mc:predicate foaf:primaryTopic; algo:mergeWith algo:Immutable ],  # The resource being managed
-     [ mc:predicate sync:isGovernedBy; algo:mergeWith algo:OR_Set ],  # Merge contract list (append-only)
+     [ mc:predicate sync:isGovernedBy; algo:mergeWith algo:LWW_Register; mc:disableBlankNodePathIdentification true ],  # Merge contract list - rdf:List, currently only LWW_Register possible (append-only)
      [ mc:predicate sync:managedResourceType; algo:mergeWith algo:Immutable ],  # Resource type for discovery
      [ mc:predicate idx:belongsToIndexShard; algo:mergeWith algo:OR_Set ],  # Index shard memberships
      [ mc:predicate sync:hasBlankNodeMapping; algo:mergeWith algo:OR_Set ] .  # Blank node canonical mappings

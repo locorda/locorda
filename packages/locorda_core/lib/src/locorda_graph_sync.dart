@@ -12,6 +12,7 @@ import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/installation_service.dart'
     show InstallationService, InstallationIdFactory;
@@ -170,6 +171,10 @@ class LocordaGraphSync {
             iriFactory: iriFactory),
         crdtTypeRegistry);
 
+    final shardManager = const ShardManager();
+    final indexRdfGenerator = IndexRdfGenerator(
+        resourceLocator: localResourceLocator, shardManager: shardManager);
+
     final crdtDocumentManager = CrdtDocumentManager(
       storage: storage,
       config: effectiveConfig,
@@ -179,23 +184,18 @@ class LocordaGraphSync {
       crdtTypeRegistry: crdtTypeRegistry,
       hlcService: hlcService,
       iriTermFactory: iriFactory,
+      indexRdfGenerator: indexRdfGenerator,
     );
 
-    final shardManager = const ShardManager();
     // Initialize indices after installation document is created
     final indexManager = IndexManager(
-      crdtDocumentManager: crdtDocumentManager,
-      rdfGenerator: IndexRdfGenerator(
-          resourceLocator: localResourceLocator, shardManager: shardManager),
-      storage: storage,
-      installationIri: installationService.installationIri,
-      resourceLocator: localResourceLocator,
-      config: effectiveConfig,
-    );
+        crdtDocumentManager: crdtDocumentManager,
+        rdfGenerator: indexRdfGenerator,
+        storage: storage,
+        installationIri: installationService.installationIri,
+        config: effectiveConfig);
 
-    await indexManager.initializeIndices(effectiveConfig);
-    await installationService.ensureDocumentSaved(
-        crdtDocumentManager, indexManager);
+    await indexManager.initializeIndices();
 
     final sync = LocordaGraphSync._(
         backend: backend,
@@ -203,6 +203,9 @@ class LocordaGraphSync {
         config: effectiveConfig,
         resourceLocator: localResourceLocator,
         crdtDocumentManager: crdtDocumentManager);
+
+    // installation documents might be organized in indices, so we need to use graph sync instead of crdtDocumentManager directly
+    await installationService.ensureDocumentSaved(sync);
 
     return sync;
   }
@@ -300,16 +303,20 @@ Cannot save resource with non-local IRI $resourceIri. Only local IRIs are suppor
 Use the 'documentIriTemplate' property of the resource configuration to configure automatic IRI translation from your IRI to the internal format on save().
 ''');
     }
-    // 3. Compute the shards in which this resource belongs
-    final shards =
-        await _indexManager.determineShards(type, resourceIri, internalAppData);
 
     // 4. save (with CRDT processing, diffing etc)
-    final saved =
-        await _crdtDocumentManager.save(type, internalAppData, shards);
+    final saved = await _crdtDocumentManager.save(type, internalAppData);
     if (saved == null) {
       // nothing changed, nothing to do
       return;
+    }
+
+    // 4a. Create any missing GroupIndex documents that were detected during save
+    // This must happen before updateIndices so the shards exist
+    for (final missing in saved.missingGroupIndices) {
+      _log.info(
+          'Creating missing GroupIndex for group "${missing.groupKey}" at ${missing.groupIndexIri}');
+      await _indexManager.createMissingGroupIndex(missing);
     }
 
     final crdtDocument = saved.crdtDocument;
@@ -327,6 +334,11 @@ Use the 'documentIriTemplate' property of the resource configuration to configur
       throw StateError(
           'Saved document $documentIri is missing crdt:clockHash, cannot update indices.');
     }
+
+    // 4a. Remove entries from shards where belongsToIndexShard was removed
+    // This must happen BEFORE updateIndices to ensure tombstones are created first
+    await _indexManager.removeTombstonedShardEntries(
+        resourceIri, crdtDocument, documentIri);
 
     final indexData = await _indexManager.updateIndices(
         type, resourceIri, clockHash, internalAppData, allShards);

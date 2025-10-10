@@ -39,6 +39,8 @@ class SyncPropertyChanges extends Table {
 
   IntColumn get changedAtMs => integer()();
   IntColumn get changeLogicalClock => integer()();
+  BoolColumn get isFrameworkProperty =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey =>
@@ -335,6 +337,7 @@ class SyncPropertyChangeDao extends DatabaseAccessor<SyncDatabase>
                   Value(iriToIdMap[predicateValue(change.propertyIri)]!),
               changedAtMs: Value(change.changedAtMs),
               changeLogicalClock: Value(change.changeLogicalClock),
+              isFrameworkProperty: Value(change.isFrameworkProperty),
             ))
         .toList();
 
@@ -376,6 +379,7 @@ class SyncPropertyChangeDao extends DatabaseAccessor<SyncDatabase>
               propertyIri: iriMap[change.propertyIriId]!,
               changedAtMs: change.changedAtMs,
               changeLogicalClock: change.changeLogicalClock,
+              isFrameworkProperty: change.isFrameworkProperty,
             ))
         .toList();
   }
@@ -387,12 +391,14 @@ class PropertyChangeInfo {
   final String propertyIri;
   final int changedAtMs;
   final int changeLogicalClock;
+  final bool isFrameworkProperty;
 
   PropertyChangeInfo({
     required this.resourceIri,
     required this.propertyIri,
     required this.changedAtMs,
     required this.changeLogicalClock,
+    required this.isFrameworkProperty,
   });
 }
 

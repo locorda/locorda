@@ -70,19 +70,24 @@ class DriftStorage implements Storage {
   }
 
   @override
-  Future<SaveDocumentResult> saveDocument(IriTerm documentIri, IriTerm typeIri, RdfGraph document,
-      DocumentMetadata metadata, List<PropertyChange> changes) async {
+  Future<SaveDocumentResult> saveDocument(
+      IriTerm documentIri,
+      IriTerm typeIri,
+      RdfGraph document,
+      DocumentMetadata metadata,
+      List<PropertyChange> changes) async {
     return await _database.transaction(() async {
       // Get previous cursor for this type
-      final previousTimestamp = await documentDao.getMaxUpdatedAtForType(typeIri.value);
+      final previousTimestamp =
+          await documentDao.getMaxUpdatedAtForType(typeIri.value);
       final previousCursor = previousTimestamp?.toString();
 
       // Validate that new timestamp is greater than existing max
-      if (previousTimestamp != null && metadata.updatedAt <= previousTimestamp) {
+      if (previousTimestamp != null &&
+          metadata.updatedAt <= previousTimestamp) {
         throw ArgumentError(
-          'New document updatedAt (${metadata.updatedAt}) must be greater than '
-          'existing max updatedAt ($previousTimestamp) for type ${typeIri.value}'
-        );
+            'New document updatedAt (${metadata.updatedAt}) must be greater than '
+            'existing max updatedAt ($previousTimestamp) for type ${typeIri.value}');
       }
 
       // Serialize RDF graph to Turtle
@@ -148,20 +153,23 @@ class DriftStorage implements Storage {
               propertyIri: _iriTermFactory(change.propertyIri),
               changedAtMs: change.changedAtMs,
               changeLogicalClock: change.changeLogicalClock,
+              isFrameworkProperty: change.isFrameworkProperty,
             ))
         .toList();
   }
 
   @override
-  Future<DocumentsResult> getDocumentsModifiedSince(IriTerm typeIri, String? cursor,
+  Future<DocumentsResult> getDocumentsModifiedSince(
+      IriTerm typeIri, String? cursor,
       {required int limit}) async {
-    final documents =
-        await documentDao.getDocumentsModifiedSince(typeIri.value, cursor, limit: limit);
+    final documents = await documentDao
+        .getDocumentsModifiedSince(typeIri.value, cursor, limit: limit);
 
     final storedDocuments = _convertToStoredDocuments(documents);
-    final nextCursor = storedDocuments.isNotEmpty && storedDocuments.length == limit
-        ? storedDocuments.last.metadata.updatedAt.toString()
-        : null;
+    final nextCursor =
+        storedDocuments.isNotEmpty && storedDocuments.length == limit
+            ? storedDocuments.last.metadata.updatedAt.toString()
+            : null;
 
     return DocumentsResult(
       documents: storedDocuments,
@@ -170,15 +178,17 @@ class DriftStorage implements Storage {
   }
 
   @override
-  Future<DocumentsResult> getDocumentsChangedByUsSince(IriTerm typeIri, String? cursor,
+  Future<DocumentsResult> getDocumentsChangedByUsSince(
+      IriTerm typeIri, String? cursor,
       {required int limit}) async {
-    final documents =
-        await documentDao.getDocumentsChangedByUsSince(typeIri.value, cursor, limit: limit);
+    final documents = await documentDao
+        .getDocumentsChangedByUsSince(typeIri.value, cursor, limit: limit);
 
     final storedDocuments = _convertToStoredDocuments(documents);
-    final nextCursor = storedDocuments.isNotEmpty && storedDocuments.length == limit
-        ? storedDocuments.last.metadata.ourPhysicalClock.toString()
-        : null;
+    final nextCursor =
+        storedDocuments.isNotEmpty && storedDocuments.length == limit
+            ? storedDocuments.last.metadata.ourPhysicalClock.toString()
+            : null;
 
     return DocumentsResult(
       documents: storedDocuments,

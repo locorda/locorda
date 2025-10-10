@@ -1,6 +1,7 @@
 /// Service for managing installation identity and lifecycle.
 library;
 
+import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
@@ -125,8 +126,7 @@ class InstallationService {
     );
   }
 
-  Future<void> ensureDocumentSaved(CrdtDocumentManager crdtDocumentManager,
-      IndexManager indexManager) async {
+  Future<void> ensureDocumentSaved(LocordaGraphSync sync) async {
     // Initialize installation document if needed
     if (!installationDocumentSaved) {
       final iri = installationIri;
@@ -155,10 +155,7 @@ class InstallationService {
           ),
         ),
       ]);
-      final shards = await indexManager.determineShards(
-          CrdtClientInstallation.classIri, iri, clientInstallation);
-      await crdtDocumentManager.save(
-          CrdtClientInstallation.classIri, clientInstallation, shards);
+      await sync.save(CrdtClientInstallation.classIri, clientInstallation);
       await markInstallationDocumentSaved();
     }
   }

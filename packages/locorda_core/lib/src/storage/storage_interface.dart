@@ -115,11 +115,14 @@ class PropertyChange {
   final RdfPredicate propertyIri; // Property that changed (e.g., schema:name)
   final int changedAtMs; // Real timestamp when change was made
   final int changeLogicalClock; // Logical clock assigned to this change
+  final bool
+      isFrameworkProperty; // Whether this is a framework metadata property (sync:logicalTime, sync:resourceHash, etc.) or app data property
 
   PropertyChange({
     required this.resourceIri,
     required this.propertyIri,
     required this.changedAtMs,
     required this.changeLogicalClock,
+    this.isFrameworkProperty = false,
   });
 }

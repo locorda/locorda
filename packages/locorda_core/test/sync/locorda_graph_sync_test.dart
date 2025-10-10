@@ -349,13 +349,18 @@ List<PropertyChange>? _parseExpectedPropertyChanges(
 }
 
 /// Compare actual and expected property changes (order-independent).
+/// Filters out framework properties from actual changes, as tests only verify app data changes.
 void _expectEqualPropertyChanges(
     List<PropertyChange> actual, List<PropertyChange> expected) {
+  // Filter to app data changes only (exclude framework metadata)
+  final actualAppChanges =
+      actual.where((pc) => !pc.isFrameworkProperty).toList();
+
   // Sort both lists by a consistent key for comparison
   String key(PropertyChange pc) =>
       '${pc.resourceIri.value}|${(pc.propertyIri as IriTerm).value}|${pc.changeLogicalClock}';
 
-  final actualSorted = actual.toList()
+  final actualSorted = actualAppChanges.toList()
     ..sort((a, b) => key(a).compareTo(key(b)));
   final expectedSorted = expected.toList()
     ..sort((a, b) => key(a).compareTo(key(b)));

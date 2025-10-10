@@ -24,6 +24,12 @@
      [ mc:predicate idx:shardingAlgorithm; algo:mergeWith algo:Immutable ],
      [ mc:predicate idx:readBy; algo:mergeWith algo:OR_Set ] .
 
+# Shard documents
+<#shard> a mc:ClassMapping;
+   mc:appliesToClass idx:Shard;
+   mc:rule
+     [ mc:predicate idx:containsEntry; algo:mergeWith algo:OR_Set ] .
+
 # GroupIndexTemplate documents
 <#group-index-template> a mc:ClassMapping;
    mc:appliesToClass idx:GroupIndexTemplate;

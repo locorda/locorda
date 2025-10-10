@@ -600,13 +600,24 @@ class $SyncPropertyChangesTable extends SyncPropertyChanges
   late final GeneratedColumn<int> changeLogicalClock = GeneratedColumn<int>(
       'change_logical_clock', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _isFrameworkPropertyMeta =
+      const VerificationMeta('isFrameworkProperty');
+  @override
+  late final GeneratedColumn<bool> isFrameworkProperty = GeneratedColumn<bool>(
+      'is_framework_property', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_framework_property" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
         documentId,
         resourceIriId,
         propertyIriId,
         changedAtMs,
-        changeLogicalClock
+        changeLogicalClock,
+        isFrameworkProperty
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -658,6 +669,12 @@ class $SyncPropertyChangesTable extends SyncPropertyChanges
     } else if (isInserting) {
       context.missing(_changeLogicalClockMeta);
     }
+    if (data.containsKey('is_framework_property')) {
+      context.handle(
+          _isFrameworkPropertyMeta,
+          isFrameworkProperty.isAcceptableOrUnknown(
+              data['is_framework_property']!, _isFrameworkPropertyMeta));
+    }
     return context;
   }
 
@@ -678,6 +695,8 @@ class $SyncPropertyChangesTable extends SyncPropertyChanges
           .read(DriftSqlType.int, data['${effectivePrefix}changed_at_ms'])!,
       changeLogicalClock: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}change_logical_clock'])!,
+      isFrameworkProperty: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}is_framework_property'])!,
     );
   }
 
@@ -694,12 +713,14 @@ class SyncPropertyChange extends DataClass
   final int propertyIriId;
   final int changedAtMs;
   final int changeLogicalClock;
+  final bool isFrameworkProperty;
   const SyncPropertyChange(
       {required this.documentId,
       required this.resourceIriId,
       required this.propertyIriId,
       required this.changedAtMs,
-      required this.changeLogicalClock});
+      required this.changeLogicalClock,
+      required this.isFrameworkProperty});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -708,6 +729,7 @@ class SyncPropertyChange extends DataClass
     map['property_iri_id'] = Variable<int>(propertyIriId);
     map['changed_at_ms'] = Variable<int>(changedAtMs);
     map['change_logical_clock'] = Variable<int>(changeLogicalClock);
+    map['is_framework_property'] = Variable<bool>(isFrameworkProperty);
     return map;
   }
 
@@ -718,6 +740,7 @@ class SyncPropertyChange extends DataClass
       propertyIriId: Value(propertyIriId),
       changedAtMs: Value(changedAtMs),
       changeLogicalClock: Value(changeLogicalClock),
+      isFrameworkProperty: Value(isFrameworkProperty),
     );
   }
 
@@ -730,6 +753,8 @@ class SyncPropertyChange extends DataClass
       propertyIriId: serializer.fromJson<int>(json['propertyIriId']),
       changedAtMs: serializer.fromJson<int>(json['changedAtMs']),
       changeLogicalClock: serializer.fromJson<int>(json['changeLogicalClock']),
+      isFrameworkProperty:
+          serializer.fromJson<bool>(json['isFrameworkProperty']),
     );
   }
   @override
@@ -741,6 +766,7 @@ class SyncPropertyChange extends DataClass
       'propertyIriId': serializer.toJson<int>(propertyIriId),
       'changedAtMs': serializer.toJson<int>(changedAtMs),
       'changeLogicalClock': serializer.toJson<int>(changeLogicalClock),
+      'isFrameworkProperty': serializer.toJson<bool>(isFrameworkProperty),
     };
   }
 
@@ -749,13 +775,15 @@ class SyncPropertyChange extends DataClass
           int? resourceIriId,
           int? propertyIriId,
           int? changedAtMs,
-          int? changeLogicalClock}) =>
+          int? changeLogicalClock,
+          bool? isFrameworkProperty}) =>
       SyncPropertyChange(
         documentId: documentId ?? this.documentId,
         resourceIriId: resourceIriId ?? this.resourceIriId,
         propertyIriId: propertyIriId ?? this.propertyIriId,
         changedAtMs: changedAtMs ?? this.changedAtMs,
         changeLogicalClock: changeLogicalClock ?? this.changeLogicalClock,
+        isFrameworkProperty: isFrameworkProperty ?? this.isFrameworkProperty,
       );
   SyncPropertyChange copyWithCompanion(SyncPropertyChangesCompanion data) {
     return SyncPropertyChange(
@@ -772,6 +800,9 @@ class SyncPropertyChange extends DataClass
       changeLogicalClock: data.changeLogicalClock.present
           ? data.changeLogicalClock.value
           : this.changeLogicalClock,
+      isFrameworkProperty: data.isFrameworkProperty.present
+          ? data.isFrameworkProperty.value
+          : this.isFrameworkProperty,
     );
   }
 
@@ -782,14 +813,15 @@ class SyncPropertyChange extends DataClass
           ..write('resourceIriId: $resourceIriId, ')
           ..write('propertyIriId: $propertyIriId, ')
           ..write('changedAtMs: $changedAtMs, ')
-          ..write('changeLogicalClock: $changeLogicalClock')
+          ..write('changeLogicalClock: $changeLogicalClock, ')
+          ..write('isFrameworkProperty: $isFrameworkProperty')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(documentId, resourceIriId, propertyIriId,
-      changedAtMs, changeLogicalClock);
+      changedAtMs, changeLogicalClock, isFrameworkProperty);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -798,7 +830,8 @@ class SyncPropertyChange extends DataClass
           other.resourceIriId == this.resourceIriId &&
           other.propertyIriId == this.propertyIriId &&
           other.changedAtMs == this.changedAtMs &&
-          other.changeLogicalClock == this.changeLogicalClock);
+          other.changeLogicalClock == this.changeLogicalClock &&
+          other.isFrameworkProperty == this.isFrameworkProperty);
 }
 
 class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
@@ -807,6 +840,7 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
   final Value<int> propertyIriId;
   final Value<int> changedAtMs;
   final Value<int> changeLogicalClock;
+  final Value<bool> isFrameworkProperty;
   final Value<int> rowid;
   const SyncPropertyChangesCompanion({
     this.documentId = const Value.absent(),
@@ -814,6 +848,7 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
     this.propertyIriId = const Value.absent(),
     this.changedAtMs = const Value.absent(),
     this.changeLogicalClock = const Value.absent(),
+    this.isFrameworkProperty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SyncPropertyChangesCompanion.insert({
@@ -822,6 +857,7 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
     required int propertyIriId,
     required int changedAtMs,
     required int changeLogicalClock,
+    this.isFrameworkProperty = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : documentId = Value(documentId),
         resourceIriId = Value(resourceIriId),
@@ -834,6 +870,7 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
     Expression<int>? propertyIriId,
     Expression<int>? changedAtMs,
     Expression<int>? changeLogicalClock,
+    Expression<bool>? isFrameworkProperty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -843,6 +880,8 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
       if (changedAtMs != null) 'changed_at_ms': changedAtMs,
       if (changeLogicalClock != null)
         'change_logical_clock': changeLogicalClock,
+      if (isFrameworkProperty != null)
+        'is_framework_property': isFrameworkProperty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -853,6 +892,7 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
       Value<int>? propertyIriId,
       Value<int>? changedAtMs,
       Value<int>? changeLogicalClock,
+      Value<bool>? isFrameworkProperty,
       Value<int>? rowid}) {
     return SyncPropertyChangesCompanion(
       documentId: documentId ?? this.documentId,
@@ -860,6 +900,7 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
       propertyIriId: propertyIriId ?? this.propertyIriId,
       changedAtMs: changedAtMs ?? this.changedAtMs,
       changeLogicalClock: changeLogicalClock ?? this.changeLogicalClock,
+      isFrameworkProperty: isFrameworkProperty ?? this.isFrameworkProperty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -882,6 +923,9 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
     if (changeLogicalClock.present) {
       map['change_logical_clock'] = Variable<int>(changeLogicalClock.value);
     }
+    if (isFrameworkProperty.present) {
+      map['is_framework_property'] = Variable<bool>(isFrameworkProperty.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -896,6 +940,7 @@ class SyncPropertyChangesCompanion extends UpdateCompanion<SyncPropertyChange> {
           ..write('propertyIriId: $propertyIriId, ')
           ..write('changedAtMs: $changedAtMs, ')
           ..write('changeLogicalClock: $changeLogicalClock, ')
+          ..write('isFrameworkProperty: $isFrameworkProperty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2002,6 +2047,7 @@ typedef $$SyncPropertyChangesTableCreateCompanionBuilder
   required int propertyIriId,
   required int changedAtMs,
   required int changeLogicalClock,
+  Value<bool> isFrameworkProperty,
   Value<int> rowid,
 });
 typedef $$SyncPropertyChangesTableUpdateCompanionBuilder
@@ -2011,6 +2057,7 @@ typedef $$SyncPropertyChangesTableUpdateCompanionBuilder
   Value<int> propertyIriId,
   Value<int> changedAtMs,
   Value<int> changeLogicalClock,
+  Value<bool> isFrameworkProperty,
   Value<int> rowid,
 });
 
@@ -2079,6 +2126,10 @@ class $$SyncPropertyChangesTableFilterComposer
 
   ColumnFilters<int> get changeLogicalClock => $composableBuilder(
       column: $table.changeLogicalClock,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isFrameworkProperty => $composableBuilder(
+      column: $table.isFrameworkProperty,
       builder: (column) => ColumnFilters(column));
 
   $$SyncDocumentsTableFilterComposer get documentId {
@@ -2158,6 +2209,10 @@ class $$SyncPropertyChangesTableOrderingComposer
       column: $table.changeLogicalClock,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get isFrameworkProperty => $composableBuilder(
+      column: $table.isFrameworkProperty,
+      builder: (column) => ColumnOrderings(column));
+
   $$SyncDocumentsTableOrderingComposer get documentId {
     final $$SyncDocumentsTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -2233,6 +2288,9 @@ class $$SyncPropertyChangesTableAnnotationComposer
 
   GeneratedColumn<int> get changeLogicalClock => $composableBuilder(
       column: $table.changeLogicalClock, builder: (column) => column);
+
+  GeneratedColumn<bool> get isFrameworkProperty => $composableBuilder(
+      column: $table.isFrameworkProperty, builder: (column) => column);
 
   $$SyncDocumentsTableAnnotationComposer get documentId {
     final $$SyncDocumentsTableAnnotationComposer composer = $composerBuilder(
@@ -2327,6 +2385,7 @@ class $$SyncPropertyChangesTableTableManager extends RootTableManager<
             Value<int> propertyIriId = const Value.absent(),
             Value<int> changedAtMs = const Value.absent(),
             Value<int> changeLogicalClock = const Value.absent(),
+            Value<bool> isFrameworkProperty = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncPropertyChangesCompanion(
@@ -2335,6 +2394,7 @@ class $$SyncPropertyChangesTableTableManager extends RootTableManager<
             propertyIriId: propertyIriId,
             changedAtMs: changedAtMs,
             changeLogicalClock: changeLogicalClock,
+            isFrameworkProperty: isFrameworkProperty,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -2343,6 +2403,7 @@ class $$SyncPropertyChangesTableTableManager extends RootTableManager<
             required int propertyIriId,
             required int changedAtMs,
             required int changeLogicalClock,
+            Value<bool> isFrameworkProperty = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncPropertyChangesCompanion.insert(
@@ -2351,6 +2412,7 @@ class $$SyncPropertyChangesTableTableManager extends RootTableManager<
             propertyIriId: propertyIriId,
             changedAtMs: changedAtMs,
             changeLogicalClock: changeLogicalClock,
+            isFrameworkProperty: isFrameworkProperty,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

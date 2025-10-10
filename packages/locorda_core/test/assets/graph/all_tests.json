@@ -1123,7 +1123,7 @@
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/recipeCategory",
-                    "changed_at": "2024-01-01T04:00:00.002Z",
+                    "changed_at": "2024-01-01T04:00:00.000Z",
                     "logical_clock": 2
                   }
                 ],

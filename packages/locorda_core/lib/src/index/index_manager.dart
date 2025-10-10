@@ -10,9 +10,9 @@ import 'package:crypto/crypto.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
-import 'package:locorda_core/src/index/group_key_generator.dart';
 import 'package:locorda_core/src/index/index_property_resolver.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
@@ -31,28 +31,20 @@ class IndexManager {
   final CrdtDocumentManager _documentManager;
   final IndexRdfGenerator _rdfGenerator;
   final IndexPropertyResolver _propertyResolver;
-  final Storage _storage;
-  final ShardManager _shardManager;
   final SyncGraphConfig _config;
-
   final IriTerm _installationIri;
-  final ResourceLocator _resourceLocator;
 
   IndexManager({
     required CrdtDocumentManager crdtDocumentManager,
     required IndexRdfGenerator rdfGenerator,
     required Storage storage,
     required IriTerm installationIri,
-    required ResourceLocator resourceLocator,
     required SyncGraphConfig config,
   })  : _documentManager = crdtDocumentManager,
         _rdfGenerator = rdfGenerator,
-        _propertyResolver = IndexPropertyResolver(storage: storage),
-        _storage = storage,
-        _shardManager = const ShardManager(),
         _config = config,
-        _installationIri = installationIri,
-        _resourceLocator = resourceLocator;
+        _propertyResolver = IndexPropertyResolver(storage: storage),
+        _installationIri = installationIri;
 
   /// Initializes all indices defined in the configuration.
   ///
@@ -61,10 +53,10 @@ class IndexManager {
   /// installation document creation.
   ///
   /// Returns the number of indices created (useful for testing).
-  Future<int> initializeIndices(SyncGraphConfig config) async {
+  Future<int> initializeIndices() async {
     var createdCount = 0;
 
-    for (final resource in config.resources) {
+    for (final resource in _config.resources) {
       for (final indexConfig in resource.indices) {
         // Create index based on type
         switch (indexConfig) {
@@ -122,8 +114,6 @@ class IndexManager {
       await _documentManager.save(
         IdxShard.classIri,
         shardGraph,
-        // shards are not tracked in other indices
-        const [],
       );
     }
 
@@ -131,8 +121,6 @@ class IndexManager {
     await _documentManager.save(
       IdxFullIndex.classIri,
       indexGraph,
-      // index documents are not tracked in other indices
-      const [],
     );
   }
 
@@ -162,219 +150,22 @@ class IndexManager {
     await _documentManager.save(
       IdxGroupIndexTemplate.classIri,
       templateGraph,
-      // group index templates are not tracked in other indices
-      const [],
     );
   }
 
-  /// Determines which shards a resource of the given type should belong to.
+  /// Creates a missing GroupIndex that was detected during shard determination.
   ///
-  /// According to LOCORDA-SPECIFICATION.md section 6.4 "Resource Creation Workflow":
-  /// 1. Identify all matching index shards based on resource type
-  /// 2. For FullIndex: Calculate shard based on resource IRI hash
-  /// 3. For GroupIndexTemplate: Determine group membership using GroupKeyGenerator,
-  ///    create GroupIndex instances if needed, then calculate shard per group
-  ///
-  /// Parameters:
-  /// - [type]: The RDF type of the resource (e.g., schema:Recipe)
-  /// - [resourceIri]: The IRI of the resource being indexed
-  /// - [internalAppData]: The resource's semantic data (for group determination)
-  ///
-  /// Returns: Iterable of shard IRIs the resource should be indexed in
-  Future<Iterable<IriTerm>> determineShards(
-    IriTerm type,
-    IriTerm resourceIri,
-    RdfGraph internalAppData,
-  ) async {
-    final shards = <IriTerm>[];
-
-    // Get all index configurations for this resource type from config
-    final resourceConfig = _getResourceConfig(type);
-    if (resourceConfig == null) {
-      _log.warning('No resource config found for type $type');
-      return shards;
-    }
-
-    // Process each index configuration
-    for (final indexConfig in resourceConfig.indices) {
-      switch (indexConfig) {
-        case FullIndexGraphConfig():
-          final indexShards = await _determineShardsForFullIndex(
-              indexConfig, resourceIri, type);
-          shards.addAll(indexShards);
-
-        case GroupIndexGraphConfig():
-          final groupIndexShards = await _determineShardsForGroupIndex(
-              indexConfig, resourceIri, type, internalAppData);
-          shards.addAll(groupIndexShards);
-      }
-    }
-
-    return shards;
-  }
-
-  /// Gets the resource configuration for a given type from the sync config.
-  ResourceGraphConfig? _getResourceConfig(IriTerm type) {
-    try {
-      return _config.getResourceConfig(type);
-    } on ArgumentError {
-      return null;
-    }
-  }
-
-  /// Determines which shard(s) a resource belongs to for a FullIndex.
-  ///
-  /// Process per SHARDING.md:
-  /// 1. Load the FullIndex document from storage
-  /// 2. Parse its sharding configuration (numberOfShards, configVersion)
-  /// 3. Calculate shard number using MD5 hash modulo algorithm
-  /// 4. Find the matching shard IRI from the index's hasShard list
-  ///
-  /// Returns: List of shard IRIs (should be exactly one for FullIndex)
-  Future<List<IriTerm>> _determineShardsForFullIndex(
-    FullIndexGraphConfig config,
-    IriTerm resourceIri,
-    IriTerm typeIri,
-  ) async {
-    // Generate the index IRI from config
-    final indexResourceIri =
-        _rdfGenerator.generateFullIndexIri(config, typeIri);
-    final indexDocumentIri = indexResourceIri.getDocumentIri();
-
-    // Load the index document from storage
-    final storedDoc = await _storage.getDocument(indexDocumentIri);
-    if (storedDoc == null) {
-      _log.warning('Index document not found: $indexDocumentIri');
-      return [];
-    }
-
-    // Parse sharding configuration from the index
-    final shardingConfig =
-        _shardManager.parseShardingConfig(storedDoc.document, indexResourceIri);
-    if (shardingConfig == null) {
-      _log.warning(
-          'Could not parse sharding config from index: $indexResourceIri');
-      return [];
-    }
-
-    // Calculate which shard number this resource belongs to
-    final shardNumber = _shardManager.determineShardNumber(
-      resourceIri,
-      numberOfShards: shardingConfig.numberOfShards,
+  /// This is a public wrapper around _createGroupIndex() that can be called
+  /// by LocordaGraphSync to create GroupIndices that were reported as missing
+  /// during document save.
+  Future<void> createMissingGroupIndex(MissingGroupIndex missing) async {
+    await _createGroupIndex(
+      missing.config,
+      missing.typeIri,
+      missing.templateIri,
+      missing.groupKey,
+      missing.groupIndexIri,
     );
-
-    // Generate the expected shard name
-    final shardIri = _rdfGenerator.generateShardIri(
-        shardingConfig.numberOfShards,
-        shardNumber,
-        shardingConfig.configVersion,
-        indexResourceIri,
-        IdxFullIndex.classIri);
-
-    return [shardIri];
-  }
-
-  /// Determines which shard(s) a resource belongs to for a GroupIndexTemplate.
-  ///
-  /// Process per LOCORDA-SPECIFICATION.md section 5.3:
-  /// 1. Generate group keys from resource properties using GroupKeyGenerator
-  /// 2. For each group key:
-  ///    a. Generate GroupIndex IRI from template IRI + group key
-  ///    b. Check if GroupIndex exists, create if needed
-  ///    c. Load GroupIndex and parse sharding configuration
-  ///    d. Calculate shard number using resource IRI hash
-  ///    e. Generate shard IRI
-  ///
-  /// Returns: List of shard IRIs (one or more, depending on group membership)
-  Future<List<IriTerm>> _determineShardsForGroupIndex(
-    GroupIndexGraphConfig config,
-    IriTerm resourceIri,
-    IriTerm typeIri,
-    RdfGraph internalAppData,
-  ) async {
-    final shards = <IriTerm>[];
-
-    // Generate the GroupIndexTemplate IRI
-    final templateIri =
-        _rdfGenerator.generateGroupIndexTemplateIri(config, typeIri);
-
-    // Generate group keys from resource properties
-    final groupKeyGenerator = GroupKeyGenerator(config);
-    final triples = internalAppData.triples.toList();
-    final groupKeys = groupKeyGenerator.generateGroupKeys(triples);
-
-    // If no group keys, resource doesn't belong to any group (missing required properties)
-    if (groupKeys.isEmpty) {
-      _log.fine(
-          'Resource $resourceIri has no group keys for template $templateIri');
-      return shards;
-    }
-
-    // Process each group key
-    for (final groupKey in groupKeys) {
-      // Generate GroupIndex IRI
-      final groupIndexIri =
-          _rdfGenerator.generateGroupIndexIri(templateIri, groupKey);
-      final groupIndexDocumentIri = groupIndexIri.getDocumentIri();
-
-      // Check if GroupIndex exists, create if needed
-      if (!(await _documentManager.hasDocument(groupIndexDocumentIri))) {
-        _log.info(
-            'Creating GroupIndex for group "$groupKey" at $groupIndexDocumentIri');
-        await _createGroupIndex(
-          config,
-          typeIri,
-          templateIri,
-          groupKey,
-          groupIndexIri,
-        );
-      }
-
-      // Load the GroupIndex document to verify it exists
-      final storedDoc = await _storage.getDocument(groupIndexDocumentIri);
-      if (storedDoc == null) {
-        // FIXME: maybe throw?
-        _log.warning('GroupIndex document not found: $groupIndexDocumentIri');
-        continue;
-      }
-
-      // Parse sharding configuration from the TEMPLATE, not the GroupIndex
-      // GroupIndex only has idx:basedOn and idx:hasShard - sharding config is in template
-      final templateDocumentIri = templateIri.getDocumentIri();
-      final templateDoc = await _storage.getDocument(templateDocumentIri);
-      if (templateDoc == null) {
-        _log.warning(
-            'GroupIndexTemplate document not found: $templateDocumentIri');
-        continue;
-      }
-
-      final shardingConfig =
-          _shardManager.parseShardingConfig(templateDoc.document, templateIri);
-      if (shardingConfig == null) {
-        _log.warning(
-            'Could not parse sharding config from GroupIndexTemplate: $templateIri');
-        continue;
-      }
-
-      // Calculate which shard number this resource belongs to
-      final shardNumber = _shardManager.determineShardNumber(
-        resourceIri,
-        numberOfShards: shardingConfig.numberOfShards,
-      );
-
-      // Generate the shard IRI (relative to GroupIndex, not template)
-      final shardIri = _rdfGenerator.generateShardIri(
-        shardingConfig.numberOfShards,
-        shardNumber,
-        shardingConfig.configVersion,
-        groupIndexIri,
-        IdxGroupIndex.classIri,
-      );
-
-      shards.add(shardIri);
-    }
-
-    return shards;
   }
 
   /// Creates a new GroupIndex instance for a specific group.
@@ -409,21 +200,11 @@ class IndexManager {
     // Save shard document first (same pattern as FullIndex)
     if (!(await _documentManager
         .hasDocument(shardResourceIri.getDocumentIri()))) {
-      await _documentManager.save(
-        IdxShard.classIri,
-        shardGraph,
-        // shards are not tracked in other indices
-        const [],
-      );
+      await _documentManager.save(IdxShard.classIri, shardGraph);
     }
 
     // Save GroupIndex document
-    await _documentManager.save(
-      IdxGroupIndex.classIri,
-      groupIndexGraph,
-      // GroupIndex documents are not tracked in other indices
-      const [],
-    );
+    await _documentManager.save(IdxGroupIndex.classIri, groupIndexGraph);
   }
 
   /// Generates RDF graph for a GroupIndex resource.
@@ -633,6 +414,97 @@ class IndexManager {
 
   IriTerm getIndexOrTemplateIri(CrdtIndexGraphConfig index, IriTerm typeIri) =>
       _rdfGenerator.generateIndexOrTemplateIri(index, typeIri);
+
+  /// Removes entries from shards based on tombstones in idx:belongsToIndexShard.
+  ///
+  /// When a resource's group membership changes (e.g., recipe category changes from
+  /// 'Dessert' to 'Main Course'), the OR-Set semantics automatically create tombstones
+  /// for the removed shard references. This method:
+  ///
+  /// 1. Detects tombstoned idx:belongsToIndexShard values in the CRDT document
+  /// 2. For each tombstoned shard, removes the corresponding entry using patch()
+  /// 3. Uses empty graph to signal removal (OR-Set tombstone will be created automatically)
+  ///
+  /// This ensures indices remain consistent with current group membership while preserving
+  /// tombstones for conflict resolution during synchronization.
+  ///
+  /// Parameters:
+  /// - [resourceIri]: The resource whose shard entries should be cleaned up
+  /// - [crdtDocument]: The saved CRDT document containing potential tombstones
+  /// - [documentIri]: The document IRI to search for tombstones
+  Future<void> removeTombstonedShardEntries(
+    IriTerm resourceIri,
+    RdfGraph crdtDocument,
+    IriTerm documentIri,
+  ) async {
+    // Find all reified statements with crdt:deletedAt for idx:belongsToIndexShard
+    final reifiedStmts =
+        crdtDocument.findTriples(predicate: Rdf.subject, object: documentIri);
+
+    final tombstones = <Triple>[];
+    for (final reifiedStmt in reifiedStmts) {
+      if (reifiedStmt.subject is! IriTerm) continue;
+      final stmtIri = reifiedStmt.subject as IriTerm;
+
+      // Check if it has crdt:deletedAt (tombstone marker)
+      final deletedAt = crdtDocument.findSingleObject<LiteralTerm>(
+        stmtIri,
+        Crdt.deletedAt,
+      );
+      if (deletedAt == null) continue;
+
+      // Check if the reified statement is about belongsToIndexShard
+      final reifiedPredicate = crdtDocument.findSingleObject<IriTerm>(
+        stmtIri,
+        Rdf.predicate,
+      );
+
+      if (reifiedPredicate == SyncManagedDocument.idxBelongsToIndexShard) {
+        tombstones.add(reifiedStmt);
+      }
+    }
+
+    if (tombstones.isEmpty) {
+      return; // No tombstones found, nothing to clean up
+    }
+
+    _log.info(
+        'Found ${tombstones.length} tombstoned shard references for $resourceIri');
+
+    // For each tombstoned shard reference, remove the entry
+    for (final tombstone in tombstones) {
+      final reifiedStmtIri = tombstone.subject as IriTerm;
+
+      // Get the shard IRI from the reified statement's object
+      final shardIri = crdtDocument.findSingleObject<IriTerm>(
+        reifiedStmtIri,
+        Rdf.object,
+      );
+
+      if (shardIri == null) {
+        _log.warning(
+            'Tombstone $reifiedStmtIri has no rdf:object, skipping cleanup');
+        continue;
+      }
+
+      _log.info(
+          'Removing entry for $resourceIri from tombstoned shard $shardIri');
+
+      // Generate the entry IRI that should be removed
+      final shardDocumentIri = shardIri.getDocumentIri();
+      final entryFragment = _generateEntryFragment(resourceIri);
+      final entryIri = IriTerm('${shardDocumentIri.value}#$entryFragment');
+
+      // Use patch() with empty graph to remove the entry
+      // This signals removal, and patch() will create appropriate tombstones
+      await _documentManager.patch(
+        IdxShard.classIri,
+        shardIri,
+        IdxShard.containsEntry,
+        (entryIri, RdfGraphExtensions.empty),
+      );
+    }
+  }
 }
 
 /// Extension to expose internal helper methods for testing.
