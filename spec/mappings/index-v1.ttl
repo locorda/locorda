@@ -56,7 +56,7 @@
 <#indexed-property> a mc:ClassMapping;
    mc:appliesToClass idx:IndexedProperty;
    mc:rule
-     [ mc:predicate idx:trackedProperty; algo:mergeWith algo:Immutable ],  # Which property to index
+     [ mc:predicate idx:trackedProperty; algo:mergeWith algo:Immutable; mc:isIdentifying true ],  # Which property to index
      [ mc:predicate idx:readBy; algo:mergeWith algo:OR_Set ] .      # Which installations read this property
 
 # GroupingRule configuration for partitioned indices

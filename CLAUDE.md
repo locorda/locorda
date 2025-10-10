@@ -93,6 +93,12 @@ The core philosophy is that this service acts as an "add-on" for synchronization
 - `dart pub run melos release` - Preview version + publish process
 - See `tool/version_and_release.md` for detailed workflow
 
+### Database Management (macOS)
+- Clean Drift databases: `rm -f ~/Library/Containers/com.example.personalNotesApp/Data/Documents/*.sqlite*`
+  - Removes both `locorda_sync.sqlite` and `personal_notes_app.sqlite` databases
+  - Use when app fails to start due to corrupted or incompatible database schema
+  - App will recreate fresh databases on next launch
+
 ## Key Files and Structure
 
 ### Core Documentation
