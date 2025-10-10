@@ -41,7 +41,9 @@
   - This unblocks the example app's core functionality
 - [x] Implement IndexManager.determineShards for FullIndex 
 - [x] Implement IndexManager.determineShards for GroupIndexTemplate - this implies creation of group indexes. 
-- [ ] More tests in all_tests.json, especially for testing the shard and index handling
+- [x] Complete full index, group index and shard creation 
+- [x] More tests in all_tests.json, especially for testing the shard and index handling
+- [x] I think we need some concept to switch between strict and lenient for document structure errors - sometimes we throw exceptions on structural errors, sometimes we only log and continue. A consistent tooling would be great here, that allows us to run in either strict or lenient mode - ideally not as static utility, but that is probably unrealistic, so a static utility would be better than nothing still.
 
 ### Priority 2: SyncManager with Status Stream
 - [ ] Create SyncManager with status stream and automatic sync triggering
@@ -50,14 +52,10 @@
   - Foundation for all higher-level sync operations
 
 ### Priority 3: Index Processing
-- [ ] Complete index creation and group subscription handling
-  - Complete group subscription and index creation logic
+- [ ] Complete index subscription handling (full and group)
+  - Complete group subscription logic
   - Currently stubbed in `configureGroupIndexSubscription()`
   - Needed for efficient data organization and sync
-- [ ] Implement shard splitting/resharding when shards reach maxSize limits (Implement Re-Sharding as per the specification)
-  - Increment shard number for overflow
-  - Update shardTotal in index/template
-  - Migrate entries to correct shards based on new distribution
 
 ### Priority 4: Backend Implementations
 - [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
@@ -65,7 +63,6 @@
   - Simpler to implement than Solid backend
   - Enables testing without external dependencies
   - Good foundation for understanding backend interface
-
 - [ ] Implement Solid backend with actual Pod storage operations
   - Most complex but enables the full vision
   - Requires Pod operations, authentication integration
@@ -78,7 +75,10 @@
 - [ ] merge-contract: RdfGraphFetcher caching with etag support (HTTP best practices, benefits all RDF loading)
 - [ ] merge-contract: Local database caching (persistence across app restarts)
 - [ ] rdf_vocabulary_to_dart: failed to load RDF graph for graphs marked as skipped must not be an error, build must not be marked as "failed" due to this
-- [ ] I think we need some concept to switch between strict and lenient for document structure errors - sometimes we throw exceptions on structural errors, sometimes we only log and continue. A consistent tooling would be great here, that allows us to run in either strict or lenient mode - ideally not as static utility, but that is probably unrealistic, so a static utility would be better than nothing still.
+- [ ] Implement shard splitting/resharding when shards reach maxSize limits (Implement Re-Sharding as per the specification)
+  - Increment shard number for overflow
+  - Update shardTotal in index/template
+  - Migrate entries to correct shards based on new distribution
 
 ## Later
 - [ ] Implement namespace in Resource Identity => maybe later
