@@ -21,7 +21,8 @@
      [ mc:predicate idx:indexesClass; algo:mergeWith algo:Immutable ],
      [ mc:predicate idx:indexedProperty; algo:mergeWith algo:OR_Set ],
      [ mc:predicate idx:hasShard; algo:mergeWith algo:OR_Set ],
-     [ mc:predicate idx:shardingAlgorithm; algo:mergeWith algo:Immutable ],
+     # No path node identification for shardingAlgorithm because it should be treated as atomic and is immutable anyways
+     [ mc:predicate idx:shardingAlgorithm; algo:mergeWith algo:Immutable; mc:disableBlankNodePathIdentification true ],
      [ mc:predicate idx:readBy; algo:mergeWith algo:OR_Set ] .
 
 # Shard documents
@@ -36,7 +37,8 @@
    mc:rule
      [ mc:predicate idx:indexesClass; algo:mergeWith algo:Immutable ],
      [ mc:predicate idx:indexedProperty; algo:mergeWith algo:OR_Set ],
-     [ mc:predicate idx:shardingAlgorithm; algo:mergeWith algo:Immutable ],
+     # No path node identification for shardingAlgorithm because it should be treated as atomic and is immutable anyways
+     [ mc:predicate idx:shardingAlgorithm; algo:mergeWith algo:Immutable; mc:disableBlankNodePathIdentification true ],
      [ mc:predicate idx:groupedBy; algo:mergeWith algo:Immutable ],
      [ mc:predicate idx:readBy; algo:mergeWith algo:OR_Set ],
      [ mc:predicate idx:populationState; algo:mergeWith algo:LWW_Register ],
@@ -71,7 +73,7 @@
    mc:rule
      [ mc:predicate idx:sourceProperty; algo:mergeWith algo:Immutable; mc:isIdentifying true ],  # Source property to extract from (identifying)
      [ mc:predicate idx:hierarchyLevel; algo:mergeWith algo:Immutable; mc:isIdentifying true ],  # Hierarchy level (identifying, default: 1)
-     [ mc:predicate idx:transform; algo:mergeWith algo:Immutable ],       # Transform list (part of grouping identity)
+     [ mc:predicate idx:transform; algo:mergeWith algo:Immutable; mc:disableBlankNodePathIdentification true ],       # Transform list (part of grouping identity)
      [ mc:predicate idx:missingValue; algo:mergeWith algo:LWW_Register ] . # Default value for missing properties
 
 # ModuloHashSharding algorithm configuration

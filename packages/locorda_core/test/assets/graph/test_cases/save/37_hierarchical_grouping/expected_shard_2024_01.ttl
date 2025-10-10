@@ -1,1 +1,28 @@
-# DUMMY
+@prefix cm: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
+@prefix mappings: <https://w3id.org/solid-crdt-sync/mappings/> .
+@prefix ns1: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZ3JvdXBlZC0zMjI2YWM2MC9ncm91cHMvMjAyNC8wMS9zaGFyZC1tb2QtbWQ1LTEtMC12MV8wXzA=#> .
+@prefix ns2: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0dyb3VwSW5kZXg=:aW5kZXgtZ3JvdXBlZC0zMjI2YWM2MC9ncm91cHMvMjAyNC8wMS9pbmRleA==#> .
+@prefix ns3: <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:d2ludGVyLXNvdXA=#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZ3JvdXBlZC0zMjI2YWM2MC9ncm91cHMvMjAyNC8wMS9zaGFyZC1tb2QtbWQ1LTEtMC12MV8wXzA=> a sync:ManagedDocument;
+    foaf:primaryTopic ns1:shard;
+    cm:clockHash "27c2b6ead486c60ef8532f09dfbd0978";
+    cm:createdAt "2024-01-15T10:00:00.001Z"^^xsd:dateTime;
+    cm:hasClockEntry ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54;
+    sync:isGovernedBy (mappings:shard-v1);
+    sync:managedResourceType idx:Shard .
+
+ns1:entry-010dc3d6ce9ab1620d994e81759cb99a cm:clockHash "d6e4e22ac422af98ceaae217867525f1";
+    idx:resource ns3:it .
+
+ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54 cm:logicalTime 2;
+    cm:physicalTime 1705312800003 .
+
+ns1:shard a idx:Shard;
+    idx:containsEntry ns1:entry-010dc3d6ce9ab1620d994e81759cb99a;
+    idx:isShardOf ns2:index .

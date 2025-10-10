@@ -24,7 +24,7 @@ dependencies:
   uuid: ^4.5.1
 
   # RDF
-  rdf_core: ^0.9.20
+  rdf_core: ^0.9.21
   
 
 dev_dependencies:
