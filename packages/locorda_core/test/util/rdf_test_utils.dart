@@ -8,16 +8,24 @@ import 'package:test/test.dart';
 ///
 /// Throws if the file does not exist.
 RdfGraph readGraphFromFile(Directory testAssetsDir, String relativePath) {
-  final file = File('${testAssetsDir.path}/$relativePath');
-  if (!file.existsSync()) {
+  try {
+    final file = File('${testAssetsDir.path}/$relativePath');
+    if (!file.existsSync()) {
+      throw TestFailure(
+        'Expected RDF file not found: ${file.path}\n'
+        'This test requires the file to exist. If this is a generate test, '
+        'ensure the expected output file has been created.',
+      );
+    }
+    final content = file.readAsStringSync();
+    return turtle.decode(content);
+  } on TestFailure {
+    rethrow; // Rethrow test failures as-is
+  } catch (e) {
     throw TestFailure(
-      'Expected RDF file not found: ${file.path}\n'
-      'This test requires the file to exist. If this is a generate test, '
-      'ensure the expected output file has been created.',
+      'Failed to read RDF file: $relativePath\nError: $e',
     );
   }
-  final content = file.readAsStringSync();
-  return turtle.decode(content);
 }
 
 /// Compares two RDF graphs using RDF canonicalization.

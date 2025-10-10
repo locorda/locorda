@@ -1,0 +1,7 @@
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/recipes/recipe123#it>
+    a schema:Recipe ;
+    schema:name "Chocolate Mousse" ;
+    schema:recipeCategory "Desserts", "Quick Meals";
+    schema:recipeIngredient "Chocolate" , "Cream" , "Eggs" .
