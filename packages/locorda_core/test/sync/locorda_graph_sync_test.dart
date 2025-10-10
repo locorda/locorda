@@ -44,6 +44,7 @@ void main() {
         final testId = testJson['id'] as String;
         final testTitle = testJson['title'] as String;
         //final testDescription = testJson['description'] as String;
+        final shouldSkip = testJson['skip'] as bool? ?? false;
 
         test('$testId: $testTitle', () async {
           // Get test-specific baseTimestamp or use default
@@ -66,7 +67,7 @@ void main() {
             default:
               fail('Unknown test suite: $suiteName');
           }
-        });
+        }, skip: shouldSkip);
       }
     });
   }
@@ -97,6 +98,11 @@ Future<void> _executeSaveTestWithSteps(
     DateTime baseTimestamp,
     String? baseInstallationId) async {
   final testId = testJson['id'] as String;
+
+  // Test-specific installation ID overrides base installation ID
+  final testInstallationId =
+      testJson['installation_id'] as String? ?? baseInstallationId;
+
   final config = _loadConfig(testAssetsDir, testJson['config'] as String);
   final storage = TestStorage();
   final iriTranslator = IriTranslator(
@@ -115,7 +121,7 @@ Future<void> _executeSaveTestWithSteps(
       testAssetsDir: testAssetsDir,
       urlToPathMap: urlToPathMap,
       baseTimestamp: baseTimestamp,
-      baseInstallationId: baseInstallationId,
+      baseInstallationId: testInstallationId,
       config: config,
       storage: storage,
       iriTranslator: iriTranslator,
@@ -141,6 +147,46 @@ Future<void> _executeStep({
 
   final action = stepJson['action'] as String;
 
+  // Load action timestamps if provided
+  final actionTs = stepJson['action_ts'] as Map<String, dynamic>?;
+  final timestampFactory =
+      TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
+
+  if (action == 'prepare') {
+    // Prepare action: Load multiple documents into storage
+    final documents = stepJson['documents'] as List<dynamic>;
+
+    // Set timestamp for prepare.save if specified
+    setTime(actionTs?['save'], timestampFactory);
+    final now = timestampFactory();
+
+    for (final docJson in documents) {
+      final docMap = docJson as Map<String, dynamic>;
+      final typeIri = IriTerm(docMap['typeIri'] as String);
+      final graphPath = docMap['graph'] as String;
+      final graph = _readGraphFromPath(testAssetsDir, graphPath)!;
+
+      // Extract document IRI from the graph
+      final documentIri = graph.subjects
+          .whereType<IriTerm>()
+          .map((s) => s.getDocumentIri())
+          .toSet()
+          .single;
+
+      storage.saveDocument(
+        documentIri,
+        typeIri,
+        graph,
+        DocumentMetadata(
+          ourPhysicalClock: now.millisecondsSinceEpoch,
+          updatedAt: now.millisecondsSinceEpoch,
+        ),
+        [],
+      );
+    }
+    return; // Prepare action has no expectations
+  }
+
   if (action != 'save') {
     fail('Unknown action: $action');
   }
@@ -152,12 +198,9 @@ Future<void> _executeStep({
   final inputResource =
       _readGraphFromPath(testAssetsDir, stepJson['input_resource'] as String)!;
 
-  // Load stored_graph_before if specified
+  // Load stored_graph_before if specified (legacy support)
   final storedGraphBefore = _readGraphFromPath(
       testAssetsDir, stepJson['stored_graph_before'] as String?);
-
-  // Load action timestamps if provided
-  final actionTs = stepJson['action_ts'] as Map<String, dynamic>?;
 
   // Extract document IRI from input
   final externalDocumentIri = inputResource.subjects
@@ -166,12 +209,8 @@ Future<void> _executeStep({
       .toSet()
       .single;
 
-  // Execute the save action
-  final timestampFactory =
-      TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
-
   if (storedGraphBefore != null) {
-    // Set timestamp for prepare.save if specified
+    // Legacy support: Set timestamp for prepare.save if specified
     setTime(actionTs?['prepare']?['save'], timestampFactory);
     final now = timestampFactory();
 
@@ -304,6 +343,20 @@ Future<void> _verifyExpectations({
     }
     await _verifyShardDocuments(testId, expectedShardDocs, testAssetsDir,
         storage, config, storedDataDocument);
+  }
+
+  // Export documents if requested (for test data generation)
+  final exportValue = expectedJson['export_documents'];
+  if (exportValue != null) {
+    if (exportValue is String) {
+      // Auto-export all documents to directory
+      await _exportAllDocuments(
+          testId, stepIndex, exportValue, testAssetsDir, storage, config);
+    } else if (exportValue is List) {
+      // Export specific documents with custom paths
+      await _exportDocuments(
+          testId, stepIndex, exportValue, testAssetsDir, storage, config);
+    }
   }
 }
 
@@ -522,7 +575,7 @@ Future<void> _verifyShardDocuments(
 ) async {
   for (final shardDocJson in expectedShardDocs) {
     final shardMap = shardDocJson as Map<String, dynamic>;
-    final indexLocalName = shardMap['index_localName'] as String;
+    final indexLocalName = shardMap['index_localName'] as String?;
     final shardTotal = shardMap['shard_total'] as int;
     final shardNumber = shardMap['shard_number'] as int;
     final shardVersion = shardMap['shard_version'] as String;
@@ -530,30 +583,43 @@ Future<void> _verifyShardDocuments(
     final groupPath =
         shardMap['group_path'] as String?; // For GroupIndex shards
 
-    // Generate shard IRI
-    final indexRdfGenerator = _createIndexRdfGenerator();
-    final (idx, resourceTypeIri) =
-        _findIndexConfigByLocalName(config, indexLocalName)!;
+    // Allow direct specification of index IRIs (for foreign/external indices)
+    final indexResourceIriString = shardMap['index_resource_iri'] as String?;
+    final indexClassIriString = shardMap['index_class_iri'] as String?;
 
+    final indexRdfGenerator = _createIndexRdfGenerator();
     final IriTerm indexResourceIri;
     final IriTerm indexClassIri;
 
-    if (idx is FullIndexGraphConfig) {
-      indexResourceIri =
-          indexRdfGenerator.generateFullIndexIri(idx, resourceTypeIri);
-      indexClassIri = IdxFullIndex.classIri;
-    } else if (idx is GroupIndexGraphConfig) {
-      if (groupPath == null) {
-        fail('group_path is required for GroupIndex shards');
+    if (indexResourceIriString != null && indexClassIriString != null) {
+      // Direct IRI specification - use these directly
+      indexResourceIri = IriTerm(indexResourceIriString);
+      indexClassIri = IriTerm(indexClassIriString);
+    } else if (indexLocalName != null) {
+      // Generate shard IRI from config
+      final (idx, resourceTypeIri) =
+          _findIndexConfigByLocalName(config, indexLocalName)!;
+
+      if (idx is FullIndexGraphConfig) {
+        indexResourceIri =
+            indexRdfGenerator.generateFullIndexIri(idx, resourceTypeIri);
+        indexClassIri = IdxFullIndex.classIri;
+      } else if (idx is GroupIndexGraphConfig) {
+        if (groupPath == null) {
+          fail('group_path is required for GroupIndex shards');
+        }
+        // First generate template IRI, then group index IRI
+        final templateIri = indexRdfGenerator.generateGroupIndexTemplateIri(
+            idx, resourceTypeIri);
+        indexResourceIri =
+            indexRdfGenerator.generateGroupIndexIri(templateIri, groupPath);
+        indexClassIri = IdxGroupIndex.classIri;
+      } else {
+        fail('Unsupported index config type: ${idx.runtimeType}');
       }
-      // First generate template IRI, then group index IRI
-      final templateIri =
-          indexRdfGenerator.generateGroupIndexTemplateIri(idx, resourceTypeIri);
-      indexResourceIri =
-          indexRdfGenerator.generateGroupIndexIri(templateIri, groupPath);
-      indexClassIri = IdxGroupIndex.classIri;
     } else {
-      fail('Unsupported index config type: ${idx.runtimeType}');
+      fail(
+          'Either index_localName or both index_resource_iri and index_class_iri must be provided');
     }
 
     final shardResourceIri = indexRdfGenerator.generateShardIri(
@@ -658,5 +724,94 @@ Future<void> _executeSaveErrorTest(
           reason:
               'Error message "$errorMessage" does not contain expected pattern "$expectedErrorMessagePattern"');
     }
+  }
+}
+
+/// Export documents from storage to files for test data generation.
+///
+/// Exports all documents from storage to a directory with auto-generated names.
+/// This is used for generating test data from a "foreign application" simulation.
+Future<void> _exportAllDocuments(
+  String testId,
+  int stepIndex,
+  String outputDir,
+  Directory testAssetsDir,
+  TestStorage storage,
+  SyncGraphConfig config,
+) async {
+  // Get all document types from config plus infrastructure types
+  final typeIris = <IriTerm>[
+    IdxFullIndex.classIri,
+    IdxGroupIndexTemplate.classIri,
+    IdxGroupIndex.classIri,
+    IdxShard.classIri,
+    CrdtClientInstallation.classIri,
+    // Add all resource types from config
+    for (final resourceConfig in config.resources) resourceConfig.typeIri,
+  ];
+
+  final exportedFiles = <String>[];
+
+  // Export documents of each type
+  for (final typeIri in typeIris) {
+    final docs =
+        await storage.getDocumentsModifiedSince(typeIri, null, limit: 100);
+
+    for (final doc in docs.documents) {
+      // Generate filename from type and document IRI
+      final typeName = typeIri.localName.toLowerCase();
+      final docHash =
+          doc.documentIri.value.hashCode.toUnsigned(32).toRadixString(16);
+      final filename = 'prepare_${typeName}_$docHash.ttl';
+
+      // Serialize to Turtle
+      final turtleContent = turtle.encode(doc.document);
+
+      // Write to file
+      final outputFile = File('${testAssetsDir.path}/$outputDir/$filename');
+      await outputFile.parent.create(recursive: true);
+      await outputFile.writeAsString(turtleContent);
+
+      exportedFiles.add(filename);
+      print('Exported ${doc.documentIri.debug} to $outputDir/$filename');
+    }
+  }
+
+  print('Exported ${exportedFiles.length} documents to $outputDir/');
+}
+
+/// This is used to capture the state of documents created by one test configuration
+/// (e.g., a "foreign application") so they can be used as prepare data in another test.
+Future<void> _exportDocuments(
+  String testId,
+  int stepIndex,
+  List<dynamic> exportDocs,
+  Directory testAssetsDir,
+  TestStorage storage,
+  SyncGraphConfig config,
+) async {
+  for (final exportJson in exportDocs) {
+    final exportMap = exportJson as Map<String, dynamic>;
+    final documentIriStr = exportMap['documentIri'] as String;
+    final outputPath = exportMap['output_path'] as String;
+
+    final documentIri = IriTerm(documentIriStr);
+    final storedDoc = await storage.getDocument(documentIri);
+
+    if (storedDoc == null) {
+      print(
+          'WARNING: Document $documentIri not found in storage, skipping export');
+      continue;
+    }
+
+    // Serialize to Turtle
+    final turtleContent = turtle.encode(storedDoc.document);
+
+    // Write to file
+    final outputFile = File('${testAssetsDir.path}/$outputPath');
+    await outputFile.parent.create(recursive: true);
+    await outputFile.writeAsString(turtleContent);
+
+    print('Exported $documentIri to $outputPath');
   }
 }

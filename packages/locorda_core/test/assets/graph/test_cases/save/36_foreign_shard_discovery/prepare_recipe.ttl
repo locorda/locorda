@@ -3,9 +3,8 @@
 @prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
 @prefix mappings: <https://example.org/test/mappings/> .
 @prefix ns1: <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#> .
-@prefix ns2: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZ3JvdXBlZC1mNjE1YmU5MC9ncm91cHMvZGVzc2VydHMvc2hhcmQtbW9kLW1kNS0xLTAtdjFfMF8w#> .
-@prefix ns3: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZnVsbC1lNjc5ZDcyZi9zaGFyZC1tb2QtbWQ1LTEtMC12MV8wXzA=#> .
-@prefix ns4: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZ3JvdXBlZC1lMDkzNjU1Yy9ncm91cHMvMjBfYWQyMjFlZmZkNzMwNTdhNjQ3ZDk2YmFiMzEyYzQ4ODYvc2hhcmQtbW9kLW1kNS0xLTAtdjFfMF8w#> .
+@prefix ns2: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZnVsbC1lNjc5ZDcyZi9zaGFyZC1tb2QtbWQ1LTEtMC12MV8wXzA=#> .
+@prefix ns3: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZ3JvdXBlZC1lMDkzNjU1Yy9ncm91cHMvMjBfYWQyMjFlZmZkNzMwNTdhNjQ3ZDk2YmFiMzEyYzQ4ODYvc2hhcmQtbW9kLW1kNS0xLTAtdjFfMF8w#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix schema: <https://schema.org/> .
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
@@ -13,10 +12,10 @@
 
 <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=> a sync:ManagedDocument;
     foaf:primaryTopic ns1:it;
-    cm:clockHash "b3b3cf932e63b8649c70e1e9062e51ec";
+    cm:clockHash "509bd5d10af48b9b5f5535774109c441";
     cm:createdAt "2024-01-01T02:00:00.000Z"^^xsd:dateTime;
-    cm:hasClockEntry ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54, ns1:lcrd-clk-md5-4a481c7617b289f7c4fd07cb3a10fd0f;
-    idx:belongsToIndexShard ns2:shard, ns3:shard, ns4:shard;
+    cm:hasClockEntry ns1:lcrd-clk-md5-4a481c7617b289f7c4fd07cb3a10fd0f;
+    idx:belongsToIndexShard ns2:shard, ns3:shard;
     sync:isGovernedBy (mappings:recipe-v1);
     sync:managedResourceType schema:Recipe .
 
@@ -24,13 +23,10 @@ ns1:it a schema:Recipe;
     schema:cookTime "PT30M";
     schema:dateCreated "2024-01-01T02:00:00Z"^^xsd:dateTime;
     schema:description "A delicious chocolate cake recipe";
-    schema:name "Updated Chocolate Cake Recipe";
+    schema:name "Chocolate Cake";
     schema:prepTime "PT20M";
     schema:recipeCategory "Desserts";
     schema:recipeYield "8 servings" .
 
 ns1:lcrd-clk-md5-4a481c7617b289f7c4fd07cb3a10fd0f cm:logicalTime 1;
     cm:physicalTime 1704074400000 .
-
-ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54 cm:logicalTime 1;
-    cm:physicalTime 1704088800000 .
