@@ -20,10 +20,10 @@ import 'package:locorda_core/locorda_core.dart';
 ///
 /// Index entries automatically use LWW-Register for all properties by default.
 /// No CRDT annotations needed - the framework handles conflict resolution.
-@LocordaIndexItem()
+@LcrdIndexItem()
 class NoteIndexEntry {
   /// Note ID - same as the full Note resource
-  @RdfProperty(IdxShardEntry.resource, iri: PodResourceRef(Note))
+  @RdfProperty(IdxShardEntry.resource, iri: LcrdRootResourceRef(Note))
   final String id;
 
   /// Note title for display in lists

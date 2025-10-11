@@ -9,24 +9,24 @@ import 'package:locorda_core/locorda_core.dart';
 const resourceIriFactoryKey = r'$resourceIriFactory';
 const resourceIriVar = r'rootResourceIri';
 
-class PodIriStrategy extends IriStrategy {
-  const PodIriStrategy([PodIriConfig? config])
+class RootIriStrategy extends IriStrategy {
+  const RootIriStrategy([RootIriConfig? config])
       : super.namedFactory(
             resourceIriFactoryKey,
-            config ?? const PodIriConfig(),
+            config ?? const RootIriConfig(),
             // exposes the IRI of the Pod Resource as a potential provider to child resources
             resourceIriVar);
 }
 
-class FragmentStrategy extends IriStrategy {
-  const FragmentStrategy(String fragment)
+class SubIriStrategy extends IriStrategy {
+  const SubIriStrategy(String fragmentTemplate)
       : super.withFragment(
             // references the parent resource IRI via the variable we expose in PodIriStrategy
             // so that the subresource IRI can be constructed as {parentResourceIri}#fragment .
             // Note: any fragment will be removed from the parent resource IRI automatically,
             // so it is no problem at all if the parent resource IRI already has a fragment.
             '{+$resourceIriVar}',
-            fragment);
+            fragmentTemplate);
 }
 
 /// Annotation for RDF classes that represent resources stored in Solid Pods.
@@ -95,7 +95,7 @@ class FragmentStrategy extends IriStrategy {
 /// - [RdfGlobalResource] - The base annotation this extends
 /// - CRDT annotations: [CrdtLwwRegister], [CrdtFwwRegister], [CrdtOrSet], [CrdtImmutable]
 /// - [LocordaGraphSync] - The main synchronization engine
-class PodResource extends RdfGlobalResource {
+class LcrdRootResource extends RdfGlobalResource {
   /// Creates a Solid Pod resource annotation.
   ///
   /// This annotation inherits all functionality from [RdfGlobalResource]
@@ -114,12 +114,12 @@ class PodResource extends RdfGlobalResource {
   ///   late String title;
   /// }
   /// ```
-  const PodResource(IriTerm? classIri,
-      [PodIriStrategy iriStrategy = const PodIriStrategy()])
+  const LcrdRootResource(IriTerm? classIri,
+      [RootIriStrategy iriStrategy = const RootIriStrategy()])
       : super(classIri, iriStrategy);
 }
 
-class PodSubResource extends RdfGlobalResource {
+class LcrdSubResource extends RdfGlobalResource {
   /// Creates a Solid Pod sub-resource annotation.
   ///
   /// This annotation is used for RDF classes that represent sub-resources
@@ -149,12 +149,12 @@ class PodSubResource extends RdfGlobalResource {
   ///   late String id; // Unique fragment identifier for this comment
   /// }
   /// ```
-  const PodSubResource(IriTerm? classIri, FragmentStrategy iriStrategy)
+  const LcrdSubResource(IriTerm? classIri, SubIriStrategy iriStrategy)
       : super(classIri, iriStrategy, registerGlobally: false);
 }
 
-class LocordaIndexItem extends RdfGlobalResource {
-  const LocordaIndexItem()
+class LcrdIndexItem extends RdfGlobalResource {
+  const LcrdIndexItem()
       // create (and register) only a Deserializer, because the IndexItem classes
       // are never serialized from dart to rdf - they are only deserialized and
       // this way we do not need a full IRI strategy
@@ -162,4 +162,8 @@ class LocordaIndexItem extends RdfGlobalResource {
             // Save a bit of space and do not repeat the type of index entries over and over again
             null,
             registerGlobally: true);
+}
+
+class LcrdGroupKey extends RdfLocalResource {
+  const LcrdGroupKey();
 }

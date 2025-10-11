@@ -34,8 +34,8 @@ import 'package:personal_notes_app/models/weblink.rdf_mapper.g.dart' as wrmg;
 /// * [$resourceRefFactory]
 RdfMapper initRdfMapper({
   RdfMapper? rdfMapper,
-  required IriTermMapper<(String id,)> Function<T>(locorda_core.PodIriConfig)
-  $resourceIriFactory,
+  required IriTermMapper<(String id,)> Function<T>(locorda_core.RootIriConfig)
+      $resourceIriFactory,
   required IriTermMapper<String> Function<T>(Type) $resourceRefFactory,
 }) {
   if (rdfMapper == null) {
@@ -46,7 +46,7 @@ RdfMapper initRdfMapper({
   registry.registerMapper<category.Category>(
     crmg.CategoryMapper(
       iriMapper: $resourceIriFactory<category.Category>(
-        const locorda_core.PodIriConfig('it'),
+        const locorda_core.RootIriConfig('it'),
       ),
     ),
   );
@@ -57,7 +57,7 @@ RdfMapper initRdfMapper({
     nrmg.NoteMapper(
       categoryIdMapper: $resourceRefFactory<String?>(category.Category),
       iriMapper: $resourceIriFactory<note.Note>(
-        const locorda_core.PodIriConfig('note'),
+        const locorda_core.RootIriConfig('note'),
       ),
     ),
   );

@@ -14,7 +14,7 @@ import 'package:locorda_core/locorda_core.dart';
 /// it receives this context object containing all the framework-managed
 /// services needed to configure RDF mapping for Solid Pods.
 class SolidMappingContext {
-  IriTermMapper<(String id,)> Function<T>(PodIriConfig) resourceIriFactory;
+  IriTermMapper<(String id,)> Function<T>(RootIriConfig) resourceIriFactory;
   IriTermMapper<String> Function<T>(Type) resourceRefFactory;
   RdfMapper baseRdfMapper;
   SolidMappingContext({

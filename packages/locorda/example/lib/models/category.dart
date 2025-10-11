@@ -17,7 +17,7 @@ import 'category_display_settings.dart';
 /// - LWW-Register for name and description (last writer wins)
 /// - Immutable for creation date
 ///
-@PodResource(PersonalNotesVocab.NotesCategory)
+@LcrdRootResource(PersonalNotesVocab.NotesCategory)
 class Category {
   /// Unique identifier for this category
   @RdfIriPart()

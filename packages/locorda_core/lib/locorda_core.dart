@@ -91,7 +91,7 @@ export 'src/index/index_config_base.dart'
         GroupingProperty;
 // Main API facade
 export 'src/locorda_graph_sync.dart' show LocordaGraphSync, IdentifiedGraph;
-export 'src/mapping/pod_iri_config.dart' show PodIriConfig;
+export 'src/mapping/root_iri_config.dart' show RootIriConfig;
 export 'src/mapping/resource_locator.dart'
     show ResourceLocator, LocalResourceLocator, ResourceIdentifier;
 export 'src/storage/remote_storage.dart' show RemoteStorage;

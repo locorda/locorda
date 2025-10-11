@@ -1,7 +1,8 @@
 import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
+import 'package:locorda_annotations/locorda_annotations.dart';
 
-@RdfLocalResource()
+@LcrdGroupKey()
 class NoteGroupKey {
   @RdfProperty(SchemaNoteDigitalDocument.dateCreated)
   final DateTime createdMonth;

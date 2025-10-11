@@ -29,7 +29,7 @@ import 'package:rdf_mapper/rdf_mapper.dart';
 /// usage and later migration to pod-based IRIs when connecting to a Solid Pod.
 class LocalResourceIriService {
   bool _isSetupComplete = false;
-  Map<Type, PodIriConfig> _registeredTypes = {};
+  Map<Type, RootIriConfig> _registeredTypes = {};
   Set<Type> _referencedTypes = {};
 
   final List<ValidationError> _setupErrors = [];
@@ -45,11 +45,11 @@ class LocalResourceIriService {
   /// [finishSetupAndValidate].
   ///
   /// Creates an [IriTermMapper] for primary resource identification using ID tuples
-  /// and the provided [PodIriConfig]. Each type can only be registered once.
+  /// and the provided [RootIriConfig]. Each type can only be registered once.
   ///
   /// Throws [StateError] if called after setup phase is complete.
   /// Validation errors will be collected if type T is already registered.
-  IriTermMapper<(String id,)> createResourceIriMapper<T>(PodIriConfig config) {
+  IriTermMapper<(String id,)> createResourceIriMapper<T>(RootIriConfig config) {
     // This is a programming constraint - throw immediately
     if (_isSetupComplete) {
       throw StateError(
@@ -159,7 +159,7 @@ class LocalResourceIriService {
     // First validate the configuration
     final validationResult = validate(resourceTypeCache);
 
-    final _resourceConfigCache = <Type, (IriTerm, PodIriConfig)>{};
+    final _resourceConfigCache = <Type, (IriTerm, RootIriConfig)>{};
     // Only proceed with setup completion if validation passes
     if (validationResult.isValid) {
       _isSetupComplete = true;
@@ -238,11 +238,11 @@ class _DelegatingReferenceConverter implements ReferenceConverter {
 /// Local IRI mapper for resource references using the same scheme as resources.
 class LocalReferenceConverter implements ReferenceConverter {
   final ResourceLocator _resourceLocator;
-  final Map<Type, (IriTerm, PodIriConfig)> _resourceConfigCache;
+  final Map<Type, (IriTerm, RootIriConfig)> _resourceConfigCache;
 
   const LocalReferenceConverter(
       {required ResourceLocator resourceLocator,
-      required Map<Type, (IriTerm, PodIriConfig)> resourceConfigCache})
+      required Map<Type, (IriTerm, RootIriConfig)> resourceConfigCache})
       : _resourceLocator = resourceLocator,
         _resourceConfigCache = resourceConfigCache;
 

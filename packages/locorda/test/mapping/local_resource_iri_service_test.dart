@@ -17,7 +17,7 @@ void main() {
   group('LocalResourceIriService', () {
     late LocalResourceIriService service;
     late ResourceTypeCache mockResourceTypeCache;
-    late PodIriConfig mockConfig;
+    late RootIriConfig mockConfig;
 
     setUp(() {
       service = LocalResourceIriService(
@@ -27,7 +27,7 @@ void main() {
         TestCategory: const IriTerm('http://example.org/Category'),
         TestUser: const IriTerm('http://example.org/User'),
       });
-      mockConfig = const PodIriConfig();
+      mockConfig = const RootIriConfig();
     });
 
     group('Programming Constraints (StateError)', () {
@@ -212,7 +212,7 @@ void main() {
         final refIri =
             refMapper.toRdfTerm('note123', MockSerializationContext());
 
-        expect(resourceIri.value, equals(refIri.value));            
+        expect(resourceIri.value, equals(refIri.value));
         expect(
             resourceIri.value,
             equals(

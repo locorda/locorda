@@ -12,13 +12,14 @@ export 'src/crdt_annotations.dart'
         CrdtLwwRegister,
         CrdtOrSet,
         McIdentifying;
-export 'src/pod_resource.dart'
+export 'src/resource.dart'
     show
-        PodResource,
-        PodSubResource,
-        PodIriStrategy,
-        LocordaIndexItem,
-        FragmentStrategy,
+        LcrdRootResource,
+        LcrdSubResource,
+        LcrdGroupKey,
+        LcrdIndexItem,
+        RootIriStrategy,
+        SubIriStrategy,
         resourceIriFactoryKey,
         resourceIriVar;
-export 'src/pod_resource_ref.dart' show PodResourceRef, resourceRefFactoryKey;
+export 'src/resource_ref.dart' show LcrdRootResourceRef, resourceRefFactoryKey;

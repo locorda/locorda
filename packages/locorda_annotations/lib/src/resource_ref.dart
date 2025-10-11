@@ -5,7 +5,7 @@ import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';
 
 const resourceRefFactoryKey = r'$resourceRefFactory';
 
-class PodResourceRef extends IriMapping {
-  const PodResourceRef(Type cls)
+class LcrdRootResourceRef extends IriMapping {
+  const LcrdRootResourceRef(Type cls)
       : super.namedFactory(resourceRefFactoryKey, cls);
 }

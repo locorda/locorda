@@ -14,9 +14,9 @@ import 'package:locorda_annotations/locorda_annotations.dart';
 /// - Immutable for createdAt (creation timestamp)
 /// - LWW-Register for content (last writer wins)
 ///
-@PodSubResource(
+@LcrdSubResource(
   Schema.Comment,
-  FragmentStrategy("comment-{id}"),
+  SubIriStrategy("comment-{id}"),
 )
 class Comment {
   /// Unique identifier for this comment (IRI fragment)

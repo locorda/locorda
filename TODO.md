@@ -50,8 +50,8 @@
   - Essential for user-facing sync control and feedback
   - Enables manual/automatic sync triggering
   - Foundation for all higher-level sync operations
-- [ ] Iri Strategy and global resource annotation for Index entries (e.g. NoteIndexEntry in the example app)
-- [ ] Rename @PodResource and @PodSubResource annotations to something more appropriate, like @LocordaResource and @LocordaSubResource
+- [x] global resource annotation for Index entries (e.g. NoteIndexEntry in the example app)
+- [x] Rename @PodResource and @PodSubResource annotations to something more appropriate, like @LocordaResource and @LocordaSubResource
  
 ### Priority 3: Index Processing
 - [ ] Complete index subscription handling (full and group)

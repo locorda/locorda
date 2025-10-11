@@ -15,7 +15,7 @@ import 'comment.dart';
 class NoteCategoryProperty extends RdfProperty {
   const NoteCategoryProperty()
       : super(PersonalNotesVocab.belongsToCategory,
-            iri: const PodResourceRef(Category));
+            iri: const LcrdRootResourceRef(Category));
 }
 
 /// A personal note with title, content, and tags.
@@ -27,11 +27,11 @@ class NoteCategoryProperty extends RdfProperty {
 /// - LWW-Register for title and content (last writer wins)
 /// - OR-Set for tags (additions and removals merge)
 ///
-@PodResource(
+@LcrdRootResource(
     PersonalNotesVocab.PersonalNote,
     // by default, the fragment is "it", but we set it explicitly here
     // to "note" instead for demonstration purposes
-    PodIriStrategy(PodIriConfig('note')))
+    RootIriStrategy(RootIriConfig('note')))
 class Note {
   /// Unique identifier for this note
   @RdfIriPart()
