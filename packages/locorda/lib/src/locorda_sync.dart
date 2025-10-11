@@ -356,14 +356,22 @@ class LocordaSync {
       indexName = getIndexName(resourceConfig, index);
       typeIri = _resourceTypeCache.getIri(resourceConfig.type);
     }
+    final completeness = indexName == null
+        // it is advised for applications to use @RdfUnmappedTriples in order to
+        // capture all data on the app resources, but it is not strictly required
+        // so we only warn
+        ? CompletenessMode.warnOnly
+        // index items may have partial data, that is absolutely fine
+        : CompletenessMode.lenient;
+
     return _syncSystem.hydrateStreaming(
         typeIri: typeIri,
         indexName: indexName,
         getCurrentCursor: getCurrentCursor,
-        onUpdate: (identifiedGraph) =>
-            onUpdate(_mapper.graph.decodeObject<T>(identifiedGraph.$2)),
-        onDelete: (identifiedGraph) =>
-            onDelete(_mapper.graph.decodeObject<T>(identifiedGraph.$2)),
+        onUpdate: (identifiedGraph) => onUpdate(_mapper.graph
+            .decodeObject<T>(identifiedGraph.$2, completeness: completeness)),
+        onDelete: (identifiedGraph) => onDelete(_mapper.graph
+            .decodeObject<T>(identifiedGraph.$2, completeness: completeness)),
         onCursorUpdate: onCursorUpdate);
   }
 

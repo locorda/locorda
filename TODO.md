@@ -46,11 +46,13 @@
 - [x] I think we need some concept to switch between strict and lenient for document structure errors - sometimes we throw exceptions on structural errors, sometimes we only log and continue. A consistent tooling would be great here, that allows us to run in either strict or lenient mode - ideally not as static utility, but that is probably unrealistic, so a static utility would be better than nothing still.
 
 ### Priority 2: SyncManager with Status Stream
-- [ ] Create SyncManager with status stream and automatic sync triggering
+- [x] Create SyncManager with status stream and automatic sync triggering
   - Essential for user-facing sync control and feedback
   - Enables manual/automatic sync triggering
   - Foundation for all higher-level sync operations
-
+- [ ] Iri Strategy and global resource annotation for Index entries (e.g. NoteIndexEntry in the example app)
+- [ ] Rename @PodResource and @PodSubResource annotations to something more appropriate, like @LocordaResource and @LocordaSubResource
+ 
 ### Priority 3: Index Processing
 - [ ] Complete index subscription handling (full and group)
   - Complete group subscription logic

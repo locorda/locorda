@@ -50,7 +50,7 @@ class SyncConfigValidator {
       SyncConfig config, ValidationResult result, RdfMapper mapper) {
     // Collect all types that need mappers
     final requiredTypes = <Type>{};
-
+    final deserializerOnly = <Type>{};
     // Add all resource dart types
     for (final resource in config.resources) {
       requiredTypes.add(resource.type);
@@ -61,6 +61,7 @@ class SyncConfigValidator {
       for (final index in resource.indices) {
         if (index.item != null) {
           requiredTypes.add(index.item!.itemType);
+          deserializerOnly.add(index.item!.itemType);
         }
 
         // Add groupKeyType for GroupIndex
@@ -82,29 +83,23 @@ class SyncConfigValidator {
       }
 
       // Try to get a serializer for the type - this is the definitive test
-      try {
-        final serializer = mapper.registry.getResourceSerializerByType(type);
-        if (serializer.typeIri != null) {
-          var hasDeserializer = mapper.registry
-                  .hasGlobalResourceDeserializerForType(serializer.typeIri!) ||
-              mapper.registry
-                  .hasGlobalResourceDeserializerForType(serializer.typeIri!);
-          if (!hasDeserializer) {
-            result.addError(
-                'Type $type has a serializer but no deserializer registered in RdfMapper. '
-                'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
-                details: {'type': type, 'typeIri': serializer.typeIri});
-          }
+      final needsSerializer = !deserializerOnly.contains(type);
+      if (needsSerializer) {
+        if (!mapper.registry.hasResourceSerializerForDartType(type)) {
+          result.addError(
+              'Type $type is not registered in RdfMapper. '
+              'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
+              details: {'type': type});
         }
-      } on SerializerNotFoundException {
+      }
+      var hasDeserializer =
+          mapper.registry.hasGlobalResourceDeserializerForDartType(type) ||
+              mapper.registry.hasLocalResourceDeserializerForDartType(type);
+      if (!hasDeserializer) {
         result.addError(
-            'Type $type is not registered in RdfMapper. '
+            'Type $type has ${needsSerializer ? 'a serializer but ' : ''}no deserializer registered in RdfMapper. '
             'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
             details: {'type': type});
-      } catch (e) {
-        result.addWarning(
-            'Could not verify mapper registration for type $type: $e',
-            details: {'type': type, 'error': e.toString()});
       }
     }
   }

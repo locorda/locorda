@@ -152,3 +152,14 @@ class PodSubResource extends RdfGlobalResource {
   const PodSubResource(IriTerm? classIri, FragmentStrategy iriStrategy)
       : super(classIri, iriStrategy, registerGlobally: false);
 }
+
+class LocordaIndexItem extends RdfGlobalResource {
+  const LocordaIndexItem()
+      // create (and register) only a Deserializer, because the IndexItem classes
+      // are never serialized from dart to rdf - they are only deserialized and
+      // this way we do not need a full IRI strategy
+      : super.deserializeOnly(
+            // Save a bit of space and do not repeat the type of index entries over and over again
+            null,
+            registerGlobally: true);
+}

@@ -17,6 +17,7 @@ export 'src/pod_resource.dart'
         PodResource,
         PodSubResource,
         PodIriStrategy,
+        LocordaIndexItem,
         FragmentStrategy,
         resourceIriFactoryKey,
         resourceIriVar;

@@ -23,7 +23,8 @@ import 'package:personal_notes_app/models/note.dart';
 ///
 /// This mapper handles serialization and deserialization between Dart objects
 /// and RDF triples for resources of type `nie.NoteIndexEntry`.
-class NoteIndexEntryMapper implements LocalResourceMapper<nie.NoteIndexEntry> {
+class NoteIndexEntryMapper
+    implements GlobalResourceDeserializer<nie.NoteIndexEntry> {
   final IriTermMapper<String> _categoryIdMapper;
   final IriTermMapper<String> _idMapper;
 
@@ -31,15 +32,15 @@ class NoteIndexEntryMapper implements LocalResourceMapper<nie.NoteIndexEntry> {
   const NoteIndexEntryMapper({
     required IriTermMapper<String> categoryIdMapper,
     required IriTermMapper<String> idMapper,
-  })  : _categoryIdMapper = categoryIdMapper,
-        _idMapper = idMapper;
+  }) : _categoryIdMapper = categoryIdMapper,
+       _idMapper = idMapper;
 
   @override
   IriTerm? get typeIri => null;
 
   @override
   nie.NoteIndexEntry fromRdfResource(
-    BlankNodeTerm subject,
+    IriTerm subject,
     DeserializationContext context,
   ) {
     final reader = context.reader(subject);
@@ -72,35 +73,5 @@ class NoteIndexEntryMapper implements LocalResourceMapper<nie.NoteIndexEntry> {
       keywords: keywords,
       categoryId: categoryId,
     );
-  }
-
-  @override
-  (BlankNodeTerm, Iterable<Triple>) toRdfResource(
-    nie.NoteIndexEntry resource,
-    SerializationContext context, {
-    RdfSubject? parentSubject,
-  }) {
-    final subject = BlankNodeTerm();
-
-    return context
-        .resourceBuilder(subject)
-        .addValue(IdxShardEntry.resource, resource.id, serializer: _idMapper)
-        .addValue(SchemaNoteDigitalDocument.name, resource.name)
-        .addValue(SchemaNoteDigitalDocument.dateCreated, resource.dateCreated)
-        .addValue(SchemaNoteDigitalDocument.dateModified, resource.dateModified)
-        .addCollection<Set<String>, String>(
-          SchemaNoteDigitalDocument.keywords,
-          resource.keywords,
-          UnorderedItemsSetMapper.new,
-        )
-        .when(
-          resource.categoryId != null,
-          (b) => b.addValue(
-            pnv.PersonalNotesVocab.belongsToCategory,
-            resource.categoryId,
-            serializer: _categoryIdMapper,
-          ),
-        )
-        .build();
   }
 }

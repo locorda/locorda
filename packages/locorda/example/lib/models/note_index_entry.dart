@@ -18,9 +18,9 @@ import 'package:locorda_core/locorda_core.dart';
 /// loading the full note content. Used in index update streams and
 /// on-demand sync scenarios.
 ///
-/// Index entries automatically use LWW-Register for all properties (framework-managed).
+/// Index entries automatically use LWW-Register for all properties by default.
 /// No CRDT annotations needed - the framework handles conflict resolution.
-@RdfLocalResource()
+@LocordaIndexItem()
 class NoteIndexEntry {
   /// Note ID - same as the full Note resource
   @RdfProperty(IdxShardEntry.resource, iri: PodResourceRef(Note))

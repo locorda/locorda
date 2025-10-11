@@ -41,11 +41,11 @@ dependencies:
     path: ../../locorda_drift
     
   # RDF mapping
-  rdf_core: ^0.9.20
-  rdf_mapper: ^0.10.2
+  rdf_core: ^0.9.21
+  rdf_mapper: ^0.10.4
   rdf_vocabularies_schema: ^0.4.5
   rdf_vocabularies_core: ^0.4.5
-  rdf_mapper_annotations: ^0.10.3
+  rdf_mapper_annotations: ^0.10.4
   
   # UI
   flutter_chips_input: ^2.0.0
@@ -64,7 +64,7 @@ dev_dependencies:
   # Code generation
   build_runner: ^2.4.0
   drift_dev: ^2.19.0
-  rdf_mapper_generator: ^0.10.8
+  rdf_mapper_generator: ^0.10.9
 
 flutter:
   uses-material-design: true

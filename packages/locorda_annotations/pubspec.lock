@@ -244,10 +244,10 @@ packages:
     dependency: "direct main"
     description:
       name: rdf_mapper_annotations
-      sha256: "5e527efb00928c87e614bbe5006ff097062713e94bfa7eec28f6a1ca8515ca59"
+      sha256: fe6b341d59114d6c86b79dea2e99daae949d7a0e706285547b396184478379df
       url: "https://pub.dev"
     source: hosted
-    version: "0.10.3"
+    version: "0.10.4"
   rdf_vocabularies_core:
     dependency: transitive
     description:

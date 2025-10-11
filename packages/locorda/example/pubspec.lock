@@ -859,26 +859,26 @@ packages:
     dependency: "direct main"
     description:
       name: rdf_mapper
-      sha256: c0814bdaf420f2c80a6af64e66556bf096e3584624afe64c4bf508ba11534a33
+      sha256: afcf046431e74114806b78d6f5638eb3e4feab7624da303a6f4ee3fc0d4172c3
       url: "https://pub.dev"
     source: hosted
-    version: "0.10.2"
+    version: "0.10.4"
   rdf_mapper_annotations:
     dependency: "direct main"
     description:
       name: rdf_mapper_annotations
-      sha256: "5e527efb00928c87e614bbe5006ff097062713e94bfa7eec28f6a1ca8515ca59"
+      sha256: fe6b341d59114d6c86b79dea2e99daae949d7a0e706285547b396184478379df
       url: "https://pub.dev"
     source: hosted
-    version: "0.10.3"
+    version: "0.10.4"
   rdf_mapper_generator:
     dependency: "direct dev"
     description:
       name: rdf_mapper_generator
-      sha256: "38a9654a3baa5e4ee0d8a34d603efdf21bb70d847c0c0708d11bdf959844c460"
+      sha256: e401aa90774afb9c4e79b02e2afcc669e99bf8c5f525081f58915784c1602b0a
       url: "https://pub.dev"
     source: hosted
-    version: "0.10.8"
+    version: "0.10.9"
   rdf_vocabularies_core:
     dependency: "direct main"
     description:
