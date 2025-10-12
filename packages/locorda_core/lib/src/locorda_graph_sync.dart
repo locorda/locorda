@@ -537,18 +537,10 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         final externalGraph =
             _iriTranslator.translateGraphToExternal(doc.document);
 
-        // FIXME: What is the identifier for Index Items here?
-        // In a way, it should be the IRI of the index item (e.g. the fragment of the shard),
-        // but at least in LocordaSync this makes no sense at all - there we
-        // need the IRI of the actually deleted resource (e.g. Note)
-
         final isDeletion = externalGraph.hasTriples(
             subject: externalIri, predicate: SyncManagedDocument.crdtDeletedAt);
-        if (isDeletion) {
-          acc.$1.add((externalIri, externalGraph));
-        } else {
-          acc.$2.add((externalIri, externalGraph));
-        }
+
+        (isDeletion ? acc.$1 : acc.$2).add((externalIri, externalGraph));
         return acc;
       });
       return (updates: updates, deletions: deletions, cursor: cursor);

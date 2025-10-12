@@ -377,11 +377,31 @@ class LocordaSync {
                       identifiedGraph.$2,
                       completeness: completeness))
                   .toList(),
-              deletions: batch.deletions
-                  .map((identifiedGraph) => _localResourceLocator
-                      .fromIri(typeIri, identifiedGraph.$1)
-                      .id)
-                  .toList(),
+              deletions: batch.deletions.map((identifiedGraph) {
+                final IriTerm itemIri;
+                if (indexName != null) {
+                  final resourceTriples = identifiedGraph.$2.findTriples(
+                      subject: identifiedGraph.$1,
+                      predicate: IdxShardEntry.resource);
+                  if (resourceTriples.isEmpty) {
+                    throw Exception(
+                        'Index item is missing required idx:resource property for deletion.');
+                  }
+                  if (resourceTriples.length > 1) {
+                    throw Exception(
+                        'Index item has multiple idx:resource properties - cannot determine resource IRI for deletion.');
+                  }
+                  if (resourceTriples.first.object is! IriTerm) {
+                    throw Exception(
+                        'Index item has non-IRI idx:resource property - cannot determine resource IRI for deletion.');
+                  }
+                  itemIri = resourceTriples.first.object as IriTerm;
+                } else {
+                  itemIri = identifiedGraph.$1;
+                }
+
+                return _localResourceLocator.fromIri(typeIri, itemIri).id;
+              }).toList(),
               cursor: batch.cursor,
             ));
   }
