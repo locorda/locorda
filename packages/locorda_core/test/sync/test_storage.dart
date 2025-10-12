@@ -85,49 +85,85 @@ class TestStorage implements Storage {
 
   @override
   Future<DocumentsResult> getDocumentsModifiedSince(
-      IriTerm typeIri, String? cursor,
+      IriTerm typeIri, String? minCursor,
       {required int limit}) async {
-    // Simple implementation - filter by updatedAt > cursor
-    final cursorTimestamp = cursor != null ? int.parse(cursor) : 0;
-    final filtered = _documents.values
+    return _getDocuments(
+      typeIri: typeIri,
+      minCursor: minCursor,
+      limit: limit,
+      timestampExtractor: (doc) => doc.metadata.updatedAt,
+    );
+  }
+
+  @override
+  Future<DocumentsResult> getDocumentsChangedByUsSince(
+      IriTerm typeIri, String? minCursor,
+      {required int limit}) async {
+    return _getDocuments(
+      typeIri: typeIri,
+      minCursor: minCursor,
+      limit: limit,
+      timestampExtractor: (doc) => doc.metadata.ourPhysicalClock,
+    );
+  }
+
+  @override
+  Stream<DocumentsResult> watchDocumentsModifiedSince(
+      IriTerm typeIri, String? minCursor) async* {
+    yield _getDocuments(
+      typeIri: typeIri,
+      minCursor: minCursor,
+      limit: null, // No limit for watch,
+      timestampExtractor: (doc) => doc.metadata.updatedAt,
+    );
+  }
+
+  @override
+  Stream<DocumentsResult> watchDocumentsChangedByUsSince(
+      IriTerm typeIri, String? minCursor) async* {
+    yield _getDocuments(
+      typeIri: typeIri,
+      minCursor: minCursor,
+      limit: null, // No limit for watch,
+      timestampExtractor: (doc) => doc.metadata.ourPhysicalClock,
+    );
+  }
+
+  /// Shared implementation for GET operations with pagination.
+  DocumentsResult _getDocuments({
+    required IriTerm typeIri,
+    required String? minCursor,
+    required int? limit,
+    required int Function(StoredDocument) timestampExtractor,
+  }) {
+    final cursorTimestamp = minCursor != null ? int.parse(minCursor) : 0;
+    final allFiltered = _documents.values
         .where((doc) => _isType(doc, typeIri))
-        .where((doc) => doc.metadata.updatedAt > cursorTimestamp)
+        .where((doc) => timestampExtractor(doc) > cursorTimestamp)
         .toList()
-      ..sort((a, b) => a.metadata.updatedAt.compareTo(b.metadata.updatedAt));
+      ..sort((a, b) => timestampExtractor(a).compareTo(timestampExtractor(b)));
 
-    final page = filtered.take(limit).toList();
-    final nextCursor = page.length < filtered.length
-        ? page.last.metadata.updatedAt.toString()
-        : null;
+    // Apply limit for pagination
+    final filtered =
+        limit != null ? allFiltered.take(limit).toList() : allFiltered;
 
-    return DocumentsResult(documents: page, nextCursor: nextCursor);
+    // currentCursor: last document's timestamp, or minCursor if no documents found
+    // This ensures the cursor never goes backwards
+    final currentCursor = filtered.isNotEmpty
+        ? timestampExtractor(filtered.last).toString()
+        : minCursor;
+
+    // hasNext: true if we got a full batch (might be more data available)
+    final hasNext = limit == null ? false : filtered.length >= limit;
+
+    return DocumentsResult(
+        documents: filtered, currentCursor: currentCursor, hasNext: hasNext);
   }
 
   bool _isType(StoredDocument doc, IriTerm typeIri) {
     final managedResourceType = doc.document.findSingleObject<IriTerm>(
         doc.documentIri, SyncManagedDocument.managedResourceType);
     return managedResourceType == typeIri;
-  }
-
-  @override
-  Future<DocumentsResult> getDocumentsChangedByUsSince(
-      IriTerm typeIri, String? cursor,
-      {required int limit}) async {
-    // Simple implementation - filter by ourPhysicalClock > cursor
-    final cursorTimestamp = cursor != null ? int.parse(cursor) : 0;
-    final filtered = _documents.values
-        .where((doc) => _isType(doc, typeIri))
-        .where((doc) => doc.metadata.ourPhysicalClock > cursorTimestamp)
-        .toList()
-      ..sort((a, b) =>
-          a.metadata.ourPhysicalClock.compareTo(b.metadata.ourPhysicalClock));
-
-    final page = filtered.take(limit).toList();
-    final nextCursor = page.length < filtered.length
-        ? page.last.metadata.ourPhysicalClock.toString()
-        : null;
-
-    return DocumentsResult(documents: page, nextCursor: nextCursor);
   }
 
   @override

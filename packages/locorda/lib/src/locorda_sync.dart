@@ -11,6 +11,7 @@ import 'package:locorda/src/index/group_index_subscription_manager.dart';
 import 'package:locorda/src/mapping/local_resource_iri_service.dart';
 import 'package:locorda/src/mapping/solid_mapping_context.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
 import 'package:http/http.dart' as http;
@@ -21,6 +22,15 @@ import 'package:http/http.dart' as http;
 /// and return a fully configured RdfMapper.
 typedef MapperInitializerFunction = RdfMapper Function(
     SolidMappingContext context);
+
+/// Type alias for a hydration batch with decoded objects of type [T].
+typedef TypedHydrationBatch<T> = ({
+  List<T> updates,
+
+  /// Ids of deleted items
+  List<String> deletions,
+  String? cursor,
+});
 
 /// Main facade for the locorda system.
 ///
@@ -198,7 +208,7 @@ class LocordaSync {
   ///
   /// Stores the object locally and triggers sync if connected to Solid Pod.
   /// Application state is updated via the hydration stream - repositories should
-  /// listen to hydrateStreaming() to receive updates.
+  /// listen to hydrateStream() to receive updates.
   ///
   /// Process:
   /// 1. CRDT processing (merge with existing, clock increment)
@@ -295,7 +305,7 @@ class LocordaSync {
   /// This performs document-level deletion, marking the entire document as deleted
   /// and affecting all resources contained within, following CRDT semantics.
   /// Application state is updated via the hydration stream - repositories should
-  /// listen to hydrateStreaming() to receive deletion notifications.
+  /// listen to hydrateStream() to receive deletion notifications.
   ///
   /// Process:
   /// 1. Add crdt:deletedAt timestamp to document
@@ -310,35 +320,25 @@ class LocordaSync {
     return _syncSystem.deleteDocument(typeIri, localIri);
   }
 
-  /// Streaming hydration that performs initial catch-up and then maintains live updates.
+  /// Hydrates resources of type [T] using a reactive stream.
   ///
-  /// This is the recommended method for repository integration:
-  /// 1. Performs catch-up hydration from lastCursor
-  /// 2. Sets up live hydration stream for ongoing updates
-  /// 3. Handles cursor consistency checks automatically
-  ///
-  /// Returns a StreamSubscription that must be managed by the caller - store it
-  /// and cancel when disposing to stop the live hydration.
-  ///
-  /// On cursor mismatch, this method automatically triggers a refresh using the
-  /// existing callbacks, so repositories don't need to handle this manually.
+  /// Returns a stream of decoded objects of type [T]. The stream automatically:
+  /// - Loads all existing resources in batches
+  /// - Switches to reactive mode for ongoing changes
+  /// - Orders resources by their update timestamp for consistent processing
+  /// - Handles RDF mapping/unmapping transparently
   ///
   /// The [localName] parameter is used to distinguish between different indices
   /// that might use the same Dart class (e.g., different GroupIndex configurations).
   ///
-  /// Callbacks:
-  /// - [getCurrentCursor]: Should return the repository's current cursor
-  /// - [onUpdate]: Called for each new/updated item
-  /// - [onDelete]: Called for each deleted item (with last known state)
-  /// - [onCursorUpdate]: Called to persist cursor updates
-  Future<HydrationSubscription> hydrateStreaming<T>({
-    required Future<String?> Function() getCurrentCursor,
-    required Future<void> Function(T item) onUpdate,
-    required Future<void> Function(T item) onDelete,
-    required Future<void> Function(String cursor) onCursorUpdate,
+  /// The [cursor] parameter allows resuming from a specific position. If null,
+  /// hydration starts from the beginning.
+  ///
+  Stream<TypedHydrationBatch<T>> hydrateStream<T>({
+    String? cursor,
     String localName = defaultIndexLocalName,
-    int batchSize = 100,
-  }) async {
+    int initialBatchSize = 100,
+  }) {
     final IriTerm typeIri;
     final String? indexName;
     final resourceConfig = _config.getResourceConfig(T);
@@ -364,15 +364,108 @@ class LocordaSync {
         // index items may have partial data, that is absolutely fine
         : CompletenessMode.lenient;
 
-    return _syncSystem.hydrateStreaming(
-        typeIri: typeIri,
-        indexName: indexName,
-        getCurrentCursor: getCurrentCursor,
-        onUpdate: (identifiedGraph) => onUpdate(_mapper.graph
-            .decodeObject<T>(identifiedGraph.$2, completeness: completeness)),
-        onDelete: (identifiedGraph) => onDelete(_mapper.graph
-            .decodeObject<T>(identifiedGraph.$2, completeness: completeness)),
-        onCursorUpdate: onCursorUpdate);
+    return _syncSystem
+        .hydrateStream(
+          typeIri: typeIri,
+          indexName: indexName,
+          cursor: cursor,
+          initialBatchSize: initialBatchSize,
+        )
+        .map((batch) => (
+              updates: batch.updates
+                  .map((identifiedGraph) => _mapper.graph.decodeObject<T>(
+                      identifiedGraph.$2,
+                      completeness: completeness))
+                  .toList(),
+              deletions: batch.deletions
+                  .map((identifiedGraph) => _localResourceLocator
+                      .fromIri(typeIri, identifiedGraph.$1)
+                      .id)
+                  .toList(),
+              cursor: batch.cursor,
+            ));
+  }
+
+  /// Convenience wrapper for callback-based hydration with automatic error handling.
+  ///
+  /// This is a simpler alternative to [hydrateStream] for common use cases.
+  /// Automatically handles:
+  /// - Cursor fetching and updates
+  /// - Error logging (unless custom [onError] provided)
+  /// - Stream subscription lifecycle
+  /// - Batch processing with updates, deletions, and cursor management
+  ///
+  /// For advanced use cases (custom stream operations, backpressure control, etc.),
+  /// use [hydrateStream] directly.
+  ///
+  /// Example:
+  /// ```dart
+  /// final subscription = await syncSystem.hydrateWithCallbacks<Note>(
+  ///   getCurrentCursor: () => cursorDao.getCursor('note'),
+  ///   onUpdate: (note) => noteDao.upsert(note),
+  ///   onDelete: (noteId) => noteDao.delete(noteId),
+  ///   onCursorUpdate: (cursor) => cursorDao.storeCursor('note', cursor),
+  /// );
+  /// ```
+  ///
+  /// Parameters:
+  /// - [getCurrentCursor]: Async function to retrieve the current cursor position
+  /// - [onUpdate]: Callback for processing updated items
+  /// - [onDelete]: Callback for processing deleted items by Id
+  /// - [onCursorUpdate]: Callback for persisting cursor updates
+  /// - [onError]: Optional custom error handler. If not provided, errors are logged
+  ///   but the stream continues running
+  /// - [localName]: For distinguishing between different indices (default: 'default')
+  /// - [initialBatchSize]: Number of items to load per batch (default: 100)
+  Future<StreamSubscription<TypedHydrationBatch<T>>> hydrateWithCallbacks<T>({
+    required Future<String?> Function() getCurrentCursor,
+    required Future<void> Function(T item) onUpdate,
+    required Future<void> Function(String itemId) onDelete,
+    required Future<void> Function(String cursor) onCursorUpdate,
+    void Function(Object error, StackTrace stackTrace)? onError,
+    String localName = defaultIndexLocalName,
+    int initialBatchSize = 100,
+  }) async {
+    final cursor = await getCurrentCursor();
+    final logger = Logger('LocordaSync.hydration<$T>');
+
+    return hydrateStream<T>(
+      cursor: cursor,
+      localName: localName,
+      initialBatchSize: initialBatchSize,
+    ).listen(
+      (batch) async {
+        try {
+          // Process updates
+          for (final item in batch.updates) {
+            await onUpdate(item);
+          }
+
+          // Process deletions
+          for (final item in batch.deletions) {
+            await onDelete(item);
+          }
+
+          // Update cursor if present
+          if (batch.cursor != null) {
+            await onCursorUpdate(batch.cursor!);
+          }
+        } catch (error, stackTrace) {
+          if (onError != null) {
+            onError(error, stackTrace);
+          } else {
+            // Default: log but don't crash the stream
+            logger.severe(
+                'Failed to process hydration batch', error, stackTrace);
+          }
+        }
+      },
+      onError: onError ??
+          (error, stackTrace) {
+            logger.severe('Hydration stream error', error, stackTrace);
+          },
+      cancelOnError: false, // Keep stream alive despite errors
+    );
   }
 
   /// Close the sync system and free resources.

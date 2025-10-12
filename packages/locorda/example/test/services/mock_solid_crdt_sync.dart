@@ -5,17 +5,6 @@ import 'dart:async';
 import 'package:locorda/locorda.dart';
 import 'package:locorda_core/locorda_core.dart';
 
-class _MockHydrationSubscription implements HydrationSubscription {
-  @override
-  Future<void> cancel() {
-    // Mock implementation - do nothing
-    return Future.value();
-  }
-
-  @override
-  bool get isActive => true;
-}
-
 class _MockSyncManager extends SyncManager {
   _MockSyncManager()
       : super(
@@ -46,16 +35,27 @@ class MockLocordaSync implements LocordaSync {
   }
 
   @override
-  Future<HydrationSubscription> hydrateStreaming<T>({
+  Stream<TypedHydrationBatch<T>> hydrateStream<T>({
+    String? cursor,
+    String localName = 'default',
+    int initialBatchSize = 100,
+  }) {
+    // Mock implementation - return empty stream
+    return Stream.empty();
+  }
+
+  @override
+  Future<StreamSubscription<TypedHydrationBatch<T>>> hydrateWithCallbacks<T>({
     required Future<String?> Function() getCurrentCursor,
     required Future<void> Function(T item) onUpdate,
-    required Future<void> Function(T item) onDelete,
+    required Future<void> Function(String itemId) onDelete,
     required Future<void> Function(String cursor) onCursorUpdate,
-    String? localName,
-    int batchSize = 100,
+    void Function(Object error, StackTrace stackTrace)? onError,
+    String localName = 'default',
+    int initialBatchSize = 100,
   }) async {
-    // Mock implementation - return empty subscription
-    return _MockHydrationSubscription();
+    // Mock implementation - return subscription to empty stream
+    return Stream<TypedHydrationBatch<T>>.empty().listen((_) {});
   }
 
   @override

@@ -70,10 +70,13 @@
   - Requires Pod operations, authentication integration
   - Can reuse patterns from in-memory backend
 
-### Priority 5: Ensure full Offline-First Support
+### Priority 5: Implement Delete
+- [] Deletion support is part of the concept and the example app has deletion usecases, but it is not fully implemented yet
+
+### Priority 6: Ensure full Offline-First Support
 - [ ] merge-contract: Build-time asset bundling (essential for offline-first: bundle all referenced merge contracts as assets so apps work offline from first launch)
 
-### Priority 6: Performance & Efficiency Optimizations
+### Priority 7: Performance & Efficiency Optimizations
 - [ ] merge-contract: RdfGraphFetcher caching with etag support (HTTP best practices, benefits all RDF loading)
 - [ ] merge-contract: Local database caching (persistence across app restarts)
 - [ ] rdf_vocabulary_to_dart: failed to load RDF graph for graphs marked as skipped must not be an error, build must not be marked as "failed" due to this

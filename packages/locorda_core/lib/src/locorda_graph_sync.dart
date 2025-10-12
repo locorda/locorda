@@ -22,12 +22,14 @@ import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
-import 'hydration/hydration_emitter.dart';
-import 'hydration/hydration_stream_manager.dart';
-
 final _log = Logger('LocordaGraphSync');
 
 typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
+typedef HydrationBatch = ({
+  List<IdentifiedGraph> updates,
+  List<IdentifiedGraph> deletions,
+  String? cursor
+});
 
 /// Main facade for the locorda system.
 ///
@@ -37,28 +39,28 @@ typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
 class LocordaGraphSync {
   // ignore: unused_field
   final Backend _backend; // TODO: Use for Remote synchronization
+  final Storage _storage;
   final IndexManager _indexManager;
   final SyncGraphConfig _config;
   final CrdtDocumentManager _crdtDocumentManager;
   final IriTranslator _iriTranslator;
-  final HydrationStreamManager _streamManager;
   final GroupIndexGraphSubscriptionManager _groupIndexManager;
   final SyncManager _syncManager;
-  late final HydrationEmitter _emitter;
 
   /// Access the sync manager for manual sync triggering and status monitoring.
   SyncManager get syncManager => _syncManager;
 
   LocordaGraphSync._({
     required Backend backend,
+    required Storage storage,
     required IndexManager indexManager,
     required SyncGraphConfig config,
     required ResourceLocator resourceLocator,
     required CrdtDocumentManager crdtDocumentManager,
   })  : _backend = backend,
+        _storage = storage,
         _indexManager = indexManager,
         _config = config,
-        _streamManager = HydrationStreamManager(),
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
           config: config,
         ),
@@ -75,12 +77,7 @@ class LocordaGraphSync {
             await Future.delayed(Duration(milliseconds: 100));
           },
           autoSyncConfig: config.autoSyncConfig,
-        ) {
-    _emitter = HydrationEmitter(
-      streamManager: _streamManager,
-      iriTranslator: _iriTranslator,
-    );
-  }
+        );
 
   /// Set up the CRDT sync system with resource-focused configuration.
   ///
@@ -211,6 +208,7 @@ class LocordaGraphSync {
 
     final sync = LocordaGraphSync._(
         backend: backend,
+        storage: storage,
         indexManager: indexManager,
         config: effectiveConfig,
         resourceLocator: localResourceLocator,
@@ -295,7 +293,7 @@ class LocordaGraphSync {
   ///
   /// Stores the object locally and triggers sync if connected to Solid Pod.
   /// Application state is updated via the hydration stream - repositories should
-  /// listen to hydrateStreaming() to receive updates.
+  /// listen to hydrateStream() to receive updates.
   ///
   /// Process:
   /// 1. CRDT processing (merge with existing, clock increment)
@@ -352,41 +350,12 @@ Use the 'documentIriTemplate' property of the resource configuration to configur
     await _indexManager.removeTombstonedShardEntries(
         resourceIri, crdtDocument, documentIri);
 
-    final indexData = await _indexManager.updateIndices(
+    // 5. Update the indices
+    await _indexManager.updateIndices(
         type, resourceIri, clockHash, internalAppData, allShards);
 
-    try {
-      // 5. Emit the hydration events - first the actual data
-      _emitter.emitForType(type, _toHydrationResult(saved));
-
-      // 6. Now we emit the index items.
-      final resourceConfig = _config.getResourceConfig(type);
-      for (var index in resourceConfig.indices) {
-        final rootIri = _indexManager.getIndexOrTemplateIri(index, type);
-        final idxItemSaveResult = indexData[rootIri];
-        if (idxItemSaveResult == null) {
-          _log.warning(
-              'No index item generated for index ${index.localName} of type $type, skipping emission.');
-          continue;
-        }
-        _emitter.emitForIndex(
-            type, index, _toHydrationResult(idxItemSaveResult));
-      }
-    } catch (e) {
-      _log.warning('Failed to emit hydration event for $resourceIri: $e');
-      // Don't fail the entire save operation for hydration emission failures
-    }
-  }
-
-  HydrationResult<IdentifiedGraph> _toHydrationResult(
-      DocumentSaveResult saveResult) {
-    return HydrationResult<IdentifiedGraph>(
-      items: [(saveResult.resourceIri as IriTerm, saveResult.appData)],
-      deletedItems: [],
-      originalCursor: saveResult.previousCursor,
-      nextCursor: saveResult.currentCursor,
-      hasMore: false,
-    );
+    // Note: No manual emission needed - Drift's watch() streams will automatically
+    // detect the database changes and emit updates to any active hydration subscriptions
   }
 
   /// Ensures a resource is available locally, fetching it from the remote source if necessary.
@@ -482,13 +451,13 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   /// This performs document-level deletion, marking the entire document as deleted
   /// and affecting all resources contained within, following CRDT semantics.
   /// Application state is updated via the hydration stream - repositories should
-  /// listen to hydrateStreaming() to receive deletion notifications.
+  /// listen to hydrateStream() to receive deletion notifications.
   ///
   /// Process:
   /// 1. Add crdt:deletedAt timestamp to document
   /// 2. Perform universal emptying (remove semantic content, keep framework metadata)
   /// 3. Store updated document in sync system
-  /// 4. Hydration stream automatically emits deletion
+  /// 4. Hydration stream automatically emits deletion (via Drift's reactive queries)
   /// 5. Schedule async Pod sync
   Future<void> deleteDocument(IriTerm typeIri, IriTerm externalIri) async {
     // Translate external IRI to internal format
@@ -497,123 +466,57 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
 
     // ignore: unused_local_variable
     final resourceConfig = _config.getResourceConfig(typeIri);
-    // Basic implementation to maintain hydration stream contract
-    // TODO: Add proper CRDT deletion processing and storage persistence
 
-    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    // TODO: Implement proper CRDT deletion processing:
+    // 1. Load existing document
+    // 2. Add crdt:deletedAt timestamp
+    // 3. Perform universal emptying (remove semantic content, keep framework metadata)
+    // 4. Save to storage (this will trigger Drift's watch() to emit updates automatically)
+    // 5. Update indices accordingly
 
-    // Emit data change with external IRI for application consumption
-    // FIXME: what about indices?
-    _emitter.emitForType(
-        typeIri,
-        HydrationResult<IdentifiedGraph>(
-          items: [],
-          deletedItems: [
-            (
-              externalIri,
-              RdfGraph.fromTriples([Triple(externalIri, Rdf.type, typeIri)])
-            )
-          ],
-          originalCursor: null,
-          nextCursor: timestamp,
-          hasMore: false,
-        ));
+    throw UnimplementedError('deleteDocument not yet fully implemented');
   }
 
-  /// Load changes from sync storage since the given cursor.
+  /// Hydrates resources of the specified type using a reactive stream.
   ///
-  /// Returns items that have been updated or deleted since the cursor position.
-  /// Use null cursor to load from the beginning.
-  Future<HydrationResult<T>> _loadChangesSince<T>(
-    String? cursor, {
-    int limit = 100,
-  }) async {
-    // TODO: Implement loading changes from sync storage
-    return HydrationResult<T>(
-      items: [],
-      deletedItems: [],
-      originalCursor: cursor,
-      nextCursor: null,
-      hasMore: false,
-    );
-  }
-
-  /// One-time hydration that handles pagination and cursor management.
+  /// Returns a stream of [HydrationBatch]es containing updates, deletions,
+  /// and cursor information. The stream automatically:
+  /// - Loads all existing documents in batches (bounded by [initialBatchSize])
+  /// - Switches to reactive mode for ongoing changes (via Drift's watch())
+  /// - Orders documents by updatedAt ascending for consistent processing
   ///
-  /// This method automatically handles:
-  /// - Pagination through all changes since lastCursor
-  /// - Cursor management and persistence
-  /// - Separate handling of updates and deletions
+  /// The caller is responsible for:
+  /// - Providing the current cursor position via [cursor]
+  /// - Processing updates and deletions from the batch
+  /// - Persisting cursor updates for resume capability
   ///
-  /// Use this for manual hydration or catch-up scenarios. For ongoing hydration
-  /// with live updates, use [hydrateStreaming] instead.
+  /// If [indexName] is provided, hydration would be scoped to that index,
+  /// but this feature is not yet fully implemented (TODO).
   ///
-  /// Callbacks:
-  /// - [onUpdate]: Called for each new/updated item
-  /// - [onDelete]: Called for each deleted item (with last known state)
-  /// - [onCursorUpdate]: Called to persist cursor for next hydration
-  Future<void> _hydrateOnce<T>({
-    required String? lastCursor,
-    required Future<void> Function(T item) onUpdate,
-    required Future<void> Function(T item) onDelete,
-    required Future<void> Function(String cursor) onCursorUpdate,
-    int batchSize = 100,
-  }) async {
-    String? currentCursor = lastCursor;
-    HydrationResult<T> result;
-
-    do {
-      result = await _loadChangesSince<T>(currentCursor, limit: batchSize);
-
-      // Apply updates
-      for (final item in result.items) {
-        await onUpdate(item);
-      }
-
-      // Apply deletions
-      for (final item in result.deletedItems) {
-        await onDelete(item);
-      }
-
-      // Update cursor
-      if (result.nextCursor != null) {
-        await onCursorUpdate(result.nextCursor!);
-        currentCursor = result.nextCursor;
-      }
-    } while (result.hasMore);
-  }
-
-  /// Streaming hydration that performs initial catch-up and then maintains live updates.
-  ///
-  /// This is the recommended method for repository integration:
-  /// 1. Performs catch-up hydration from lastCursor
-  /// 2. Sets up live hydration stream for ongoing updates
-  /// 3. Handles cursor consistency checks automatically
-  ///
-  /// Returns a StreamSubscription that must be managed by the caller - store it
-  /// and cancel when disposing to stop the live hydration.
-  ///
-  /// On cursor mismatch, this method automatically triggers a refresh using the
-  /// existing callbacks, so repositories don't need to handle this manually.
-  ///
-  /// If indexName is provided, the hydration is scoped to that index, else it
-  /// is scoped to the full resource type itself.
-  ///
-  /// Callbacks:
-  /// - [getCurrentCursor]: Should return the repository's current cursor
-  /// - [onUpdate]: Called for each new/updated item
-  /// - [onDelete]: Called for each deleted item (with last known state)
-  /// - [onCursorUpdate]: Called to persist cursor updates
-  Future<HydrationSubscription> hydrateStreaming({
+  /// Example:
+  /// ```dart
+  /// final subscription = syncSystem.hydrateStream(
+  ///   typeIri: Note.classIri,
+  ///   cursor: _lastCursor,
+  /// ).listen((batch) async {
+  ///   for (final (iri, graph) in batch.updates) {
+  ///     await _processUpdate(iri, graph);
+  ///   }
+  ///   for (final (iri, graph) in batch.deletions) {
+  ///     await _processDeletion(iri, graph);
+  ///   }
+  ///   if (batch.cursor != null) {
+  ///     _lastCursor = batch.cursor;
+  ///   }
+  /// });
+  /// ```
+  Stream<HydrationBatch> hydrateStream({
     required IriTerm typeIri,
     String? indexName,
-    required Future<String?> Function() getCurrentCursor,
-    required Future<void> Function(IdentifiedGraph item) onUpdate,
-    required Future<void> Function(IdentifiedGraph item) onDelete,
-    required Future<void> Function(String cursor) onCursorUpdate,
-    int batchSize = 100,
-  }) async {
-    // Check if T is a registered resource type
+    String? cursor,
+    int initialBatchSize = 100,
+  }) async* {
+    // Validate configuration
     final resourceConfig = _config.getResourceConfig(typeIri);
     if (indexName != null) {
       if (!resourceConfig.indices
@@ -621,59 +524,66 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         throw ArgumentError(
             'No index with local name $indexName is configured for resource type $typeIri');
       }
+      // TODO: Implement index-specific hydration by loading the corresponding index shards
+      throw UnimplementedError('Index-specific hydration not yet implemented');
     }
-    // 1. Set up live hydration updates
-    final subscription = _streamManager
-        .getOrCreateController(typeIri, indexName)
-        .stream
-        .listen((result) async {
-      // TODO: Implement proper cursor consistency checking
-      // The current originalCursor check is too strict and prevents local changes
-      // from being applied immediately. Need to design a better approach that:
-      // 1. Allows immediate application of local changes (save/delete operations)
-      // 2. Provides proper consistency checking for remote sync updates
-      // 3. Handles cursor mismatches gracefully without blocking updates
 
-      // Apply changes directly without cursor consistency check for now
-      for (final item in result.items) {
-        await onUpdate(item);
-      }
-      for (final item in result.deletedItems) {
-        await onDelete(item);
-      }
-      if (result.nextCursor != null) {
-        await onCursorUpdate(result.nextCursor!);
-      }
-    });
+    HydrationBatch convertResult(
+        List<StoredDocument> documents, String? cursor) {
+      final (deletions, updates) = documents
+          .fold((<IdentifiedGraph>[], <IdentifiedGraph>[]), (acc, doc) {
+        // Translate internal IRIs to external format for application consumption
+        final externalIri = _iriTranslator.internalToExternal(doc.documentIri);
+        final externalGraph =
+            _iriTranslator.translateGraphToExternal(doc.document);
 
-    // 2. Initial catch-up hydration
-    final initialCursor = await getCurrentCursor();
-    await _hydrateOnce<IdentifiedGraph>(
-      lastCursor: initialCursor,
-      onUpdate: onUpdate,
-      onDelete: onDelete,
-      onCursorUpdate: onCursorUpdate,
-      batchSize: batchSize,
-    );
-    return _HydrationStreamSubscription(subscription);
+        // FIXME: What is the identifier for Index Items here?
+        // In a way, it should be the IRI of the index item (e.g. the fragment of the shard),
+        // but at least in LocordaSync this makes no sense at all - there we
+        // need the IRI of the actually deleted resource (e.g. Note)
+
+        final isDeletion = externalGraph.hasTriples(
+            subject: externalIri, predicate: SyncManagedDocument.crdtDeletedAt);
+        if (isDeletion) {
+          acc.$1.add((externalIri, externalGraph));
+        } else {
+          acc.$2.add((externalIri, externalGraph));
+        }
+        return acc;
+      });
+      return (updates: updates, deletions: deletions, cursor: cursor);
+    }
+
+    // Phase 1: Load all existing documents in batches using pagination
+    // This ensures we don't load unbounded amounts of data into memory
+    while (true) {
+      final result = await _storage.getDocumentsModifiedSince(
+        typeIri,
+        cursor,
+        limit: initialBatchSize,
+      );
+
+      // Process each document in the batch
+      yield convertResult(result.documents, result.currentCursor);
+
+      cursor = result.currentCursor;
+
+      // If there are no more documents to fetch, we've loaded everything
+      if (!result.hasNext) {
+        break;
+      }
+    }
+
+    // Phase 2: Switch to reactive watch for ongoing changes
+    // This automatically emits updates whenever documents of this type change
+    yield* _storage
+        .watchDocumentsModifiedSince(typeIri, cursor)
+        .map((result) => convertResult(result.documents, result.currentCursor));
   }
 
   /// Close the sync system and free resources.
   Future<void> close() async {
     await _syncManager.dispose();
     await _crdtDocumentManager.close();
-    await _streamManager.close();
   }
-}
-
-class _HydrationStreamSubscription implements HydrationSubscription {
-  final StreamSubscription _subscription;
-
-  _HydrationStreamSubscription(this._subscription);
-
-  @override
-  Future<void> cancel() => _subscription.cancel();
-
-  @override
-  bool get isActive => _subscription.isPaused == false;
 }

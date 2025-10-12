@@ -645,8 +645,7 @@ Future<void> _verifyShardDocuments(
 
 Future<String> _failMissing(
     TestStorage storage, IriTerm typeIri, IriTerm shardDocumentIri) async {
-  final all =
-      await storage.getDocumentsModifiedSince(typeIri, null, limit: 100);
+  final all = await storage.watchDocumentsModifiedSince(typeIri, null).first;
   final existing = all.documents
       .map((d) => '${d.documentIri.debug} - ${d.documentIri.value}')
       .join('\n');
@@ -754,8 +753,7 @@ Future<void> _exportAllDocuments(
 
   // Export documents of each type
   for (final typeIri in typeIris) {
-    final docs =
-        await storage.getDocumentsModifiedSince(typeIri, null, limit: 100);
+    final docs = await storage.watchDocumentsModifiedSince(typeIri, null).first;
 
     for (final doc in docs.documents) {
       // Generate filename from type and document IRI

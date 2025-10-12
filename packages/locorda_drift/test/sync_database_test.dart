@@ -222,9 +222,9 @@ void main() {
           updatedAt: 3000,
         );
 
-        // Act
-        final docs = await dao.getDocumentsModifiedSince(typeIri.value, '2200',
-            limit: 10);
+        // Act - Watch stream and get first emission
+        final docs =
+            await dao.watchDocumentsModifiedSince(typeIri.value, '2200').first;
 
         // Assert
         expect(docs, hasLength(2));
@@ -262,9 +262,10 @@ void main() {
           updatedAt: 3000,
         );
 
-        // Act
+        // Act - Watch stream and get first emission
         final docs = await dao
-            .getDocumentsChangedByUsSince(typeIri.value, '1200', limit: 10);
+            .watchDocumentsChangedByUsSince(typeIri.value, '1200')
+            .first;
 
         // Assert
         expect(docs, hasLength(2));
@@ -289,15 +290,18 @@ void main() {
           );
         }
 
-        // Act
-        final modifiedDocs = await dao
-            .getDocumentsModifiedSince(typeIri.value, '2001', limit: 2);
+        // Act - Watch streams and get first emissions
+        final modifiedDocs =
+            await dao.watchDocumentsModifiedSince(typeIri.value, '2001').first;
         final changedDocs = await dao
-            .getDocumentsChangedByUsSince(typeIri.value, '1001', limit: 3);
+            .watchDocumentsChangedByUsSince(typeIri.value, '1001')
+            .first;
 
-        // Assert
-        expect(modifiedDocs, hasLength(2));
-        expect(changedDocs, hasLength(3));
+        // Assert - Stream returns all matching documents (no limit)
+        expect(modifiedDocs,
+            hasLength(3)); // doc2, doc3, doc4 all have updatedAt > 2001
+        expect(changedDocs,
+            hasLength(4)); // doc1-4 all have ourPhysicalClock > 1001
       });
     });
 

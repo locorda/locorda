@@ -233,14 +233,17 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
     return document?.id;
   }
 
-  /// Get documents of a specific type modified since cursor, ordered by updatedAt ascending
+  /// Get documents of a specific type modified since cursor with pagination support.
+  ///
+  /// Returns a batch of documents for initial loading before switching to reactive watch.
+  /// Used for paginated loading of existing documents.
   Future<List<DocumentWithIri>> getDocumentsModifiedSince(
-      String typeIri, String? cursor,
+      String typeIri, String? minCursor,
       {required int limit}) async {
     final typeIriId = await _getExistingIriId(typeIri);
     if (typeIriId == null) return [];
 
-    final timestamp = cursor != null ? int.parse(cursor) : 0;
+    final timestamp = minCursor != null ? int.parse(minCursor) : 0;
 
     final documents = await (select(syncDocuments)
           ..where((d) =>
@@ -253,14 +256,17 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
     return _convertDocumentsWithIris(documents);
   }
 
-  /// Get documents of a specific type changed by us since cursor, ordered by ourPhysicalClock ascending
+  /// Get documents of a specific type changed by us since cursor with pagination support.
+  ///
+  /// Returns a batch of documents for initial sync before switching to reactive watch.
+  /// Used for paginated loading of local changes.
   Future<List<DocumentWithIri>> getDocumentsChangedByUsSince(
-      String typeIri, String? cursor,
+      String typeIri, String? minCursor,
       {required int limit}) async {
     final typeIriId = await _getExistingIriId(typeIri);
     if (typeIriId == null) return [];
 
-    final timestamp = cursor != null ? int.parse(cursor) : 0;
+    final timestamp = minCursor != null ? int.parse(minCursor) : 0;
 
     final documents = await (select(syncDocuments)
           ..where((d) =>
@@ -271,6 +277,56 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
         .get();
 
     return _convertDocumentsWithIris(documents);
+  }
+
+  /// Watch documents of a specific type modified since cursor, ordered by updatedAt ascending.
+  ///
+  /// Automatically emits updates whenever documents of the given type change in the database.
+  /// This leverages Drift's reactive query support for efficient change detection.
+  Stream<List<DocumentWithIri>> watchDocumentsModifiedSince(
+      String typeIri, String? minCursor) async* {
+    final typeIriId = await _getExistingIriId(typeIri);
+    if (typeIriId == null) {
+      yield [];
+      return;
+    }
+
+    final timestamp = minCursor != null ? int.parse(minCursor) : 0;
+
+    // Use Drift's watch() to get a reactive stream
+    await for (final documents in (select(syncDocuments)
+          ..where((d) =>
+              d.typeIriId.equals(typeIriId) &
+              d.updatedAt.isBiggerThanValue(timestamp))
+          ..orderBy([(d) => OrderingTerm(expression: d.updatedAt)]))
+        .watch()) {
+      yield await _convertDocumentsWithIris(documents);
+    }
+  }
+
+  /// Watch documents of a specific type changed by us since cursor, ordered by ourPhysicalClock ascending.
+  ///
+  /// Automatically emits updates whenever documents that we changed are modified in the database.
+  /// This leverages Drift's reactive query support for efficient change detection.
+  Stream<List<DocumentWithIri>> watchDocumentsChangedByUsSince(
+      String typeIri, String? minCursor) async* {
+    final typeIriId = await _getExistingIriId(typeIri);
+    if (typeIriId == null) {
+      yield [];
+      return;
+    }
+
+    final timestamp = minCursor != null ? int.parse(minCursor) : 0;
+
+    // Use Drift's watch() to get a reactive stream
+    await for (final documents in (select(syncDocuments)
+          ..where((d) =>
+              d.typeIriId.equals(typeIriId) &
+              d.ourPhysicalClock.isBiggerThanValue(timestamp))
+          ..orderBy([(d) => OrderingTerm(expression: d.ourPhysicalClock)]))
+        .watch()) {
+      yield await _convertDocumentsWithIris(documents);
+    }
   }
 
   /// Get the highest updatedAt timestamp for a specific type (for cursor management)

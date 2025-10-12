@@ -236,9 +236,9 @@ void main() {
         await storage.saveDocument(doc3Iri, typeIri, graph,
             DocumentMetadata(ourPhysicalClock: 1200, updatedAt: 3000), []);
 
-        // Act
+        // Act - watch the stream and collect first emission
         final docsResult =
-            await storage.getDocumentsModifiedSince(typeIri, '2200', limit: 10);
+            await storage.watchDocumentsModifiedSince(typeIri, '2200').first;
 
         // Assert
         expect(docsResult.documents, hasLength(2));
@@ -268,9 +268,9 @@ void main() {
         await storage.saveDocument(doc3Iri, typeIri, graph,
             DocumentMetadata(ourPhysicalClock: 2000, updatedAt: 3000), []);
 
-        // Act
-        final docsResult = await storage
-            .getDocumentsChangedByUsSince(typeIri, '1200', limit: 10);
+        // Act - watch the stream and collect first emission
+        final docsResult =
+            await storage.watchDocumentsChangedByUsSince(typeIri, '1200').first;
 
         // Assert
         expect(docsResult.documents, hasLength(2));
@@ -284,26 +284,44 @@ void main() {
             lessThan(docsResult.documents[1].metadata.ourPhysicalClock));
       });
 
-      testWidgets('respects limit parameter', (tester) async {
+      testWidgets('emits updates when documents change', (tester) async {
         // Arrange
         final graph = RdfGraph();
         final typeIri = const IriTerm('https://example.com/TestType');
-        for (int i = 0; i < 5; i++) {
-          await storage.saveDocument(
-            IriTerm.validated('https://example.com/doc$i'),
-            typeIri,
-            graph,
-            DocumentMetadata(ourPhysicalClock: 1000 + i, updatedAt: 2000 + i),
-            [],
-          );
-        }
 
-        // Act
-        final docsResult =
-            await storage.getDocumentsModifiedSince(typeIri, '1500', limit: 2);
+        // Save initial documents
+        await storage.saveDocument(
+          IriTerm.validated('https://example.com/doc0'),
+          typeIri,
+          graph,
+          DocumentMetadata(ourPhysicalClock: 1000, updatedAt: 2000),
+          [],
+        );
 
-        // Assert
-        expect(docsResult.documents, hasLength(2));
+        // Act - Start watching from cursor 1500
+        final stream = storage.watchDocumentsModifiedSince(typeIri, '1500');
+
+        // Wait for initial emission
+        final firstResult = await stream.first;
+
+        // Assert - Initial emission should contain doc0 (updatedAt=2000 > 1500)
+        expect(firstResult.documents, hasLength(1));
+        expect(firstResult.documents[0].documentIri.value,
+            'https://example.com/doc0');
+
+        // Act - Add a new document and verify stream emits update
+        final streamFuture = stream.first;
+        await storage.saveDocument(
+          IriTerm.validated('https://example.com/doc1'),
+          typeIri,
+          graph,
+          DocumentMetadata(ourPhysicalClock: 1001, updatedAt: 2001),
+          [],
+        );
+
+        // Assert - Stream should emit updated result with both documents
+        final secondResult = await streamFuture;
+        expect(secondResult.documents, hasLength(2));
       });
     });
 

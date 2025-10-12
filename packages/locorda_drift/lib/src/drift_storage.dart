@@ -160,40 +160,92 @@ class DriftStorage implements Storage {
 
   @override
   Future<DocumentsResult> getDocumentsModifiedSince(
-      IriTerm typeIri, String? cursor,
+      IriTerm typeIri, String? minCursor,
       {required int limit}) async {
     final documents = await documentDao
-        .getDocumentsModifiedSince(typeIri.value, cursor, limit: limit);
-
+        .getDocumentsModifiedSince(typeIri.value, minCursor, limit: limit);
     final storedDocuments = _convertToStoredDocuments(documents);
-    final nextCursor =
-        storedDocuments.isNotEmpty && storedDocuments.length == limit
-            ? storedDocuments.last.metadata.updatedAt.toString()
-            : null;
+
+    // currentCursor: last document's timestamp, or minCursor if no documents found
+    // This ensures the cursor never goes backwards
+    final currentCursor = storedDocuments.isNotEmpty
+        ? storedDocuments.last.metadata.updatedAt.toString()
+        : minCursor;
+
+    // hasNext: true if we got a full batch (might be more data available)
+    final hasNext = documents.length >= limit;
 
     return DocumentsResult(
       documents: storedDocuments,
-      nextCursor: nextCursor,
+      currentCursor: currentCursor,
+      hasNext: hasNext,
     );
   }
 
   @override
   Future<DocumentsResult> getDocumentsChangedByUsSince(
-      IriTerm typeIri, String? cursor,
+      IriTerm typeIri, String? minCursor,
       {required int limit}) async {
     final documents = await documentDao
-        .getDocumentsChangedByUsSince(typeIri.value, cursor, limit: limit);
-
+        .getDocumentsChangedByUsSince(typeIri.value, minCursor, limit: limit);
     final storedDocuments = _convertToStoredDocuments(documents);
-    final nextCursor =
-        storedDocuments.isNotEmpty && storedDocuments.length == limit
-            ? storedDocuments.last.metadata.ourPhysicalClock.toString()
-            : null;
+
+    // currentCursor: last document's timestamp, or minCursor if no documents found
+    // This ensures the cursor never goes backwards
+    final currentCursor = storedDocuments.isNotEmpty
+        ? storedDocuments.last.metadata.ourPhysicalClock.toString()
+        : minCursor;
+
+    // hasNext: true if we got a full batch (might be more data available)
+    final hasNext = documents.length >= limit;
 
     return DocumentsResult(
       documents: storedDocuments,
-      nextCursor: nextCursor,
+      currentCursor: currentCursor,
+      hasNext: hasNext,
     );
+  }
+
+  @override
+  Stream<DocumentsResult> watchDocumentsModifiedSince(
+      IriTerm typeIri, String? minCursor) async* {
+    await for (final documents
+        in documentDao.watchDocumentsModifiedSince(typeIri.value, minCursor)) {
+      final storedDocuments = _convertToStoredDocuments(documents);
+
+      // For watch streams: currentCursor is the latest data, or minCursor if no docs
+      // hasNext is always false for streams (they don't paginate)
+      final cursor = storedDocuments.isNotEmpty
+          ? storedDocuments.last.metadata.updatedAt.toString()
+          : minCursor;
+
+      yield DocumentsResult(
+        documents: storedDocuments,
+        currentCursor: cursor,
+        hasNext: false,
+      );
+    }
+  }
+
+  @override
+  Stream<DocumentsResult> watchDocumentsChangedByUsSince(
+      IriTerm typeIri, String? minCursor) async* {
+    await for (final documents in documentDao.watchDocumentsChangedByUsSince(
+        typeIri.value, minCursor)) {
+      final storedDocuments = _convertToStoredDocuments(documents);
+
+      // For watch streams: currentCursor is the latest data, or minCursor if no docs
+      // hasNext is always false for streams (they don't paginate)
+      final cursor = storedDocuments.isNotEmpty
+          ? storedDocuments.last.metadata.ourPhysicalClock.toString()
+          : minCursor;
+
+      yield DocumentsResult(
+        documents: storedDocuments,
+        currentCursor: cursor,
+        hasNext: false,
+      );
+    }
   }
 
   @override

@@ -78,7 +78,8 @@ export 'src/generated/_index.dart' show IdxShardEntry
         SyncResourceStatement,
         SyncUniversalProperties*/
     ;
-export 'src/hydration_result.dart' show HydrationResult, HydrationSubscription;
+export 'src/hydration_result.dart' show HydrationSubscription;
+export 'src/locorda_graph_sync.dart' show HydrationBatch, IdentifiedGraph;
 // Index configuration
 export 'src/index/index_config_base.dart'
     show

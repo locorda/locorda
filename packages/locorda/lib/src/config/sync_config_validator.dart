@@ -84,22 +84,28 @@ class SyncConfigValidator {
 
       // Try to get a serializer for the type - this is the definitive test
       final needsSerializer = !deserializerOnly.contains(type);
-      if (needsSerializer) {
-        if (!mapper.registry.hasResourceSerializerForDartType(type)) {
-          result.addError(
-              'Type $type is not registered in RdfMapper. '
-              'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
-              details: {'type': type});
-        }
-      }
+      final hasSerializer = needsSerializer &&
+          mapper.registry.hasResourceSerializerForDartType(type);
       var hasDeserializer =
           mapper.registry.hasGlobalResourceDeserializerForDartType(type) ||
               mapper.registry.hasLocalResourceDeserializerForDartType(type);
-      if (!hasDeserializer) {
+      if (!hasSerializer && !hasDeserializer) {
         result.addError(
-            'Type $type has ${needsSerializer ? 'a serializer but ' : ''}no deserializer registered in RdfMapper. '
+            'Type $type is not registered in RdfMapper. '
             'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
             details: {'type': type});
+      } else {
+        if (!hasDeserializer) {
+          result.addError(
+              'Type $type has ${hasSerializer ? 'a serializer but ' : ''}no deserializer registered in RdfMapper. '
+              'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
+              details: {'type': type});
+        } else if (!hasSerializer && needsSerializer) {
+          result.addError(
+              'Type $type has a deserializer but no serializer registered in RdfMapper. '
+              'Ensure the type is properly annotated with @PodResource, @RdfGlobalResource or @RdfLocalResource - or a mapper is implemented and registered manually.',
+              details: {'type': type});
+        }
       }
     }
   }

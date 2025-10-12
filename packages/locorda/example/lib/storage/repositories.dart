@@ -23,7 +23,7 @@ final _log = Logger('CategoryRepository');
 class CategoryRepository {
   final CategoryDao _categoryDao;
   final LocordaSync _syncSystem;
-  final HydrationSubscription _hydrationSubscription;
+  final StreamSubscription _hydrationSubscription;
 
   static const String _resourceType = 'category';
 
@@ -45,17 +45,15 @@ class CategoryRepository {
     CursorDao cursorDao,
     LocordaSync syncSystem,
   ) async {
-    final repository = CategoryRepository._(
-        categoryDao,
-        syncSystem,
-        await syncSystem.hydrateStreaming<models.Category>(
-          getCurrentCursor: () => cursorDao.getCursor(_resourceType),
-          onUpdate: (category) => _handleCategoryUpdate(categoryDao, category),
-          onDelete: (category) => _handleCategoryDelete(categoryDao, category),
-          onCursorUpdate: (cursor) =>
-              cursorDao.storeCursor(_resourceType, cursor),
-        ));
+    final subscription = await syncSystem.hydrateWithCallbacks<models.Category>(
+      getCurrentCursor: () => cursorDao.getCursor(_resourceType),
+      onUpdate: (category) => _handleCategoryUpdate(categoryDao, category),
+      onDelete: (categoryId) => _handleCategoryDelete(categoryDao, categoryId),
+      onCursorUpdate: (cursor) => cursorDao.storeCursor(_resourceType, cursor),
+    );
 
+    final repository =
+        CategoryRepository._(categoryDao, syncSystem, subscription);
     return repository;
   }
 
@@ -68,8 +66,8 @@ class CategoryRepository {
 
   /// Handle category deletion from sync storage
   static Future<void> _handleCategoryDelete(
-      CategoryDao categoryDao, models.Category category) async {
-    await categoryDao.deleteCategoryById(category.id);
+      CategoryDao categoryDao, String id) async {
+    await categoryDao.deleteCategoryById(id);
   }
 
   /// Watch all categories ordered by name (non-archived only)
@@ -164,8 +162,8 @@ class NoteRepository {
   final CommentDao _commentDao;
   final NoteIndexEntryDao _noteIndexDao;
   final LocordaSync _syncSystem;
-  final HydrationSubscription _dataHydrationSubscription;
-  final HydrationSubscription _indexHydrationSubscription;
+  final StreamSubscription _dataHydrationSubscription;
+  final StreamSubscription _indexHydrationSubscription;
 
   static const String _resourceType = 'note';
   static const String _indexResourceType = 'noteIndexEntry';
@@ -193,29 +191,33 @@ class NoteRepository {
     CursorDao cursorDao,
     LocordaSync syncSystem,
   ) async {
+    // Setup data hydration for full Note resources
+    final dataSubscription = await syncSystem.hydrateWithCallbacks<models.Note>(
+      getCurrentCursor: () => cursorDao.getCursor(_resourceType),
+      onUpdate: (note) => _handleNoteUpdate(noteDao, commentDao, note),
+      onDelete: (noteId) => _handleNoteDelete(noteDao, commentDao, noteId),
+      onCursorUpdate: (cursor) => cursorDao.storeCursor(_resourceType, cursor),
+    );
+
+    // Setup index hydration for NoteIndexEntry resources
+    final indexSubscription =
+        await syncSystem.hydrateWithCallbacks<models.NoteIndexEntry>(
+      getCurrentCursor: () => cursorDao.getCursor(_indexResourceType),
+      onUpdate: (noteEntry) =>
+          _handleNoteIndexEntryUpdate(noteIndexDao, noteEntry),
+      onDelete: (noteId) => _handleNoteIndexEntryDelete(noteIndexDao, noteId),
+      onCursorUpdate: (cursor) =>
+          cursorDao.storeCursor(_indexResourceType, cursor),
+    );
+
     final repository = NoteRepository._(
-        noteDao,
-        commentDao,
-        noteIndexDao,
-        syncSystem,
-        // Data hydration for full Note resources
-        await syncSystem.hydrateStreaming<models.Note>(
-          getCurrentCursor: () => cursorDao.getCursor(_resourceType),
-          onUpdate: (note) => _handleNoteUpdate(noteDao, commentDao, note),
-          onDelete: (note) => _handleNoteDelete(noteDao, commentDao, note),
-          onCursorUpdate: (cursor) =>
-              cursorDao.storeCursor(_resourceType, cursor),
-        ),
-        // Index hydration for NoteIndexEntry resources
-        await syncSystem.hydrateStreaming<models.NoteIndexEntry>(
-          getCurrentCursor: () => cursorDao.getCursor(_indexResourceType),
-          onUpdate: (noteEntry) =>
-              _handleNoteIndexEntryUpdate(noteIndexDao, noteEntry),
-          onDelete: (noteEntry) =>
-              _handleNoteIndexEntryDelete(noteIndexDao, noteEntry),
-          onCursorUpdate: (cursor) =>
-              cursorDao.storeCursor(_indexResourceType, cursor),
-        ));
+      noteDao,
+      commentDao,
+      noteIndexDao,
+      syncSystem,
+      dataSubscription,
+      indexSubscription,
+    );
 
     return repository;
   }
@@ -236,9 +238,9 @@ class NoteRepository {
 
   /// Handle note deletion from sync storage
   static Future<void> _handleNoteDelete(
-      NoteDao noteDao, CommentDao commentDao, models.Note note) async {
-    await commentDao.deleteCommentsForNote(note.id);
-    await noteDao.deleteNoteById(note.id);
+      NoteDao noteDao, CommentDao commentDao, String id) async {
+    await commentDao.deleteCommentsForNote(id);
+    await noteDao.deleteNoteById(id);
   }
 
   /// Handle note index entry update from sync storage
@@ -250,8 +252,8 @@ class NoteRepository {
 
   /// Handle note index entry deletion from sync storage
   static Future<void> _handleNoteIndexEntryDelete(
-      NoteIndexEntryDao noteIndexDao, models.NoteIndexEntry noteEntry) async {
-    await noteIndexDao.deleteNoteIndexEntryById(noteEntry.id);
+      NoteIndexEntryDao noteIndexDao, String id) async {
+    await noteIndexDao.deleteNoteIndexEntryById(id);
   }
 
   /// Get a specific note by ID
