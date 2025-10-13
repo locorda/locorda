@@ -223,8 +223,8 @@ void main() {
         );
 
         // Act - Watch stream and get first emission
-        final docs =
-            await dao.watchDocumentsModifiedSince(typeIri.value, '2200').first;
+        final docs = await dao.getDocumentsModifiedSince(typeIri.value, '2200',
+            limit: 100);
 
         // Assert
         expect(docs, hasLength(2));
@@ -264,8 +264,7 @@ void main() {
 
         // Act - Watch stream and get first emission
         final docs = await dao
-            .watchDocumentsChangedByUsSince(typeIri.value, '1200')
-            .first;
+            .getDocumentsChangedByUsSince(typeIri.value, '1200', limit: 100);
 
         // Assert
         expect(docs, hasLength(2));
@@ -291,11 +290,10 @@ void main() {
         }
 
         // Act - Watch streams and get first emissions
-        final modifiedDocs =
-            await dao.watchDocumentsModifiedSince(typeIri.value, '2001').first;
+        final modifiedDocs = await dao
+            .getDocumentsModifiedSince(typeIri.value, '2001', limit: 100);
         final changedDocs = await dao
-            .watchDocumentsChangedByUsSince(typeIri.value, '1001')
-            .first;
+            .getDocumentsChangedByUsSince(typeIri.value, '1000', limit: 100);
 
         // Assert - Stream returns all matching documents (no limit)
         expect(modifiedDocs,
