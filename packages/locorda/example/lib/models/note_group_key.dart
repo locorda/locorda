@@ -8,8 +8,8 @@ class NoteGroupKey {
   final DateTime createdMonth;
 
   NoteGroupKey(DateTime createdMonth)
-      : createdMonth =
-            DateTime(createdMonth.year, createdMonth.month, 1, 0, 0, 0, 0, 0);
+      : createdMonth = DateTime.utc(
+            createdMonth.year, createdMonth.month, 1, 0, 0, 0, 0, 0);
 
   /// Helper for current month group
   static NoteGroupKey get currentMonth => NoteGroupKey(DateTime.now());
@@ -17,7 +17,7 @@ class NoteGroupKey {
   /// Helper for previous month group
   static NoteGroupKey get previousMonth {
     final now = DateTime.now();
-    final prevMonth = DateTime(now.year, now.month - 1, 1);
+    final prevMonth = DateTime.utc(now.year, now.month - 1, 1);
     return NoteGroupKey(prevMonth);
   }
 

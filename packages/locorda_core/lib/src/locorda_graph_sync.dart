@@ -732,6 +732,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         lastCursorCompleter.complete(lastEmittedCursor);
       } catch (e, st) {
         lastCursorCompleter.completeError(e, st);
+        _log.severe('Error loading index entries', e, st);
         controller.addError(e, st);
       } finally {
         await controller.close();
