@@ -34,7 +34,7 @@ class GroupIndexGraphSubscriptionManager {
   Future<Set<String>> getGroupIdentifiers(
       String indexName, RdfGraph groupKeyGraph) async {
     // Step 1: Find the GroupIndex configuration for indexName
-    final groupIndexConfig = _findGroupIndexConfig(indexName);
+    final groupIndexConfig = _config.findGroupIndexConfig(indexName);
     if (groupIndexConfig == null) {
       throw GroupIndexGraphSubscriptionException(
           'No GroupIndex found with indexName "$indexName". '
@@ -62,18 +62,5 @@ class GroupIndexGraphSubscriptionManager {
     }
 
     return groupIdentifiers;
-  }
-
-  /// Find the GroupIndex configuration for the given indexName.
-  (ResourceGraphConfig, GroupIndexGraphConfig)? _findGroupIndexConfig(
-      String indexName) {
-    for (final resource in _config.resources) {
-      for (final index in resource.indices) {
-        if (index is GroupIndexGraphConfig && index.localName == indexName) {
-          return (resource, index);
-        }
-      }
-    }
-    return null;
   }
 }

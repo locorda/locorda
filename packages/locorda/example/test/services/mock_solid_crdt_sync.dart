@@ -8,8 +8,9 @@ import 'package:locorda_core/locorda_core.dart';
 class _MockSyncManager extends SyncManager {
   _MockSyncManager()
       : super(
-          syncFunction: () async {},
+          syncFunction: (syncTime) async {},
           autoSyncConfig: const AutoSyncConfig.disabled(),
+          physicalTimestampFactory: () => DateTime.now(),
         );
 }
 

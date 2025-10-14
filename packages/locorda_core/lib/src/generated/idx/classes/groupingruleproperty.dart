@@ -100,7 +100,7 @@ class IdxGroupingRuleProperty {
 
   /// hierarchyLevel [Expects: http://www.w3.org/2001/XMLSchema#integer]
   ///
-  /// Optional hierarchy level for multi-property grouping (default: 1). Properties with explicit levels create nested directory structures sorted by level. Properties without levels are joined with '-' separator after lexicographic IRI ordering.
+  /// Hierarchy level for multi-property grouping. Properties are sorted by level to create nested directory structures. Together with idx:sourceProperty, forms the identification key for GroupingRuleProperty blank nodes. Use 1 when you do not know which value to use.
   ///
   /// Can be used on: https://w3id.org/solid-crdt-sync/vocab/idx#GroupingRuleProperty
   ///

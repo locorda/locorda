@@ -58,24 +58,24 @@ class HlcService {
     return (clockEntryIri, RdfGraph.fromTriples(triples));
   }
 
-  CurrentCrdtClock newClock(IriTerm documentIri) {
-    final physicalTime = _physicalTimestampFactory();
+  CurrentCrdtClock newClock(IriTerm documentIri, {int? physicalTime}) {
+    physicalTime ??= _physicalTimestampFactory().millisecondsSinceEpoch;
     final logicalTime = 1;
 
     var fullClock = [
-      _buildClockEntryNode(
-          documentIri, physicalTime.millisecondsSinceEpoch, logicalTime)
+      _buildClockEntryNode(documentIri, physicalTime, logicalTime)
     ];
     return (
       logicalTime: logicalTime,
-      physicalTime: physicalTime.millisecondsSinceEpoch,
+      physicalTime: physicalTime,
       fullClock: fullClock,
       hash: _hashClock(fullClock)
     );
   }
 
-  CurrentCrdtClock incrementClock(IriTerm documentIri, CrdtClock clock) {
-    final physicalTime = _physicalTimestampFactory();
+  CurrentCrdtClock incrementClock(IriTerm documentIri, CrdtClock clock,
+      {int? physicalTime}) {
+    physicalTime ??= _physicalTimestampFactory().millisecondsSinceEpoch;
     final ourClockEntryIri = _generateClockEntryIri(documentIri);
 
     final (ours: ours, theirs: theirs) =
@@ -95,19 +95,17 @@ class HlcService {
       final oldLogicalTime = ourClockEntry.$2.findSingleObject<LiteralTerm>(
           ourClockEntry.$1, CrdtClockEntry.logicalTime)!;
       logicalTime = oldLogicalTime.integerValue + 1;
-      entry = _buildClockEntryNode(
-          documentIri, physicalTime.millisecondsSinceEpoch, logicalTime);
+      entry = _buildClockEntryNode(documentIri, physicalTime, logicalTime);
     } else {
       logicalTime = 1;
-      entry = _buildClockEntryNode(
-          documentIri, physicalTime.millisecondsSinceEpoch, logicalTime);
+      entry = _buildClockEntryNode(documentIri, physicalTime, logicalTime);
     }
 
     var fullClock = [entry, ...theirs];
 
     return (
       logicalTime: logicalTime,
-      physicalTime: physicalTime.millisecondsSinceEpoch,
+      physicalTime: physicalTime,
       fullClock: fullClock,
       hash: _hashClock(fullClock)
     );

@@ -29,6 +29,7 @@ typedef DocumentSaveResult = ({
   String currentCursor, // The cursor for this save operation
   RdfGraph crdtDocument,
   RdfGraph appData,
+  int physicalTime,
   List<
       MissingGroupIndex> missingGroupIndices // GroupIndices that need to be created
 });
@@ -352,38 +353,25 @@ class CrdtDocumentManager {
 
   Future<DocumentSaveResult?> patch(IriTerm type, IriTerm primaryResourceIri,
       IriTerm predicate, Node node) async {
-    IriTerm documentIri = primaryResourceIri.getDocumentIri();
-    // 1. Extract resource and document IRIs (with validation)
+    final r = await modify(type, primaryResourceIri, (oldAppData) {
+      // TODO: the patch implementation is very naive and inefficient - we might want to optimize this in the future
+      final hasEntry = oldAppData.hasTriples(
+          subject: primaryResourceIri, predicate: predicate, object: node.$1);
+      final triplesToRemove = oldAppData.subgraph(node.$1).triples.toSet();
 
-    final (
-      oldAppData: oldAppData,
-      oldFrameworkGraph: oldFrameworkGraph,
-      mergeContract: mergeContract,
-      governedByFiles: governedByFiles
-    ) = await _prepare(type, documentIri);
-    if (oldAppData == null) {
-      throw ArgumentError(
-          'Cannot patch non-existing document $documentIri - use save() instead');
-    }
-    // TODO: the patch implementation is very naive and inefficient - we might want to optimize this in the future
-    final hasEntry = oldAppData.hasTriples(
-        subject: primaryResourceIri, predicate: predicate, object: node.$1);
-    final triplesToRemove = oldAppData.subgraph(node.$1).triples.toSet();
-
-    var entry = Triple(primaryResourceIri, predicate, node.$1);
-    final removeEntry = node.$2.isEmpty;
-    final addEntry = !hasEntry && !removeEntry;
-    if (removeEntry) {
-      triplesToRemove.add(entry);
-    }
-    final appData = RdfGraph.fromTriples([
-      ...oldAppData.triples.where((t) => !triplesToRemove.contains(t)),
-      if (addEntry) entry,
-      ...node.$2.triples
-    ]);
-
-    final r = await _save(type, primaryResourceIri, documentIri, appData,
-        oldAppData, oldFrameworkGraph, mergeContract, governedByFiles);
+      var entry = Triple(primaryResourceIri, predicate, node.$1);
+      final removeEntry = node.$2.isEmpty;
+      final addEntry = !hasEntry && !removeEntry;
+      if (removeEntry) {
+        triplesToRemove.add(entry);
+      }
+      final appData = RdfGraph.fromTriples([
+        ...oldAppData.triples.where((t) => !triplesToRemove.contains(t)),
+        if (addEntry) entry,
+        ...node.$2.triples
+      ]);
+      return appData;
+    });
     if (r == null) {
       return null;
     }
@@ -395,6 +383,40 @@ class CrdtDocumentManager {
       previousCursor: r.previousCursor,
       resourceIri: node.$1,
       missingGroupIndices: r.missingGroupIndices,
+      physicalTime: r.physicalTime,
+    );
+  }
+
+  Future<DocumentSaveResult?> modify(IriTerm type, IriTerm primaryResourceIri,
+      RdfGraph Function(RdfGraph oldAppData) modifier,
+      {int? physicalTime, bool acceptMissing = false}) async {
+    IriTerm documentIri = primaryResourceIri.getDocumentIri();
+    // 1. Extract resource and document IRIs (with validation)
+
+    final (
+      oldAppData: oldAppData,
+      oldFrameworkGraph: oldFrameworkGraph,
+      mergeContract: mergeContract,
+      governedByFiles: governedByFiles
+    ) = await _prepare(type, documentIri);
+    if (oldAppData == null && !acceptMissing) {
+      throw ArgumentError(
+          'Cannot patch non-existing document $documentIri - use save() instead');
+    }
+
+    // let the caller derive the app data from the old state
+    final appData = modifier(oldAppData == null ? RdfGraph() : oldAppData);
+
+    return await _save(
+      type,
+      primaryResourceIri,
+      documentIri,
+      appData,
+      oldAppData,
+      oldFrameworkGraph,
+      mergeContract,
+      governedByFiles,
+      physicalTime: physicalTime,
     );
   }
 
@@ -433,14 +455,16 @@ class CrdtDocumentManager {
   }
 
   Future<DocumentSaveResult?> _save(
-      IriTerm type,
-      IriTerm resourceIri,
-      IriTerm documentIri,
-      RdfGraph appData,
-      RdfGraph? oldAppData,
-      RdfGraph? oldFrameworkGraph,
-      MergeContract mergeContract,
-      List<IriTerm> governedByFiles) async {
+    IriTerm type,
+    IriTerm resourceIri,
+    IriTerm documentIri,
+    RdfGraph appData,
+    RdfGraph? oldAppData,
+    RdfGraph? oldFrameworkGraph,
+    MergeContract mergeContract,
+    List<IriTerm> governedByFiles, {
+    int? physicalTime,
+  }) async {
     RdfGraph? oldDocument;
     RdfGraph? crdtDocument;
     RdfGraph? frameworkGraph;
@@ -460,8 +484,9 @@ class CrdtDocumentManager {
           ? null
           : _extractCrdtClock(oldFrameworkGraph, documentIri);
       final clock = oldClock == null
-          ? _hlcService.newClock(documentIri)
-          : _hlcService.incrementClock(documentIri, oldClock);
+          ? _hlcService.newClock(documentIri, physicalTime: physicalTime)
+          : _hlcService.incrementClock(documentIri, oldClock,
+              physicalTime: physicalTime);
       final physicalTimestamp = clock.physicalTime;
 
       // 4. Detect property changes between old and new app graphs and generate CRDT metadata
@@ -575,6 +600,7 @@ class CrdtDocumentManager {
         previousCursor: saveResult.previousCursor,
         currentCursor: saveResult.currentCursor,
         missingGroupIndices: missingGroupIndices,
+        physicalTime: clock.physicalTime,
       );
     } on UnidentifiedBlankNodeException catch (e, stackTrace) {
       _log.severe('Save operation failed for type $type', e, stackTrace);
@@ -757,6 +783,7 @@ class CrdtDocumentManager {
           predicate: predicate,
           values: values.cast<RdfObject>(),
           mergeContext: context,
+          physicalClock: clock.physicalTime,
         );
 
         metadataGraphs.addAll(metadataGraph);
@@ -823,6 +850,7 @@ class CrdtDocumentManager {
           oldValues: oldValues,
           newValues: newValues,
           mergeContext: context,
+          physicalClock: clock.physicalTime,
         );
 
         metadataGraphs.addAll(metadataGraph);

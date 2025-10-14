@@ -56,6 +56,101 @@ class SyncSettings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// Individual index entries within shards
+/// These are lightweight representations of resources with only indexed properties
+class IndexEntries extends Table {
+  @ReferenceName('shardIri')
+  IntColumn get shardIri => integer().references(SyncIris, #id)();
+
+  /// Direct reference to the index this entry belongs to.
+  /// This is immutable - an entry never changes which index it belongs to.
+  @ReferenceName('indexIri')
+  IntColumn get indexIriId => integer().references(SyncIris, #id)();
+
+  /// The resource IRI this entry points to (e.g., /notes/note-123#note)
+  @ReferenceName('indexResourceIri')
+  IntColumn get resourceIriId => integer().references(SyncIris, #id)();
+
+  /// Clock hash from the resource's CRDT metadata
+  TextColumn get clockHash => text()();
+
+  /// application specific RDF payload in turtle format
+  TextColumn get headerProperties => text().nullable()();
+
+  /// When this entry was last updated (milliseconds since epoch)
+  IntColumn get updatedAt => integer()();
+
+  /// Physical clock for cursor-based pagination
+  IntColumn get ourPhysicalClock => integer()();
+
+  /// Tombstone marker - true if entry was removed from index
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {shardIri, resourceIriId};
+}
+
+/// Group index subscriptions
+/// Tracks which group indices the user has explicitly subscribed to
+class GroupIndexSubscriptions extends Table {
+  IntColumn get groupIndexIriId => integer().references(SyncIris, #id)();
+
+  @ReferenceName('groupIndexTemplateIriId')
+  IntColumn get groupIndexTemplateIriId =>
+      integer().references(SyncIris, #id)();
+
+  /// Fetch policy: 'onRequest' or 'prefetch'
+  TextColumn get itemFetchPolicy => text()();
+
+  /// Timestamp when this subscription was created (milliseconds since epoch)
+  IntColumn get createdAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {groupIndexIriId};
+}
+
+/// Sync metadata for tracking last sync timestamps
+///
+/// Singleton table (only one row) that tracks when we last synchronized
+/// shard documents. Used to determine which shards need updating.
+class SyncMetadata extends Table {
+  /// Primary key (always 1 for singleton)
+  IntColumn get id => integer().withDefault(const Constant(1))();
+
+  /// Physical clock timestamp of last successful shard sync (milliseconds since epoch)
+  /// Used to find shards with entries newer than this timestamp
+  IntColumn get lastShardSyncTimestamp =>
+      integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Index Iri set versions for cursor tracking
+///
+/// Tracks unique combinations of (usually subscribed) group index IDs for a template.
+/// Used to enable correct cursor semantics when the set of index IDs change:
+/// - New subscriptions must load historical data (cursor=0 → current)
+/// - Old subscriptions continue from their last cursor position
+///
+/// Each unique set of index IRI IDs gets a version ID that can be
+/// embedded in the cursor string (e.g., "100@42" = timestamp 100, set version 42).
+class IndexIriIdSetVersions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// Comma-separated, sorted list of index IRI IDs (e.g., "5,7,9")
+  /// Always sorted ascending to ensure consistent hashing
+  TextColumn get indexIriIds => text()();
+
+  /// When this version was created (milliseconds since epoch)
+  IntColumn get createdAt => integer()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {indexIriIds}
+      ];
+}
+
 /// Mixin for efficient IRI batch loading and creation
 ///
 /// TODO: can we optimize this further by caching recently used IRIs in memory?
@@ -82,7 +177,7 @@ mixin IriBatchLoader on DatabaseAccessor<SyncDatabase> {
   }
 
   /// Efficiently get/create multiple IRI IDs in batch
-  Future<Map<String, int>> getOrCreateIriIdsBatch(Set<String> iris) async {
+  Future<Map<String, int>> getOrCreateIriIdsBatch(Iterable<String> iris) async {
     if (iris.isEmpty) return {};
 
     // 1. First try to get all existing IRIs
@@ -102,7 +197,7 @@ mixin IriBatchLoader on DatabaseAccessor<SyncDatabase> {
   }
 
   /// Get existing IRI → ID mappings for the given IRIs
-  Future<Map<String, int>> _getExistingIriIds(Set<String> iris) async {
+  Future<Map<String, int>> _getExistingIriIds(Iterable<String> iris) async {
     if (iris.isEmpty) return {};
 
     const batchSize = 999;
@@ -458,6 +553,308 @@ class PropertyChangeInfo {
   });
 }
 
+/// Data Access Object for index management
+@DriftAccessor(tables: [
+  IndexEntries,
+  GroupIndexSubscriptions,
+  SyncIris,
+  IndexIriIdSetVersions,
+  SyncMetadata,
+])
+class IndexDao extends DatabaseAccessor<SyncDatabase>
+    with _$IndexDaoMixin, IriBatchLoader {
+  IndexDao(super.db);
+
+  /// Get index entries for hydration (cursor-based, excluding deleted)
+  Future<IndexEntriesPage> getIndexEntries({
+    required Iterable<int> indexIds,
+    int? cursorTimestamp,
+    int limit = 100,
+  }) async {
+    // Direct query without joins - indexId is denormalized on index_entries
+    var query = select(db.indexEntries)
+      ..where((e) => e.isDeleted.equals(false) & e.indexIriId.isIn(indexIds));
+
+    // Apply cursor based on updatedAt timestamp (milliseconds since epoch)
+    if (cursorTimestamp != null) {
+      query = query
+        ..where((e) => e.updatedAt.isBiggerThanValue(cursorTimestamp));
+    }
+
+    // Order by update timestamp
+    query = query
+      ..orderBy([(e) => OrderingTerm.asc(e.updatedAt)])
+      ..limit(limit);
+
+    final entries = await query.get();
+
+    if (entries.isEmpty) {
+      return IndexEntriesPage(entries: [], hasMore: false, lastCursor: null);
+    }
+
+    // Batch load resource IRIs
+    final resourceIriIds = entries.map((e) => e.resourceIriId).toSet();
+    final iriMap = await getIrisBatch(resourceIriIds);
+
+    final entriesWithIris = entries
+        .map((e) => DriftIndexEntry(
+              entry: e,
+              resourceIri: iriMap[e.resourceIriId]!,
+            ))
+        .toList();
+
+    final lastCursor = entries.last.updatedAt;
+    final hasMore = entries.length == limit;
+
+    return IndexEntriesPage(
+      entries: entriesWithIris,
+      hasMore: hasMore,
+      lastCursor: lastCursor,
+    );
+  }
+
+  /// Watch index entries for reactive hydration
+  Stream<List<DriftIndexEntry>> watchIndexEntries({
+    required Iterable<int> indexIds,
+    int? cursorTimestamp,
+  }) {
+    // Direct query without joins - indexId is denormalized on index_entries
+    var query = select(db.indexEntries)
+      ..where((e) => e.isDeleted.equals(false) & e.indexIriId.isIn(indexIds));
+
+    // Apply cursor based on updatedAt timestamp (milliseconds since epoch)
+    if (cursorTimestamp != null) {
+      query = query
+        ..where((e) => e.updatedAt.isBiggerThanValue(cursorTimestamp));
+    }
+
+    // Order by update timestamp
+    query = query..orderBy([(e) => OrderingTerm.asc(e.updatedAt)]);
+
+    return query.watch().asyncMap((entries) async {
+      if (entries.isEmpty) return <DriftIndexEntry>[];
+
+      // Batch load resource IRIs
+      final resourceIriIds = entries.map((e) => e.resourceIriId).toSet();
+      final iriMap = await getIrisBatch(resourceIriIds);
+
+      return entries
+          .map((e) => DriftIndexEntry(
+                entry: e,
+                resourceIri: iriMap[e.resourceIriId]!,
+              ))
+          .toList();
+    });
+  }
+
+  /// Save or update a group index subscription
+  Future<void> saveGroupIndexSubscription({
+    required int groupIndexIriId,
+    required int groupIndexTemplateIriId,
+    required String itemFetchPolicy,
+    required int createdAt,
+  }) async {
+    await into(db.groupIndexSubscriptions).insertOnConflictUpdate(
+      GroupIndexSubscriptionsCompanion.insert(
+        groupIndexIriId: Value(groupIndexIriId),
+        groupIndexTemplateIriId: groupIndexTemplateIriId,
+        itemFetchPolicy: itemFetchPolicy,
+        createdAt: createdAt,
+      ),
+    );
+  }
+
+  /// Get subscribed group index IDs for a template
+  Future<Set<int>> getSubscribedGroupIndexIds(
+      int groupIndexTemplateIriId) async {
+    final results = await (select(db.groupIndexSubscriptions)
+          ..where(
+              (s) => s.groupIndexTemplateIriId.equals(groupIndexTemplateIriId)))
+        .get();
+
+    return results.map((row) => row.groupIndexIriId).toSet();
+  }
+
+  /// Watch subscribed group index IDs for reactive updates
+  Stream<Set<int>> watchSubscribedGroupIndexIds(int templateId) {
+    return (select(db.groupIndexSubscriptions)
+          ..where((s) => s.groupIndexTemplateIriId.equals(templateId)))
+        .watch()
+        .map((results) => results.map((row) => row.groupIndexIriId).toSet());
+  }
+
+  /// Get or create a index id set version for the given index IDs.
+  ///
+  /// Returns the version ID that can be used in cursor strings.
+  /// Index IDs are automatically sorted to ensure consistent hashing.
+  Future<int> ensureIndexIdSetVersion({
+    required Set<int> indexIds,
+    required int createdAt,
+  }) async {
+    // Sort IDs to ensure consistent representation
+    final sortedIds = indexIds.toList()..sort();
+    final idsStr = sortedIds.join(',');
+
+    // Try to find existing version
+    final existing = await (select(db.indexIriIdSetVersions)
+          ..where((v) => v.indexIriIds.equals(idsStr)))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      return existing.id;
+    }
+
+    // Create new version
+    return await into(db.indexIriIdSetVersions).insert(
+      IndexIriIdSetVersionsCompanion.insert(
+        indexIriIds: idsStr,
+        createdAt: createdAt,
+      ),
+    );
+  }
+
+  /// Get the index IDs for a given set version.
+  ///
+  /// Returns empty list if version not found.
+  Future<List<int>> getIndexIriIdsForVersion(int versionId) async {
+    final version = await (select(db.indexIriIdSetVersions)
+          ..where((v) => v.id.equals(versionId)))
+        .getSingleOrNull();
+
+    if (version == null) return [];
+
+    if (version.indexIriIds.isEmpty) return [];
+    return version.indexIriIds.split(',').map(int.parse).toList();
+  }
+
+  /// Save or update an index entry (overwrites existing entry).
+  Future<void> saveIndexEntry({
+    required int shardIriId,
+    required int indexIriId,
+    required int resourceIriId,
+    required String clockHash,
+    String? headerProperties,
+    bool isDeleted = false,
+    required int ourPhysicalClock,
+    required int updatedAt,
+  }) async {
+    await into(db.indexEntries).insertOnConflictUpdate(
+      IndexEntriesCompanion.insert(
+        shardIri: shardIriId,
+        indexIriId: indexIriId,
+        resourceIriId: resourceIriId,
+        clockHash: clockHash,
+        headerProperties: Value(headerProperties),
+        updatedAt: updatedAt,
+        ourPhysicalClock: ourPhysicalClock,
+        isDeleted: Value(isDeleted),
+      ),
+    );
+  }
+
+  /// Get all active (non-deleted) entries for a shard.
+  ///
+  /// Used for sync to generate shard documents.
+  Future<List<DriftIndexEntry>> getActiveIndexEntriesForShard(
+      int shardIriId) async {
+    final query = select(db.indexEntries).join([
+      innerJoin(
+          db.syncIris, db.syncIris.id.equalsExp(db.indexEntries.resourceIriId))
+    ])
+      ..where(db.indexEntries.shardIri.equals(shardIriId) &
+          db.indexEntries.isDeleted.equals(false));
+
+    final results = await query.get();
+
+    return results
+        .map((row) => DriftIndexEntry(
+              entry: row.readTable(db.indexEntries),
+              resourceIri: row.readTable(db.syncIris).iri,
+            ))
+        .toList();
+  }
+
+  /// Get shard IRIs that have entries modified after the given timestamp.
+  ///
+  /// This includes both new/updated entries and deleted entries (tombstones).
+  /// Used by SyncFunction to find shards that need to be regenerated.
+  ///
+  /// Returns: List of tuples (shardIri, maxPhysicalClock) for shards with modifications.
+  ///
+  /// Uses max(ourPhysicalClock) per shard to find shards with changes since the last sync.
+  /// This ensures deletions are properly detected using the item's timestamp,
+  /// not the deletion operation's timestamp.
+  Future<List<(String shardIri, int maxPhysicalClock)>> getShardsToUpdate(
+      int sinceTimestamp) async {
+    // Use raw SQL with HAVING clause for efficient filtering on DB level
+    final results = await customSelect(
+      '''
+      SELECT s.iri, MAX(e.our_physical_clock) as max_clock
+      FROM index_entries e
+      JOIN sync_iris s ON s.id = e.shard_iri
+      GROUP BY e.shard_iri
+      HAVING max_clock > ?
+      ''',
+      variables: [Variable.withInt(sinceTimestamp)],
+      readsFrom: {db.indexEntries, db.syncIris},
+    ).get();
+
+    return results
+        .map((row) => (
+              row.read<String>('iri'),
+              row.read<int>('max_clock'),
+            ))
+        .toList();
+  }
+
+  /// Get the last shard sync timestamp from metadata.
+  ///
+  /// Returns 0 if no sync has been performed yet.
+  Future<int> getLastShardSyncTimestamp() async {
+    final metadata = await (select(db.syncMetadata)
+          ..where((m) => m.id.equals(1)))
+        .getSingleOrNull();
+
+    return metadata?.lastShardSyncTimestamp ?? 0;
+  }
+
+  /// Update the last shard sync timestamp in metadata.
+  ///
+  /// Creates the metadata row if it doesn't exist.
+  Future<void> updateLastShardSyncTimestamp(int timestamp) async {
+    await into(db.syncMetadata).insertOnConflictUpdate(
+      SyncMetadataCompanion.insert(
+        id: const Value(1),
+        lastShardSyncTimestamp: Value(timestamp),
+      ),
+    );
+  }
+}
+
+/// Index entry with resolved resource IRI (internal Drift representation)
+class DriftIndexEntry {
+  final IndexEntry entry;
+  final String resourceIri;
+
+  DriftIndexEntry({
+    required this.entry,
+    required this.resourceIri,
+  });
+}
+
+/// Page of index entries with pagination info (internal Drift representation)
+class IndexEntriesPage {
+  final List<DriftIndexEntry> entries;
+  final bool hasMore;
+  final int? lastCursor;
+
+  IndexEntriesPage({
+    required this.entries,
+    required this.hasMore,
+    required this.lastCursor,
+  });
+}
+
 /// Document with IRI for batch operations
 class DocumentWithIri {
   final String iri;
@@ -471,8 +868,17 @@ class DocumentWithIri {
 
 /// Main sync database class
 @DriftDatabase(
-  tables: [SyncIris, SyncDocuments, SyncPropertyChanges, SyncSettings],
-  daos: [SyncDocumentDao, SyncPropertyChangeDao],
+  tables: [
+    SyncIris,
+    SyncDocuments,
+    SyncPropertyChanges,
+    SyncSettings,
+    IndexEntries,
+    GroupIndexSubscriptions,
+    IndexIriIdSetVersions,
+    SyncMetadata,
+  ],
+  daos: [SyncDocumentDao, SyncPropertyChangeDao, IndexDao],
 )
 class SyncDatabase extends _$SyncDatabase {
   SyncDatabase({DriftWebOptions? web, DriftNativeOptions? native})
@@ -482,7 +888,7 @@ class SyncDatabase extends _$SyncDatabase {
   SyncDatabase.forExecutor(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -510,6 +916,33 @@ class SyncDatabase extends _$SyncDatabase {
         CREATE INDEX IF NOT EXISTS idx_property_changes_document
         ON sync_property_changes(document_id);
       ''');
+
+          // Index management table indices
+          await m.database.customStatement('''
+        CREATE INDEX IF NOT EXISTS idx_index_entries_shard
+        ON index_entries(shard_iri);
+      ''');
+
+          await m.database.customStatement('''
+        CREATE INDEX IF NOT EXISTS idx_index_entries_resource
+        ON index_entries(resource_iri_id);
+      ''');
+
+          await m.database.customStatement('''
+        CREATE INDEX IF NOT EXISTS idx_index_entries_clock
+        ON index_entries(our_physical_clock);
+      ''');
+
+          await m.database.customStatement('''
+        CREATE INDEX IF NOT EXISTS idx_index_entries_deleted
+        ON index_entries(is_deleted);
+      ''');
+
+          await m.database.customStatement('''
+        CREATE INDEX IF NOT EXISTS idx_index_entries_index_updated
+        ON index_entries(index_iri_id, updated_at) 
+        WHERE is_deleted = 0;
+      ''');
         },
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
@@ -527,6 +960,49 @@ class SyncDatabase extends _$SyncDatabase {
           if (from < 3) {
             // Create settings table
             await m.createTable(syncSettings);
+          }
+          if (from < 4) {
+            // Create index management tables with integer timestamps
+            await m.createTable(indexEntries);
+            await m.createTable(groupIndexSubscriptions);
+            await m.createTable(indexIriIdSetVersions);
+
+            // Create performance indices
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_index_entries_shard
+              ON index_entries(shard_iri);
+            ''');
+
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_index_entries_resource
+              ON index_entries(resource_iri_id);
+            ''');
+
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_index_entries_clock
+              ON index_entries(our_physical_clock);
+            ''');
+
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_index_entries_deleted
+              ON index_entries(is_deleted);
+            ''');
+
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_index_entries_index_updated
+              ON index_entries(index_iri_id, updated_at) 
+              WHERE is_deleted = 0;
+            ''');
+          }
+          if (from < 5) {
+            // Create sync metadata table for tracking last sync timestamp
+            await m.createTable(syncMetadata);
+
+            // Initialize with default row (id=1, lastShardSyncTimestamp=0)
+            await m.database.customStatement('''
+              INSERT INTO sync_metadata (id, last_shard_sync_timestamp) 
+              VALUES (1, 0);
+            ''');
           }
         },
       );

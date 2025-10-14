@@ -38,8 +38,6 @@ export 'src/config/validation.dart'
 // CRDT implementations
 export 'src/crdt/crdt_types.dart'
     show CrdtType, LwwRegister, FwwRegister, OrSet;
-export 'src/crdt/hybrid_logical_clock.dart'
-    show HybridLogicalClock, HlcTimestamp;
 // Vocabularies
 export 'src/generated/_index.dart' show IdxShardEntry
     // TODO: what do we need to export here?

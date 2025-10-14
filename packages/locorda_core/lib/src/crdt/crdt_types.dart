@@ -1,5 +1,4 @@
 import 'package:locorda_core/src/generated/_index.dart';
-import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/metadata_generator.dart';
@@ -32,7 +31,8 @@ abstract interface class CrdtType {
       required RdfSubject subject,
       required RdfPredicate predicate,
       required List<RdfObject> values,
-      required CrdtMergeContext mergeContext});
+      required CrdtMergeContext mergeContext,
+      required int physicalClock});
 
   /// Creates the metadata triples for a local property value change.
   /// The returned graph may be empty if no metadata is needed.
@@ -48,6 +48,7 @@ abstract interface class CrdtType {
     required List<RdfObject> oldValues,
     required List<RdfObject> newValues,
     required CrdtMergeContext mergeContext,
+    required int physicalClock,
   });
 }
 
@@ -62,31 +63,35 @@ class LwwRegister implements CrdtType {
   bool get isSingleValueSupported => true;
 
   @override
-  Iterable<Node> initialValue(
-      {required IriTerm documentIri,
-      required RdfGraph appData,
-      required IdentifiedBlankNodes<IriTerm> blankNodes,
-      required RdfSubject subject,
-      required RdfPredicate predicate,
-      required List<RdfObject> values,
-      required CrdtMergeContext mergeContext}) {
+  Iterable<Node> initialValue({
+    required IriTerm documentIri,
+    required RdfGraph appData,
+    required IdentifiedBlankNodes<IriTerm> blankNodes,
+    required RdfSubject subject,
+    required RdfPredicate predicate,
+    required List<RdfObject> values,
+    required CrdtMergeContext mergeContext,
+    required int physicalClock,
+  }) {
     // No metadata needed for adding a LWW Register value
     return const <Node>[];
   }
 
   @override
-  Iterable<Node> localValueChange(
-      {required IriTerm documentIri,
-      required RdfGraph oldAppData,
-      required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
-      required RdfSubject oldSubject,
-      required RdfGraph newAppData,
-      required IdentifiedBlankNodes<IriTerm> newBlankNodes,
-      required RdfSubject newSubject,
-      required RdfPredicate predicate,
-      required List<RdfObject> oldValues,
-      required List<RdfObject> newValues,
-      required CrdtMergeContext mergeContext}) {
+  Iterable<Node> localValueChange({
+    required IriTerm documentIri,
+    required RdfGraph oldAppData,
+    required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
+    required RdfSubject oldSubject,
+    required RdfGraph newAppData,
+    required IdentifiedBlankNodes<IriTerm> newBlankNodes,
+    required RdfSubject newSubject,
+    required RdfPredicate predicate,
+    required List<RdfObject> oldValues,
+    required List<RdfObject> newValues,
+    required CrdtMergeContext mergeContext,
+    required int physicalClock,
+  }) {
     // FIXME: what about the case when newValues is empty and oldValues is not? Do we need metadata for that?
     // No metadata needed for changing a LWW Register value - one will win based on the clock during merge, that is all
     return const <Node>[];
@@ -102,31 +107,35 @@ class Immutable implements CrdtType {
   bool get isSingleValueSupported => true;
 
   @override
-  Iterable<Node> initialValue(
-      {required IriTerm documentIri,
-      required RdfGraph appData,
-      required IdentifiedBlankNodes<IriTerm> blankNodes,
-      required RdfSubject subject,
-      required RdfPredicate predicate,
-      required List<RdfObject> values,
-      required CrdtMergeContext mergeContext}) {
+  Iterable<Node> initialValue({
+    required IriTerm documentIri,
+    required RdfGraph appData,
+    required IdentifiedBlankNodes<IriTerm> blankNodes,
+    required RdfSubject subject,
+    required RdfPredicate predicate,
+    required List<RdfObject> values,
+    required CrdtMergeContext mergeContext,
+    required int physicalClock,
+  }) {
     // No metadata needed
     return const <Node>[];
   }
 
   @override
-  Iterable<Node> localValueChange(
-      {required IriTerm documentIri,
-      required RdfGraph oldAppData,
-      required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
-      required RdfSubject oldSubject,
-      required RdfGraph newAppData,
-      required IdentifiedBlankNodes<IriTerm> newBlankNodes,
-      required RdfSubject newSubject,
-      required RdfPredicate predicate,
-      required List<RdfObject> oldValues,
-      required List<RdfObject> newValues,
-      required CrdtMergeContext mergeContext}) {
+  Iterable<Node> localValueChange({
+    required IriTerm documentIri,
+    required RdfGraph oldAppData,
+    required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
+    required RdfSubject oldSubject,
+    required RdfGraph newAppData,
+    required IdentifiedBlankNodes<IriTerm> newBlankNodes,
+    required RdfSubject newSubject,
+    required RdfPredicate predicate,
+    required List<RdfObject> oldValues,
+    required List<RdfObject> newValues,
+    required CrdtMergeContext mergeContext,
+    required int physicalClock,
+  }) {
     // No metadata needed for changing a Immutable value - there are not changes allowed.
     return const <Node>[];
   }
@@ -142,31 +151,35 @@ class FwwRegister implements CrdtType {
   bool get isSingleValueSupported => true;
 
   @override
-  Iterable<Node> initialValue(
-      {required IriTerm documentIri,
-      required RdfGraph appData,
-      required IdentifiedBlankNodes<IriTerm> blankNodes,
-      required RdfSubject subject,
-      required RdfPredicate predicate,
-      required List<RdfObject> values,
-      required CrdtMergeContext mergeContext}) {
+  Iterable<Node> initialValue({
+    required IriTerm documentIri,
+    required RdfGraph appData,
+    required IdentifiedBlankNodes<IriTerm> blankNodes,
+    required RdfSubject subject,
+    required RdfPredicate predicate,
+    required List<RdfObject> values,
+    required CrdtMergeContext mergeContext,
+    required int physicalClock,
+  }) {
     // No metadata needed for adding a FWW Register value
     return const <Node>[];
   }
 
   @override
-  Iterable<Node> localValueChange(
-      {required IriTerm documentIri,
-      required RdfGraph oldAppData,
-      required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
-      required RdfSubject oldSubject,
-      required RdfGraph newAppData,
-      required IdentifiedBlankNodes<IriTerm> newBlankNodes,
-      required RdfSubject newSubject,
-      required RdfPredicate predicate,
-      required List<RdfObject> oldValues,
-      required List<RdfObject> newValues,
-      required CrdtMergeContext mergeContext}) {
+  Iterable<Node> localValueChange({
+    required IriTerm documentIri,
+    required RdfGraph oldAppData,
+    required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
+    required RdfSubject oldSubject,
+    required RdfGraph newAppData,
+    required IdentifiedBlankNodes<IriTerm> newBlankNodes,
+    required RdfSubject newSubject,
+    required RdfPredicate predicate,
+    required List<RdfObject> oldValues,
+    required List<RdfObject> newValues,
+    required CrdtMergeContext mergeContext,
+    required int physicalClock,
+  }) {
     // FIXME: what about the case when newValues is empty and oldValues is not? Do we need metadata for that?
     // No metadata needed for changing a FWW Register value - one will win based on the clock during merge, that is all
     return const <Node>[];
@@ -175,10 +188,6 @@ class FwwRegister implements CrdtType {
 
 /// Observed-Remove Set for multi-value properties.
 class OrSet implements CrdtType {
-  final PhysicalTimestampFactory timestampFactory;
-
-  const OrSet(this.timestampFactory);
-
   @override
   IriTerm get iri => AlgoOR_Set.classIri;
 
@@ -192,7 +201,8 @@ class OrSet implements CrdtType {
       required RdfSubject subject,
       required RdfPredicate predicate,
       required List<RdfObject> values,
-      required CrdtMergeContext mergeContext}) {
+      required CrdtMergeContext mergeContext,
+      required int physicalClock}) {
     validateBlankNodeValues(values, blankNodes, "Or Set values");
     // No metadata needed for adding a OR Set value
     return const <Node>[];
@@ -221,7 +231,8 @@ class OrSet implements CrdtType {
       required RdfPredicate predicate,
       required List<RdfObject> oldValues,
       required List<RdfObject> newValues,
-      required CrdtMergeContext mergeContext}) {
+      required CrdtMergeContext mergeContext,
+      required int physicalClock}) {
     validateBlankNodeValues(newValues, newBlankNodes, "Or Set values");
     validateBlankNodeValues(oldValues, oldBlankNodes, "Old Or Set values");
     final identifiedNewValues =
@@ -234,8 +245,9 @@ class OrSet implements CrdtType {
     if (removedValues.isEmpty) {
       return const <Node>[];
     }
-    final deletionDate = timestampFactory();
-    final deletionDateTerm = LiteralTermExtensions.dateTime(deletionDate);
+    final deletionDate = physicalClock;
+    final deletionDateTerm =
+        LiteralTermExtensions.dateTimeFromMillisecondsSinceEpoch(deletionDate);
     return removedValues
         .expand((identifiedValue) => switch (identifiedValue) {
               IdentifiedBlankNodeSubject ibn => ibn.identifiers,
@@ -275,13 +287,12 @@ class CrdtTypeRegistry {
   CrdtTypeRegistry._(List<CrdtType> types)
       : _typesByIri = {for (var type in types) type.iri: type};
 
-  CrdtTypeRegistry.forStandardTypes(
-      {required PhysicalTimestampFactory physicalTimestampFactory})
+  CrdtTypeRegistry.forStandardTypes()
       : this._([
           LwwRegister(),
           FwwRegister(),
           Immutable(),
-          OrSet(physicalTimestampFactory),
+          OrSet(),
         ]);
 
   /// Get the CRDT type instance for the given IRI - fallbacks to LWW Register.

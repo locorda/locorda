@@ -4,9 +4,6 @@
 /// and ShardManager to create and maintain indices according to the specification.
 library;
 
-import 'dart:convert';
-
-import 'package:crypto/crypto.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
@@ -30,6 +27,7 @@ class IndexManager {
   final CrdtDocumentManager _documentManager;
   final IndexRdfGenerator _rdfGenerator;
   final IndexPropertyResolver _propertyResolver;
+  final Storage _storage;
   final SyncGraphConfig _config;
   final IriTerm _installationIri;
 
@@ -41,6 +39,7 @@ class IndexManager {
     required SyncGraphConfig config,
   })  : _documentManager = crdtDocumentManager,
         _rdfGenerator = rdfGenerator,
+        _storage = storage,
         _config = config,
         _propertyResolver = IndexPropertyResolver(storage: storage),
         _installationIri = installationIri;
@@ -250,21 +249,21 @@ class IndexManager {
   /// - [clockHash]: The clock hash from the saved CRDT document
   /// - [internalAppData]: The resource's semantic data (for extracting header properties)
   /// - [allShards]: All shard IRIs the resource currently belongs to (from idx:belongsToIndexShard)
-  Future<Map<IriTerm, DocumentSaveResult>> updateIndices(
+  Future<void> updateIndices(
     IriTerm type,
     IriTerm resourceIri,
     String clockHash,
     RdfGraph internalAppData,
     Iterable<IriTerm> allShards,
+    int physicalClock,
   ) async {
-    final updatedIndices = <IriTerm, DocumentSaveResult>{};
     // Process each shard the resource belongs to
     for (final shardIri in allShards) {
       final shardDocumentIri = shardIri.getDocumentIri();
       // Resolve which properties should be indexed for this shard
-      final (rootIri, indexedProperties) =
+      final (indexIri, indexedProperties) =
           await _propertyResolver.resolveIndexedProperties(shardDocumentIri);
-      if (rootIri == null) {
+      if (indexIri == null) {
         _log.warning(
             'Shard $shardDocumentIri has no associated index or template, skipping.');
         continue;
@@ -276,88 +275,25 @@ class IndexManager {
         propertiesToExtract: indexedProperties,
       );
 
-      // Generate entry graph for this resource
-      final (entryIri, entryGraph) = _generateIndexEntry(
-        shardDocumentIri: shardDocumentIri,
-        itemResourceIri: resourceIri,
+      // Serialize header properties to Turtle if present
+      String? headerPropertiesTurtle;
+      if (headerProperties != null) {
+        final headerGraph = RdfGraph.fromTriples(headerProperties.entries
+            .expand((e) => e.value.map((v) => Triple(resourceIri, e.key, v))));
+        headerPropertiesTurtle = turtle.encode(headerGraph);
+      }
+
+      // Save index entry to database
+      await _storage.saveIndexEntry(
+        shardIri: shardIri,
+        indexIri: indexIri,
+        resourceIri: resourceIri,
         clockHash: clockHash,
-        headerProperties: headerProperties,
+        headerProperties: headerPropertiesTurtle,
+        updatedAt: physicalClock,
+        ourPhysicalClock: physicalClock,
       );
-
-      // Save updated shard
-      // CrdtDocumentManager.patch() will automatically:
-      // 1. Load the existing shard document (if it exists)
-      // 2. Merge the entry graph with plain local data exchange:
-      //    - Add entry IRI to idx:containsEntry OR-Set if not exists
-      //    - Remove existing IRI subgraph
-      //    - Add new entry subgraph
-      // 3. Save the merged result, creating proper CRDT structures
-      final r = await _documentManager.patch(
-        IdxShard.classIri,
-        shardIri,
-        IdxShard.containsEntry,
-        (entryIri, entryGraph),
-      );
-      if (r != null) {
-        updatedIndices[rootIri] = r;
-      }
     }
-    return updatedIndices;
-  }
-
-  /// Generates RDF graph for an index entry.
-  ///
-  /// Creates a graph containing:
-  /// - Link from shard to entry (idx:containsEntry)
-  /// - Entry properties (idx:resource, crdt:clockHash, optional headers)
-  ///
-  /// All installations must generate identical fragments for the same resource
-  /// to ensure CRDT convergence. Uses MD5-based fragment generation as specified
-  /// in proposal 010-index-entry-iri-identification.md
-  Node _generateIndexEntry({
-    required IriTerm shardDocumentIri,
-    required IriTerm itemResourceIri,
-    required String clockHash,
-    Map<IriTerm, List<RdfObject>>? headerProperties,
-  }) {
-    // Generate deterministic fragment from resource IRI
-    final entryFragment = _generateEntryFragment(itemResourceIri);
-    final entryIri = IriTerm('${shardDocumentIri.value}#$entryFragment');
-
-    final triples = <Triple>[
-      // Entry properties
-      Triple(entryIri, IdxShardEntry.resource, itemResourceIri), // Immutable
-      Triple(
-        entryIri,
-        IdxShardEntry.crdtClockHash,
-        LiteralTerm(clockHash),
-      ), // LWW-Register
-    ];
-
-    // Optional header properties (all LWW-Register)
-    if (headerProperties != null) {
-      for (final entry in headerProperties.entries) {
-        triples.addMultiple(entryIri, entry.key, entry.value);
-      }
-    }
-
-    return (entryIri, triples.toRdfGraph());
-  }
-
-  /// Generates deterministic fragment identifier for index entry.
-  ///
-  /// Uses MD5 hash of resource IRI to ensure all installations
-  /// generate identical fragment identifiers for the same resource.
-  ///
-  /// This is a specification requirement (proposal 010) - all implementations
-  /// MUST use this exact algorithm for interoperability.
-  ///
-  /// Returns: `entry-{32-char-md5-hex}` (e.g., `entry-a1b2c3d4...`)
-  String _generateEntryFragment(IriTerm resourceIri) {
-    // Use full IRI value, not prefixed form
-    final bytes = utf8.encode(resourceIri.value);
-    final digest = md5.convert(bytes);
-    return 'entry-${digest.toString()}'; // Full 32-character hex string
   }
 
   /// Extracts header properties from resource data for specified properties.
@@ -431,11 +367,8 @@ class IndexManager {
   /// - [resourceIri]: The resource whose shard entries should be cleaned up
   /// - [crdtDocument]: The saved CRDT document containing potential tombstones
   /// - [documentIri]: The document IRI to search for tombstones
-  Future<void> removeTombstonedShardEntries(
-    IriTerm resourceIri,
-    RdfGraph crdtDocument,
-    IriTerm documentIri,
-  ) async {
+  Future<void> removeTombstonedShardEntries(IriTerm resourceIri,
+      RdfGraph crdtDocument, IriTerm documentIri, int ourPhysicalClock) async {
     // Find all reified statements with crdt:deletedAt for idx:belongsToIndexShard
     final reifiedStmts =
         crdtDocument.findTriples(predicate: Rdf.subject, object: documentIri);
@@ -486,21 +419,30 @@ class IndexManager {
         continue;
       }
 
-      _log.info(
-          'Removing entry for $resourceIri from tombstoned shard $shardIri');
+      _log.info('Marking entry for $resourceIri as deleted in shard $shardIri');
 
-      // Generate the entry IRI that should be removed
+      // Resolve index IRI for this shard
       final shardDocumentIri = shardIri.getDocumentIri();
-      final entryFragment = _generateEntryFragment(resourceIri);
-      final entryIri = IriTerm('${shardDocumentIri.value}#$entryFragment');
+      final (indexIri, _) =
+          await _propertyResolver.resolveIndexedProperties(shardDocumentIri);
 
-      // Use patch() with empty graph to remove the entry
-      // This signals removal, and patch() will create appropriate tombstones
-      await _documentManager.patch(
-        IdxShard.classIri,
-        shardIri,
-        IdxShard.containsEntry,
-        (entryIri, RdfGraphExtensions.empty),
+      if (indexIri == null) {
+        _log.warning(
+            'Cannot resolve index for shard $shardDocumentIri, skipping tombstone');
+        continue;
+      }
+
+      // Mark entry as deleted in database
+      // We use empty clockHash and no headerProperties for deleted entries
+      await _storage.saveIndexEntry(
+        shardIri: shardIri,
+        indexIri: indexIri,
+        resourceIri: resourceIri,
+        clockHash: '', // Empty hash for deleted entries
+        headerProperties: null,
+        isDeleted: true,
+        ourPhysicalClock: ourPhysicalClock,
+        updatedAt: ourPhysicalClock,
       );
     }
   }

@@ -54,10 +54,39 @@
 - [x] Rename @PodResource and @PodSubResource annotations to something more appropriate, like @LocordaResource and @LocordaSubResource
  
 ### Priority 3: Index Processing
-- [ ] Complete index subscription handling (full and group)
+- [x] Implement index entry hydration (hydrateStream for indices)
+  - Loads shard documents and extracts index entries
+  - Provides lightweight resource views with indexed properties only
+- [x] Complete index subscription handling (full and group)
   - Complete group subscription logic
   - Currently stubbed in `configureGroupIndexSubscription()`
   - Needed for efficient data organization and sync
+- [ ] Optimize index entry hydration performance
+  - **Entry-level change tracking:** Currently, when a single entry in a shard changes,
+    ALL entries in that shard (hundreds to thousands) are re-emitted to the application.
+    This is a trade-off for implementation simplicity and cursor robustness.
+  - **Possible optimizations:**
+    - Track entry-specific cursors within shards
+    - Batch entry updates within shard updates
+    - Use diff algorithms to detect changed entries only
+    - Add entry-level batching respecting initialBatchSize
+  - **Note:** Current implementation is acceptable for typical use cases but may become
+    noticeable in high-frequency update scenarios
+- [ ] Implement proper index entry deletion tracking
+  - **Problem:** When an entry is removed from a shard's `idx:containsEntry` OR-Set,
+    it currently just stops appearing in updates without explicit deletion notification.
+  - **Challenges:**
+    - Tombstones are for entries, not for the referenced resources
+    - Tombstones don't carry the `idx:resource` property by default
+    - Entries can "disappear" due to re-sharding (moving to different shard), not true deletion
+  - **Possible solutions:**
+    - Enhance tombstone structure to include `idx:resource` reference
+    - Track entry removals separately from resource deletions
+    - Distinguish between "entry removed due to re-sharding" vs "resource deleted"
+    - Maintain a separate deletion stream based on tombstone analysis
+    - Include both the resource predicate and some special deletion marker in the entry tombstone to mark this as the tombstone for deleting the resource, not only the shard entry
+  - **Impact:** Applications currently need to handle missing entries gracefully,
+    treating absence as implicit deletion. Explicit deletion events would improve UX.
 
 ### Priority 4: Backend Implementations
 - [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
@@ -84,6 +113,7 @@
   - Increment shard number for overflow
   - Update shardTotal in index/template
   - Migrate entries to correct shards based on new distribution
+- [ ] Use drift storage for locorda graph sync test
 
 ## Later
 - [ ] Implement namespace in Resource Identity => maybe later

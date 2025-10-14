@@ -15,10 +15,7 @@ import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:locorda_core/src/util/lru_cache.dart';
 import 'package:rdf_core/rdf_core.dart';
 
-typedef IndexProperties = (
-  IriTerm? indexOrTemplateIri,
-  Set<IriTerm> properties
-);
+typedef IndexProperties = (IriTerm? indexIri, Set<IriTerm> properties);
 
 /// Resolves which properties should be indexed for a given shard.
 ///
@@ -77,17 +74,17 @@ class IndexPropertyResolver {
     final shardResourceIri = IriTerm('${shardDocumentIri.value}#shard');
 
     // 2. Get parent index IRI via idx:isShardOf
-    final parentIndexIri = shardGraph.findSingleObject<IriTerm>(
+    final indexIri = shardGraph.findSingleObject<IriTerm>(
       shardResourceIri,
       IdxShard.isShardOf,
     );
 
-    if (parentIndexIri == null) {
+    if (indexIri == null) {
       return (null, const <IriTerm>{});
     }
 
     // 3. Load parent index document
-    final parentIndexDocumentIri = parentIndexIri.getDocumentIri();
+    final parentIndexDocumentIri = indexIri.getDocumentIri();
     final indexDoc = await _storage.getDocument(parentIndexDocumentIri);
     if (indexDoc == null) {
       return (null, const <IriTerm>{});
@@ -97,17 +94,17 @@ class IndexPropertyResolver {
 
     // 4. Check if this is a GroupIndex that needs template resolution
     final indexTypes = indexGraph.getMultiValueObjects<IriTerm>(
-      parentIndexIri,
+      indexIri,
       Rdf.type,
     );
 
-    IriTerm effectiveIndexIri = parentIndexIri;
-    RdfGraph effectiveIndexGraph = indexGraph;
+    IriTerm indexOrTemplateIri = indexIri;
+    RdfGraph indexOrTemplateGraph = indexGraph;
 
     if (indexTypes.contains(IdxGroupIndex.classIri)) {
       // Follow idx:basedOn to get template
       final templateIri = indexGraph.findSingleObject<IriTerm>(
-        parentIndexIri,
+        indexIri,
         IdxGroupIndex.basedOn,
       );
 
@@ -115,19 +112,19 @@ class IndexPropertyResolver {
         final templateDocumentIri = templateIri.getDocumentIri();
         final templateDoc = await _storage.getDocument(templateDocumentIri);
         if (templateDoc != null) {
-          effectiveIndexIri = templateIri;
-          effectiveIndexGraph = templateDoc.document;
+          indexOrTemplateIri = templateIri;
+          indexOrTemplateGraph = templateDoc.document;
         }
       }
     }
 
     // 5. Extract idx:indexedProperty list
     final properties = _extractIndexedProperties(
-      effectiveIndexGraph,
-      effectiveIndexIri,
+      indexOrTemplateGraph,
+      indexOrTemplateIri,
     );
 
-    return (effectiveIndexIri, properties);
+    return (indexIri, properties);
   }
 
   /// Extracts property IRIs from idx:indexedProperty blank nodes.

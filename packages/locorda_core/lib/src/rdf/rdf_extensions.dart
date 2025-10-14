@@ -188,6 +188,7 @@ extension LiteralTermExtensions on LiteralTerm {
       int millisecondsSinceEpoch) {
     return LiteralTerm(
         DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch)
+            .toUtc()
             .toIso8601String(),
         datatype: Xsd.dateTime);
   }

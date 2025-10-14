@@ -13,6 +13,15 @@ mixin _$SyncPropertyChangeDaoMixin on DatabaseAccessor<SyncDatabase> {
   $SyncPropertyChangesTable get syncPropertyChanges =>
       attachedDatabase.syncPropertyChanges;
 }
+mixin _$IndexDaoMixin on DatabaseAccessor<SyncDatabase> {
+  $SyncIrisTable get syncIris => attachedDatabase.syncIris;
+  $IndexEntriesTable get indexEntries => attachedDatabase.indexEntries;
+  $GroupIndexSubscriptionsTable get groupIndexSubscriptions =>
+      attachedDatabase.groupIndexSubscriptions;
+  $IndexIriIdSetVersionsTable get indexIriIdSetVersions =>
+      attachedDatabase.indexIriIdSetVersions;
+  $SyncMetadataTable get syncMetadata => attachedDatabase.syncMetadata;
+}
 
 class $SyncIrisTable extends SyncIris with TableInfo<$SyncIrisTable, SyncIri> {
   @override
@@ -1137,6 +1146,1204 @@ class SyncSettingsCompanion extends UpdateCompanion<SyncSetting> {
   }
 }
 
+class $IndexEntriesTable extends IndexEntries
+    with TableInfo<$IndexEntriesTable, IndexEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IndexEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _shardIriMeta =
+      const VerificationMeta('shardIri');
+  @override
+  late final GeneratedColumn<int> shardIri = GeneratedColumn<int>(
+      'shard_iri', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+  static const VerificationMeta _indexIriIdMeta =
+      const VerificationMeta('indexIriId');
+  @override
+  late final GeneratedColumn<int> indexIriId = GeneratedColumn<int>(
+      'index_iri_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+  static const VerificationMeta _resourceIriIdMeta =
+      const VerificationMeta('resourceIriId');
+  @override
+  late final GeneratedColumn<int> resourceIriId = GeneratedColumn<int>(
+      'resource_iri_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+  static const VerificationMeta _clockHashMeta =
+      const VerificationMeta('clockHash');
+  @override
+  late final GeneratedColumn<String> clockHash = GeneratedColumn<String>(
+      'clock_hash', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _headerPropertiesMeta =
+      const VerificationMeta('headerProperties');
+  @override
+  late final GeneratedColumn<String> headerProperties = GeneratedColumn<String>(
+      'header_properties', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _ourPhysicalClockMeta =
+      const VerificationMeta('ourPhysicalClock');
+  @override
+  late final GeneratedColumn<int> ourPhysicalClock = GeneratedColumn<int>(
+      'our_physical_clock', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        shardIri,
+        indexIriId,
+        resourceIriId,
+        clockHash,
+        headerProperties,
+        updatedAt,
+        ourPhysicalClock,
+        isDeleted
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'index_entries';
+  @override
+  VerificationContext validateIntegrity(Insertable<IndexEntry> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('shard_iri')) {
+      context.handle(_shardIriMeta,
+          shardIri.isAcceptableOrUnknown(data['shard_iri']!, _shardIriMeta));
+    } else if (isInserting) {
+      context.missing(_shardIriMeta);
+    }
+    if (data.containsKey('index_iri_id')) {
+      context.handle(
+          _indexIriIdMeta,
+          indexIriId.isAcceptableOrUnknown(
+              data['index_iri_id']!, _indexIriIdMeta));
+    } else if (isInserting) {
+      context.missing(_indexIriIdMeta);
+    }
+    if (data.containsKey('resource_iri_id')) {
+      context.handle(
+          _resourceIriIdMeta,
+          resourceIriId.isAcceptableOrUnknown(
+              data['resource_iri_id']!, _resourceIriIdMeta));
+    } else if (isInserting) {
+      context.missing(_resourceIriIdMeta);
+    }
+    if (data.containsKey('clock_hash')) {
+      context.handle(_clockHashMeta,
+          clockHash.isAcceptableOrUnknown(data['clock_hash']!, _clockHashMeta));
+    } else if (isInserting) {
+      context.missing(_clockHashMeta);
+    }
+    if (data.containsKey('header_properties')) {
+      context.handle(
+          _headerPropertiesMeta,
+          headerProperties.isAcceptableOrUnknown(
+              data['header_properties']!, _headerPropertiesMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('our_physical_clock')) {
+      context.handle(
+          _ourPhysicalClockMeta,
+          ourPhysicalClock.isAcceptableOrUnknown(
+              data['our_physical_clock']!, _ourPhysicalClockMeta));
+    } else if (isInserting) {
+      context.missing(_ourPhysicalClockMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {shardIri, resourceIriId};
+  @override
+  IndexEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IndexEntry(
+      shardIri: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}shard_iri'])!,
+      indexIriId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}index_iri_id'])!,
+      resourceIriId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}resource_iri_id'])!,
+      clockHash: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}clock_hash'])!,
+      headerProperties: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}header_properties']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      ourPhysicalClock: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}our_physical_clock'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+    );
+  }
+
+  @override
+  $IndexEntriesTable createAlias(String alias) {
+    return $IndexEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class IndexEntry extends DataClass implements Insertable<IndexEntry> {
+  final int shardIri;
+
+  /// Direct reference to the index this entry belongs to.
+  /// This is immutable - an entry never changes which index it belongs to.
+  final int indexIriId;
+
+  /// The resource IRI this entry points to (e.g., /notes/note-123#note)
+  final int resourceIriId;
+
+  /// Clock hash from the resource's CRDT metadata
+  final String clockHash;
+
+  /// application specific RDF payload in turtle format
+  final String? headerProperties;
+
+  /// When this entry was last updated (milliseconds since epoch)
+  final int updatedAt;
+
+  /// Physical clock for cursor-based pagination
+  final int ourPhysicalClock;
+
+  /// Tombstone marker - true if entry was removed from index
+  final bool isDeleted;
+  const IndexEntry(
+      {required this.shardIri,
+      required this.indexIriId,
+      required this.resourceIriId,
+      required this.clockHash,
+      this.headerProperties,
+      required this.updatedAt,
+      required this.ourPhysicalClock,
+      required this.isDeleted});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['shard_iri'] = Variable<int>(shardIri);
+    map['index_iri_id'] = Variable<int>(indexIriId);
+    map['resource_iri_id'] = Variable<int>(resourceIriId);
+    map['clock_hash'] = Variable<String>(clockHash);
+    if (!nullToAbsent || headerProperties != null) {
+      map['header_properties'] = Variable<String>(headerProperties);
+    }
+    map['updated_at'] = Variable<int>(updatedAt);
+    map['our_physical_clock'] = Variable<int>(ourPhysicalClock);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  IndexEntriesCompanion toCompanion(bool nullToAbsent) {
+    return IndexEntriesCompanion(
+      shardIri: Value(shardIri),
+      indexIriId: Value(indexIriId),
+      resourceIriId: Value(resourceIriId),
+      clockHash: Value(clockHash),
+      headerProperties: headerProperties == null && nullToAbsent
+          ? const Value.absent()
+          : Value(headerProperties),
+      updatedAt: Value(updatedAt),
+      ourPhysicalClock: Value(ourPhysicalClock),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory IndexEntry.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IndexEntry(
+      shardIri: serializer.fromJson<int>(json['shardIri']),
+      indexIriId: serializer.fromJson<int>(json['indexIriId']),
+      resourceIriId: serializer.fromJson<int>(json['resourceIriId']),
+      clockHash: serializer.fromJson<String>(json['clockHash']),
+      headerProperties: serializer.fromJson<String?>(json['headerProperties']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      ourPhysicalClock: serializer.fromJson<int>(json['ourPhysicalClock']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'shardIri': serializer.toJson<int>(shardIri),
+      'indexIriId': serializer.toJson<int>(indexIriId),
+      'resourceIriId': serializer.toJson<int>(resourceIriId),
+      'clockHash': serializer.toJson<String>(clockHash),
+      'headerProperties': serializer.toJson<String?>(headerProperties),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'ourPhysicalClock': serializer.toJson<int>(ourPhysicalClock),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  IndexEntry copyWith(
+          {int? shardIri,
+          int? indexIriId,
+          int? resourceIriId,
+          String? clockHash,
+          Value<String?> headerProperties = const Value.absent(),
+          int? updatedAt,
+          int? ourPhysicalClock,
+          bool? isDeleted}) =>
+      IndexEntry(
+        shardIri: shardIri ?? this.shardIri,
+        indexIriId: indexIriId ?? this.indexIriId,
+        resourceIriId: resourceIriId ?? this.resourceIriId,
+        clockHash: clockHash ?? this.clockHash,
+        headerProperties: headerProperties.present
+            ? headerProperties.value
+            : this.headerProperties,
+        updatedAt: updatedAt ?? this.updatedAt,
+        ourPhysicalClock: ourPhysicalClock ?? this.ourPhysicalClock,
+        isDeleted: isDeleted ?? this.isDeleted,
+      );
+  IndexEntry copyWithCompanion(IndexEntriesCompanion data) {
+    return IndexEntry(
+      shardIri: data.shardIri.present ? data.shardIri.value : this.shardIri,
+      indexIriId:
+          data.indexIriId.present ? data.indexIriId.value : this.indexIriId,
+      resourceIriId: data.resourceIriId.present
+          ? data.resourceIriId.value
+          : this.resourceIriId,
+      clockHash: data.clockHash.present ? data.clockHash.value : this.clockHash,
+      headerProperties: data.headerProperties.present
+          ? data.headerProperties.value
+          : this.headerProperties,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      ourPhysicalClock: data.ourPhysicalClock.present
+          ? data.ourPhysicalClock.value
+          : this.ourPhysicalClock,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IndexEntry(')
+          ..write('shardIri: $shardIri, ')
+          ..write('indexIriId: $indexIriId, ')
+          ..write('resourceIriId: $resourceIriId, ')
+          ..write('clockHash: $clockHash, ')
+          ..write('headerProperties: $headerProperties, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('ourPhysicalClock: $ourPhysicalClock, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(shardIri, indexIriId, resourceIriId,
+      clockHash, headerProperties, updatedAt, ourPhysicalClock, isDeleted);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IndexEntry &&
+          other.shardIri == this.shardIri &&
+          other.indexIriId == this.indexIriId &&
+          other.resourceIriId == this.resourceIriId &&
+          other.clockHash == this.clockHash &&
+          other.headerProperties == this.headerProperties &&
+          other.updatedAt == this.updatedAt &&
+          other.ourPhysicalClock == this.ourPhysicalClock &&
+          other.isDeleted == this.isDeleted);
+}
+
+class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
+  final Value<int> shardIri;
+  final Value<int> indexIriId;
+  final Value<int> resourceIriId;
+  final Value<String> clockHash;
+  final Value<String?> headerProperties;
+  final Value<int> updatedAt;
+  final Value<int> ourPhysicalClock;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const IndexEntriesCompanion({
+    this.shardIri = const Value.absent(),
+    this.indexIriId = const Value.absent(),
+    this.resourceIriId = const Value.absent(),
+    this.clockHash = const Value.absent(),
+    this.headerProperties = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.ourPhysicalClock = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IndexEntriesCompanion.insert({
+    required int shardIri,
+    required int indexIriId,
+    required int resourceIriId,
+    required String clockHash,
+    this.headerProperties = const Value.absent(),
+    required int updatedAt,
+    required int ourPhysicalClock,
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : shardIri = Value(shardIri),
+        indexIriId = Value(indexIriId),
+        resourceIriId = Value(resourceIriId),
+        clockHash = Value(clockHash),
+        updatedAt = Value(updatedAt),
+        ourPhysicalClock = Value(ourPhysicalClock);
+  static Insertable<IndexEntry> custom({
+    Expression<int>? shardIri,
+    Expression<int>? indexIriId,
+    Expression<int>? resourceIriId,
+    Expression<String>? clockHash,
+    Expression<String>? headerProperties,
+    Expression<int>? updatedAt,
+    Expression<int>? ourPhysicalClock,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (shardIri != null) 'shard_iri': shardIri,
+      if (indexIriId != null) 'index_iri_id': indexIriId,
+      if (resourceIriId != null) 'resource_iri_id': resourceIriId,
+      if (clockHash != null) 'clock_hash': clockHash,
+      if (headerProperties != null) 'header_properties': headerProperties,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (ourPhysicalClock != null) 'our_physical_clock': ourPhysicalClock,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IndexEntriesCompanion copyWith(
+      {Value<int>? shardIri,
+      Value<int>? indexIriId,
+      Value<int>? resourceIriId,
+      Value<String>? clockHash,
+      Value<String?>? headerProperties,
+      Value<int>? updatedAt,
+      Value<int>? ourPhysicalClock,
+      Value<bool>? isDeleted,
+      Value<int>? rowid}) {
+    return IndexEntriesCompanion(
+      shardIri: shardIri ?? this.shardIri,
+      indexIriId: indexIriId ?? this.indexIriId,
+      resourceIriId: resourceIriId ?? this.resourceIriId,
+      clockHash: clockHash ?? this.clockHash,
+      headerProperties: headerProperties ?? this.headerProperties,
+      updatedAt: updatedAt ?? this.updatedAt,
+      ourPhysicalClock: ourPhysicalClock ?? this.ourPhysicalClock,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (shardIri.present) {
+      map['shard_iri'] = Variable<int>(shardIri.value);
+    }
+    if (indexIriId.present) {
+      map['index_iri_id'] = Variable<int>(indexIriId.value);
+    }
+    if (resourceIriId.present) {
+      map['resource_iri_id'] = Variable<int>(resourceIriId.value);
+    }
+    if (clockHash.present) {
+      map['clock_hash'] = Variable<String>(clockHash.value);
+    }
+    if (headerProperties.present) {
+      map['header_properties'] = Variable<String>(headerProperties.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (ourPhysicalClock.present) {
+      map['our_physical_clock'] = Variable<int>(ourPhysicalClock.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IndexEntriesCompanion(')
+          ..write('shardIri: $shardIri, ')
+          ..write('indexIriId: $indexIriId, ')
+          ..write('resourceIriId: $resourceIriId, ')
+          ..write('clockHash: $clockHash, ')
+          ..write('headerProperties: $headerProperties, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('ourPhysicalClock: $ourPhysicalClock, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $GroupIndexSubscriptionsTable extends GroupIndexSubscriptions
+    with TableInfo<$GroupIndexSubscriptionsTable, GroupIndexSubscription> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroupIndexSubscriptionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _groupIndexIriIdMeta =
+      const VerificationMeta('groupIndexIriId');
+  @override
+  late final GeneratedColumn<int> groupIndexIriId = GeneratedColumn<int>(
+      'group_index_iri_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+  static const VerificationMeta _groupIndexTemplateIriIdMeta =
+      const VerificationMeta('groupIndexTemplateIriId');
+  @override
+  late final GeneratedColumn<int> groupIndexTemplateIriId =
+      GeneratedColumn<int>('group_index_template_iri_id', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: true,
+          defaultConstraints:
+              GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+  static const VerificationMeta _itemFetchPolicyMeta =
+      const VerificationMeta('itemFetchPolicy');
+  @override
+  late final GeneratedColumn<String> itemFetchPolicy = GeneratedColumn<String>(
+      'item_fetch_policy', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [groupIndexIriId, groupIndexTemplateIriId, itemFetchPolicy, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'group_index_subscriptions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<GroupIndexSubscription> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('group_index_iri_id')) {
+      context.handle(
+          _groupIndexIriIdMeta,
+          groupIndexIriId.isAcceptableOrUnknown(
+              data['group_index_iri_id']!, _groupIndexIriIdMeta));
+    }
+    if (data.containsKey('group_index_template_iri_id')) {
+      context.handle(
+          _groupIndexTemplateIriIdMeta,
+          groupIndexTemplateIriId.isAcceptableOrUnknown(
+              data['group_index_template_iri_id']!,
+              _groupIndexTemplateIriIdMeta));
+    } else if (isInserting) {
+      context.missing(_groupIndexTemplateIriIdMeta);
+    }
+    if (data.containsKey('item_fetch_policy')) {
+      context.handle(
+          _itemFetchPolicyMeta,
+          itemFetchPolicy.isAcceptableOrUnknown(
+              data['item_fetch_policy']!, _itemFetchPolicyMeta));
+    } else if (isInserting) {
+      context.missing(_itemFetchPolicyMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {groupIndexIriId};
+  @override
+  GroupIndexSubscription map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroupIndexSubscription(
+      groupIndexIriId: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}group_index_iri_id'])!,
+      groupIndexTemplateIriId: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}group_index_template_iri_id'])!,
+      itemFetchPolicy: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}item_fetch_policy'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $GroupIndexSubscriptionsTable createAlias(String alias) {
+    return $GroupIndexSubscriptionsTable(attachedDatabase, alias);
+  }
+}
+
+class GroupIndexSubscription extends DataClass
+    implements Insertable<GroupIndexSubscription> {
+  final int groupIndexIriId;
+  final int groupIndexTemplateIriId;
+
+  /// Fetch policy: 'onRequest' or 'prefetch'
+  final String itemFetchPolicy;
+
+  /// Timestamp when this subscription was created (milliseconds since epoch)
+  final int createdAt;
+  const GroupIndexSubscription(
+      {required this.groupIndexIriId,
+      required this.groupIndexTemplateIriId,
+      required this.itemFetchPolicy,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['group_index_iri_id'] = Variable<int>(groupIndexIriId);
+    map['group_index_template_iri_id'] = Variable<int>(groupIndexTemplateIriId);
+    map['item_fetch_policy'] = Variable<String>(itemFetchPolicy);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  GroupIndexSubscriptionsCompanion toCompanion(bool nullToAbsent) {
+    return GroupIndexSubscriptionsCompanion(
+      groupIndexIriId: Value(groupIndexIriId),
+      groupIndexTemplateIriId: Value(groupIndexTemplateIriId),
+      itemFetchPolicy: Value(itemFetchPolicy),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory GroupIndexSubscription.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroupIndexSubscription(
+      groupIndexIriId: serializer.fromJson<int>(json['groupIndexIriId']),
+      groupIndexTemplateIriId:
+          serializer.fromJson<int>(json['groupIndexTemplateIriId']),
+      itemFetchPolicy: serializer.fromJson<String>(json['itemFetchPolicy']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'groupIndexIriId': serializer.toJson<int>(groupIndexIriId),
+      'groupIndexTemplateIriId':
+          serializer.toJson<int>(groupIndexTemplateIriId),
+      'itemFetchPolicy': serializer.toJson<String>(itemFetchPolicy),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  GroupIndexSubscription copyWith(
+          {int? groupIndexIriId,
+          int? groupIndexTemplateIriId,
+          String? itemFetchPolicy,
+          int? createdAt}) =>
+      GroupIndexSubscription(
+        groupIndexIriId: groupIndexIriId ?? this.groupIndexIriId,
+        groupIndexTemplateIriId:
+            groupIndexTemplateIriId ?? this.groupIndexTemplateIriId,
+        itemFetchPolicy: itemFetchPolicy ?? this.itemFetchPolicy,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  GroupIndexSubscription copyWithCompanion(
+      GroupIndexSubscriptionsCompanion data) {
+    return GroupIndexSubscription(
+      groupIndexIriId: data.groupIndexIriId.present
+          ? data.groupIndexIriId.value
+          : this.groupIndexIriId,
+      groupIndexTemplateIriId: data.groupIndexTemplateIriId.present
+          ? data.groupIndexTemplateIriId.value
+          : this.groupIndexTemplateIriId,
+      itemFetchPolicy: data.itemFetchPolicy.present
+          ? data.itemFetchPolicy.value
+          : this.itemFetchPolicy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupIndexSubscription(')
+          ..write('groupIndexIriId: $groupIndexIriId, ')
+          ..write('groupIndexTemplateIriId: $groupIndexTemplateIriId, ')
+          ..write('itemFetchPolicy: $itemFetchPolicy, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      groupIndexIriId, groupIndexTemplateIriId, itemFetchPolicy, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroupIndexSubscription &&
+          other.groupIndexIriId == this.groupIndexIriId &&
+          other.groupIndexTemplateIriId == this.groupIndexTemplateIriId &&
+          other.itemFetchPolicy == this.itemFetchPolicy &&
+          other.createdAt == this.createdAt);
+}
+
+class GroupIndexSubscriptionsCompanion
+    extends UpdateCompanion<GroupIndexSubscription> {
+  final Value<int> groupIndexIriId;
+  final Value<int> groupIndexTemplateIriId;
+  final Value<String> itemFetchPolicy;
+  final Value<int> createdAt;
+  const GroupIndexSubscriptionsCompanion({
+    this.groupIndexIriId = const Value.absent(),
+    this.groupIndexTemplateIriId = const Value.absent(),
+    this.itemFetchPolicy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  GroupIndexSubscriptionsCompanion.insert({
+    this.groupIndexIriId = const Value.absent(),
+    required int groupIndexTemplateIriId,
+    required String itemFetchPolicy,
+    required int createdAt,
+  })  : groupIndexTemplateIriId = Value(groupIndexTemplateIriId),
+        itemFetchPolicy = Value(itemFetchPolicy),
+        createdAt = Value(createdAt);
+  static Insertable<GroupIndexSubscription> custom({
+    Expression<int>? groupIndexIriId,
+    Expression<int>? groupIndexTemplateIriId,
+    Expression<String>? itemFetchPolicy,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (groupIndexIriId != null) 'group_index_iri_id': groupIndexIriId,
+      if (groupIndexTemplateIriId != null)
+        'group_index_template_iri_id': groupIndexTemplateIriId,
+      if (itemFetchPolicy != null) 'item_fetch_policy': itemFetchPolicy,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  GroupIndexSubscriptionsCompanion copyWith(
+      {Value<int>? groupIndexIriId,
+      Value<int>? groupIndexTemplateIriId,
+      Value<String>? itemFetchPolicy,
+      Value<int>? createdAt}) {
+    return GroupIndexSubscriptionsCompanion(
+      groupIndexIriId: groupIndexIriId ?? this.groupIndexIriId,
+      groupIndexTemplateIriId:
+          groupIndexTemplateIriId ?? this.groupIndexTemplateIriId,
+      itemFetchPolicy: itemFetchPolicy ?? this.itemFetchPolicy,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (groupIndexIriId.present) {
+      map['group_index_iri_id'] = Variable<int>(groupIndexIriId.value);
+    }
+    if (groupIndexTemplateIriId.present) {
+      map['group_index_template_iri_id'] =
+          Variable<int>(groupIndexTemplateIriId.value);
+    }
+    if (itemFetchPolicy.present) {
+      map['item_fetch_policy'] = Variable<String>(itemFetchPolicy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupIndexSubscriptionsCompanion(')
+          ..write('groupIndexIriId: $groupIndexIriId, ')
+          ..write('groupIndexTemplateIriId: $groupIndexTemplateIriId, ')
+          ..write('itemFetchPolicy: $itemFetchPolicy, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $IndexIriIdSetVersionsTable extends IndexIriIdSetVersions
+    with TableInfo<$IndexIriIdSetVersionsTable, IndexIriIdSetVersion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IndexIriIdSetVersionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _indexIriIdsMeta =
+      const VerificationMeta('indexIriIds');
+  @override
+  late final GeneratedColumn<String> indexIriIds = GeneratedColumn<String>(
+      'index_iri_ids', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [id, indexIriIds, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'index_iri_id_set_versions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<IndexIriIdSetVersion> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('index_iri_ids')) {
+      context.handle(
+          _indexIriIdsMeta,
+          indexIriIds.isAcceptableOrUnknown(
+              data['index_iri_ids']!, _indexIriIdsMeta));
+    } else if (isInserting) {
+      context.missing(_indexIriIdsMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {indexIriIds},
+      ];
+  @override
+  IndexIriIdSetVersion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IndexIriIdSetVersion(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      indexIriIds: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}index_iri_ids'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $IndexIriIdSetVersionsTable createAlias(String alias) {
+    return $IndexIriIdSetVersionsTable(attachedDatabase, alias);
+  }
+}
+
+class IndexIriIdSetVersion extends DataClass
+    implements Insertable<IndexIriIdSetVersion> {
+  final int id;
+
+  /// Comma-separated, sorted list of index IRI IDs (e.g., "5,7,9")
+  /// Always sorted ascending to ensure consistent hashing
+  final String indexIriIds;
+
+  /// When this version was created (milliseconds since epoch)
+  final int createdAt;
+  const IndexIriIdSetVersion(
+      {required this.id, required this.indexIriIds, required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['index_iri_ids'] = Variable<String>(indexIriIds);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  IndexIriIdSetVersionsCompanion toCompanion(bool nullToAbsent) {
+    return IndexIriIdSetVersionsCompanion(
+      id: Value(id),
+      indexIriIds: Value(indexIriIds),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory IndexIriIdSetVersion.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IndexIriIdSetVersion(
+      id: serializer.fromJson<int>(json['id']),
+      indexIriIds: serializer.fromJson<String>(json['indexIriIds']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'indexIriIds': serializer.toJson<String>(indexIriIds),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  IndexIriIdSetVersion copyWith(
+          {int? id, String? indexIriIds, int? createdAt}) =>
+      IndexIriIdSetVersion(
+        id: id ?? this.id,
+        indexIriIds: indexIriIds ?? this.indexIriIds,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  IndexIriIdSetVersion copyWithCompanion(IndexIriIdSetVersionsCompanion data) {
+    return IndexIriIdSetVersion(
+      id: data.id.present ? data.id.value : this.id,
+      indexIriIds:
+          data.indexIriIds.present ? data.indexIriIds.value : this.indexIriIds,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IndexIriIdSetVersion(')
+          ..write('id: $id, ')
+          ..write('indexIriIds: $indexIriIds, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, indexIriIds, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IndexIriIdSetVersion &&
+          other.id == this.id &&
+          other.indexIriIds == this.indexIriIds &&
+          other.createdAt == this.createdAt);
+}
+
+class IndexIriIdSetVersionsCompanion
+    extends UpdateCompanion<IndexIriIdSetVersion> {
+  final Value<int> id;
+  final Value<String> indexIriIds;
+  final Value<int> createdAt;
+  const IndexIriIdSetVersionsCompanion({
+    this.id = const Value.absent(),
+    this.indexIriIds = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  IndexIriIdSetVersionsCompanion.insert({
+    this.id = const Value.absent(),
+    required String indexIriIds,
+    required int createdAt,
+  })  : indexIriIds = Value(indexIriIds),
+        createdAt = Value(createdAt);
+  static Insertable<IndexIriIdSetVersion> custom({
+    Expression<int>? id,
+    Expression<String>? indexIriIds,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (indexIriIds != null) 'index_iri_ids': indexIriIds,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  IndexIriIdSetVersionsCompanion copyWith(
+      {Value<int>? id, Value<String>? indexIriIds, Value<int>? createdAt}) {
+    return IndexIriIdSetVersionsCompanion(
+      id: id ?? this.id,
+      indexIriIds: indexIriIds ?? this.indexIriIds,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (indexIriIds.present) {
+      map['index_iri_ids'] = Variable<String>(indexIriIds.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IndexIriIdSetVersionsCompanion(')
+          ..write('id: $id, ')
+          ..write('indexIriIds: $indexIriIds, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncMetadataTable extends SyncMetadata
+    with TableInfo<$SyncMetadataTable, SyncMetadataData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncMetadataTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _lastShardSyncTimestampMeta =
+      const VerificationMeta('lastShardSyncTimestamp');
+  @override
+  late final GeneratedColumn<int> lastShardSyncTimestamp = GeneratedColumn<int>(
+      'last_shard_sync_timestamp', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns => [id, lastShardSyncTimestamp];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_metadata';
+  @override
+  VerificationContext validateIntegrity(Insertable<SyncMetadataData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('last_shard_sync_timestamp')) {
+      context.handle(
+          _lastShardSyncTimestampMeta,
+          lastShardSyncTimestamp.isAcceptableOrUnknown(
+              data['last_shard_sync_timestamp']!, _lastShardSyncTimestampMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncMetadataData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      lastShardSyncTimestamp: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}last_shard_sync_timestamp'])!,
+    );
+  }
+
+  @override
+  $SyncMetadataTable createAlias(String alias) {
+    return $SyncMetadataTable(attachedDatabase, alias);
+  }
+}
+
+class SyncMetadataData extends DataClass
+    implements Insertable<SyncMetadataData> {
+  /// Primary key (always 1 for singleton)
+  final int id;
+
+  /// Physical clock timestamp of last successful shard sync (milliseconds since epoch)
+  /// Used to find shards with entries newer than this timestamp
+  final int lastShardSyncTimestamp;
+  const SyncMetadataData(
+      {required this.id, required this.lastShardSyncTimestamp});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['last_shard_sync_timestamp'] = Variable<int>(lastShardSyncTimestamp);
+    return map;
+  }
+
+  SyncMetadataCompanion toCompanion(bool nullToAbsent) {
+    return SyncMetadataCompanion(
+      id: Value(id),
+      lastShardSyncTimestamp: Value(lastShardSyncTimestamp),
+    );
+  }
+
+  factory SyncMetadataData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncMetadataData(
+      id: serializer.fromJson<int>(json['id']),
+      lastShardSyncTimestamp:
+          serializer.fromJson<int>(json['lastShardSyncTimestamp']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'lastShardSyncTimestamp': serializer.toJson<int>(lastShardSyncTimestamp),
+    };
+  }
+
+  SyncMetadataData copyWith({int? id, int? lastShardSyncTimestamp}) =>
+      SyncMetadataData(
+        id: id ?? this.id,
+        lastShardSyncTimestamp:
+            lastShardSyncTimestamp ?? this.lastShardSyncTimestamp,
+      );
+  SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
+    return SyncMetadataData(
+      id: data.id.present ? data.id.value : this.id,
+      lastShardSyncTimestamp: data.lastShardSyncTimestamp.present
+          ? data.lastShardSyncTimestamp.value
+          : this.lastShardSyncTimestamp,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataData(')
+          ..write('id: $id, ')
+          ..write('lastShardSyncTimestamp: $lastShardSyncTimestamp')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, lastShardSyncTimestamp);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncMetadataData &&
+          other.id == this.id &&
+          other.lastShardSyncTimestamp == this.lastShardSyncTimestamp);
+}
+
+class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
+  final Value<int> id;
+  final Value<int> lastShardSyncTimestamp;
+  const SyncMetadataCompanion({
+    this.id = const Value.absent(),
+    this.lastShardSyncTimestamp = const Value.absent(),
+  });
+  SyncMetadataCompanion.insert({
+    this.id = const Value.absent(),
+    this.lastShardSyncTimestamp = const Value.absent(),
+  });
+  static Insertable<SyncMetadataData> custom({
+    Expression<int>? id,
+    Expression<int>? lastShardSyncTimestamp,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (lastShardSyncTimestamp != null)
+        'last_shard_sync_timestamp': lastShardSyncTimestamp,
+    });
+  }
+
+  SyncMetadataCompanion copyWith(
+      {Value<int>? id, Value<int>? lastShardSyncTimestamp}) {
+    return SyncMetadataCompanion(
+      id: id ?? this.id,
+      lastShardSyncTimestamp:
+          lastShardSyncTimestamp ?? this.lastShardSyncTimestamp,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (lastShardSyncTimestamp.present) {
+      map['last_shard_sync_timestamp'] =
+          Variable<int>(lastShardSyncTimestamp.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataCompanion(')
+          ..write('id: $id, ')
+          ..write('lastShardSyncTimestamp: $lastShardSyncTimestamp')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SyncDatabase extends GeneratedDatabase {
   _$SyncDatabase(QueryExecutor e) : super(e);
   $SyncDatabaseManager get managers => $SyncDatabaseManager(this);
@@ -1145,16 +2352,31 @@ abstract class _$SyncDatabase extends GeneratedDatabase {
   late final $SyncPropertyChangesTable syncPropertyChanges =
       $SyncPropertyChangesTable(this);
   late final $SyncSettingsTable syncSettings = $SyncSettingsTable(this);
+  late final $IndexEntriesTable indexEntries = $IndexEntriesTable(this);
+  late final $GroupIndexSubscriptionsTable groupIndexSubscriptions =
+      $GroupIndexSubscriptionsTable(this);
+  late final $IndexIriIdSetVersionsTable indexIriIdSetVersions =
+      $IndexIriIdSetVersionsTable(this);
+  late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
   late final SyncDocumentDao syncDocumentDao =
       SyncDocumentDao(this as SyncDatabase);
   late final SyncPropertyChangeDao syncPropertyChangeDao =
       SyncPropertyChangeDao(this as SyncDatabase);
+  late final IndexDao indexDao = IndexDao(this as SyncDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [syncIris, syncDocuments, syncPropertyChanges, syncSettings];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        syncIris,
+        syncDocuments,
+        syncPropertyChanges,
+        syncSettings,
+        indexEntries,
+        groupIndexSubscriptions,
+        indexIriIdSetVersions,
+        syncMetadata
+      ];
 }
 
 typedef $$SyncIrisTableCreateCompanionBuilder = SyncIrisCompanion Function({
@@ -1230,6 +2452,91 @@ final class $$SyncIrisTableReferences
         .filter((f) => f.propertyIriId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_propertyIriTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$IndexEntriesTable, List<IndexEntry>>
+      _shardIriTable(_$SyncDatabase db) => MultiTypedResultKey.fromTable(
+          db.indexEntries,
+          aliasName:
+              $_aliasNameGenerator(db.syncIris.id, db.indexEntries.shardIri));
+
+  $$IndexEntriesTableProcessedTableManager get shardIri {
+    final manager = $$IndexEntriesTableTableManager($_db, $_db.indexEntries)
+        .filter((f) => f.shardIri.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_shardIriTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$IndexEntriesTable, List<IndexEntry>>
+      _indexIriTable(_$SyncDatabase db) => MultiTypedResultKey.fromTable(
+          db.indexEntries,
+          aliasName:
+              $_aliasNameGenerator(db.syncIris.id, db.indexEntries.indexIriId));
+
+  $$IndexEntriesTableProcessedTableManager get indexIri {
+    final manager = $$IndexEntriesTableTableManager($_db, $_db.indexEntries)
+        .filter((f) => f.indexIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_indexIriTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$IndexEntriesTable, List<IndexEntry>>
+      _indexResourceIriTable(_$SyncDatabase db) =>
+          MultiTypedResultKey.fromTable(db.indexEntries,
+              aliasName: $_aliasNameGenerator(
+                  db.syncIris.id, db.indexEntries.resourceIriId));
+
+  $$IndexEntriesTableProcessedTableManager get indexResourceIri {
+    final manager = $$IndexEntriesTableTableManager($_db, $_db.indexEntries)
+        .filter((f) => f.resourceIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_indexResourceIriTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$GroupIndexSubscriptionsTable,
+      List<GroupIndexSubscription>> _groupIndexSubscriptionsRefsTable(
+          _$SyncDatabase db) =>
+      MultiTypedResultKey.fromTable(db.groupIndexSubscriptions,
+          aliasName: $_aliasNameGenerator(
+              db.syncIris.id, db.groupIndexSubscriptions.groupIndexIriId));
+
+  $$GroupIndexSubscriptionsTableProcessedTableManager
+      get groupIndexSubscriptionsRefs {
+    final manager = $$GroupIndexSubscriptionsTableTableManager(
+            $_db, $_db.groupIndexSubscriptions)
+        .filter(
+            (f) => f.groupIndexIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_groupIndexSubscriptionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$GroupIndexSubscriptionsTable,
+      List<GroupIndexSubscription>> _groupIndexTemplateIriIdTable(
+          _$SyncDatabase db) =>
+      MultiTypedResultKey.fromTable(db.groupIndexSubscriptions,
+          aliasName: $_aliasNameGenerator(db.syncIris.id,
+              db.groupIndexSubscriptions.groupIndexTemplateIriId));
+
+  $$GroupIndexSubscriptionsTableProcessedTableManager
+      get groupIndexTemplateIriId {
+    final manager = $$GroupIndexSubscriptionsTableTableManager(
+            $_db, $_db.groupIndexSubscriptions)
+        .filter((f) =>
+            f.groupIndexTemplateIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_groupIndexTemplateIriIdTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -1331,6 +2638,115 @@ class $$SyncIrisTableFilterComposer
               $removeJoinBuilderFromRootComposer:
                   $removeJoinBuilderFromRootComposer,
             ));
+    return f(composer);
+  }
+
+  Expression<bool> shardIri(
+      Expression<bool> Function($$IndexEntriesTableFilterComposer f) f) {
+    final $$IndexEntriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.indexEntries,
+        getReferencedColumn: (t) => t.shardIri,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IndexEntriesTableFilterComposer(
+              $db: $db,
+              $table: $db.indexEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> indexIri(
+      Expression<bool> Function($$IndexEntriesTableFilterComposer f) f) {
+    final $$IndexEntriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.indexEntries,
+        getReferencedColumn: (t) => t.indexIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IndexEntriesTableFilterComposer(
+              $db: $db,
+              $table: $db.indexEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> indexResourceIri(
+      Expression<bool> Function($$IndexEntriesTableFilterComposer f) f) {
+    final $$IndexEntriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.indexEntries,
+        getReferencedColumn: (t) => t.resourceIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IndexEntriesTableFilterComposer(
+              $db: $db,
+              $table: $db.indexEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> groupIndexSubscriptionsRefs(
+      Expression<bool> Function($$GroupIndexSubscriptionsTableFilterComposer f)
+          f) {
+    final $$GroupIndexSubscriptionsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.groupIndexSubscriptions,
+            getReferencedColumn: (t) => t.groupIndexIriId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$GroupIndexSubscriptionsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.groupIndexSubscriptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> groupIndexTemplateIriId(
+      Expression<bool> Function($$GroupIndexSubscriptionsTableFilterComposer f)
+          f) {
+    final $$GroupIndexSubscriptionsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.groupIndexSubscriptions,
+            getReferencedColumn: (t) => t.groupIndexTemplateIriId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$GroupIndexSubscriptionsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.groupIndexSubscriptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 }
@@ -1453,6 +2869,115 @@ class $$SyncIrisTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> shardIri<T extends Object>(
+      Expression<T> Function($$IndexEntriesTableAnnotationComposer a) f) {
+    final $$IndexEntriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.indexEntries,
+        getReferencedColumn: (t) => t.shardIri,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IndexEntriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.indexEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> indexIri<T extends Object>(
+      Expression<T> Function($$IndexEntriesTableAnnotationComposer a) f) {
+    final $$IndexEntriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.indexEntries,
+        getReferencedColumn: (t) => t.indexIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IndexEntriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.indexEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> indexResourceIri<T extends Object>(
+      Expression<T> Function($$IndexEntriesTableAnnotationComposer a) f) {
+    final $$IndexEntriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.indexEntries,
+        getReferencedColumn: (t) => t.resourceIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IndexEntriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.indexEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> groupIndexSubscriptionsRefs<T extends Object>(
+      Expression<T> Function($$GroupIndexSubscriptionsTableAnnotationComposer a)
+          f) {
+    final $$GroupIndexSubscriptionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.groupIndexSubscriptions,
+            getReferencedColumn: (t) => t.groupIndexIriId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$GroupIndexSubscriptionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.groupIndexSubscriptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> groupIndexTemplateIriId<T extends Object>(
+      Expression<T> Function($$GroupIndexSubscriptionsTableAnnotationComposer a)
+          f) {
+    final $$GroupIndexSubscriptionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.groupIndexSubscriptions,
+            getReferencedColumn: (t) => t.groupIndexTemplateIriId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$GroupIndexSubscriptionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.groupIndexSubscriptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$SyncIrisTableTableManager extends RootTableManager<
@@ -1470,7 +2995,12 @@ class $$SyncIrisTableTableManager extends RootTableManager<
         {bool syncDocumentsRefs,
         bool typeIri,
         bool resourceIri,
-        bool propertyIri})> {
+        bool propertyIri,
+        bool shardIri,
+        bool indexIri,
+        bool indexResourceIri,
+        bool groupIndexSubscriptionsRefs,
+        bool groupIndexTemplateIriId})> {
   $$SyncIrisTableTableManager(_$SyncDatabase db, $SyncIrisTable table)
       : super(TableManagerState(
           db: db,
@@ -1505,14 +3035,24 @@ class $$SyncIrisTableTableManager extends RootTableManager<
               {syncDocumentsRefs = false,
               typeIri = false,
               resourceIri = false,
-              propertyIri = false}) {
+              propertyIri = false,
+              shardIri = false,
+              indexIri = false,
+              indexResourceIri = false,
+              groupIndexSubscriptionsRefs = false,
+              groupIndexTemplateIriId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (syncDocumentsRefs) db.syncDocuments,
                 if (typeIri) db.syncDocuments,
                 if (resourceIri) db.syncPropertyChanges,
-                if (propertyIri) db.syncPropertyChanges
+                if (propertyIri) db.syncPropertyChanges,
+                if (shardIri) db.indexEntries,
+                if (indexIri) db.indexEntries,
+                if (indexResourceIri) db.indexEntries,
+                if (groupIndexSubscriptionsRefs) db.groupIndexSubscriptions,
+                if (groupIndexTemplateIriId) db.groupIndexSubscriptions
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -1567,6 +3107,69 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.propertyIriId == item.id),
+                        typedResults: items),
+                  if (shardIri)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            IndexEntry>(
+                        currentTable: table,
+                        referencedTable:
+                            $$SyncIrisTableReferences._shardIriTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0).shardIri,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.shardIri == item.id),
+                        typedResults: items),
+                  if (indexIri)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            IndexEntry>(
+                        currentTable: table,
+                        referencedTable:
+                            $$SyncIrisTableReferences._indexIriTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0).indexIri,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.indexIriId == item.id),
+                        typedResults: items),
+                  if (indexResourceIri)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            IndexEntry>(
+                        currentTable: table,
+                        referencedTable: $$SyncIrisTableReferences
+                            ._indexResourceIriTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0)
+                                .indexResourceIri,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.resourceIriId == item.id),
+                        typedResults: items),
+                  if (groupIndexSubscriptionsRefs)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            GroupIndexSubscription>(
+                        currentTable: table,
+                        referencedTable: $$SyncIrisTableReferences
+                            ._groupIndexSubscriptionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0)
+                                .groupIndexSubscriptionsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.groupIndexIriId == item.id),
+                        typedResults: items),
+                  if (groupIndexTemplateIriId)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            GroupIndexSubscription>(
+                        currentTable: table,
+                        referencedTable: $$SyncIrisTableReferences
+                            ._groupIndexTemplateIriIdTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0)
+                                .groupIndexTemplateIriId,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupIndexTemplateIriId == item.id),
                         typedResults: items)
                 ];
               },
@@ -1590,7 +3193,12 @@ typedef $$SyncIrisTableProcessedTableManager = ProcessedTableManager<
         {bool syncDocumentsRefs,
         bool typeIri,
         bool resourceIri,
-        bool propertyIri})>;
+        bool propertyIri,
+        bool shardIri,
+        bool indexIri,
+        bool indexResourceIri,
+        bool groupIndexSubscriptionsRefs,
+        bool groupIndexTemplateIriId})>;
 typedef $$SyncDocumentsTableCreateCompanionBuilder = SyncDocumentsCompanion
     Function({
   Value<int> id,
@@ -2626,6 +4234,1098 @@ typedef $$SyncSettingsTableProcessedTableManager = ProcessedTableManager<
     ),
     SyncSetting,
     PrefetchHooks Function()>;
+typedef $$IndexEntriesTableCreateCompanionBuilder = IndexEntriesCompanion
+    Function({
+  required int shardIri,
+  required int indexIriId,
+  required int resourceIriId,
+  required String clockHash,
+  Value<String?> headerProperties,
+  required int updatedAt,
+  required int ourPhysicalClock,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+typedef $$IndexEntriesTableUpdateCompanionBuilder = IndexEntriesCompanion
+    Function({
+  Value<int> shardIri,
+  Value<int> indexIriId,
+  Value<int> resourceIriId,
+  Value<String> clockHash,
+  Value<String?> headerProperties,
+  Value<int> updatedAt,
+  Value<int> ourPhysicalClock,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+
+final class $$IndexEntriesTableReferences
+    extends BaseReferences<_$SyncDatabase, $IndexEntriesTable, IndexEntry> {
+  $$IndexEntriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $SyncIrisTable _shardIriTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias(
+          $_aliasNameGenerator(db.indexEntries.shardIri, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get shardIri {
+    final $_column = $_itemColumn<int>('shard_iri')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_shardIriTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SyncIrisTable _indexIriIdTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias(
+          $_aliasNameGenerator(db.indexEntries.indexIriId, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get indexIriId {
+    final $_column = $_itemColumn<int>('index_iri_id')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_indexIriIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SyncIrisTable _resourceIriIdTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias(
+          $_aliasNameGenerator(db.indexEntries.resourceIriId, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get resourceIriId {
+    final $_column = $_itemColumn<int>('resource_iri_id')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_resourceIriIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$IndexEntriesTableFilterComposer
+    extends Composer<_$SyncDatabase, $IndexEntriesTable> {
+  $$IndexEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get clockHash => $composableBuilder(
+      column: $table.clockHash, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get headerProperties => $composableBuilder(
+      column: $table.headerProperties,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ourPhysicalClock => $composableBuilder(
+      column: $table.ourPhysicalClock,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  $$SyncIrisTableFilterComposer get shardIri {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shardIri,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableFilterComposer get indexIriId {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.indexIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableFilterComposer get resourceIriId {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.resourceIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$IndexEntriesTableOrderingComposer
+    extends Composer<_$SyncDatabase, $IndexEntriesTable> {
+  $$IndexEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get clockHash => $composableBuilder(
+      column: $table.clockHash, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get headerProperties => $composableBuilder(
+      column: $table.headerProperties,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ourPhysicalClock => $composableBuilder(
+      column: $table.ourPhysicalClock,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  $$SyncIrisTableOrderingComposer get shardIri {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shardIri,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableOrderingComposer get indexIriId {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.indexIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableOrderingComposer get resourceIriId {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.resourceIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$IndexEntriesTableAnnotationComposer
+    extends Composer<_$SyncDatabase, $IndexEntriesTable> {
+  $$IndexEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get clockHash =>
+      $composableBuilder(column: $table.clockHash, builder: (column) => column);
+
+  GeneratedColumn<String> get headerProperties => $composableBuilder(
+      column: $table.headerProperties, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get ourPhysicalClock => $composableBuilder(
+      column: $table.ourPhysicalClock, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  $$SyncIrisTableAnnotationComposer get shardIri {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shardIri,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableAnnotationComposer get indexIriId {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.indexIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableAnnotationComposer get resourceIriId {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.resourceIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$IndexEntriesTableTableManager extends RootTableManager<
+    _$SyncDatabase,
+    $IndexEntriesTable,
+    IndexEntry,
+    $$IndexEntriesTableFilterComposer,
+    $$IndexEntriesTableOrderingComposer,
+    $$IndexEntriesTableAnnotationComposer,
+    $$IndexEntriesTableCreateCompanionBuilder,
+    $$IndexEntriesTableUpdateCompanionBuilder,
+    (IndexEntry, $$IndexEntriesTableReferences),
+    IndexEntry,
+    PrefetchHooks Function(
+        {bool shardIri, bool indexIriId, bool resourceIriId})> {
+  $$IndexEntriesTableTableManager(_$SyncDatabase db, $IndexEntriesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IndexEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IndexEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IndexEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> shardIri = const Value.absent(),
+            Value<int> indexIriId = const Value.absent(),
+            Value<int> resourceIriId = const Value.absent(),
+            Value<String> clockHash = const Value.absent(),
+            Value<String?> headerProperties = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int> ourPhysicalClock = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              IndexEntriesCompanion(
+            shardIri: shardIri,
+            indexIriId: indexIriId,
+            resourceIriId: resourceIriId,
+            clockHash: clockHash,
+            headerProperties: headerProperties,
+            updatedAt: updatedAt,
+            ourPhysicalClock: ourPhysicalClock,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int shardIri,
+            required int indexIriId,
+            required int resourceIriId,
+            required String clockHash,
+            Value<String?> headerProperties = const Value.absent(),
+            required int updatedAt,
+            required int ourPhysicalClock,
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              IndexEntriesCompanion.insert(
+            shardIri: shardIri,
+            indexIriId: indexIriId,
+            resourceIriId: resourceIriId,
+            clockHash: clockHash,
+            headerProperties: headerProperties,
+            updatedAt: updatedAt,
+            ourPhysicalClock: ourPhysicalClock,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$IndexEntriesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {shardIri = false, indexIriId = false, resourceIriId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (shardIri) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.shardIri,
+                    referencedTable:
+                        $$IndexEntriesTableReferences._shardIriTable(db),
+                    referencedColumn:
+                        $$IndexEntriesTableReferences._shardIriTable(db).id,
+                  ) as T;
+                }
+                if (indexIriId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.indexIriId,
+                    referencedTable:
+                        $$IndexEntriesTableReferences._indexIriIdTable(db),
+                    referencedColumn:
+                        $$IndexEntriesTableReferences._indexIriIdTable(db).id,
+                  ) as T;
+                }
+                if (resourceIriId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.resourceIriId,
+                    referencedTable:
+                        $$IndexEntriesTableReferences._resourceIriIdTable(db),
+                    referencedColumn: $$IndexEntriesTableReferences
+                        ._resourceIriIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$IndexEntriesTableProcessedTableManager = ProcessedTableManager<
+    _$SyncDatabase,
+    $IndexEntriesTable,
+    IndexEntry,
+    $$IndexEntriesTableFilterComposer,
+    $$IndexEntriesTableOrderingComposer,
+    $$IndexEntriesTableAnnotationComposer,
+    $$IndexEntriesTableCreateCompanionBuilder,
+    $$IndexEntriesTableUpdateCompanionBuilder,
+    (IndexEntry, $$IndexEntriesTableReferences),
+    IndexEntry,
+    PrefetchHooks Function(
+        {bool shardIri, bool indexIriId, bool resourceIriId})>;
+typedef $$GroupIndexSubscriptionsTableCreateCompanionBuilder
+    = GroupIndexSubscriptionsCompanion Function({
+  Value<int> groupIndexIriId,
+  required int groupIndexTemplateIriId,
+  required String itemFetchPolicy,
+  required int createdAt,
+});
+typedef $$GroupIndexSubscriptionsTableUpdateCompanionBuilder
+    = GroupIndexSubscriptionsCompanion Function({
+  Value<int> groupIndexIriId,
+  Value<int> groupIndexTemplateIriId,
+  Value<String> itemFetchPolicy,
+  Value<int> createdAt,
+});
+
+final class $$GroupIndexSubscriptionsTableReferences extends BaseReferences<
+    _$SyncDatabase, $GroupIndexSubscriptionsTable, GroupIndexSubscription> {
+  $$GroupIndexSubscriptionsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SyncIrisTable _groupIndexIriIdTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias($_aliasNameGenerator(
+          db.groupIndexSubscriptions.groupIndexIriId, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get groupIndexIriId {
+    final $_column = $_itemColumn<int>('group_index_iri_id')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIndexIriIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SyncIrisTable _groupIndexTemplateIriIdTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias($_aliasNameGenerator(
+          db.groupIndexSubscriptions.groupIndexTemplateIriId, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get groupIndexTemplateIriId {
+    final $_column = $_itemColumn<int>('group_index_template_iri_id')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item =
+        $_typedResult.readTableOrNull(_groupIndexTemplateIriIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$GroupIndexSubscriptionsTableFilterComposer
+    extends Composer<_$SyncDatabase, $GroupIndexSubscriptionsTable> {
+  $$GroupIndexSubscriptionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get itemFetchPolicy => $composableBuilder(
+      column: $table.itemFetchPolicy,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$SyncIrisTableFilterComposer get groupIndexIriId {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupIndexIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableFilterComposer get groupIndexTemplateIriId {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupIndexTemplateIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$GroupIndexSubscriptionsTableOrderingComposer
+    extends Composer<_$SyncDatabase, $GroupIndexSubscriptionsTable> {
+  $$GroupIndexSubscriptionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get itemFetchPolicy => $composableBuilder(
+      column: $table.itemFetchPolicy,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$SyncIrisTableOrderingComposer get groupIndexIriId {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupIndexIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableOrderingComposer get groupIndexTemplateIriId {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupIndexTemplateIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$GroupIndexSubscriptionsTableAnnotationComposer
+    extends Composer<_$SyncDatabase, $GroupIndexSubscriptionsTable> {
+  $$GroupIndexSubscriptionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get itemFetchPolicy => $composableBuilder(
+      column: $table.itemFetchPolicy, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$SyncIrisTableAnnotationComposer get groupIndexIriId {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupIndexIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableAnnotationComposer get groupIndexTemplateIriId {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupIndexTemplateIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$GroupIndexSubscriptionsTableTableManager extends RootTableManager<
+    _$SyncDatabase,
+    $GroupIndexSubscriptionsTable,
+    GroupIndexSubscription,
+    $$GroupIndexSubscriptionsTableFilterComposer,
+    $$GroupIndexSubscriptionsTableOrderingComposer,
+    $$GroupIndexSubscriptionsTableAnnotationComposer,
+    $$GroupIndexSubscriptionsTableCreateCompanionBuilder,
+    $$GroupIndexSubscriptionsTableUpdateCompanionBuilder,
+    (GroupIndexSubscription, $$GroupIndexSubscriptionsTableReferences),
+    GroupIndexSubscription,
+    PrefetchHooks Function(
+        {bool groupIndexIriId, bool groupIndexTemplateIriId})> {
+  $$GroupIndexSubscriptionsTableTableManager(
+      _$SyncDatabase db, $GroupIndexSubscriptionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroupIndexSubscriptionsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroupIndexSubscriptionsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroupIndexSubscriptionsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> groupIndexIriId = const Value.absent(),
+            Value<int> groupIndexTemplateIriId = const Value.absent(),
+            Value<String> itemFetchPolicy = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+          }) =>
+              GroupIndexSubscriptionsCompanion(
+            groupIndexIriId: groupIndexIriId,
+            groupIndexTemplateIriId: groupIndexTemplateIriId,
+            itemFetchPolicy: itemFetchPolicy,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> groupIndexIriId = const Value.absent(),
+            required int groupIndexTemplateIriId,
+            required String itemFetchPolicy,
+            required int createdAt,
+          }) =>
+              GroupIndexSubscriptionsCompanion.insert(
+            groupIndexIriId: groupIndexIriId,
+            groupIndexTemplateIriId: groupIndexTemplateIriId,
+            itemFetchPolicy: itemFetchPolicy,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$GroupIndexSubscriptionsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {groupIndexIriId = false, groupIndexTemplateIriId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (groupIndexIriId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.groupIndexIriId,
+                    referencedTable: $$GroupIndexSubscriptionsTableReferences
+                        ._groupIndexIriIdTable(db),
+                    referencedColumn: $$GroupIndexSubscriptionsTableReferences
+                        ._groupIndexIriIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (groupIndexTemplateIriId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.groupIndexTemplateIriId,
+                    referencedTable: $$GroupIndexSubscriptionsTableReferences
+                        ._groupIndexTemplateIriIdTable(db),
+                    referencedColumn: $$GroupIndexSubscriptionsTableReferences
+                        ._groupIndexTemplateIriIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$GroupIndexSubscriptionsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$SyncDatabase,
+        $GroupIndexSubscriptionsTable,
+        GroupIndexSubscription,
+        $$GroupIndexSubscriptionsTableFilterComposer,
+        $$GroupIndexSubscriptionsTableOrderingComposer,
+        $$GroupIndexSubscriptionsTableAnnotationComposer,
+        $$GroupIndexSubscriptionsTableCreateCompanionBuilder,
+        $$GroupIndexSubscriptionsTableUpdateCompanionBuilder,
+        (GroupIndexSubscription, $$GroupIndexSubscriptionsTableReferences),
+        GroupIndexSubscription,
+        PrefetchHooks Function(
+            {bool groupIndexIriId, bool groupIndexTemplateIriId})>;
+typedef $$IndexIriIdSetVersionsTableCreateCompanionBuilder
+    = IndexIriIdSetVersionsCompanion Function({
+  Value<int> id,
+  required String indexIriIds,
+  required int createdAt,
+});
+typedef $$IndexIriIdSetVersionsTableUpdateCompanionBuilder
+    = IndexIriIdSetVersionsCompanion Function({
+  Value<int> id,
+  Value<String> indexIriIds,
+  Value<int> createdAt,
+});
+
+class $$IndexIriIdSetVersionsTableFilterComposer
+    extends Composer<_$SyncDatabase, $IndexIriIdSetVersionsTable> {
+  $$IndexIriIdSetVersionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get indexIriIds => $composableBuilder(
+      column: $table.indexIriIds, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$IndexIriIdSetVersionsTableOrderingComposer
+    extends Composer<_$SyncDatabase, $IndexIriIdSetVersionsTable> {
+  $$IndexIriIdSetVersionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get indexIriIds => $composableBuilder(
+      column: $table.indexIriIds, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$IndexIriIdSetVersionsTableAnnotationComposer
+    extends Composer<_$SyncDatabase, $IndexIriIdSetVersionsTable> {
+  $$IndexIriIdSetVersionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get indexIriIds => $composableBuilder(
+      column: $table.indexIriIds, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$IndexIriIdSetVersionsTableTableManager extends RootTableManager<
+    _$SyncDatabase,
+    $IndexIriIdSetVersionsTable,
+    IndexIriIdSetVersion,
+    $$IndexIriIdSetVersionsTableFilterComposer,
+    $$IndexIriIdSetVersionsTableOrderingComposer,
+    $$IndexIriIdSetVersionsTableAnnotationComposer,
+    $$IndexIriIdSetVersionsTableCreateCompanionBuilder,
+    $$IndexIriIdSetVersionsTableUpdateCompanionBuilder,
+    (
+      IndexIriIdSetVersion,
+      BaseReferences<_$SyncDatabase, $IndexIriIdSetVersionsTable,
+          IndexIriIdSetVersion>
+    ),
+    IndexIriIdSetVersion,
+    PrefetchHooks Function()> {
+  $$IndexIriIdSetVersionsTableTableManager(
+      _$SyncDatabase db, $IndexIriIdSetVersionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IndexIriIdSetVersionsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IndexIriIdSetVersionsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IndexIriIdSetVersionsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> indexIriIds = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+          }) =>
+              IndexIriIdSetVersionsCompanion(
+            id: id,
+            indexIriIds: indexIriIds,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String indexIriIds,
+            required int createdAt,
+          }) =>
+              IndexIriIdSetVersionsCompanion.insert(
+            id: id,
+            indexIriIds: indexIriIds,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$IndexIriIdSetVersionsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$SyncDatabase,
+        $IndexIriIdSetVersionsTable,
+        IndexIriIdSetVersion,
+        $$IndexIriIdSetVersionsTableFilterComposer,
+        $$IndexIriIdSetVersionsTableOrderingComposer,
+        $$IndexIriIdSetVersionsTableAnnotationComposer,
+        $$IndexIriIdSetVersionsTableCreateCompanionBuilder,
+        $$IndexIriIdSetVersionsTableUpdateCompanionBuilder,
+        (
+          IndexIriIdSetVersion,
+          BaseReferences<_$SyncDatabase, $IndexIriIdSetVersionsTable,
+              IndexIriIdSetVersion>
+        ),
+        IndexIriIdSetVersion,
+        PrefetchHooks Function()>;
+typedef $$SyncMetadataTableCreateCompanionBuilder = SyncMetadataCompanion
+    Function({
+  Value<int> id,
+  Value<int> lastShardSyncTimestamp,
+});
+typedef $$SyncMetadataTableUpdateCompanionBuilder = SyncMetadataCompanion
+    Function({
+  Value<int> id,
+  Value<int> lastShardSyncTimestamp,
+});
+
+class $$SyncMetadataTableFilterComposer
+    extends Composer<_$SyncDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastShardSyncTimestamp => $composableBuilder(
+      column: $table.lastShardSyncTimestamp,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$SyncMetadataTableOrderingComposer
+    extends Composer<_$SyncDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastShardSyncTimestamp => $composableBuilder(
+      column: $table.lastShardSyncTimestamp,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$SyncMetadataTableAnnotationComposer
+    extends Composer<_$SyncDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get lastShardSyncTimestamp => $composableBuilder(
+      column: $table.lastShardSyncTimestamp, builder: (column) => column);
+}
+
+class $$SyncMetadataTableTableManager extends RootTableManager<
+    _$SyncDatabase,
+    $SyncMetadataTable,
+    SyncMetadataData,
+    $$SyncMetadataTableFilterComposer,
+    $$SyncMetadataTableOrderingComposer,
+    $$SyncMetadataTableAnnotationComposer,
+    $$SyncMetadataTableCreateCompanionBuilder,
+    $$SyncMetadataTableUpdateCompanionBuilder,
+    (
+      SyncMetadataData,
+      BaseReferences<_$SyncDatabase, $SyncMetadataTable, SyncMetadataData>
+    ),
+    SyncMetadataData,
+    PrefetchHooks Function()> {
+  $$SyncMetadataTableTableManager(_$SyncDatabase db, $SyncMetadataTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncMetadataTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncMetadataTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> lastShardSyncTimestamp = const Value.absent(),
+          }) =>
+              SyncMetadataCompanion(
+            id: id,
+            lastShardSyncTimestamp: lastShardSyncTimestamp,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> lastShardSyncTimestamp = const Value.absent(),
+          }) =>
+              SyncMetadataCompanion.insert(
+            id: id,
+            lastShardSyncTimestamp: lastShardSyncTimestamp,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$SyncMetadataTableProcessedTableManager = ProcessedTableManager<
+    _$SyncDatabase,
+    $SyncMetadataTable,
+    SyncMetadataData,
+    $$SyncMetadataTableFilterComposer,
+    $$SyncMetadataTableOrderingComposer,
+    $$SyncMetadataTableAnnotationComposer,
+    $$SyncMetadataTableCreateCompanionBuilder,
+    $$SyncMetadataTableUpdateCompanionBuilder,
+    (
+      SyncMetadataData,
+      BaseReferences<_$SyncDatabase, $SyncMetadataTable, SyncMetadataData>
+    ),
+    SyncMetadataData,
+    PrefetchHooks Function()>;
 
 class $SyncDatabaseManager {
   final _$SyncDatabase _db;
@@ -2638,4 +5338,13 @@ class $SyncDatabaseManager {
       $$SyncPropertyChangesTableTableManager(_db, _db.syncPropertyChanges);
   $$SyncSettingsTableTableManager get syncSettings =>
       $$SyncSettingsTableTableManager(_db, _db.syncSettings);
+  $$IndexEntriesTableTableManager get indexEntries =>
+      $$IndexEntriesTableTableManager(_db, _db.indexEntries);
+  $$GroupIndexSubscriptionsTableTableManager get groupIndexSubscriptions =>
+      $$GroupIndexSubscriptionsTableTableManager(
+          _db, _db.groupIndexSubscriptions);
+  $$IndexIriIdSetVersionsTableTableManager get indexIriIdSetVersions =>
+      $$IndexIriIdSetVersionsTableTableManager(_db, _db.indexIriIdSetVersions);
+  $$SyncMetadataTableTableManager get syncMetadata =>
+      $$SyncMetadataTableTableManager(_db, _db.syncMetadata);
 }

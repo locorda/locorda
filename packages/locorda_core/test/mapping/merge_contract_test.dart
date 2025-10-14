@@ -1,12 +1,10 @@
 import 'package:locorda_core/src/crdt/crdt_types.dart';
-import 'package:locorda_core/src/hlc_service.dart';
-import 'package:test/test.dart';
-import 'package:rdf_core/rdf_core.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
+import 'package:rdf_core/rdf_core.dart';
+import 'package:test/test.dart';
 
 void main() {
-  final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
-      physicalTimestampFactory: defaultPhysicalTimestampFactory);
+  final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes();
 
   group('MergeContract', () {
     late IriTerm classIriA;

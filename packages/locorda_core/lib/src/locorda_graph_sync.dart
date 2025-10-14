@@ -19,8 +19,11 @@ import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
+import 'package:locorda_core/src/sync/sync_function.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
+import 'package:rxdart/rxdart.dart';
 
 final _log = Logger('LocordaGraphSync');
 
@@ -46,6 +49,8 @@ class LocordaGraphSync {
   final IriTranslator _iriTranslator;
   final GroupIndexGraphSubscriptionManager _groupIndexManager;
   final SyncManager _syncManager;
+  final PhysicalTimestampFactory _physicalTimestampFactory;
+  final IndexRdfGenerator _indexRdfGenerator;
 
   /// Access the sync manager for manual sync triggering and status monitoring.
   SyncManager get syncManager => _syncManager;
@@ -57,6 +62,8 @@ class LocordaGraphSync {
     required SyncGraphConfig config,
     required ResourceLocator resourceLocator,
     required CrdtDocumentManager crdtDocumentManager,
+    required IndexRdfGenerator indexRdfGenerator,
+    required PhysicalTimestampFactory physicalTimestampFactory,
   })  : _backend = backend,
         _storage = storage,
         _indexManager = indexManager,
@@ -70,14 +77,15 @@ class LocordaGraphSync {
         ),
         _crdtDocumentManager = crdtDocumentManager,
         _syncManager = SyncManager(
-          syncFunction: () async {
-            // TODO: Implement actual sync logic here
-            // For now, this is a placeholder that will be implemented in Priority 4
-            _log.info('Sync triggered (not yet implemented)');
-            await Future.delayed(Duration(milliseconds: 100));
-          },
-          autoSyncConfig: config.autoSyncConfig,
-        );
+            syncFunction: SyncFunction(
+              storage: storage,
+              documentManager: crdtDocumentManager,
+              indexManager: indexManager,
+            ),
+            autoSyncConfig: config.autoSyncConfig,
+            physicalTimestampFactory: physicalTimestampFactory),
+        _indexRdfGenerator = indexRdfGenerator,
+        _physicalTimestampFactory = physicalTimestampFactory;
 
   /// Set up the CRDT sync system with resource-focused configuration.
   ///
@@ -169,8 +177,7 @@ class LocordaGraphSync {
       installationLocalId: installationService.installationLocalId,
       physicalTimestampFactory: physicalTimestampFactory,
     );
-    final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
-        physicalTimestampFactory: physicalTimestampFactory);
+    final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes();
 
     // TODO: the HttpRdfGraphFetcher should be db-cached (ideally with initialization from deployment and etag)
     final mergeContractLoader = StandardMergeContractLoader(
@@ -207,12 +214,15 @@ class LocordaGraphSync {
     await indexManager.initializeIndices();
 
     final sync = LocordaGraphSync._(
-        backend: backend,
-        storage: storage,
-        indexManager: indexManager,
-        config: effectiveConfig,
-        resourceLocator: localResourceLocator,
-        crdtDocumentManager: crdtDocumentManager);
+      backend: backend,
+      storage: storage,
+      indexManager: indexManager,
+      config: effectiveConfig,
+      resourceLocator: localResourceLocator,
+      crdtDocumentManager: crdtDocumentManager,
+      indexRdfGenerator: indexRdfGenerator,
+      physicalTimestampFactory: physicalTimestampFactory,
+    );
 
     // installation documents might be organized in indices, so we need to use graph sync instead of crdtDocumentManager directly
     await installationService.ensureDocumentSaved(sync);
@@ -277,16 +287,21 @@ class LocordaGraphSync {
     // Use the GroupIndexSubscriptionManager to handle validation and processing
     final groupIdentifiers =
         await _groupIndexManager.getGroupIdentifiers(indexName, groupKeyGraph);
+    final (resourceConfig, indexConfig) =
+        _config.findGroupIndexConfig(indexName)!;
     _log.info(
         'configure called for index: $indexName and group key: $groupKeyGraph, resolved to group identifiers: $groupIdentifiers');
-    // TODO: Implement actual subscription logic with itemFetchPolicy
-    // This should:
-    // 1. Load existing items for the generated group identifiers
-    // 2. Set up hydration streams for the group
-    // 3. Apply the ItemFetchPolicy (OnDemand, Eager, etc.)
-    // 4. Schedule sync operations if connected to Pod
-
-    //return groupIdentifiers;
+    for (final id in groupIdentifiers) {
+      final groupIndexTemplateIri = _indexRdfGenerator
+          .generateGroupIndexTemplateIri(indexConfig, resourceConfig.typeIri);
+      final groupIndexIri =
+          _indexRdfGenerator.generateGroupIndexIri(groupIndexTemplateIri, id);
+      await _storage.saveGroupIndexSubscription(
+          groupIndexIri: groupIndexIri,
+          groupIndexTemplateIri: groupIndexTemplateIri,
+          itemFetchPolicy: itemFetchPolicy,
+          createdAt: _physicalTimestampFactory().millisecondsSinceEpoch);
+    }
   }
 
   /// Save an object with CRDT processing.
@@ -348,11 +363,11 @@ Use the 'documentIriTemplate' property of the resource configuration to configur
     // 4a. Remove entries from shards where belongsToIndexShard was removed
     // This must happen BEFORE updateIndices to ensure tombstones are created first
     await _indexManager.removeTombstonedShardEntries(
-        resourceIri, crdtDocument, documentIri);
+        resourceIri, crdtDocument, documentIri, saved.physicalTime);
 
     // 5. Update the indices
-    await _indexManager.updateIndices(
-        type, resourceIri, clockHash, internalAppData, allShards);
+    await _indexManager.updateIndices(type, resourceIri, clockHash,
+        internalAppData, allShards, saved.physicalTime);
 
     // Note: No manual emission needed - Drift's watch() streams will automatically
     // detect the database changes and emit updates to any active hydration subscriptions
@@ -474,42 +489,40 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
     // 4. Save to storage (this will trigger Drift's watch() to emit updates automatically)
     // 5. Update indices accordingly
 
+    // TODO: universal emptying **must** preserve the primaryTopic relationship
+    // to ensure the resource IRI remains known for hydration streams
     throw UnimplementedError('deleteDocument not yet fully implemented');
   }
 
   /// Hydrates resources of the specified type using a reactive stream.
   ///
   /// Returns a stream of [HydrationBatch]es containing updates, deletions,
-  /// and cursor information. The stream automatically:
+  /// and cursor information.
+  ///
+  /// ## Without Index (indexName == null)
+  /// Hydrates complete resource documents:
   /// - Loads all existing documents in batches (bounded by [initialBatchSize])
   /// - Switches to reactive mode for ongoing changes (via Drift's watch())
   /// - Orders documents by updatedAt ascending for consistent processing
+  /// - Emits (primaryTopicIri, appGraph) for each resource
+  ///
+  /// ## With Index (indexName != null)
+  /// Hydrates lightweight index entries from the specified index:
+  /// - Loads the index document to find associated shards
+  /// - Loads shard documents containing index entries
+  /// - Extracts entries with indexed properties only (not full resources)
+  /// - Emits (resourceIri, entryGraph) for each indexed item
+  /// - **Note:** [initialBatchSize] is currently ignored for index hydration
+  ///
+  /// **Performance:** When a shard changes, ALL its entries (hundreds to thousands)
+  /// are re-emitted. This is acceptable for most use cases but may be optimized
+  /// in the future with entry-level change tracking.
   ///
   /// The caller is responsible for:
   /// - Providing the current cursor position via [cursor]
   /// - Processing updates and deletions from the batch
   /// - Persisting cursor updates for resume capability
   ///
-  /// If [indexName] is provided, hydration would be scoped to that index,
-  /// but this feature is not yet fully implemented (TODO).
-  ///
-  /// Example:
-  /// ```dart
-  /// final subscription = syncSystem.hydrateStream(
-  ///   typeIri: Note.classIri,
-  ///   cursor: _lastCursor,
-  /// ).listen((batch) async {
-  ///   for (final (iri, graph) in batch.updates) {
-  ///     await _processUpdate(iri, graph);
-  ///   }
-  ///   for (final (iri, graph) in batch.deletions) {
-  ///     await _processDeletion(iri, graph);
-  ///   }
-  ///   if (batch.cursor != null) {
-  ///     _lastCursor = batch.cursor;
-  ///   }
-  /// });
-  /// ```
   Stream<HydrationBatch> hydrateStream({
     required IriTerm typeIri,
     String? indexName,
@@ -518,16 +531,259 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   }) async* {
     // Validate configuration
     final resourceConfig = _config.getResourceConfig(typeIri);
-    if (indexName != null) {
-      if (!resourceConfig.indices
-          .any((index) => index.localName == indexName)) {
-        throw ArgumentError(
-            'No index with local name $indexName is configured for resource type $typeIri');
+    if (indexName == null) {
+      yield* _hydrateRootResourceStream(
+        typeIri: typeIri,
+        cursor: cursor,
+        initialBatchSize: initialBatchSize,
+      );
+    } else {
+      // Index-specific hydration
+      final indexConfig = resourceConfig.getIndexByName(indexName);
+
+      // Parse cursor format: "<millis-since-epoch>@<indexSetVersionId>"
+      // e.g., "1697198445123@42"
+      // If no @ present, assume just timestamp with no index set version tracking
+      final (cursorTimestamp, cursorIndexSetVersionId) = _parseCursor(cursor);
+      final startCursor = cursorTimestamp ?? 0;
+      switch (indexConfig) {
+        case GroupIndexGraphConfig _:
+          // For GroupIndex: Use reactive subscriptions that automatically rebuild the stream
+          // when subscriptions change.
+          final templateIri = _indexRdfGenerator.generateGroupIndexTemplateIri(
+              indexConfig, typeIri);
+          // Reactive approach: Watch subscription changes and rebuild the entry stream
+          yield* _storage
+              .watchSubscribedGroupIndexIris(templateIri)
+              .switchMap((indexIris) => _doHydrateIndexEntryStream(
+                    indexName,
+                    indexIris,
+                    startCursor,
+                    useIndexSetVersionId: true,
+                    cursorIndexSetVersionId: cursorIndexSetVersionId,
+                  ));
+        case FullIndexGraphConfig _: // FullIndex: there is just a single index
+          final indexIri =
+              _indexRdfGenerator.generateFullIndexIri(indexConfig, typeIri);
+          yield* _doHydrateIndexEntryStream(
+            indexName,
+            {indexIri},
+            startCursor,
+            useIndexSetVersionId: false,
+          );
       }
-      // TODO: Implement index-specific hydration by loading the corresponding index shards
-      throw UnimplementedError('Index-specific hydration not yet implemented');
+    }
+  }
+
+  (int? cursorTimestamp, int? setVersionId) _parseCursor(String? cursor) {
+    // Parse cursor format: "<millis-since-epoch>@<setVersionId>"
+    // e.g., "1697198445123@42"
+    // If no @ present, assume old format (just timestamp) with no version tracking
+    int? cursorTimestamp;
+    int? cursorSetVersionId;
+    if (cursor != null && cursor.isNotEmpty) {
+      final parts = cursor.split('@');
+      cursorTimestamp = int.tryParse(parts[0]);
+      if (cursorTimestamp == null) {
+        _log.warning(
+            'Invalid cursor timestamp: ${parts[0]}, starting from beginning.');
+      }
+      if (parts.length > 1) {
+        cursorSetVersionId = int.tryParse(parts[1]);
+      }
+    }
+    return (cursorTimestamp, cursorSetVersionId);
+  }
+
+  /// Formats a cursor string from a timestamp and optional set version ID
+  String _formatCursor(int timestamp, int? setVersionId) {
+    return setVersionId != null ? '$timestamp@$setVersionId' : '$timestamp';
+  }
+
+  Stream<HydrationBatch> _doHydrateIndexEntryStream(
+    String indexName,
+    Set<IriTerm> indexIris,
+    int startCursor, {
+    bool useIndexSetVersionId = false,
+    int? cursorIndexSetVersionId,
+  }) async* {
+    int? indexSetVersionId;
+    // Track the last cursor emitted from batch loading
+    int lastEmittedCursor = startCursor;
+
+    // If useIndexSetVersionId is true, we need to associate the indexIris with a set version
+    // to track which indices we query against. This also means that the set version
+    // will be included in the actual (string) cursor we emit
+    if (useIndexSetVersionId) {
+      if (indexIris.isEmpty) {
+        _log.warning(
+            'No subscriptions for GroupIndex $indexName, emitting empty stream.');
+        yield (
+          updates: <IdentifiedGraph>[],
+          deletions: <IdentifiedGraph>[],
+          cursor: startCursor.toString()
+        );
+        return;
+      }
+      var now = _physicalTimestampFactory().millisecondsSinceEpoch;
+      // Create/get set version for current subscriptions
+      indexSetVersionId = await _storage.ensureIndexSetVersion(
+        indexIris: indexIris,
+        createdAt: now,
+      );
+
+      // Determine which index IRIs are new vs. old based on cursor
+      final cursorIndexIris = cursorIndexSetVersionId == null
+          ? const <IriTerm>{}
+          : await _storage.getIndexIrisForVersion(cursorIndexSetVersionId);
+
+      final newIndexIris = indexIris.difference(cursorIndexIris);
+
+      final hasNewIndices = newIndexIris.isNotEmpty;
+
+      // Phase 1a: Load historical data for new indices (0 → startCursor)
+      if (hasNewIndices && startCursor > 0) {
+        _log.info(
+            'Loading historical data for ${newIndexIris.length} new indices up to cursor $startCursor');
+
+        final result = _loadExistingEntriesAsStream(
+            newIndexIris, indexSetVersionId,
+            fromCursor: 0, toCursor: startCursor);
+        yield* result.stream;
+        lastEmittedCursor = await result.lastCursor;
+      }
     }
 
+    // Phase 1b: Load current data for all subscriptions (from startCursor)
+    final result = _loadExistingEntriesAsStream(indexIris, indexSetVersionId,
+        fromCursor: lastEmittedCursor);
+    yield* result.stream;
+    lastEmittedCursor = await result.lastCursor;
+
+    // Phase 2: Switch to reactive watch for ongoing changes
+    yield* _storage
+        .watchIndexEntries(
+          indexIris: indexIris,
+          cursorTimestamp: lastEmittedCursor,
+        )
+        .where((entries) => entries.isNotEmpty)
+        .map((entries) => _convertIndexEntriesToBatch(
+            entries, entries.last.updatedAt, indexSetVersionId));
+  }
+
+  /// Streams index entries in batches and returns the last emitted cursor.
+  ///
+  /// Returns a record containing:
+  /// - stream: The stream of hydration batches
+  /// - lastCursor: A future that completes with the last cursor emitted
+  ///
+  /// This allows callers to know where the batch loading ended, which is
+  /// necessary to correctly position the cursor for the reactive watch phase.
+  ({Stream<HydrationBatch> stream, Future<int> lastCursor})
+      _loadExistingEntriesAsStream(
+          Set<IriTerm> indexIris, int? indexSetVersionId,
+          {required int fromCursor, int? toCursor}) {
+    final controller = StreamController<HydrationBatch>();
+    final lastCursorCompleter = Completer<int>();
+    var lastEmittedCursor = fromCursor;
+
+    Future<void> loadEntries() async {
+      try {
+        int? cursor = fromCursor;
+        while (cursor != null && (toCursor == null || cursor < toCursor)) {
+          final page = await _storage.getIndexEntries(
+            indexIris: indexIris,
+            cursorTimestamp: cursor,
+            limit: 100,
+          );
+
+          if (page.entries.isNotEmpty) {
+            final batch = _convertIndexEntriesToBatch(
+                page.entries, page.lastCursor, indexSetVersionId);
+            controller.add(batch);
+            lastEmittedCursor = page.lastCursor ?? lastEmittedCursor;
+            cursor = page.lastCursor;
+          }
+
+          if (!page.hasMore ||
+              (toCursor != null && (cursor != null && cursor > toCursor))) {
+            break;
+          }
+        }
+        lastCursorCompleter.complete(lastEmittedCursor);
+      } catch (e, st) {
+        lastCursorCompleter.completeError(e, st);
+        controller.addError(e, st);
+      } finally {
+        await controller.close();
+      }
+    }
+
+    loadEntries();
+
+    return (stream: controller.stream, lastCursor: lastCursorCompleter.future);
+  }
+
+  // Helper to convert DB entries to HydrationBatch
+  HydrationBatch _convertIndexEntriesToBatch(
+      List<storage.IndexEntryWithIri> entries,
+      int? lastCursor,
+      int? setVersionId) {
+    final updates = <IdentifiedGraph>[];
+    final deletions = <IdentifiedGraph>[];
+
+    for (final entry in entries) {
+      // Entry structure in DB:
+      // - entry.resourceIri: The resource IRI (already external, stored as IriTerm.value)
+      // - entry.clockHash: The CRDT clock hash of the resource
+      // - entry.headerProperties: Turtle-encoded triples with indexed properties
+      //
+      // In RDF, the full entry looks like:
+      //   entryIri idx:resource resourceIri .
+      //   entryIri crdt:clockHash "hash" .
+      //   entryIri schema:title "..." .  // header properties
+      //
+      // For hydration, we flatten this to just the resource IRI and its properties.
+      final resourceIri = entry.resourceIri;
+
+      // Build graph with clockHash and header properties
+      final triples = <Triple>[
+        Triple(
+          resourceIri,
+          Crdt.clockHash,
+          LiteralTerm(entry.clockHash),
+        ),
+      ];
+
+      // Add header properties if present
+      // Header properties are stored as Turtle-encoded triples in the DB
+      if (entry.headerProperties != null) {
+        final headerGraph = turtle.decode(entry.headerProperties!);
+        triples.addAll(headerGraph.triples);
+      }
+
+      final graph = RdfGraph.fromTriples(triples);
+
+      // Entries with isDeleted=true are tombstones
+      if (entry.isDeleted) {
+        deletions.add((resourceIri, graph));
+      } else {
+        updates.add((resourceIri, graph));
+      }
+    }
+
+    return (
+      updates: updates,
+      deletions: deletions,
+      cursor: _formatCursor(lastCursor ?? 0, setVersionId)
+    );
+  }
+
+  Stream<HydrationBatch> _hydrateRootResourceStream({
+    required IriTerm typeIri,
+    String? cursor,
+    int initialBatchSize = 100,
+  }) async* {
     HydrationBatch convertResult(
         List<StoredDocument> documents, String? cursor) {
       final (deletions, updates) = documents
@@ -537,10 +793,19 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
         final externalGraph =
             _iriTranslator.translateGraphToExternal(doc.document);
 
+        final primaryTopicIri = externalGraph.expectSingleObject<IriTerm>(
+            externalIri, SyncManagedDocument.foafPrimaryTopic);
+        final appGraph = primaryTopicIri != null
+            ? externalGraph.subgraph(primaryTopicIri)
+            : externalGraph;
         final isDeletion = externalGraph.hasTriples(
             subject: externalIri, predicate: SyncManagedDocument.crdtDeletedAt);
-
-        (isDeletion ? acc.$1 : acc.$2).add((externalIri, externalGraph));
+        if (primaryTopicIri == null) {
+          _log.warning(
+              'Document ${doc.documentIri} (isDeletion: $isDeletion) is missing foaf:primaryTopic, cannot determine resource IRI. Skipping.');
+          return acc;
+        }
+        (isDeletion ? acc.$1 : acc.$2).add((primaryTopicIri, appGraph));
         return acc;
       });
       return (updates: updates, deletions: deletions, cursor: cursor);

@@ -1,9 +1,8 @@
 import 'package:locorda_core/src/crdt/crdt_types.dart';
-import 'package:locorda_core/src/hlc_service.dart';
-import 'package:test/test.dart';
-import 'package:rdf_core/rdf_core.dart';
-import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/create_merge_contract.dart';
+import 'package:locorda_core/src/mapping/merge_contract.dart';
+import 'package:rdf_core/rdf_core.dart';
+import 'package:test/test.dart';
 
 import 'test_matchers.dart';
 
@@ -247,7 +246,8 @@ void main() {
           hasRuleProperties(classARule1));
       expect(contract.getClassMapping(classB)!.getPropertyRule(prop2),
           hasRuleProperties(classBRule2));
-      expect(contract.getPredicateMapping(prop3), hasRuleProperties(globalRule3));
+      expect(
+          contract.getPredicateMapping(prop3), hasRuleProperties(globalRule3));
 
       // Verify class mappings don't interfere with each other
       expect(contract.getClassMapping(classA)!.getPropertyRule(prop2), isNull);
@@ -322,15 +322,15 @@ void main() {
       expect(finalMapping.getPropertyRule(prop2), hasRuleProperties(rule2));
 
       // First-wins should resolve the conflict
-      expect(finalMapping.getPropertyRule(prop3), hasRuleProperties(rule3Winner));
+      expect(
+          finalMapping.getPropertyRule(prop3), hasRuleProperties(rule3Winner));
     });
   });
 }
 
 MergeContract _createValidMergeContractFrom(List<DocumentMapping> documents) {
   final (result, validation) = createMergeContractFrom(documents,
-      crdtRegistry: CrdtTypeRegistry.forStandardTypes(
-          physicalTimestampFactory: defaultPhysicalTimestampFactory));
+      crdtRegistry: CrdtTypeRegistry.forStandardTypes());
   validation.throwIfInvalid();
   return result;
 }

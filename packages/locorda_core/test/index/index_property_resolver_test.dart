@@ -4,15 +4,15 @@ import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
-import '../sync/test_storage.dart';
+import '../sync/in_memory_storage.dart';
 
 void main() {
   group('IndexPropertyResolver', () {
-    late TestStorage storage;
+    late InMemoryStorage storage;
     late IndexPropertyResolver resolver;
 
     setUp(() {
-      storage = TestStorage();
+      storage = InMemoryStorage();
       resolver = IndexPropertyResolver(storage: storage, cacheSize: 3);
     });
 

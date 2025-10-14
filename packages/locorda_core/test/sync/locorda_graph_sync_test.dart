@@ -14,7 +14,7 @@ import '../util/rdf_test_utils.dart';
 import 'test_backend.dart';
 import 'test_fetcher.dart';
 import 'test_physical_timestamp_factory.dart';
-import 'test_storage.dart';
+import 'in_memory_storage.dart';
 
 void main() {
   // Load and parse all_tests.json
@@ -104,7 +104,7 @@ Future<void> _executeSaveTestWithSteps(
       testJson['installation_id'] as String? ?? baseInstallationId;
 
   final config = _loadConfig(testAssetsDir, testJson['config'] as String);
-  final storage = TestStorage();
+  final storage = InMemoryStorage();
   final iriTranslator = IriTranslator(
       resourceLocator: LocalResourceLocator(iriTermFactory: IriTerm.validated),
       resourceConfigs: config.resources);
@@ -139,7 +139,7 @@ Future<void> _executeStep({
   required DateTime baseTimestamp,
   required String? baseInstallationId,
   required SyncGraphConfig config,
-  required TestStorage storage,
+  required InMemoryStorage storage,
   required IriTranslator iriTranslator,
 }) async {
   // make sure to reset property changes for next step
@@ -185,6 +185,49 @@ Future<void> _executeStep({
       );
     }
     return; // Prepare action has no expectations
+  }
+
+  if (action == 'sync') {
+    // Sync action: Trigger sync for all shards that need updates
+
+    // Set timestamp for sync action if specified
+    setTime(actionTs?['sync'], timestampFactory);
+
+    final fetcher = TestFetcher(
+      testAssetsDir: testAssetsDir,
+      urlToPathMap: urlToPathMap,
+    );
+
+    // Create installation ID factory if base installation ID provided
+    final installationIdFactory =
+        baseInstallationId != null ? () => baseInstallationId : null;
+
+    final sync = await LocordaGraphSync.setup(
+        backend: TestBackend(),
+        storage: storage,
+        config: config,
+        fetcher: fetcher,
+        physicalTimestampFactory: timestampFactory,
+        installationIdFactory: installationIdFactory);
+
+    // Trigger sync - finds all shards with changes and syncs them
+    await sync.syncManager.sync();
+
+    // Verify expectations if provided
+    final expectedJson = stepJson['expected'] as Map<String, dynamic>?;
+    if (expectedJson != null) {
+      // For sync action, we verify shard documents and group index documents
+      await _verifyExpectations(
+        testId: testId,
+        stepIndex: stepIndex,
+        expectedJson: expectedJson,
+        testAssetsDir: testAssetsDir,
+        storage: storage,
+        config: config,
+        iriTranslator: iriTranslator,
+      );
+    }
+    return;
   }
 
   if (action != 'save') {
@@ -270,17 +313,22 @@ Future<void> _verifyExpectations({
   required int stepIndex,
   required Map<String, dynamic> expectedJson,
   required Directory testAssetsDir,
-  required TestStorage storage,
+  required InMemoryStorage storage,
   required SyncGraphConfig config,
   required IriTranslator iriTranslator,
-  required IriTerm externalDocumentIri,
-  required IriTerm typeIri,
+  IriTerm? externalDocumentIri,
+  IriTerm? typeIri,
 }) async {
-  final documentIri = iriTranslator.externalToInternal(externalDocumentIri);
+  final documentIri = externalDocumentIri == null
+      ? null
+      : iriTranslator.externalToInternal(externalDocumentIri);
 
   // Verify stored graph if expected
   final expectedStoredGraphPath = expectedJson['stored_graph'] as String?;
   if (expectedStoredGraphPath != null) {
+    if (documentIri == null || typeIri == null) {
+      fail('documentIri and typeIri must be provided to verify stored_graph');
+    }
     final expectedStoredGraph =
         _readGraphFromPath(testAssetsDir, expectedStoredGraphPath)!;
     final storedDataDocument = await storage.getDocument(documentIri);
@@ -294,6 +342,9 @@ Future<void> _verifyExpectations({
   // Verify property changes if expected
   final expectedPropertyChanges = _parseExpectedPropertyChanges(expectedJson);
   if (expectedPropertyChanges != null) {
+    if (documentIri == null) {
+      fail('documentIri must be provided to verify property_changes');
+    }
     final actualPropertyChanges = await storage.getPropertyChanges(documentIri);
     _expectEqualPropertyChanges(actualPropertyChanges, expectedPropertyChanges);
   }
@@ -337,12 +388,8 @@ Future<void> _verifyExpectations({
   // Verify shard documents if expected
   final expectedShardDocs = expectedJson['shard_documents'] as List<dynamic>?;
   if (expectedShardDocs != null) {
-    final storedDataDocument = await storage.getDocument(documentIri);
-    if (storedDataDocument == null) {
-      fail(await _failMissing(storage, typeIri, documentIri));
-    }
-    await _verifyShardDocuments(testId, expectedShardDocs, testAssetsDir,
-        storage, config, storedDataDocument);
+    await _verifyShardDocuments(
+        testId, expectedShardDocs, testAssetsDir, storage, config);
   }
 
   // Export documents if requested (for test data generation)
@@ -457,7 +504,7 @@ Future<void> _verifyIndexDocuments(
   String testId,
   List<dynamic> expectedIndexDocs,
   Directory testAssetsDir,
-  TestStorage storage,
+  InMemoryStorage storage,
   SyncGraphConfig config,
 ) async {
   for (final indexDocJson in expectedIndexDocs) {
@@ -498,7 +545,7 @@ Future<void> _verifyGroupIndexDocuments(
   String testId,
   List<dynamic> expectedGroupIndexDocs,
   Directory testAssetsDir,
-  TestStorage storage,
+  InMemoryStorage storage,
   SyncGraphConfig config,
 ) async {
   for (final groupIndexDocJson in expectedGroupIndexDocs) {
@@ -569,9 +616,8 @@ Future<void> _verifyShardDocuments(
   String testId,
   List<dynamic> expectedShardDocs,
   Directory testAssetsDir,
-  TestStorage storage,
+  InMemoryStorage storage,
   SyncGraphConfig config,
-  StoredDocument storedDataDocument,
 ) async {
   for (final shardDocJson in expectedShardDocs) {
     final shardMap = shardDocJson as Map<String, dynamic>;
@@ -644,7 +690,7 @@ Future<void> _verifyShardDocuments(
 }
 
 Future<String> _failMissing(
-    TestStorage storage, IriTerm typeIri, IriTerm shardDocumentIri) async {
+    InMemoryStorage storage, IriTerm typeIri, IriTerm shardDocumentIri) async {
   final all = await storage.watchDocumentsModifiedSince(typeIri, null).first;
   final existing = all.documents
       .map((d) => '${d.documentIri.debug} - ${d.documentIri.value}')
@@ -680,7 +726,7 @@ Future<void> _executeSaveErrorTest(
   // Load action timestamps if provided
   final actionTs = testJson['action_ts'] as Map<String, dynamic>?;
 
-  final storage = TestStorage();
+  final storage = InMemoryStorage();
 
   try {
     // Execute save (should throw)
@@ -735,7 +781,7 @@ Future<void> _exportAllDocuments(
   int stepIndex,
   String outputDir,
   Directory testAssetsDir,
-  TestStorage storage,
+  InMemoryStorage storage,
   SyncGraphConfig config,
 ) async {
   // Get all document types from config plus infrastructure types
@@ -785,7 +831,7 @@ Future<void> _exportDocuments(
   int stepIndex,
   List<dynamic> exportDocs,
   Directory testAssetsDir,
-  TestStorage storage,
+  InMemoryStorage storage,
   SyncGraphConfig config,
 ) async {
   for (final exportJson in exportDocs) {

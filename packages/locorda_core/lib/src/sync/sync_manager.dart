@@ -2,6 +2,7 @@
 library;
 
 import 'dart:async';
+import 'package:locorda_core/src/hlc_service.dart';
 import 'package:logging/logging.dart';
 import 'sync_state.dart';
 
@@ -77,7 +78,7 @@ class AutoSyncConfig {
 /// await syncManager.dispose();
 /// ```
 class SyncManager {
-  final Future<void> Function() _syncFunction;
+  final Future<void> Function(DateTime syncTime) _syncFunction;
   final AutoSyncConfig _autoSyncConfig;
 
   final _statusController = StreamController<SyncState>.broadcast();
@@ -85,6 +86,7 @@ class SyncManager {
   Timer? _autoSyncTimer;
   bool _isDisposed = false;
   Completer<void>? _syncCompleter;
+  PhysicalTimestampFactory _physicalTimestampFactory;
 
   /// Stream of sync state changes.
   ///
@@ -99,10 +101,12 @@ class SyncManager {
   bool get isSyncing => _currentState.status == SyncStatus.syncing;
 
   SyncManager({
-    required Future<void> Function() syncFunction,
+    required Future<void> Function(DateTime syncTime) syncFunction,
     AutoSyncConfig autoSyncConfig = const AutoSyncConfig.disabled(),
+    required PhysicalTimestampFactory physicalTimestampFactory,
   })  : _syncFunction = syncFunction,
-        _autoSyncConfig = autoSyncConfig {
+        _autoSyncConfig = autoSyncConfig,
+        _physicalTimestampFactory = physicalTimestampFactory {
     _initialize();
   }
 
@@ -156,10 +160,11 @@ class SyncManager {
       _updateState(SyncState.syncing(lastSyncTime: _currentState.lastSyncTime));
 
       // Perform the actual sync
-      await _syncFunction();
+      final syncTime = _physicalTimestampFactory();
+      await _syncFunction(syncTime);
 
       _log.info('Sync completed successfully');
-      _updateState(SyncState.success());
+      _updateState(SyncState.success(syncTime));
       _syncCompleter!.complete();
     } catch (error, stackTrace) {
       _log.severe('Sync failed', error, stackTrace);

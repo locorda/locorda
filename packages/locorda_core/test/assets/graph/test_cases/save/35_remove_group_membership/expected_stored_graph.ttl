@@ -31,4 +31,4 @@ ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54 cm:logicalTime 2;
 ns1:lcrd-stmt-md5-66df6bbfe8c511f7733c3351c5604d0e rdf:object ns3:shard;
     rdf:predicate idx:belongsToIndexShard;
     rdf:subject <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz>;
-    cm:deletedAt "2024-01-01T04:00:00.001Z"^^xsd:dateTime .
+    cm:deletedAt "2024-01-01T04:00:00.000Z"^^xsd:dateTime .

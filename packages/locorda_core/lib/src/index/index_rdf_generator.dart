@@ -123,6 +123,7 @@ class IndexRdfGenerator {
     FullIndexGraphConfig config,
     IriTerm typeIri,
   ) {
+    // FIXME: should we maybe cache these IRIs somewhere to avoid recomputing them?
     final hash = generateHash(
         typeIri, config.shardingAlgorithmClass, config.hashAlgorithmClass);
 
@@ -230,6 +231,8 @@ class IndexRdfGenerator {
 
   IriTerm generateGroupIndexTemplateIri(
       GroupIndexGraphConfig config, IriTerm typeIri) {
+    // FIXME: should we maybe cache these IRIs somewhere to avoid recomputing them?
+
     // Generate hash from grouping rule properties per specification
     // Format: sourceProperty|transformList|hierarchyLevel|missingValue
     // Multiple properties sorted by hierarchy level first, then lexicographic IRI ordering

@@ -3,6 +3,7 @@ library;
 
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
 import 'package:rdf_core/rdf_core.dart';
 
 import 'sync_database.dart';
@@ -14,6 +15,7 @@ import 'sync_database.dart';
 class DriftStorage implements Storage {
   final SyncDocumentDao documentDao;
   final SyncPropertyChangeDao propertyChangeDao;
+  final IndexDao indexDao;
   final SyncDatabase _database;
   final RdfGraphCodec _codec;
   final IriTermFactory _iriTermFactory;
@@ -23,6 +25,7 @@ class DriftStorage implements Storage {
   DriftStorage._({
     required this.documentDao,
     required this.propertyChangeDao,
+    required this.indexDao,
     required SyncDatabase database,
     IriTermFactory iriTermFactory = IriTerm.validated,
   })  : _database = database,
@@ -40,6 +43,7 @@ class DriftStorage implements Storage {
     return DriftStorage._(
         documentDao: database.syncDocumentDao,
         propertyChangeDao: database.syncPropertyChangeDao,
+        indexDao: database.indexDao,
         database: database,
         iriTermFactory: iriTermFactory);
   }
@@ -50,6 +54,7 @@ class DriftStorage implements Storage {
     return DriftStorage._(
       documentDao: database.syncDocumentDao,
       propertyChangeDao: database.syncPropertyChangeDao,
+      indexDao: database.indexDao,
       database: database,
       iriTermFactory: iriTermFactory,
     );
@@ -267,6 +272,238 @@ class DriftStorage implements Storage {
           key: key,
           value: value,
         ));
+  }
+
+  // ========================================================================
+  // Index Management
+  // ========================================================================
+
+  /// Internal helper: Get or create IRI ID from SyncIris table
+  /// IndexDao has IriBatchLoader mixin which provides these methods
+  Future<int> _getOrCreateIriId(String iri) async {
+    return (await indexDao.getOrCreateIriIdsBatch({iri}))[iri]!;
+  }
+
+  /// Internal helper: Batch get IRI IDs
+
+  Future<Set<int>> _getOrCreateIriIds(Iterable<String> iris) async {
+    return (await indexDao.getOrCreateIriIdsBatch(iris)).values.toSet();
+  }
+
+  Future<Map<String, int>> _getOrCreateIriIdsMap(Iterable<String> iris) async {
+    return (await indexDao.getOrCreateIriIdsBatch(iris));
+  }
+
+  /// Internal helper: Batch get IRIs from IDs
+  Future<Map<int, String>> _getIris(Set<int> ids) async {
+    return await indexDao.getIrisBatch(ids);
+  }
+
+  @override
+  Future<storage.IndexEntriesPage> getIndexEntries({
+    required Iterable<IriTerm> indexIris,
+    int? cursorTimestamp,
+    int limit = 100,
+  }) async {
+    // Translate index IRIs to IDs internally
+    final indexIds = await _getOrCreateIriIds(
+      indexIris.map((iri) => iri.value),
+    );
+
+    // Query directly by index IDs
+    final page = await indexDao.getIndexEntries(
+      indexIds: indexIds,
+      cursorTimestamp: cursorTimestamp,
+      limit: limit,
+    );
+
+    return storage.IndexEntriesPage(
+      entries: page.entries
+          .map((e) => storage.IndexEntryWithIri(
+                resourceIri: _iriTermFactory(e.resourceIri),
+                clockHash: e.entry.clockHash,
+                headerProperties: e.entry.headerProperties,
+                updatedAt: e.entry.updatedAt,
+                isDeleted: e.entry.isDeleted,
+                ourPhysicalClock: e.entry.ourPhysicalClock,
+              ))
+          .toList(),
+      hasMore: page.hasMore,
+      lastCursor: page.lastCursor,
+    );
+  }
+
+  @override
+  Stream<List<storage.IndexEntryWithIri>> watchIndexEntries({
+    required Iterable<IriTerm> indexIris,
+    int? cursorTimestamp,
+  }) async* {
+    // Translate index IRIs to IDs internally
+    final indexIds = await _getOrCreateIriIds(
+      indexIris.map((iri) => iri.value),
+    );
+
+    // Watch using internal IDs
+    yield* indexDao
+        .watchIndexEntries(
+          indexIds: indexIds,
+          cursorTimestamp: cursorTimestamp,
+        )
+        .map((entries) => entries
+            .map((e) => storage.IndexEntryWithIri(
+                  resourceIri: _iriTermFactory(e.resourceIri),
+                  clockHash: e.entry.clockHash,
+                  headerProperties: e.entry.headerProperties,
+                  updatedAt: e.entry.updatedAt,
+                  ourPhysicalClock: e.entry.ourPhysicalClock,
+                  isDeleted: e.entry.isDeleted,
+                ))
+            .toList());
+  }
+
+  @override
+  Future<void> saveGroupIndexSubscription({
+    required IriTerm groupIndexIri,
+    required IriTerm groupIndexTemplateIri,
+    required ItemFetchPolicy itemFetchPolicy,
+    required int createdAt,
+  }) async {
+    // Translate group index IRI to ID internally
+    final ids = await _getOrCreateIriIdsMap(
+      [groupIndexIri.value, groupIndexTemplateIri.value],
+    );
+    final groupIndexIriId = ids[groupIndexIri.value]!;
+    final groupIndexTemplateIriId = ids[groupIndexTemplateIri.value]!;
+    return indexDao.saveGroupIndexSubscription(
+      groupIndexIriId: groupIndexIriId,
+      groupIndexTemplateIriId: groupIndexTemplateIriId,
+      itemFetchPolicy: itemFetchPolicy.name,
+      createdAt: createdAt,
+    );
+  }
+
+  @override
+  Stream<Set<IriTerm>> watchSubscribedGroupIndexIris(
+      IriTerm templateIri) async* {
+    // Translate template IRI to ID
+    final templateId = await _getOrCreateIriId(templateIri.value);
+
+    // Watch subscribed index IDs from DAO
+    await for (final indexIds
+        in indexDao.watchSubscribedGroupIndexIds(templateId)) {
+      // Translate IDs back to IRIs
+      if (indexIds.isEmpty) {
+        yield const {};
+      } else {
+        final idToIri = await _getIris(indexIds);
+        yield idToIri.values.map((iri) => _iriTermFactory(iri)).toSet();
+      }
+    }
+  }
+
+  @override
+  Future<int> ensureIndexSetVersion({
+    required Set<IriTerm> indexIris,
+    required int createdAt,
+  }) async {
+    // Translate index IRIs to IDs internally
+    final indexIds = await _getOrCreateIriIds(
+      indexIris.map((iri) => iri.value),
+    );
+
+    // Store version with IDs (implementation detail)
+    return indexDao.ensureIndexIdSetVersion(
+      indexIds: indexIds,
+      createdAt: createdAt,
+    );
+  }
+
+  @override
+  Future<Set<IriTerm>> getIndexIrisForVersion(int versionId) async {
+    // Get index IDs from DAO
+    final indexIds = await indexDao.getIndexIriIdsForVersion(versionId);
+
+    // Translate IDs back to IRIs
+    if (indexIds.isEmpty) return const {};
+
+    final idToIri = await _getIris(indexIds.toSet());
+    return idToIri.values.map((iri) => _iriTermFactory(iri)).toSet();
+  }
+
+  @override
+  Future<void> saveIndexEntry({
+    required IriTerm shardIri,
+    required IriTerm indexIri,
+    required IriTerm resourceIri,
+    required String clockHash,
+    String? headerProperties,
+    bool isDeleted = false,
+    required int ourPhysicalClock,
+    required int updatedAt,
+  }) async {
+    // Translate IRIs to IDs
+    final iriIds = await _getOrCreateIriIdsMap([
+      shardIri.value,
+      indexIri.value,
+      resourceIri.value,
+    ]);
+
+    final shardIriId = iriIds[shardIri.value]!;
+    final indexIriId = iriIds[indexIri.value]!;
+    final resourceIriId = iriIds[resourceIri.value]!;
+
+    // Save entry to database
+    await indexDao.saveIndexEntry(
+      shardIriId: shardIriId,
+      indexIriId: indexIriId,
+      resourceIriId: resourceIriId,
+      clockHash: clockHash,
+      headerProperties: headerProperties,
+      isDeleted: isDeleted,
+      ourPhysicalClock: ourPhysicalClock,
+      updatedAt: updatedAt,
+    );
+  }
+
+  @override
+  Future<List<storage.IndexEntryWithIri>> getActiveIndexEntriesForShard(
+      IriTerm shardIri) async {
+    // Translate shard IRI to ID
+    final iriIds = await _getOrCreateIriIdsMap([shardIri.value]);
+    final shardIriId = iriIds[shardIri.value]!;
+
+    // Get entries from DAO
+    final driftEntries =
+        await indexDao.getActiveIndexEntriesForShard(shardIriId);
+
+    // Convert to Storage interface type
+    return driftEntries
+        .map((driftEntry) => storage.IndexEntryWithIri(
+              resourceIri: _iriTermFactory(driftEntry.resourceIri),
+              clockHash: driftEntry.entry.clockHash,
+              headerProperties: driftEntry.entry.headerProperties,
+              updatedAt: driftEntry.entry.updatedAt,
+              ourPhysicalClock: driftEntry.entry.ourPhysicalClock,
+              isDeleted: driftEntry.entry.isDeleted,
+            ))
+        .toList();
+  }
+
+  @override
+  Future<List<(IriTerm iri, int maxPhysicalClock)>> getShardsToUpdate(
+      int sinceTimestamp) async {
+    final shardIris = await indexDao.getShardsToUpdate(sinceTimestamp);
+    return shardIris.map((iri) => (_iriTermFactory(iri.$1), iri.$2)).toList();
+  }
+
+  @override
+  Future<int> getLastShardSyncTimestamp() async {
+    return await indexDao.getLastShardSyncTimestamp();
+  }
+
+  @override
+  Future<void> updateLastShardSyncTimestamp(int timestamp) async {
+    await indexDao.updateLastShardSyncTimestamp(timestamp);
   }
 
   List<StoredDocument> _convertToStoredDocuments(

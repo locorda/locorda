@@ -33,13 +33,18 @@
               "input_resource": "test_cases/save/01_first_save/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/01_first_save/expected_stored_graph.ttl",
-                "installation": "test_cases/save/01_first_save/expected_installation.ttl",
-                "index_documents": [
-                  {
-                    "localName": "recipe-index",
-                    "expected_graph": "test_cases/save/01_first_save/expected_index.ttl"
-                  }
-                ],
+                "installation": "test_cases/save/01_first_save/expected_installation.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "action_ts": {
+                "sync": "2024-01-01T02:00:00.001Z"
+              },
+              "expected": {
                 "shard_documents": [
                   {
                     "index_localName": "recipe-index",
@@ -48,10 +53,13 @@
                     "shard_version": "1_0_0",
                     "expected_graph": "test_cases/save/01_first_save/expected_shard.ttl"
                   }
+                ],
+                "index_documents": [
+                  {
+                    "localName": "recipe-index",
+                    "expected_graph": "test_cases/save/01_first_save/expected_index.ttl"
+                  }
                 ]
-              },
-              "action_ts": {
-                "save": "2024-01-01T02:00:00Z"
               }
             }
           ]
@@ -732,7 +740,14 @@
             {
               "action": "save",
               "typeIri": "https://schema.org/Recipe",
-              "stored_graph_before": "test_cases/save/22_multiple_refs_identified_remove_one/stored_graph_before.ttl",
+              "input_resource": "test_cases/save/22_multiple_refs_identified_remove_one/input_resource_initial.ttl",
+              "action_ts": {
+                "save": "2024-01-01T00:00:00Z"
+              }
+            },
+            {
+              "action": "save",
+              "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/22_multiple_refs_identified_remove_one/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/22_multiple_refs_identified_remove_one/expected_stored_graph.ttl",
@@ -1026,7 +1041,15 @@
               "input_resource": "test_cases/save/31_group_index_first_save/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/31_group_index_first_save/expected_stored_graph.ttl",
-                "installation": "test_cases/save/31_group_index_first_save/expected_installation.ttl",
+                "installation": "test_cases/save/31_group_index_first_save/expected_installation.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "expected": {
                 "index_documents": [
                   {
                     "localName": "recipes-by-category",
@@ -1035,7 +1058,7 @@
                 ]
               },
               "action_ts": {
-                "save": "2024-01-01T02:00:00Z"
+                "sync": "2024-01-01T02:00:00.001Z"
               }
             }
           ]
@@ -1052,25 +1075,18 @@
               "input_resource": "test_cases/save/32_multiple_groups/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/32_multiple_groups/expected_stored_graph.ttl",
-                "installation": "test_cases/save/32_multiple_groups/expected_installation.ttl",
-                "index_documents": [
-                  {
-                    "localName": "recipes-by-category",
-                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_template.ttl"
-                  }
-                ],
-                "group_index_documents": [
-                  {
-                    "template_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_desserts.ttl"
-                  },
-                  {
-                    "template_localName": "recipes-by-category",
-                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
-                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_quick_meals.ttl"
-                  }
-                ],
+                "installation": "test_cases/save/32_multiple_groups/expected_installation.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "action_ts": {
+                "sync": "2024-01-01T02:00:01.000Z"
+              },
+              "expected": {
                 "shard_documents": [
                   {
                     "index_localName": "recipes-by-category",
@@ -1088,10 +1104,25 @@
                     "shard_version": "1_0_0",
                     "expected_graph": "test_cases/save/32_multiple_groups/expected_shard_quick_meals.ttl"
                   }
+                ],
+                "index_documents": [
+                  {
+                    "localName": "recipes-by-category",
+                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_template.ttl"
+                  }
+                ],
+                "group_index_documents": [
+                  {
+                    "template_localName": "recipes-by-category",
+                    "group_path": "desserts",
+                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_desserts.ttl"
+                  },
+                  {
+                    "template_localName": "recipes-by-category",
+                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
+                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_quick_meals.ttl"
+                  }
                 ]
-              },
-              "action_ts": {
-                "save": "2024-01-01T02:00:00Z"
               }
             }
           ]
@@ -1111,6 +1142,9 @@
               }
             },
             {
+              "action": "sync"
+            },
+            {
               "action": "save",
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/33_update_group_membership/input_resource.ttl",
@@ -1126,7 +1160,15 @@
                     "changed_at": "2024-01-01T04:00:00.000Z",
                     "logical_clock": 2
                   }
-                ],
+                ]
+              }
+            },
+            {
+              "action": "sync",
+              "action_ts": {
+                "sync": "2024-01-01T04:00:01.000Z"
+              },
+              "expected": {
                 "shard_documents": [
                   {
                     "index_localName": "recipes-by-category",
@@ -1176,7 +1218,18 @@
                     "changed_at": "2024-01-01T04:00:00Z",
                     "logical_clock": 2
                   }
-                ],
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T04:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "action_ts": {
+                "sync": "2024-01-01T04:00:00.001Z"
+              },
+              "expected": {
                 "shard_documents": [
                   {
                     "index_localName": "recipes-by-category",
@@ -1195,9 +1248,6 @@
                     "expected_graph": "test_cases/save/34_add_group_membership/expected_shard_quick_meals.ttl"
                   }
                 ]
-              },
-              "action_ts": {
-                "save": "2024-01-01T04:00:00Z"
               }
             }
           ]
@@ -1217,6 +1267,9 @@
               }
             },
             {
+              "action": "sync"
+            },
+            {
               "action": "save",
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/35_remove_group_membership/input_resource.ttl",
@@ -1229,7 +1282,18 @@
                     "changed_at": "2024-01-01T04:00:00Z",
                     "logical_clock": 2
                   }
-                ],
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T04:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "action_ts": {
+                "sync": "2024-01-01T04:00:00.001Z"
+              },
+              "expected": {
                 "shard_documents": [
                   {
                     "index_localName": "recipes-by-category",
@@ -1248,9 +1312,6 @@
                     "expected_graph": "test_cases/save/35_remove_group_membership/expected_shard_quick_meals_after.ttl"
                   }
                 ]
-              },
-              "action_ts": {
-                "save": "2024-01-01T04:00:00Z"
               }
             }
           ]
@@ -1340,7 +1401,18 @@
                     "changed_at": "2024-01-01T06:00:00Z",
                     "logical_clock": 1
                   }
-                ],
+                ]
+              },
+              "action_ts": {
+                "save": "2024-01-01T06:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "action_ts": {
+                "sync": "2024-01-01T06:00:00.001Z"
+              },
+              "expected": {
                 "shard_documents": [
                   {
                     "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1lNjc5ZDcyZi9pbmRleA==#index",
@@ -1367,9 +1439,6 @@
                     "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_desserts.ttl"
                   }
                 ]
-              },
-              "action_ts": {
-                "save": "2024-01-01T06:00:00Z"
               }
             }
           ]
@@ -1386,26 +1455,24 @@
               "input_resource": "test_cases/save/37_hierarchical_grouping/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/37_hierarchical_grouping/expected_stored_graph.ttl",
-                "installation": "test_cases/save/37_hierarchical_grouping/expected_installation.ttl",
+                "installation": "test_cases/save/37_hierarchical_grouping/expected_installation.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-15T10:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "expected": {
                 "index_documents": [
                   {
                     "localName": "recipes-by-date",
                     "expected_graph": "test_cases/save/37_hierarchical_grouping/expected_group_index_template.ttl"
                   }
-                ],
-                "shard_documents": [
-                  {
-                    "index_localName": "recipes-by-date",
-                    "group_path": "2024/01",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/37_hierarchical_grouping/expected_shard_2024_01.ttl"
-                  }
                 ]
               },
               "action_ts": {
-                "save": "2024-01-15T10:00:00Z"
+                "sync": "2024-01-15T10:00:00.001Z"
               }
             }
           ]
@@ -1422,7 +1489,15 @@
               "input_resource": "test_cases/save/38_missing_property_skip/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/38_missing_property_skip/expected_stored_graph.ttl",
-                "installation": "test_cases/save/38_missing_property_skip/expected_installation.ttl",
+                "installation": "test_cases/save/38_missing_property_skip/expected_installation.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "expected": {
                 "index_documents": [
                   {
                     "localName": "recipes-by-category",
@@ -1431,7 +1506,7 @@
                 ]
               },
               "action_ts": {
-                "save": "2024-01-01T02:00:00Z"
+                "sync": "2024-01-01T02:00:00.001Z"
               }
             }
           ]
@@ -1448,7 +1523,15 @@
               "input_resource": "test_cases/save/39_missing_property_default/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/39_missing_property_default/expected_stored_graph.ttl",
-                "installation": "test_cases/save/39_missing_property_default/expected_installation.ttl",
+                "installation": "test_cases/save/39_missing_property_default/expected_installation.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "expected": {
                 "index_documents": [
                   {
                     "localName": "recipes-by-category",
@@ -1467,7 +1550,7 @@
                 ]
               },
               "action_ts": {
-                "save": "2024-01-01T02:00:00Z"
+                "sync": "2024-01-01T02:00:00.001Z"
               }
             }
           ]
@@ -1484,7 +1567,15 @@
               "input_resource": "test_cases/save/40_transform_lowercase/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/40_transform_lowercase/expected_stored_graph.ttl",
-                "installation": "test_cases/save/40_transform_lowercase/expected_installation.ttl",
+                "installation": "test_cases/save/40_transform_lowercase/expected_installation.ttl"
+              },
+              "action_ts": {
+                "save": "2024-01-01T02:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "expected": {
                 "index_documents": [
                   {
                     "localName": "recipes-by-category",
@@ -1503,7 +1594,7 @@
                 ]
               },
               "action_ts": {
-                "save": "2024-01-01T02:00:00Z"
+                "sync": "2024-01-01T02:00:00.001Z"
               }
             }
           ]
@@ -1528,7 +1619,15 @@
               "input_resource": "test_cases/save/41_noop_group_index/input_resource.ttl",
               "expected": {
                 "stored_graph": "test_cases/save/41_noop_group_index/expected_stored_graph.ttl",
-                "property_changes": [],
+                "property_changes": []
+              },
+              "action_ts": {
+                "save": "2024-01-01T04:00:00Z"
+              }
+            },
+            {
+              "action": "sync",
+              "expected": {
                 "shard_documents": [
                   {
                     "index_localName": "recipes-by-category",
@@ -1541,7 +1640,7 @@
                 ]
               },
               "action_ts": {
-                "save": "2024-01-01T04:00:00Z"
+                "sync": "2024-01-01T04:00:00.001Z"
               }
             }
           ]

@@ -172,6 +172,12 @@ class ResourceGraphConfig extends ResourceConfigBase {
             : null,
         super(indices: indices);
 
+  CrdtIndexGraphConfig getIndexByName(String localName) {
+    return indices.firstWhere((i) => i.localName == localName,
+        orElse: () =>
+            throw ArgumentError('No index found with localName: $localName'));
+  }
+
   factory ResourceGraphConfig.fromJson(Map<String, dynamic> json) {
     final typeIri = IriTerm(json['typeIri'] as String);
     final crdtMappingStr = json['crdtMapping'] as String;
@@ -246,5 +252,18 @@ class SyncGraphConfig extends SyncConfigBase {
       resources: updatedResources,
       autoSyncConfig: autoSyncConfig,
     );
+  }
+
+  /// Find the GroupIndex configuration for the given indexName.
+  (ResourceGraphConfig, GroupIndexGraphConfig)? findGroupIndexConfig(
+      String indexName) {
+    for (final resource in resources) {
+      for (final index in resource.indices) {
+        if (index is GroupIndexGraphConfig && index.localName == indexName) {
+          return (resource, index);
+        }
+      }
+    }
+    return null;
   }
 }

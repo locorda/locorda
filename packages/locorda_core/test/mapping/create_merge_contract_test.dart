@@ -1,9 +1,8 @@
 import 'package:locorda_core/src/crdt/crdt_types.dart';
-import 'package:locorda_core/src/hlc_service.dart';
-import 'package:test/test.dart';
-import 'package:rdf_core/rdf_core.dart';
-import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/create_merge_contract.dart';
+import 'package:locorda_core/src/mapping/merge_contract.dart';
+import 'package:rdf_core/rdf_core.dart';
+import 'package:test/test.dart';
 
 import 'test_matchers.dart';
 
@@ -93,8 +92,7 @@ void main() {
         final contract = _createValidMergeContractFrom([document]);
 
         expect(contract.getClassMapping(classIriA), isNull);
-        expect(
-            contract.getPredicateMapping(predicateIri1),
+        expect(contract.getPredicateMapping(predicateIri1),
             hasRuleProperties(predicateRule));
       });
     });
@@ -164,8 +162,8 @@ void main() {
 
         final result = collectClassMappings([doc1, doc2]);
 
-        expect(
-            result[classIriA]!.getPropertyRule(predicateIri1), matchesRule(rule1));
+        expect(result[classIriA]!.getPropertyRule(predicateIri1),
+            matchesRule(rule1));
       });
 
       test('should process imports with correct precedence', () {
@@ -243,10 +241,10 @@ void main() {
 
         final result = collectClassMappings([doc1, doc2]);
 
-        expect(
-            result[classIriA]!.getPropertyRule(predicateIri1), matchesRule(rule1));
-        expect(
-            result[classIriA]!.getPropertyRule(predicateIri2), matchesRule(rule2));
+        expect(result[classIriA]!.getPropertyRule(predicateIri1),
+            matchesRule(rule1));
+        expect(result[classIriA]!.getPropertyRule(predicateIri2),
+            matchesRule(rule2));
       });
     });
 
@@ -280,10 +278,10 @@ void main() {
         final result = mergeClassMappingGroups([collection1, collection2]);
 
         expect(result, hasLength(2));
-        expect(
-            result[classIriA]!.getPropertyRule(predicateIri1), matchesRule(ruleA));
-        expect(
-            result[classIriB]!.getPropertyRule(predicateIri2), matchesRule(ruleB));
+        expect(result[classIriA]!.getPropertyRule(predicateIri1),
+            matchesRule(ruleA));
+        expect(result[classIriB]!.getPropertyRule(predicateIri2),
+            matchesRule(ruleB));
       });
     });
 
@@ -344,8 +342,10 @@ void main() {
             mergePredicateMappingGroups([mapping1, mapping2]).toList();
 
         expect(result, hasLength(1));
-        expect(result.first.getPredicateRule(predicateIri1), matchesRule(rule1));
-        expect(result.first.getPredicateRule(predicateIri2), matchesRule(rule2));
+        expect(
+            result.first.getPredicateRule(predicateIri1), matchesRule(rule1));
+        expect(
+            result.first.getPredicateRule(predicateIri2), matchesRule(rule2));
       });
     });
 
@@ -505,8 +505,7 @@ void main() {
   });
 }
 
-final _crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes(
-    physicalTimestampFactory: defaultPhysicalTimestampFactory);
+final _crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes();
 
 MergeContract _createValidMergeContractFrom(List<DocumentMapping> documents) {
   final (result, validation) =

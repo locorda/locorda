@@ -4,6 +4,7 @@
 /// that support CRDT synchronization with offline-first capabilities.
 library;
 
+import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 abstract interface class Storage {
@@ -113,6 +114,190 @@ abstract interface class Storage {
   /// Creates or updates the setting. Used to persist configuration values
   /// like installation IRI and flags.
   Future<void> setSetting(String key, String value);
+
+  // ========================================================================
+  // Index Management
+  // ========================================================================
+
+  /// Get index entries for hydration (cursor-based, excluding deleted).
+  ///
+  /// Returns a batch of entries for pagination during initial loading.
+  /// Used for batch loading existing index entries before switching to reactive watch.
+  ///
+  /// Parameters:
+  /// - [indexIris]: The index IRIs to query
+  /// - [cursorTimestamp]: Only return entries with updatedAt > cursor (milliseconds since epoch, null = from beginning)
+  /// - [limit]: Maximum number of entries to return (for pagination)
+  ///
+  /// Returns entries ordered by updatedAt ascending.
+  /// Implementation may translate IRIs to IDs internally for efficiency.
+  Future<IndexEntriesPage> getIndexEntries({
+    required Iterable<IriTerm> indexIris,
+    int? cursorTimestamp,
+    int limit = 100,
+  });
+
+  /// Watch index entries for reactive hydration.
+  ///
+  /// Emits entries whenever they change in the database.
+  /// Used for reactive hydration - automatically receiving updates when entries change.
+  ///
+  /// The stream emits:
+  /// - Initial data immediately upon subscription
+  /// - New entries whenever relevant data changes in the database
+  ///
+  /// Parameters:
+  /// - [indexIris]: The index IRIs to watch
+  /// - [cursorTimestamp]: Only emit entries with updatedAt > cursor (milliseconds since epoch, null = from beginning)
+  ///
+  /// Returns a stream that emits entries ordered by updatedAt ascending.
+  /// The stream automatically updates when entries change.
+  /// Implementation may translate IRIs to IDs internally for efficiency.
+  Stream<List<IndexEntryWithIri>> watchIndexEntries({
+    required Iterable<IriTerm> indexIris,
+    int? cursorTimestamp,
+  });
+
+  /// Save or update a group index subscription.
+  ///
+  /// Creates or updates the subscription for the given index.
+  /// Triggers reactive updates in watchIndexEntries() streams.
+  Future<void> saveGroupIndexSubscription({
+    required IriTerm groupIndexIri,
+    required IriTerm groupIndexTemplateIri,
+    required ItemFetchPolicy itemFetchPolicy,
+    required int createdAt,
+  });
+
+  /// Watch subscribed group index IRIs for reactive updates.
+  ///
+  /// Emits the list of subscribed index IRIs whenever subscriptions change.
+  Stream<Set<IriTerm>> watchSubscribedGroupIndexIris(IriTerm templateIri);
+
+  /// Get or create an index set version for cursor tracking.
+  ///
+  /// Returns a version ID that can be embedded in cursor strings.
+  /// Index IRIs are automatically sorted for consistent hashing.
+  ///
+  /// Used to track which indices were active at a given cursor position,
+  /// enabling correct historical data loading when subscriptions change.
+  Future<int> ensureIndexSetVersion({
+    required Set<IriTerm> indexIris,
+    required int createdAt,
+  });
+
+  /// Get the index IRIs for a given set version.
+  ///
+  /// Returns empty set if version not found.
+  /// Used to parse cursor strings and determine which indices were active.
+  Future<Set<IriTerm>> getIndexIrisForVersion(int versionId);
+
+  /// Save or update an index entry.
+  ///
+  /// Overwrites existing entry with same (shardIri, resourceIri) if present.
+  /// This is a cache of the actual resource data - caller is responsible for
+  /// providing current data.
+  ///
+  /// Parameters:
+  /// - [shardIri]: The shard this entry belongs to
+  /// - [indexIri]: The index this entry belongs to (immutable)
+  /// - [resourceIri]: The resource this entry points to
+  /// - [clockHash]: CRDT clock hash from the resource
+  /// - [headerProperties]: Turtle-encoded indexed properties (nullable)
+  /// - [isDeleted]: Whether this entry is marked as deleted (tombstone)
+  ///
+  /// Timestamps (updatedAt, ourPhysicalClock) are set automatically by storage.
+  Future<void> saveIndexEntry({
+    required IriTerm shardIri,
+    required IriTerm indexIri,
+    required IriTerm resourceIri,
+    required String clockHash,
+    String? headerProperties,
+    bool isDeleted = false,
+    required int ourPhysicalClock,
+    required int updatedAt,
+  });
+
+  /// Get all active (non-deleted) index entries for a shard.
+  ///
+  /// Used by SyncFunction to generate shard documents for sync.
+  /// Only returns entries where isDeleted = false.
+  ///
+  /// Parameters:
+  /// - [shardIri]: The shard IRI to query entries for
+  ///
+  /// Returns all non-deleted entries for the shard, unordered.
+  Future<List<IndexEntryWithIri>> getActiveIndexEntriesForShard(
+      IriTerm shardIri);
+
+  /// Get shard IRIs that have entries modified after the given timestamp.
+  ///
+  /// Used by SyncFunction to determine which shards need regeneration.
+  /// Includes both new/updated entries and deleted entries (tombstones).
+  ///
+  /// Parameters:
+  /// - [sinceTimestamp]: Physical clock timestamp (milliseconds since epoch)
+  ///
+  /// Returns: List of shard IRIs with modifications after the timestamp
+  Future<List<(IriTerm iri, int maxPhysicalClock)>> getShardsToUpdate(
+      int sinceTimestamp);
+
+  /// Get the timestamp of the last successful shard sync.
+  ///
+  /// Returns 0 if no sync has been performed yet.
+  Future<int> getLastShardSyncTimestamp();
+
+  /// Update the timestamp of the last successful shard sync.
+  ///
+  /// Parameters:
+  /// - [timestamp]: Physical clock timestamp (milliseconds since epoch)
+  Future<void> updateLastShardSyncTimestamp(int timestamp);
+}
+
+/// Index entry with resolved resource IRI.
+///
+/// Represents a lightweight index entry containing only indexed properties,
+/// not the full resource document.
+class IndexEntryWithIri {
+  /// The resource IRI this entry points to
+  final IriTerm resourceIri;
+
+  /// Clock hash from the resource's CRDT metadata
+  final String clockHash;
+
+  /// Turtle-encoded header properties as RDF triples.
+  /// Contains the indexed properties for this entry (e.g., schema:title, schema:datePublished).
+  /// null if no header properties configured for this index.
+  final String? headerProperties;
+
+  /// Timestamp when this entry was last updated (milliseconds since epoch, for cursor-based pagination)
+  final int updatedAt;
+  final int ourPhysicalClock;
+
+  /// Tombstone marker - true if entry was removed from index
+  final bool isDeleted;
+
+  IndexEntryWithIri({
+    required this.resourceIri,
+    required this.clockHash,
+    this.headerProperties,
+    required this.updatedAt,
+    required this.ourPhysicalClock,
+    required this.isDeleted,
+  });
+}
+
+/// Page of index entries with pagination info.
+class IndexEntriesPage {
+  final List<IndexEntryWithIri> entries;
+  final bool hasMore;
+  final int? lastCursor;
+
+  IndexEntriesPage({
+    required this.entries,
+    required this.hasMore,
+    required this.lastCursor,
+  });
 }
 
 /// Document with content and metadata retrieved from storage.

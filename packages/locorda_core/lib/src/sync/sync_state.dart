@@ -54,9 +54,9 @@ class SyncState {
         error = null;
 
   /// Create a success state with the current timestamp.
-  SyncState.success()
+  SyncState.success(DateTime lastSyncTime)
       : status = SyncStatus.success,
-        lastSyncTime = DateTime.now(),
+        lastSyncTime = lastSyncTime,
         errorMessage = null,
         error = null;
 
