@@ -225,6 +225,11 @@ mixin IriBatchLoader on DatabaseAccessor<SyncDatabase> {
     return result[iri];
   }
 
+  Future<int> getOrCreateIriId(String iri) async {
+    final result = await getOrCreateIriIdsBatch({iri});
+    return result[iri]!;
+  }
+
   /// Create missing IRIs and return their IDs
   Future<Map<String, int>> _createMissingIris(Set<String> iris) async {
     if (iris.isEmpty) return {};
@@ -381,11 +386,9 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
   /// This leverages Drift's reactive query support for efficient change detection.
   Stream<List<DocumentWithIri>> watchDocumentsModifiedSince(
       String typeIri, String? minCursor) async* {
-    final typeIriId = await _getExistingIriId(typeIri);
-    if (typeIriId == null) {
-      yield [];
-      return;
-    }
+    // for watch we need to do getOrCreate to ensure typeIri exists
+    // because there might be no documents of this type yet but later
+    final typeIriId = await getOrCreateIriId(typeIri);
 
     final timestamp = minCursor != null ? int.parse(minCursor) : 0;
 
@@ -406,11 +409,7 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
   /// This leverages Drift's reactive query support for efficient change detection.
   Stream<List<DocumentWithIri>> watchDocumentsChangedByUsSince(
       String typeIri, String? minCursor) async* {
-    final typeIriId = await _getExistingIriId(typeIri);
-    if (typeIriId == null) {
-      yield [];
-      return;
-    }
+    final typeIriId = await getOrCreateIriId(typeIri);
 
     final timestamp = minCursor != null ? int.parse(minCursor) : 0;
 

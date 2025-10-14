@@ -213,9 +213,10 @@ class DriftStorage implements Storage {
 
   @override
   Stream<DocumentsResult> watchDocumentsModifiedSince(
-      IriTerm typeIri, String? minCursor) async* {
-    await for (final documents
-        in documentDao.watchDocumentsModifiedSince(typeIri.value, minCursor)) {
+      IriTerm typeIri, String? minCursor) {
+    return documentDao
+        .watchDocumentsModifiedSince(typeIri.value, minCursor)
+        .map((documents) {
       final storedDocuments = _convertToStoredDocuments(documents);
 
       // For watch streams: currentCursor is the latest data, or minCursor if no docs
@@ -224,12 +225,12 @@ class DriftStorage implements Storage {
           ? storedDocuments.last.metadata.updatedAt.toString()
           : minCursor;
 
-      yield DocumentsResult(
+      return DocumentsResult(
         documents: storedDocuments,
         currentCursor: cursor,
         hasNext: false,
       );
-    }
+    });
   }
 
   @override
