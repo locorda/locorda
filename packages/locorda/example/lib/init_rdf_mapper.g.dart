@@ -30,12 +30,14 @@ import 'package:personal_notes_app/models/weblink.rdf_mapper.g.dart' as wrmg;
 /// Initializes and returns an RdfMapper with mappers registered.
 ///
 /// [rdfMapper] An optional RdfMapper instance to use. If not provided, a new one will be created.
+/// * [$indexItemIriFactory]
 /// * [$resourceIriFactory]
 /// * [$resourceRefFactory]
 RdfMapper initRdfMapper({
   RdfMapper? rdfMapper,
+  required IriTermMapper<(String id,)> Function<T>(Type) $indexItemIriFactory,
   required IriTermMapper<(String id,)> Function<T>(locorda_core.RootIriConfig)
-      $resourceIriFactory,
+  $resourceIriFactory,
   required IriTermMapper<String> Function<T>(Type) $resourceRefFactory,
 }) {
   if (rdfMapper == null) {
@@ -65,7 +67,7 @@ RdfMapper initRdfMapper({
   registry.registerDeserializer<nie.NoteIndexEntry>(
     niermg.NoteIndexEntryMapper(
       categoryIdMapper: $resourceRefFactory<String?>(category.Category),
-      idMapper: $resourceRefFactory<String>(note.Note),
+      iriMapper: $indexItemIriFactory<nie.NoteIndexEntry>(note.Note),
     ),
   );
   registry.registerMapper<weblink.Weblink>(wrmg.WeblinkMapper());

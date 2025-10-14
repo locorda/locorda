@@ -98,6 +98,7 @@ class LocordaSync {
     final mappingContext = SolidMappingContext(
       resourceIriFactory: iriService.createResourceIriMapper,
       resourceRefFactory: iriService.createResourceRefMapper,
+      indexItemIriFactory: iriService.createIndexItemIriMapper,
       baseRdfMapper: RdfMapper(
           registry: RdfMapperRegistry(),
           iriTermFactory: iriTermFactory,
@@ -323,16 +324,58 @@ class LocordaSync {
   /// Hydrates resources of type [T] using a reactive stream.
   ///
   /// Returns a stream of decoded objects of type [T]. The stream automatically:
-  /// - Loads all existing resources in batches
-  /// - Switches to reactive mode for ongoing changes
+  /// - Loads all existing resources/entries in batches (controlled by [initialBatchSize])
+  /// - Switches to reactive mode for ongoing changes (via Drift's watch())
   /// - Orders resources by their update timestamp for consistent processing
   /// - Handles RDF mapping/unmapping transparently
   ///
-  /// The [localName] parameter is used to distinguish between different indices
-  /// that might use the same Dart class (e.g., different GroupIndex configurations).
+  /// ## Behavior Based on Type [T]
   ///
-  /// The [cursor] parameter allows resuming from a specific position. If null,
-  /// hydration starts from the beginning.
+  /// **Full Resource Hydration** (if [T] is a `@LocordaResource` type):
+  /// - Loads complete resource documents with all properties
+  /// - Uses [cursor] to resume from last processed position
+  /// - Each emission represents a full resource object
+  ///
+  /// **Index Entry Hydration** (if [T] is a `@LocordaIndexItem` type):
+  /// - Loads lightweight index entries with only indexed properties
+  /// - **Entry-level change tracking**: Only changed entries are re-emitted,
+  ///   not entire shards, using progressive cursor tracking
+  /// - For GroupIndex: Automatically handles subscription changes and loads
+  ///   historical data for newly subscribed groups
+  /// - Significantly more efficient for large datasets
+  ///
+  /// ## Parameters
+  /// - [cursor]: Resume position from previous hydration. Format depends on
+  ///   hydration type (see [LocordaGraphSync.hydrateStream] for details).
+  ///   If null, starts from the beginning.
+  /// - [localName]: Distinguishes between different indices using the same
+  ///   Dart class (e.g., different GroupIndex configurations). Only relevant
+  ///   for index item types. Default: [defaultIndexLocalName].
+  /// - [initialBatchSize]: Number of items to load per batch during initial
+  ///   catch-up phase. Default: 100. Adjust based on memory constraints and
+  ///   network conditions.
+  ///
+  /// ## Performance Characteristics
+  /// - **Batch Loading Phase**: Processes existing data in chunks of [initialBatchSize]
+  /// - **Reactive Phase**: Only emits changed items, minimizing overhead
+  /// - **Memory Efficient**: Streams data incrementally, never loads entire dataset
+  ///
+  /// ## Example
+  /// ```dart
+  /// // Full resource hydration
+  /// syncSystem.hydrateStream<Note>(cursor: lastCursor).listen((batch) {
+  ///   for (final note in batch.updates) {
+  ///     // Process complete Note object
+  ///   }
+  /// });
+  ///
+  /// // Index entry hydration (lightweight)
+  /// syncSystem.hydrateStream<NoteIndexEntry>(cursor: lastCursor).listen((batch) {
+  ///   for (final entry in batch.updates) {
+  ///     // Process lightweight NoteIndexEntry (only indexed properties)
+  ///   }
+  /// });
+  /// ```
   ///
   Stream<TypedHydrationBatch<T>> hydrateStream<T>({
     String? cursor,
@@ -377,31 +420,11 @@ class LocordaSync {
                       identifiedGraph.$2,
                       completeness: completeness))
                   .toList(),
-              deletions: batch.deletions.map((identifiedGraph) {
-                final IriTerm itemIri;
-                if (indexName != null) {
-                  final resourceTriples = identifiedGraph.$2.findTriples(
-                      subject: identifiedGraph.$1,
-                      predicate: IdxShardEntry.resource);
-                  if (resourceTriples.isEmpty) {
-                    throw Exception(
-                        'Index item is missing required idx:resource property for deletion.');
-                  }
-                  if (resourceTriples.length > 1) {
-                    throw Exception(
-                        'Index item has multiple idx:resource properties - cannot determine resource IRI for deletion.');
-                  }
-                  if (resourceTriples.first.object is! IriTerm) {
-                    throw Exception(
-                        'Index item has non-IRI idx:resource property - cannot determine resource IRI for deletion.');
-                  }
-                  itemIri = resourceTriples.first.object as IriTerm;
-                } else {
-                  itemIri = identifiedGraph.$1;
-                }
-
-                return _localResourceLocator.fromIri(typeIri, itemIri).id;
-              }).toList(),
+              deletions: batch.deletions
+                  .map((identifiedGraph) => _localResourceLocator
+                      .fromIri(typeIri, identifiedGraph.$1)
+                      .id)
+                  .toList(),
               cursor: batch.cursor,
             ));
   }

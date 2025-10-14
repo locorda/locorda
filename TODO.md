@@ -61,17 +61,36 @@
   - Complete group subscription logic
   - Currently stubbed in `configureGroupIndexSubscription()`
   - Needed for efficient data organization and sync
-- [ ] Optimize index entry hydration performance
-  - **Entry-level change tracking:** Currently, when a single entry in a shard changes,
-    ALL entries in that shard (hundreds to thousands) are re-emitted to the application.
-    This is a trade-off for implementation simplicity and cursor robustness.
-  - **Possible optimizations:**
-    - Track entry-specific cursors within shards
-    - Batch entry updates within shard updates
-    - Use diff algorithms to detect changed entries only
-    - Add entry-level batching respecting initialBatchSize
-  - **Note:** Current implementation is acceptable for typical use cases but may become
-    noticeable in high-frequency update scenarios
+- [x] Optimize index entry hydration performance
+  - **Entry-level change tracking:** ✅ **IMPLEMENTED**
+  - **Solution:** Progressive cursor tracking in `watchIndexEntries()` - maintains a per-stream cursor
+    that filters entries by `updatedAt`, emitting only entries that have changed since the last emission.
+  - **Implementation details:**
+    - Uses `StreamController` with manual cursor tracking
+    - Filters entries on Dart side after Drift watch triggers
+    - Minimal memory overhead (one int per stream)
+    - Works seamlessly with existing batch loading phase
+  - **Completed optimizations:**
+    - ✅ Track entry-specific cursors (via updatedAt per entry)
+    - ✅ Entry-level batching respecting initialBatchSize
+    - ✅ Efficient change detection using timestamps (no diff algorithms needed)
+  - **Result:** Only changed entries are re-emitted, not entire shards
+- [x] Adjust example app and LocordaSync to semantic changes wrt index item graphs - they now use the resource iri, not the entry iri!
+
+
+### Priority 4: Backend Implementations
+- [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
+- [ ] Implement in-memory backend for testing and development
+  - Simpler to implement than Solid backend
+  - Enables testing without external dependencies
+  - Good foundation for understanding backend interface
+- [ ] Implement Solid backend with actual Pod storage operations
+  - Most complex but enables the full vision
+  - Requires Pod operations, authentication integration
+  - Can reuse patterns from in-memory backend
+
+### Priority 5: Implement Delete
+- [ ] Deletion support is part of the concept and the example app has deletion usecases, but it is not fully implemented yet
 - [ ] Implement proper index entry deletion tracking
   - **Problem:** When an entry is removed from a shard's `idx:containsEntry` OR-Set,
     it currently just stops appearing in updates without explicit deletion notification.
@@ -87,20 +106,6 @@
     - Include both the resource predicate and some special deletion marker in the entry tombstone to mark this as the tombstone for deleting the resource, not only the shard entry
   - **Impact:** Applications currently need to handle missing entries gracefully,
     treating absence as implicit deletion. Explicit deletion events would improve UX.
-
-### Priority 4: Backend Implementations
-- [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
-- [ ] Implement in-memory backend for testing and development
-  - Simpler to implement than Solid backend
-  - Enables testing without external dependencies
-  - Good foundation for understanding backend interface
-- [ ] Implement Solid backend with actual Pod storage operations
-  - Most complex but enables the full vision
-  - Requires Pod operations, authentication integration
-  - Can reuse patterns from in-memory backend
-
-### Priority 5: Implement Delete
-- [] Deletion support is part of the concept and the example app has deletion usecases, but it is not fully implemented yet
 
 ### Priority 6: Ensure full Offline-First Support
 - [ ] merge-contract: Build-time asset bundling (essential for offline-first: bundle all referenced merge contracts as assets so apps work offline from first launch)

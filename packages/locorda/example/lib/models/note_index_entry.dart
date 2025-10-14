@@ -5,12 +5,10 @@
 /// like Hybrid Logical Clock hashes for change detection.
 library;
 
+import 'package:locorda_annotations/locorda_annotations.dart';
 import 'package:personal_notes_app/models/note.dart';
-
 import 'package:rdf_mapper_annotations/rdf_mapper_annotations.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
-import 'package:locorda_annotations/locorda_annotations.dart';
-import 'package:locorda_core/locorda_core.dart';
 
 /// Lightweight index entry for Note resources.
 ///
@@ -18,12 +16,11 @@ import 'package:locorda_core/locorda_core.dart';
 /// loading the full note content. Used in index update streams and
 /// on-demand sync scenarios.
 ///
-/// Index entries automatically use LWW-Register for all properties by default.
-/// No CRDT annotations needed - the framework handles conflict resolution.
-@LcrdIndexItem()
+/// No CRDT annotations needed for index entries, would be ignored anyways.
+@LcrdIndexItem(IndexItemIriStrategy(Note))
 class NoteIndexEntry {
-  /// Note ID - same as the full Note resource
-  @RdfProperty(IdxShardEntry.resource, iri: LcrdRootResourceRef(Note))
+  /// Unique identifier for the note
+  @RdfIriPart()
   final String id;
 
   /// Note title for display in lists

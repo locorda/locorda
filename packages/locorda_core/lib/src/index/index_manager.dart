@@ -438,6 +438,7 @@ class IndexManager {
         shardIri: shardIri,
         indexIri: indexIri,
         resourceIri: resourceIri,
+        // TODO: is it correct to use empty clockHash here?
         clockHash: '', // Empty hash for deleted entries
         headerProperties: null,
         isDeleted: true,

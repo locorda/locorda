@@ -508,15 +508,21 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   ///
   /// ## With Index (indexName != null)
   /// Hydrates lightweight index entries from the specified index:
-  /// - Loads the index document to find associated shards
-  /// - Loads shard documents containing index entries
+  /// - Loads index entries in batches (bounded by [initialBatchSize])
+  /// - Switches to reactive mode for ongoing changes
+  /// - **Entry-level change tracking**: Only changed entries are re-emitted,
+  ///   not entire shards. Uses progressive cursor tracking to minimize overhead.
   /// - Extracts entries with indexed properties only (not full resources)
   /// - Emits (resourceIri, entryGraph) for each indexed item
-  /// - **Note:** [initialBatchSize] is currently ignored for index hydration
+  /// - For GroupIndex: Automatically handles subscription changes and loads
+  ///   historical data for newly subscribed groups
   ///
-  /// **Performance:** When a shard changes, ALL its entries (hundreds to thousands)
-  /// are re-emitted. This is acceptable for most use cases but may be optimized
-  /// in the future with entry-level change tracking.
+  /// ## Performance Characteristics
+  /// - **Batch Loading Phase**: Controlled by [initialBatchSize], loads existing
+  ///   data in configurable chunks to avoid memory spikes
+  /// - **Reactive Phase**: Only emits entries that have actually changed since
+  ///   the last emission, using entry-level timestamps for efficient filtering
+  /// - **Memory Footprint**: Minimal overhead (one cursor int per active stream)
   ///
   /// The caller is responsible for:
   /// - Providing the current cursor position via [cursor]
@@ -561,6 +567,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
                     startCursor,
                     useIndexSetVersionId: true,
                     cursorIndexSetVersionId: cursorIndexSetVersionId,
+                    initialBatchSize: initialBatchSize,
                   ));
         case FullIndexGraphConfig _: // FullIndex: there is just a single index
           final indexIri =
@@ -570,6 +577,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
             {indexIri},
             startCursor,
             useIndexSetVersionId: false,
+            initialBatchSize: initialBatchSize,
           );
       }
     }
@@ -606,6 +614,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
     int startCursor, {
     bool useIndexSetVersionId = false,
     int? cursorIndexSetVersionId,
+    required int initialBatchSize,
   }) async* {
     int? indexSetVersionId;
     // Track the last cursor emitted from batch loading
@@ -647,16 +656,24 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
             'Loading historical data for ${newIndexIris.length} new indices up to cursor $startCursor');
 
         final result = _loadExistingEntriesAsStream(
-            newIndexIris, indexSetVersionId,
-            fromCursor: 0, toCursor: startCursor);
+          newIndexIris,
+          indexSetVersionId,
+          fromCursor: 0,
+          toCursor: startCursor,
+          initialBatchSize: initialBatchSize,
+        );
         yield* result.stream;
         lastEmittedCursor = await result.lastCursor;
       }
     }
 
     // Phase 1b: Load current data for all subscriptions (from startCursor)
-    final result = _loadExistingEntriesAsStream(indexIris, indexSetVersionId,
-        fromCursor: lastEmittedCursor);
+    final result = _loadExistingEntriesAsStream(
+      indexIris,
+      indexSetVersionId,
+      fromCursor: lastEmittedCursor,
+      initialBatchSize: initialBatchSize,
+    );
     yield* result.stream;
     lastEmittedCursor = await result.lastCursor;
 
@@ -682,7 +699,9 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   ({Stream<HydrationBatch> stream, Future<int> lastCursor})
       _loadExistingEntriesAsStream(
           Set<IriTerm> indexIris, int? indexSetVersionId,
-          {required int fromCursor, int? toCursor}) {
+          {required int fromCursor,
+          int? toCursor,
+          required int initialBatchSize}) {
     final controller = StreamController<HydrationBatch>();
     final lastCursorCompleter = Completer<int>();
     var lastEmittedCursor = fromCursor;
@@ -694,7 +713,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
           final page = await _storage.getIndexEntries(
             indexIris: indexIris,
             cursorTimestamp: cursor,
-            limit: 100,
+            limit: initialBatchSize,
           );
 
           if (page.entries.isNotEmpty) {
@@ -746,14 +765,8 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
       // For hydration, we flatten this to just the resource IRI and its properties.
       final resourceIri = entry.resourceIri;
 
-      // Build graph with clockHash and header properties
-      final triples = <Triple>[
-        Triple(
-          resourceIri,
-          Crdt.clockHash,
-          LiteralTerm(entry.clockHash),
-        ),
-      ];
+      // Build graph with header properties
+      final triples = <Triple>[];
 
       // Add header properties if present
       // Header properties are stored as Turtle-encoded triples in the DB

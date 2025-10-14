@@ -7,6 +7,7 @@ import 'package:locorda_annotations/locorda_annotations.dart';
 import 'package:locorda_core/locorda_core.dart';
 
 const resourceIriFactoryKey = r'$resourceIriFactory';
+const indexItemIriFactoryKey = r'$indexItemIriFactory';
 const resourceIriVar = r'rootResourceIri';
 
 class RootIriStrategy extends IriStrategy {
@@ -153,15 +154,21 @@ class LcrdSubResource extends RdfGlobalResource {
       : super(classIri, iriStrategy, registerGlobally: false);
 }
 
+class IndexItemIriStrategy extends IriStrategy {
+  const IndexItemIriStrategy(Type resourceType)
+      : super.namedFactory(indexItemIriFactoryKey, resourceType);
+}
+
 class LcrdIndexItem extends RdfGlobalResource {
-  const LcrdIndexItem()
+  const LcrdIndexItem(IndexItemIriStrategy iriStrategy)
       // create (and register) only a Deserializer, because the IndexItem classes
-      // are never serialized from dart to rdf - they are only deserialized and
-      // this way we do not need a full IRI strategy
+      // are never serialized from dart to rdf - they are only deserialized.
       : super.deserializeOnly(
             // Save a bit of space and do not repeat the type of index entries over and over again
+            // Plus: since the IndexItem uses the same type as the root resource, we would
+            // risk messing up the rdf mapper if we used the same type here.
             null,
-            registerGlobally: true);
+            iri: iriStrategy);
 }
 
 class LcrdGroupKey extends RdfLocalResource {

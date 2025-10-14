@@ -92,6 +92,19 @@ class LocalResourceIriService {
     return _LocalReferenceIriMapper(_converter, targetType);
   }
 
+  IriTermMapper<(String,)> createIndexItemIriMapper<T>(Type targetType) {
+    // This is a programming constraint - throw immediately
+    if (_isSetupComplete) {
+      throw StateError(
+          'Index item IRI mapper cannot be created after setup is complete');
+    }
+    // referencing the same type multiple times of course is fine
+    _referencedTypes.add(targetType);
+
+    // Create local reference mapper that uses the same IRI scheme as resources
+    return _LocalIndexItemIriMapper(_converter, targetType);
+  }
+
   /// Validates the current setup configuration.
   ///
   /// Returns a [ValidationResult] containing any errors or warnings found
@@ -211,6 +224,25 @@ class _LocalReferenceIriMapper implements IriTermMapper<String> {
   @override
   IriTerm toRdfTerm(String value, SerializationContext context) {
     return _converter.toIri(targetType, value);
+  }
+}
+
+class _LocalIndexItemIriMapper implements IriTermMapper<(String,)> {
+  final Type targetType;
+  final ReferenceConverter _converter;
+
+  const _LocalIndexItemIriMapper(this._converter, this.targetType);
+
+  @override
+  (String,) fromRdfTerm(IriTerm term, DeserializationContext context) {
+    final id = _converter.fromIri(targetType, term);
+    return (id,);
+  }
+
+  @override
+  IriTerm toRdfTerm((String,) value, SerializationContext context) {
+    final (id,) = value;
+    return _converter.toIri(targetType, id);
   }
 }
 

@@ -1,6 +1,7 @@
 /// Drift database schema for Locorda sync storage.
 library;
 
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
@@ -573,7 +574,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   }) async {
     // Direct query without joins - indexId is denormalized on index_entries
     var query = select(db.indexEntries)
-      ..where((e) => e.isDeleted.equals(false) & e.indexIriId.isIn(indexIds));
+      ..where((e) => e.indexIriId.isIn(indexIds));
 
     // Apply cursor based on updatedAt timestamp (milliseconds since epoch)
     if (cursorTimestamp != null) {
@@ -613,38 +614,59 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
     );
   }
 
-  /// Watch index entries for reactive hydration
+  /// Watch index entries for reactive hydration with progressive cursor tracking.
+  ///
+  /// Uses entry-level change tracking to emit only entries that have changed
+  /// since the last emission. The [cursorTimestamp] acts as the initial baseline,
+  /// and subsequent emissions only include entries with updatedAt > last emitted cursor.
+  ///
+  /// This minimizes the number of entries re-emitted when a single entry in a shard changes.
   Stream<List<DriftIndexEntry>> watchIndexEntries({
     required Iterable<int> indexIds,
     int? cursorTimestamp,
   }) {
+    final controller = StreamController<List<DriftIndexEntry>>();
+    var currentCursor = cursorTimestamp ?? 0;
+
     // Direct query without joins - indexId is denormalized on index_entries
-    var query = select(db.indexEntries)
-      ..where((e) => e.isDeleted.equals(false) & e.indexIriId.isIn(indexIds));
+    final query = select(db.indexEntries)
+      ..where((e) => e.indexIriId.isIn(indexIds))
+      ..orderBy([(e) => OrderingTerm.asc(e.updatedAt)]);
 
-    // Apply cursor based on updatedAt timestamp (milliseconds since epoch)
-    if (cursorTimestamp != null) {
-      query = query
-        ..where((e) => e.updatedAt.isBiggerThanValue(cursorTimestamp));
-    }
+    final subscription = query.watch().listen((allEntries) async {
+      // Filter only entries that are newer than our current cursor
+      // This is the key optimization: only emit entries that have actually changed
+      final newEntries =
+          allEntries.where((e) => e.updatedAt > currentCursor).toList();
 
-    // Order by update timestamp
-    query = query..orderBy([(e) => OrderingTerm.asc(e.updatedAt)]);
+      if (newEntries.isEmpty) {
+        // No new entries - skip this emission
+        return;
+      }
 
-    return query.watch().asyncMap((entries) async {
-      if (entries.isEmpty) return <DriftIndexEntry>[];
+      // Update cursor to the latest timestamp we're emitting
+      // This ensures next emission only includes entries changed after this point
+      currentCursor =
+          newEntries.map((e) => e.updatedAt).reduce((a, b) => a > b ? a : b);
 
-      // Batch load resource IRIs
-      final resourceIriIds = entries.map((e) => e.resourceIriId).toSet();
+      // Batch load resource IRIs only for new entries
+      final resourceIriIds = newEntries.map((e) => e.resourceIriId).toSet();
       final iriMap = await getIrisBatch(resourceIriIds);
 
-      return entries
+      final entriesWithIris = newEntries
           .map((e) => DriftIndexEntry(
                 entry: e,
                 resourceIri: iriMap[e.resourceIriId]!,
               ))
           .toList();
+
+      controller.add(entriesWithIris);
     });
+
+    // Cleanup: cancel drift watch subscription when stream is cancelled
+    controller.onCancel = () => subscription.cancel();
+
+    return controller.stream;
   }
 
   /// Save or update a group index subscription

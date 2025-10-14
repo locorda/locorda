@@ -13,7 +13,6 @@ import 'package:rdf_mapper/rdf_mapper.dart';
 
 // Other imports
 import 'package:personal_notes_app/models/note_index_entry.dart' as nie;
-import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
 import 'package:personal_notes_app/vocabulary/personal_notes_vocab.dart' as pnv;
 import 'package:personal_notes_app/models/category.dart' as category;
@@ -26,14 +25,14 @@ import 'package:personal_notes_app/models/note.dart';
 class NoteIndexEntryMapper
     implements GlobalResourceDeserializer<nie.NoteIndexEntry> {
   final IriTermMapper<String> _categoryIdMapper;
-  final IriTermMapper<String> _idMapper;
+  final IriTermMapper<(String id,)> _iriMapper;
 
   /// Constructor
   const NoteIndexEntryMapper({
     required IriTermMapper<String> categoryIdMapper,
-    required IriTermMapper<String> idMapper,
+    required IriTermMapper<(String id,)> iriMapper,
   }) : _categoryIdMapper = categoryIdMapper,
-       _idMapper = idMapper;
+       _iriMapper = iriMapper;
 
   @override
   IriTerm? get typeIri => null;
@@ -45,10 +44,8 @@ class NoteIndexEntryMapper
   ) {
     final reader = context.reader(subject);
 
-    final String id = reader.require(
-      IdxShardEntry.resource,
-      deserializer: _idMapper,
-    );
+    final (id,) = _iriMapper.fromRdfTerm(subject, context);
+
     final String name = reader.require(SchemaNoteDigitalDocument.name);
     final DateTime dateCreated = reader.require(
       SchemaNoteDigitalDocument.dateCreated,

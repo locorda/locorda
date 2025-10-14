@@ -20,6 +20,5 @@ export 'src/resource.dart'
         LcrdIndexItem,
         RootIriStrategy,
         SubIriStrategy,
-        resourceIriFactoryKey,
-        resourceIriVar;
+        IndexItemIriStrategy;
 export 'src/resource_ref.dart' show LcrdRootResourceRef, resourceRefFactoryKey;

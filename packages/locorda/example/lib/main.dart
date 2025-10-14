@@ -57,6 +57,7 @@ Future<LocordaSync> initializeLocordaSync(
     backend: SolidBackend(auth: SolidAuthBridge(solidAuth)),
     mapperInitializer: (context) => initRdfMapper(
         rdfMapper: context.baseRdfMapper,
+        $indexItemIriFactory: context.indexItemIriFactory,
         $resourceIriFactory: context.resourceIriFactory,
         $resourceRefFactory: context.resourceRefFactory),
 
