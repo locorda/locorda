@@ -264,6 +264,10 @@ class IndexManager {
       final (indexIri, indexedProperties) =
           await _propertyResolver.resolveIndexedProperties(shardDocumentIri);
       if (indexIri == null) {
+        // FIXME: this can happen for foreign app shards which are referenced - we need to handle this case
+        // somehow. Downloading the shard and index is not an option here, because
+        // we are offline-first. So maybe make an index entry without header properties,
+        // without index IRI and with a marker that this needs to be resolved later?
         _log.warning(
             'Shard $shardDocumentIri has no associated index or template, skipping.');
         continue;
