@@ -16,7 +16,18 @@ enum ItemFetchPolicy {
   /// Lazy item fetching - items are only downloaded from the pod to local
   /// when explicitly requested by the application. Once downloaded, items are
   /// automatically updated when remote changes occur.
-  onRequest
+  onRequest;
+
+  static ItemFetchPolicy fromString(String value) {
+    switch (value.toLowerCase()) {
+      case 'prefetch':
+        return ItemFetchPolicy.prefetch;
+      case 'onrequest':
+        return ItemFetchPolicy.onRequest;
+      default:
+        throw ArgumentError('Invalid ItemFetchPolicy value: $value');
+    }
+  }
 }
 
 /// Defines how index items are structured and deserialized.

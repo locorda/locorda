@@ -1,4 +1,5 @@
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/remote_storage.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
@@ -20,12 +21,17 @@ class RemoteSyncOrchestrator {
   final Storage _storage;
   final RemoteStorage _remoteStorage;
   final RemoteDocumentMerger _merger;
-
+  final SyncGraphConfig _config;
+  final IndexRdfGenerator _indexRdfGenerator;
   RemoteSyncOrchestrator({
     required Storage storage,
     required RemoteStorage remoteStorage,
+    required SyncGraphConfig config,
+    required IndexRdfGenerator indexRdfGenerator,
   })  : _storage = storage,
         _remoteStorage = remoteStorage,
+        _config = config,
+        _indexRdfGenerator = indexRdfGenerator,
         _merger = RemoteDocumentMerger(storage: storage);
 
   RemoteId get _remoteId => _remoteStorage.remoteId;
@@ -62,10 +68,9 @@ class RemoteSyncOrchestrator {
   Future<SyncContext> _reconcileMetadata() async {
     _log.info('Phase A: Metadata Reconciliation & Queue Building');
 
-    final syncContext = SyncContext();
-
     // Step 1: Sync Index Documents
-    await _syncIndexDocuments(syncContext);
+    final allIndices = await _syncIndexDocuments();
+    final syncContext = SyncContext(indices: allIndices);
 
     // Step 2: Build Document Sync Queue
     await _buildDocumentSyncQueue(syncContext);
@@ -102,21 +107,29 @@ class RemoteSyncOrchestrator {
   /// 2. Handle 200/304/404 responses
   /// 3. Merge if needed
   /// 4. Upload loop with retry on 412 conflict
-  Future<void> _syncIndexDocuments(SyncContext context) async {
+  Future<List<(IriTerm, ItemFetchPolicy)>> _syncIndexDocuments() async {
     _log.fine('Syncing index documents');
 
-    // TODO: Get configured indices from IndexManager
-    final indices = <IriTerm>[];
-    _log.warning('TODO: Get configured indices from IndexManager');
+    final fullIndices = _config.resources.expand((resource) =>
+        resource.indices.whereType<FullIndexGraphConfig>().map((index) {
+          final iri =
+              _indexRdfGenerator.generateFullIndexIri(index, resource.typeIri);
+          return (iri, index.itemFetchPolicy);
+        }));
+    final groupIndices = await _storage.getAllSubscribedGroupIndices();
+    final indices = <(IriTerm, ItemFetchPolicy)>[
+      ...fullIndices,
+      ...groupIndices
+    ];
 
-    for (final indexIri in indices) {
-      await _syncSingleIndexDocument(indexIri, context);
+    for (final (indexIri, _) in indices) {
+      await _syncSingleIndexDocument(indexIri);
     }
+    return indices;
   }
 
   /// Sync a single index document with retry loop on 412
-  Future<void> _syncSingleIndexDocument(
-      IriTerm indexIri, SyncContext context) async {
+  Future<void> _syncSingleIndexDocument(IriTerm indexIri) async {
     _log.fine('Syncing index: $indexIri');
 
     while (true) {
@@ -579,6 +592,8 @@ class RemoteSyncOrchestrator {
 
 /// Context object carrying state through sync phases
 class SyncContext {
+  final List<(IriTerm, ItemFetchPolicy)> indices;
+
   /// Documents that need to be processed (IRI set)
   final Set<IriTerm> documentQueue = {};
 
@@ -587,4 +602,7 @@ class SyncContext {
 
   /// ETags for shards from Phase A (shardIri -> ETag)
   final Map<IriTerm, String?> shardETags = {};
+
+  SyncContext({List<(IriTerm, ItemFetchPolicy)> indices = const []})
+      : indices = List.unmodifiable(indices);
 }

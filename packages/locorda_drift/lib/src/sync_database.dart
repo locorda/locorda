@@ -753,6 +753,30 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
         .map((results) => results.map((row) => row.groupIndexIriId).toSet());
   }
 
+  /// Get all subscribed group indices with their IRIs and fetch policies.
+  ///
+  /// Returns records containing the group index IRI string and item fetch policy
+  /// for all currently subscribed group indices.
+  Future<List<SubscribedGroupIndexData>> getAllSubscribedGroupIndices() async {
+    final query = select(db.groupIndexSubscriptions).join([
+      innerJoin(
+        db.syncIris,
+        db.syncIris.id.equalsExp(db.groupIndexSubscriptions.groupIndexIriId),
+      ),
+    ]);
+
+    final results = await query.get();
+
+    return results.map((row) {
+      final subscription = row.readTable(db.groupIndexSubscriptions);
+      final iri = row.readTable(db.syncIris);
+      return SubscribedGroupIndexData(
+        groupIndexIri: iri.iri,
+        itemFetchPolicy: subscription.itemFetchPolicy,
+      );
+    }).toList();
+  }
+
   /// Get or create a index id set version for the given index IDs.
   ///
   /// Returns the version ID that can be used in cursor strings.
@@ -1001,6 +1025,17 @@ class DriftIndexEntry {
   DriftIndexEntry({
     required this.entry,
     required this.resourceIri,
+  });
+}
+
+/// Subscribed group index data with IRI and fetch policy
+class SubscribedGroupIndexData {
+  final String groupIndexIri;
+  final String itemFetchPolicy;
+
+  SubscribedGroupIndexData({
+    required this.groupIndexIri,
+    required this.itemFetchPolicy,
   });
 }
 

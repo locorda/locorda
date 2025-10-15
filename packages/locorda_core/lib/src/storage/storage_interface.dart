@@ -169,10 +169,18 @@ abstract interface class Storage {
     required int createdAt,
   });
 
+
   /// Watch subscribed group index IRIs for reactive updates.
   ///
   /// Emits the list of subscribed index IRIs whenever subscriptions change.
   Stream<Set<IriTerm>> watchSubscribedGroupIndexIris(IriTerm templateIri);
+
+  /// Get all subscribed group indices with their fetch policies.
+  ///
+  /// Returns a list of tuples containing the group index IRI and its
+  /// associated item fetch policy for all currently subscribed group indices.
+  /// Used during remote sync to determine which indices need synchronization.
+  Future<List<(IriTerm, ItemFetchPolicy)>> getAllSubscribedGroupIndices();
 
   /// Get or create an index set version for cursor tracking.
   ///

@@ -390,6 +390,20 @@ class DriftStorage implements Storage {
   }
 
   @override
+  Future<List<(IriTerm, ItemFetchPolicy)>>
+      getAllSubscribedGroupIndices() async {
+    final subscriptions = await indexDao.getAllSubscribedGroupIndices();
+
+    return subscriptions.map((subscription) {
+      final indexIri = _iriTermFactory(subscription.groupIndexIri);
+      final fetchPolicy = ItemFetchPolicy.fromString(
+        subscription.itemFetchPolicy,
+      );
+      return (indexIri, fetchPolicy);
+    }).toList();
+  }
+
+  @override
   Stream<Set<IriTerm>> watchSubscribedGroupIndexIris(
       IriTerm templateIri) async* {
     // Translate template IRI to ID

@@ -15,6 +15,7 @@ class ShardDocumentGenerator {
   final Storage _storage;
   final CrdtDocumentManager _documentManager;
   final IndexManager _indexManager;
+
   ShardDocumentGenerator({
     required Storage storage,
     required CrdtDocumentManager documentManager,

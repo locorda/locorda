@@ -244,6 +244,13 @@ class InMemoryStorage implements Storage {
   }
 
   @override
+  Future<List<(IriTerm, ItemFetchPolicy)>> getAllSubscribedGroupIndices() async {
+    return _groupIndexSubscriptions.values
+        .map((sub) => (sub.groupIndexIri, sub.itemFetchPolicy))
+        .toList();
+  }
+
+  @override
   Future<int> ensureIndexSetVersion({
     required Set<IriTerm> indexIris,
     required int createdAt,

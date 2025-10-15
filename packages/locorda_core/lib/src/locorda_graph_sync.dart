@@ -79,6 +79,8 @@ class LocordaGraphSync {
               documentManager: crdtDocumentManager,
               indexManager: indexManager,
               backends: backends,
+              config: config,
+              indexRdfGenerator: indexRdfGenerator,
             ),
             autoSyncConfig: config.autoSyncConfig,
             physicalTimestampFactory: physicalTimestampFactory),
