@@ -79,6 +79,7 @@
 
 
 ### Priority 4: Backend Implementations
+- [x] Refine concept for actual sync algorithm
 - [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
 - [ ] Implement in-memory backend for testing and development
   - Simpler to implement than Solid backend
@@ -88,6 +89,10 @@
   - Most complex but enables the full vision
   - Requires Pod operations, authentication integration
   - Can reuse patterns from in-memory backend
+- [ ] Thoroughly test, for example
+  - Foreign indices/shards that are referenced, but not yet downloaded when an item is saved!
+- [ ] on save metadata computation: Don't we have to check for existing tombstone entries and remove them ? What happens to those? will we get endless tombstone chains?
+- [ ] Should we prepare the remote sync code for the possibility to have different remotes? Maybe by prefixing the etags?
 
 ### Priority 5: Implement Delete
 - [ ] Deletion support is part of the concept and the example app has deletion usecases, but it is not fully implemented yet

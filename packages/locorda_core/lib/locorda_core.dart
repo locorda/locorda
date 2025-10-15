@@ -93,6 +93,7 @@ export 'src/locorda_graph_sync.dart' show LocordaGraphSync, IdentifiedGraph;
 export 'src/mapping/root_iri_config.dart' show RootIriConfig;
 export 'src/mapping/resource_locator.dart'
     show ResourceLocator, LocalResourceLocator, ResourceIdentifier;
+export 'src/storage/remote_id.dart' show RemoteId;
 export 'src/storage/remote_storage.dart' show RemoteStorage;
 export 'src/storage/storage_interface.dart'
     show

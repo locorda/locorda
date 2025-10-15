@@ -11,7 +11,7 @@ import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
 import '../util/rdf_test_utils.dart';
-import 'test_backend.dart';
+import 'in_memory_backend.dart';
 import 'test_fetcher.dart';
 import 'test_physical_timestamp_factory.dart';
 import 'in_memory_storage.dart';
@@ -203,7 +203,7 @@ Future<void> _executeStep({
         baseInstallationId != null ? () => baseInstallationId : null;
 
     final sync = await LocordaGraphSync.setup(
-        backend: TestBackend(),
+        backends: [InMemoryBackend()],
         storage: storage,
         config: config,
         fetcher: fetcher,
@@ -278,7 +278,7 @@ Future<void> _executeStep({
       baseInstallationId != null ? () => baseInstallationId : null;
 
   final sync = await LocordaGraphSync.setup(
-      backend: TestBackend(),
+      backends: [InMemoryBackend()],
       storage: storage,
       config: config,
       fetcher: fetcher,
@@ -742,7 +742,7 @@ Future<void> _executeSaveErrorTest(
         baseInstallationId != null ? () => baseInstallationId : null;
 
     final sync = await LocordaGraphSync.setup(
-        backend: TestBackend(),
+        backends: [InMemoryBackend()],
         storage: storage,
         config: config,
         fetcher: fetcher,

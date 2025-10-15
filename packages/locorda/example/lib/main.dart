@@ -54,7 +54,7 @@ Future<LocordaSync> initializeLocordaSync(
   return await LocordaSync.setup(
     /* control behaviour and system integration */
     storage: DriftStorage(web: driftWeb, native: driftNative),
-    backend: SolidBackend(auth: SolidAuthBridge(solidAuth)),
+    backends: [SolidBackend(auth: SolidAuthBridge(solidAuth))],
     mapperInitializer: (context) => initRdfMapper(
         rdfMapper: context.baseRdfMapper,
         $indexItemIriFactory: context.indexItemIriFactory,

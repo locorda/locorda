@@ -40,8 +40,6 @@ typedef HydrationBatch = ({
 /// optional Solid Pod synchronization. Handles RDF mapping, storage,
 /// and sync operations transparently.
 class LocordaGraphSync {
-  // ignore: unused_field
-  final Backend _backend; // TODO: Use for Remote synchronization
   final Storage _storage;
   final IndexManager _indexManager;
   final SyncGraphConfig _config;
@@ -56,7 +54,7 @@ class LocordaGraphSync {
   SyncManager get syncManager => _syncManager;
 
   LocordaGraphSync._({
-    required Backend backend,
+    required List<Backend> backends,
     required Storage storage,
     required IndexManager indexManager,
     required SyncGraphConfig config,
@@ -64,8 +62,7 @@ class LocordaGraphSync {
     required CrdtDocumentManager crdtDocumentManager,
     required IndexRdfGenerator indexRdfGenerator,
     required PhysicalTimestampFactory physicalTimestampFactory,
-  })  : _backend = backend,
-        _storage = storage,
+  })  : _storage = storage,
         _indexManager = indexManager,
         _config = config,
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
@@ -81,7 +78,7 @@ class LocordaGraphSync {
               storage: storage,
               documentManager: crdtDocumentManager,
               indexManager: indexManager,
-              backend: backend,
+              backends: backends,
             ),
             autoSyncConfig: config.autoSyncConfig,
             physicalTimestampFactory: physicalTimestampFactory),
@@ -98,7 +95,7 @@ class LocordaGraphSync {
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
   static Future<LocordaGraphSync> setup({
-    required Backend backend,
+    required List<Backend> backends,
     required Storage storage,
     required SyncGraphConfig config,
     PhysicalTimestampFactory? physicalTimestampFactory,
@@ -215,7 +212,7 @@ class LocordaGraphSync {
     await indexManager.initializeIndices();
 
     final sync = LocordaGraphSync._(
-      backend: backend,
+      backends: backends,
       storage: storage,
       indexManager: indexManager,
       config: effectiveConfig,

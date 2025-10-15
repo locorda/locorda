@@ -22,6 +22,8 @@ Before any network requests, the client prepares its local state.
 * **Verify Index Item Consistency**: Ensure entries in the index items table for any "dirty" documents are up-to-date with their latest clock hash and header properties. This step confirms local consistency before network operations begin.  
 * **Materialize Current Local Shard State**: For each shard in the sync, construct its **current_local_shard_state**. This is done by taking the last known version of the shard document (from the previous sync's download/upload) and applying the current set of entries from the index items table as its "application data". This in-memory document represents the complete, up-to-date local view.
 
+> **FIXME:** Why does this state that this is in-memory? Why not replace the old local state in DB with this? 
+
 ### **4. Synchronization Cycle 🔄**
 
 The core process begins, organized into distinct, sequential phases.

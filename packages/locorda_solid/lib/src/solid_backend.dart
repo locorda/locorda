@@ -3,6 +3,9 @@ import 'package:locorda_core/locorda_core.dart';
 import 'auth/solid_auth_provider.dart';
 
 class SolidBackend implements Backend {
+  String get name => 'solid';
+
+  // ignore: unused_field
   final SolidAuthProvider _authProvider;
 
   SolidBackend({
@@ -10,11 +13,7 @@ class SolidBackend implements Backend {
   }) : _authProvider = auth;
 
   @override
-  Auth get auth => _authProvider;
-
-  @override
-  RemoteStorage get remoteStorage => throw UnimplementedError();
-
-  @override
-  ResourceLocator get resourceLocator => throw UnimplementedError();
+  List<RemoteStorage> get remotes =>
+      // FIXME: Implement actual Pod RemoteStorage instances
+      [];
 }

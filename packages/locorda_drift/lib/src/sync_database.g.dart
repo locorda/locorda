@@ -20,7 +20,11 @@ mixin _$IndexDaoMixin on DatabaseAccessor<SyncDatabase> {
       attachedDatabase.groupIndexSubscriptions;
   $IndexIriIdSetVersionsTable get indexIriIdSetVersions =>
       attachedDatabase.indexIriIdSetVersions;
-  $SyncMetadataTable get syncMetadata => attachedDatabase.syncMetadata;
+}
+mixin _$RemoteSyncStateDaoMixin on DatabaseAccessor<SyncDatabase> {
+  $RemoteSettingsTable get remoteSettings => attachedDatabase.remoteSettings;
+  $SyncIrisTable get syncIris => attachedDatabase.syncIris;
+  $RemoteSyncStateTable get remoteSyncState => attachedDatabase.remoteSyncState;
 }
 
 class $SyncIrisTable extends SyncIris with TableInfo<$SyncIrisTable, SyncIri> {
@@ -2148,47 +2152,88 @@ class IndexIriIdSetVersionsCompanion
   }
 }
 
-class $SyncMetadataTable extends SyncMetadata
-    with TableInfo<$SyncMetadataTable, SyncMetadataData> {
+class $RemoteSettingsTable extends RemoteSettings
+    with TableInfo<$RemoteSettingsTable, RemoteSetting> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $SyncMetadataTable(this.attachedDatabase, [this._alias]);
+  $RemoteSettingsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
       'id', aliasedName, false,
+      hasAutoIncrement: true,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _lastShardSyncTimestampMeta =
-      const VerificationMeta('lastShardSyncTimestamp');
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _remoteIdMeta =
+      const VerificationMeta('remoteId');
   @override
-  late final GeneratedColumn<int> lastShardSyncTimestamp = GeneratedColumn<int>(
-      'last_shard_sync_timestamp', aliasedName, false,
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+      'remote_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _remoteTypeMeta =
+      const VerificationMeta('remoteType');
+  @override
+  late final GeneratedColumn<String> remoteType = GeneratedColumn<String>(
+      'remote_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _lastSyncTimestampMeta =
+      const VerificationMeta('lastSyncTimestamp');
+  @override
+  late final GeneratedColumn<int> lastSyncTimestamp = GeneratedColumn<int>(
+      'last_sync_timestamp', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
-  List<GeneratedColumn> get $columns => [id, lastShardSyncTimestamp];
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, remoteId, remoteType, lastSyncTimestamp, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'sync_metadata';
+  static const String $name = 'remote_settings';
   @override
-  VerificationContext validateIntegrity(Insertable<SyncMetadataData> instance,
+  VerificationContext validateIntegrity(Insertable<RemoteSetting> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('last_shard_sync_timestamp')) {
+    if (data.containsKey('remote_id')) {
+      context.handle(_remoteIdMeta,
+          remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta));
+    } else if (isInserting) {
+      context.missing(_remoteIdMeta);
+    }
+    if (data.containsKey('remote_type')) {
       context.handle(
-          _lastShardSyncTimestampMeta,
-          lastShardSyncTimestamp.isAcceptableOrUnknown(
-              data['last_shard_sync_timestamp']!, _lastShardSyncTimestampMeta));
+          _remoteTypeMeta,
+          remoteType.isAcceptableOrUnknown(
+              data['remote_type']!, _remoteTypeMeta));
+    } else if (isInserting) {
+      context.missing(_remoteTypeMeta);
+    }
+    if (data.containsKey('last_sync_timestamp')) {
+      context.handle(
+          _lastSyncTimestampMeta,
+          lastSyncTimestamp.isAcceptableOrUnknown(
+              data['last_sync_timestamp']!, _lastSyncTimestampMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
     }
     return context;
   }
@@ -2196,55 +2241,86 @@ class $SyncMetadataTable extends SyncMetadata
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {remoteType, remoteId},
+      ];
+  @override
+  RemoteSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SyncMetadataData(
+    return RemoteSetting(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      lastShardSyncTimestamp: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}last_shard_sync_timestamp'])!,
+      remoteId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}remote_id'])!,
+      remoteType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}remote_type'])!,
+      lastSyncTimestamp: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}last_sync_timestamp'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
     );
   }
 
   @override
-  $SyncMetadataTable createAlias(String alias) {
-    return $SyncMetadataTable(attachedDatabase, alias);
+  $RemoteSettingsTable createAlias(String alias) {
+    return $RemoteSettingsTable(attachedDatabase, alias);
   }
 }
 
-class SyncMetadataData extends DataClass
-    implements Insertable<SyncMetadataData> {
-  /// Primary key (always 1 for singleton)
+class RemoteSetting extends DataClass implements Insertable<RemoteSetting> {
+  /// Auto-incrementing primary key
   final int id;
 
-  /// Physical clock timestamp of last successful shard sync (milliseconds since epoch)
-  /// Used to find shards with entries newer than this timestamp
-  final int lastShardSyncTimestamp;
-  const SyncMetadataData(
-      {required this.id, required this.lastShardSyncTimestamp});
+  /// Remote ID (e.g., 'https://alice.pod.example/')
+  /// Combined with remoteType must be unique per backend.
+  final String remoteId;
+
+  /// Type of remote (e.g., 'solid-pod', 'generic-http')
+  /// Allows future extensibility for different remote types
+  final String remoteType;
+
+  /// Timestamp of last successful sync with this remote (milliseconds since epoch)
+  /// Used for tracking overall remote sync progress
+  final int lastSyncTimestamp;
+
+  /// When this remote was first configured (milliseconds since epoch)
+  final int createdAt;
+  const RemoteSetting(
+      {required this.id,
+      required this.remoteId,
+      required this.remoteType,
+      required this.lastSyncTimestamp,
+      required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['last_shard_sync_timestamp'] = Variable<int>(lastShardSyncTimestamp);
+    map['remote_id'] = Variable<String>(remoteId);
+    map['remote_type'] = Variable<String>(remoteType);
+    map['last_sync_timestamp'] = Variable<int>(lastSyncTimestamp);
+    map['created_at'] = Variable<int>(createdAt);
     return map;
   }
 
-  SyncMetadataCompanion toCompanion(bool nullToAbsent) {
-    return SyncMetadataCompanion(
+  RemoteSettingsCompanion toCompanion(bool nullToAbsent) {
+    return RemoteSettingsCompanion(
       id: Value(id),
-      lastShardSyncTimestamp: Value(lastShardSyncTimestamp),
+      remoteId: Value(remoteId),
+      remoteType: Value(remoteType),
+      lastSyncTimestamp: Value(lastSyncTimestamp),
+      createdAt: Value(createdAt),
     );
   }
 
-  factory SyncMetadataData.fromJson(Map<String, dynamic> json,
+  factory RemoteSetting.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SyncMetadataData(
+    return RemoteSetting(
       id: serializer.fromJson<int>(json['id']),
-      lastShardSyncTimestamp:
-          serializer.fromJson<int>(json['lastShardSyncTimestamp']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
+      remoteType: serializer.fromJson<String>(json['remoteType']),
+      lastSyncTimestamp: serializer.fromJson<int>(json['lastSyncTimestamp']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
     );
   }
   @override
@@ -2252,72 +2328,115 @@ class SyncMetadataData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'lastShardSyncTimestamp': serializer.toJson<int>(lastShardSyncTimestamp),
+      'remoteId': serializer.toJson<String>(remoteId),
+      'remoteType': serializer.toJson<String>(remoteType),
+      'lastSyncTimestamp': serializer.toJson<int>(lastSyncTimestamp),
+      'createdAt': serializer.toJson<int>(createdAt),
     };
   }
 
-  SyncMetadataData copyWith({int? id, int? lastShardSyncTimestamp}) =>
-      SyncMetadataData(
+  RemoteSetting copyWith(
+          {int? id,
+          String? remoteId,
+          String? remoteType,
+          int? lastSyncTimestamp,
+          int? createdAt}) =>
+      RemoteSetting(
         id: id ?? this.id,
-        lastShardSyncTimestamp:
-            lastShardSyncTimestamp ?? this.lastShardSyncTimestamp,
+        remoteId: remoteId ?? this.remoteId,
+        remoteType: remoteType ?? this.remoteType,
+        lastSyncTimestamp: lastSyncTimestamp ?? this.lastSyncTimestamp,
+        createdAt: createdAt ?? this.createdAt,
       );
-  SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
-    return SyncMetadataData(
+  RemoteSetting copyWithCompanion(RemoteSettingsCompanion data) {
+    return RemoteSetting(
       id: data.id.present ? data.id.value : this.id,
-      lastShardSyncTimestamp: data.lastShardSyncTimestamp.present
-          ? data.lastShardSyncTimestamp.value
-          : this.lastShardSyncTimestamp,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      remoteType:
+          data.remoteType.present ? data.remoteType.value : this.remoteType,
+      lastSyncTimestamp: data.lastSyncTimestamp.present
+          ? data.lastSyncTimestamp.value
+          : this.lastSyncTimestamp,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('SyncMetadataData(')
+    return (StringBuffer('RemoteSetting(')
           ..write('id: $id, ')
-          ..write('lastShardSyncTimestamp: $lastShardSyncTimestamp')
+          ..write('remoteId: $remoteId, ')
+          ..write('remoteType: $remoteType, ')
+          ..write('lastSyncTimestamp: $lastSyncTimestamp, ')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, lastShardSyncTimestamp);
+  int get hashCode =>
+      Object.hash(id, remoteId, remoteType, lastSyncTimestamp, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SyncMetadataData &&
+      (other is RemoteSetting &&
           other.id == this.id &&
-          other.lastShardSyncTimestamp == this.lastShardSyncTimestamp);
+          other.remoteId == this.remoteId &&
+          other.remoteType == this.remoteType &&
+          other.lastSyncTimestamp == this.lastSyncTimestamp &&
+          other.createdAt == this.createdAt);
 }
 
-class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
+class RemoteSettingsCompanion extends UpdateCompanion<RemoteSetting> {
   final Value<int> id;
-  final Value<int> lastShardSyncTimestamp;
-  const SyncMetadataCompanion({
+  final Value<String> remoteId;
+  final Value<String> remoteType;
+  final Value<int> lastSyncTimestamp;
+  final Value<int> createdAt;
+  const RemoteSettingsCompanion({
     this.id = const Value.absent(),
-    this.lastShardSyncTimestamp = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.remoteType = const Value.absent(),
+    this.lastSyncTimestamp = const Value.absent(),
+    this.createdAt = const Value.absent(),
   });
-  SyncMetadataCompanion.insert({
+  RemoteSettingsCompanion.insert({
     this.id = const Value.absent(),
-    this.lastShardSyncTimestamp = const Value.absent(),
-  });
-  static Insertable<SyncMetadataData> custom({
+    required String remoteId,
+    required String remoteType,
+    this.lastSyncTimestamp = const Value.absent(),
+    required int createdAt,
+  })  : remoteId = Value(remoteId),
+        remoteType = Value(remoteType),
+        createdAt = Value(createdAt);
+  static Insertable<RemoteSetting> custom({
     Expression<int>? id,
-    Expression<int>? lastShardSyncTimestamp,
+    Expression<String>? remoteId,
+    Expression<String>? remoteType,
+    Expression<int>? lastSyncTimestamp,
+    Expression<int>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (lastShardSyncTimestamp != null)
-        'last_shard_sync_timestamp': lastShardSyncTimestamp,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (remoteType != null) 'remote_type': remoteType,
+      if (lastSyncTimestamp != null) 'last_sync_timestamp': lastSyncTimestamp,
+      if (createdAt != null) 'created_at': createdAt,
     });
   }
 
-  SyncMetadataCompanion copyWith(
-      {Value<int>? id, Value<int>? lastShardSyncTimestamp}) {
-    return SyncMetadataCompanion(
+  RemoteSettingsCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? remoteId,
+      Value<String>? remoteType,
+      Value<int>? lastSyncTimestamp,
+      Value<int>? createdAt}) {
+    return RemoteSettingsCompanion(
       id: id ?? this.id,
-      lastShardSyncTimestamp:
-          lastShardSyncTimestamp ?? this.lastShardSyncTimestamp,
+      remoteId: remoteId ?? this.remoteId,
+      remoteType: remoteType ?? this.remoteType,
+      lastSyncTimestamp: lastSyncTimestamp ?? this.lastSyncTimestamp,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -2327,18 +2446,326 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (lastShardSyncTimestamp.present) {
-      map['last_shard_sync_timestamp'] =
-          Variable<int>(lastShardSyncTimestamp.value);
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (remoteType.present) {
+      map['remote_type'] = Variable<String>(remoteType.value);
+    }
+    if (lastSyncTimestamp.present) {
+      map['last_sync_timestamp'] = Variable<int>(lastSyncTimestamp.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
     }
     return map;
   }
 
   @override
   String toString() {
-    return (StringBuffer('SyncMetadataCompanion(')
+    return (StringBuffer('RemoteSettingsCompanion(')
           ..write('id: $id, ')
-          ..write('lastShardSyncTimestamp: $lastShardSyncTimestamp')
+          ..write('remoteId: $remoteId, ')
+          ..write('remoteType: $remoteType, ')
+          ..write('lastSyncTimestamp: $lastSyncTimestamp, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RemoteSyncStateTable extends RemoteSyncState
+    with TableInfo<$RemoteSyncStateTable, RemoteSyncStateData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RemoteSyncStateTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _documentIriIdMeta =
+      const VerificationMeta('documentIriId');
+  @override
+  late final GeneratedColumn<int> documentIriId = GeneratedColumn<int>(
+      'document_iri_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+  static const VerificationMeta _remoteIdMeta =
+      const VerificationMeta('remoteId');
+  @override
+  late final GeneratedColumn<int> remoteId = GeneratedColumn<int>(
+      'remote_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES remote_settings (id)'));
+  static const VerificationMeta _etagMeta = const VerificationMeta('etag');
+  @override
+  late final GeneratedColumn<String> etag = GeneratedColumn<String>(
+      'etag', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastSyncedAtMeta =
+      const VerificationMeta('lastSyncedAt');
+  @override
+  late final GeneratedColumn<int> lastSyncedAt = GeneratedColumn<int>(
+      'last_synced_at', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [documentIriId, remoteId, etag, lastSyncedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'remote_sync_state';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<RemoteSyncStateData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('document_iri_id')) {
+      context.handle(
+          _documentIriIdMeta,
+          documentIriId.isAcceptableOrUnknown(
+              data['document_iri_id']!, _documentIriIdMeta));
+    } else if (isInserting) {
+      context.missing(_documentIriIdMeta);
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(_remoteIdMeta,
+          remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta));
+    } else if (isInserting) {
+      context.missing(_remoteIdMeta);
+    }
+    if (data.containsKey('etag')) {
+      context.handle(
+          _etagMeta, etag.isAcceptableOrUnknown(data['etag']!, _etagMeta));
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+          _lastSyncedAtMeta,
+          lastSyncedAt.isAcceptableOrUnknown(
+              data['last_synced_at']!, _lastSyncedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {documentIriId, remoteId};
+  @override
+  RemoteSyncStateData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RemoteSyncStateData(
+      documentIriId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}document_iri_id'])!,
+      remoteId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}remote_id'])!,
+      etag: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}etag']),
+      lastSyncedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}last_synced_at'])!,
+    );
+  }
+
+  @override
+  $RemoteSyncStateTable createAlias(String alias) {
+    return $RemoteSyncStateTable(attachedDatabase, alias);
+  }
+}
+
+class RemoteSyncStateData extends DataClass
+    implements Insertable<RemoteSyncStateData> {
+  /// Foreign key to SyncIris table for the document IRI
+  final int documentIriId;
+
+  /// Foreign key to RemoteSettings for efficient storage
+  /// Normalized reference instead of repeating URLs
+  final int remoteId;
+
+  /// ETag from last GET/PUT for conditional requests
+  /// NULL if never synced or ETag not supported by remote
+  final String? etag;
+
+  /// Timestamp of last successful sync (milliseconds since epoch)
+  /// Used for tracking when document was last synced with this remote
+  final int lastSyncedAt;
+  const RemoteSyncStateData(
+      {required this.documentIriId,
+      required this.remoteId,
+      this.etag,
+      required this.lastSyncedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['document_iri_id'] = Variable<int>(documentIriId);
+    map['remote_id'] = Variable<int>(remoteId);
+    if (!nullToAbsent || etag != null) {
+      map['etag'] = Variable<String>(etag);
+    }
+    map['last_synced_at'] = Variable<int>(lastSyncedAt);
+    return map;
+  }
+
+  RemoteSyncStateCompanion toCompanion(bool nullToAbsent) {
+    return RemoteSyncStateCompanion(
+      documentIriId: Value(documentIriId),
+      remoteId: Value(remoteId),
+      etag: etag == null && nullToAbsent ? const Value.absent() : Value(etag),
+      lastSyncedAt: Value(lastSyncedAt),
+    );
+  }
+
+  factory RemoteSyncStateData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RemoteSyncStateData(
+      documentIriId: serializer.fromJson<int>(json['documentIriId']),
+      remoteId: serializer.fromJson<int>(json['remoteId']),
+      etag: serializer.fromJson<String?>(json['etag']),
+      lastSyncedAt: serializer.fromJson<int>(json['lastSyncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'documentIriId': serializer.toJson<int>(documentIriId),
+      'remoteId': serializer.toJson<int>(remoteId),
+      'etag': serializer.toJson<String?>(etag),
+      'lastSyncedAt': serializer.toJson<int>(lastSyncedAt),
+    };
+  }
+
+  RemoteSyncStateData copyWith(
+          {int? documentIriId,
+          int? remoteId,
+          Value<String?> etag = const Value.absent(),
+          int? lastSyncedAt}) =>
+      RemoteSyncStateData(
+        documentIriId: documentIriId ?? this.documentIriId,
+        remoteId: remoteId ?? this.remoteId,
+        etag: etag.present ? etag.value : this.etag,
+        lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      );
+  RemoteSyncStateData copyWithCompanion(RemoteSyncStateCompanion data) {
+    return RemoteSyncStateData(
+      documentIriId: data.documentIriId.present
+          ? data.documentIriId.value
+          : this.documentIriId,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      etag: data.etag.present ? data.etag.value : this.etag,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RemoteSyncStateData(')
+          ..write('documentIriId: $documentIriId, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('etag: $etag, ')
+          ..write('lastSyncedAt: $lastSyncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(documentIriId, remoteId, etag, lastSyncedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RemoteSyncStateData &&
+          other.documentIriId == this.documentIriId &&
+          other.remoteId == this.remoteId &&
+          other.etag == this.etag &&
+          other.lastSyncedAt == this.lastSyncedAt);
+}
+
+class RemoteSyncStateCompanion extends UpdateCompanion<RemoteSyncStateData> {
+  final Value<int> documentIriId;
+  final Value<int> remoteId;
+  final Value<String?> etag;
+  final Value<int> lastSyncedAt;
+  final Value<int> rowid;
+  const RemoteSyncStateCompanion({
+    this.documentIriId = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.etag = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RemoteSyncStateCompanion.insert({
+    required int documentIriId,
+    required int remoteId,
+    this.etag = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : documentIriId = Value(documentIriId),
+        remoteId = Value(remoteId);
+  static Insertable<RemoteSyncStateData> custom({
+    Expression<int>? documentIriId,
+    Expression<int>? remoteId,
+    Expression<String>? etag,
+    Expression<int>? lastSyncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (documentIriId != null) 'document_iri_id': documentIriId,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (etag != null) 'etag': etag,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RemoteSyncStateCompanion copyWith(
+      {Value<int>? documentIriId,
+      Value<int>? remoteId,
+      Value<String?>? etag,
+      Value<int>? lastSyncedAt,
+      Value<int>? rowid}) {
+    return RemoteSyncStateCompanion(
+      documentIriId: documentIriId ?? this.documentIriId,
+      remoteId: remoteId ?? this.remoteId,
+      etag: etag ?? this.etag,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (documentIriId.present) {
+      map['document_iri_id'] = Variable<int>(documentIriId.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<int>(remoteId.value);
+    }
+    if (etag.present) {
+      map['etag'] = Variable<String>(etag.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RemoteSyncStateCompanion(')
+          ..write('documentIriId: $documentIriId, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('etag: $etag, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2357,12 +2784,16 @@ abstract class _$SyncDatabase extends GeneratedDatabase {
       $GroupIndexSubscriptionsTable(this);
   late final $IndexIriIdSetVersionsTable indexIriIdSetVersions =
       $IndexIriIdSetVersionsTable(this);
-  late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
+  late final $RemoteSettingsTable remoteSettings = $RemoteSettingsTable(this);
+  late final $RemoteSyncStateTable remoteSyncState =
+      $RemoteSyncStateTable(this);
   late final SyncDocumentDao syncDocumentDao =
       SyncDocumentDao(this as SyncDatabase);
   late final SyncPropertyChangeDao syncPropertyChangeDao =
       SyncPropertyChangeDao(this as SyncDatabase);
   late final IndexDao indexDao = IndexDao(this as SyncDatabase);
+  late final RemoteSyncStateDao remoteSyncStateDao =
+      RemoteSyncStateDao(this as SyncDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2375,7 +2806,8 @@ abstract class _$SyncDatabase extends GeneratedDatabase {
         indexEntries,
         groupIndexSubscriptions,
         indexIriIdSetVersions,
-        syncMetadata
+        remoteSettings,
+        remoteSyncState
       ];
 }
 
@@ -2537,6 +2969,23 @@ final class $$SyncIrisTableReferences
 
     final cache =
         $_typedResult.readTableOrNull(_groupIndexTemplateIriIdTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$RemoteSyncStateTable, List<RemoteSyncStateData>>
+      _remoteSyncStateRefsTable(_$SyncDatabase db) =>
+          MultiTypedResultKey.fromTable(db.remoteSyncState,
+              aliasName: $_aliasNameGenerator(
+                  db.syncIris.id, db.remoteSyncState.documentIriId));
+
+  $$RemoteSyncStateTableProcessedTableManager get remoteSyncStateRefs {
+    final manager = $$RemoteSyncStateTableTableManager(
+            $_db, $_db.remoteSyncState)
+        .filter((f) => f.documentIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_remoteSyncStateRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -2747,6 +3196,27 @@ class $$SyncIrisTableFilterComposer
                   $removeJoinBuilderFromRootComposer:
                       $removeJoinBuilderFromRootComposer,
                 ));
+    return f(composer);
+  }
+
+  Expression<bool> remoteSyncStateRefs(
+      Expression<bool> Function($$RemoteSyncStateTableFilterComposer f) f) {
+    final $$RemoteSyncStateTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.remoteSyncState,
+        getReferencedColumn: (t) => t.documentIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RemoteSyncStateTableFilterComposer(
+              $db: $db,
+              $table: $db.remoteSyncState,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
@@ -2978,6 +3448,27 @@ class $$SyncIrisTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> remoteSyncStateRefs<T extends Object>(
+      Expression<T> Function($$RemoteSyncStateTableAnnotationComposer a) f) {
+    final $$RemoteSyncStateTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.remoteSyncState,
+        getReferencedColumn: (t) => t.documentIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RemoteSyncStateTableAnnotationComposer(
+              $db: $db,
+              $table: $db.remoteSyncState,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$SyncIrisTableTableManager extends RootTableManager<
@@ -3000,7 +3491,8 @@ class $$SyncIrisTableTableManager extends RootTableManager<
         bool indexIri,
         bool indexResourceIri,
         bool groupIndexSubscriptionsRefs,
-        bool groupIndexTemplateIriId})> {
+        bool groupIndexTemplateIriId,
+        bool remoteSyncStateRefs})> {
   $$SyncIrisTableTableManager(_$SyncDatabase db, $SyncIrisTable table)
       : super(TableManagerState(
           db: db,
@@ -3040,7 +3532,8 @@ class $$SyncIrisTableTableManager extends RootTableManager<
               indexIri = false,
               indexResourceIri = false,
               groupIndexSubscriptionsRefs = false,
-              groupIndexTemplateIriId = false}) {
+              groupIndexTemplateIriId = false,
+              remoteSyncStateRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -3052,7 +3545,8 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                 if (indexIri) db.indexEntries,
                 if (indexResourceIri) db.indexEntries,
                 if (groupIndexSubscriptionsRefs) db.groupIndexSubscriptions,
-                if (groupIndexTemplateIriId) db.groupIndexSubscriptions
+                if (groupIndexTemplateIriId) db.groupIndexSubscriptions,
+                if (remoteSyncStateRefs) db.remoteSyncState
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -3170,6 +3664,19 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems.where(
                                 (e) => e.groupIndexTemplateIriId == item.id),
+                        typedResults: items),
+                  if (remoteSyncStateRefs)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            RemoteSyncStateData>(
+                        currentTable: table,
+                        referencedTable: $$SyncIrisTableReferences
+                            ._remoteSyncStateRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0)
+                                .remoteSyncStateRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.documentIriId == item.id),
                         typedResults: items)
                 ];
               },
@@ -3198,7 +3705,8 @@ typedef $$SyncIrisTableProcessedTableManager = ProcessedTableManager<
         bool indexIri,
         bool indexResourceIri,
         bool groupIndexSubscriptionsRefs,
-        bool groupIndexTemplateIriId})>;
+        bool groupIndexTemplateIriId,
+        bool remoteSyncStateRefs})>;
 typedef $$SyncDocumentsTableCreateCompanionBuilder = SyncDocumentsCompanion
     Function({
   Value<int> id,
@@ -5202,20 +5710,49 @@ typedef $$IndexIriIdSetVersionsTableProcessedTableManager
         ),
         IndexIriIdSetVersion,
         PrefetchHooks Function()>;
-typedef $$SyncMetadataTableCreateCompanionBuilder = SyncMetadataCompanion
+typedef $$RemoteSettingsTableCreateCompanionBuilder = RemoteSettingsCompanion
     Function({
   Value<int> id,
-  Value<int> lastShardSyncTimestamp,
+  required String remoteId,
+  required String remoteType,
+  Value<int> lastSyncTimestamp,
+  required int createdAt,
 });
-typedef $$SyncMetadataTableUpdateCompanionBuilder = SyncMetadataCompanion
+typedef $$RemoteSettingsTableUpdateCompanionBuilder = RemoteSettingsCompanion
     Function({
   Value<int> id,
-  Value<int> lastShardSyncTimestamp,
+  Value<String> remoteId,
+  Value<String> remoteType,
+  Value<int> lastSyncTimestamp,
+  Value<int> createdAt,
 });
 
-class $$SyncMetadataTableFilterComposer
-    extends Composer<_$SyncDatabase, $SyncMetadataTable> {
-  $$SyncMetadataTableFilterComposer({
+final class $$RemoteSettingsTableReferences extends BaseReferences<
+    _$SyncDatabase, $RemoteSettingsTable, RemoteSetting> {
+  $$RemoteSettingsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$RemoteSyncStateTable, List<RemoteSyncStateData>>
+      _remoteSyncStateRefsTable(_$SyncDatabase db) =>
+          MultiTypedResultKey.fromTable(db.remoteSyncState,
+              aliasName: $_aliasNameGenerator(
+                  db.remoteSettings.id, db.remoteSyncState.remoteId));
+
+  $$RemoteSyncStateTableProcessedTableManager get remoteSyncStateRefs {
+    final manager =
+        $$RemoteSyncStateTableTableManager($_db, $_db.remoteSyncState)
+            .filter((f) => f.remoteId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_remoteSyncStateRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$RemoteSettingsTableFilterComposer
+    extends Composer<_$SyncDatabase, $RemoteSettingsTable> {
+  $$RemoteSettingsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5225,14 +5762,44 @@ class $$SyncMetadataTableFilterComposer
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get lastShardSyncTimestamp => $composableBuilder(
-      column: $table.lastShardSyncTimestamp,
+  ColumnFilters<String> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get remoteType => $composableBuilder(
+      column: $table.remoteType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastSyncTimestamp => $composableBuilder(
+      column: $table.lastSyncTimestamp,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> remoteSyncStateRefs(
+      Expression<bool> Function($$RemoteSyncStateTableFilterComposer f) f) {
+    final $$RemoteSyncStateTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.remoteSyncState,
+        getReferencedColumn: (t) => t.remoteId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RemoteSyncStateTableFilterComposer(
+              $db: $db,
+              $table: $db.remoteSyncState,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
-class $$SyncMetadataTableOrderingComposer
-    extends Composer<_$SyncDatabase, $SyncMetadataTable> {
-  $$SyncMetadataTableOrderingComposer({
+class $$RemoteSettingsTableOrderingComposer
+    extends Composer<_$SyncDatabase, $RemoteSettingsTable> {
+  $$RemoteSettingsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5242,14 +5809,23 @@ class $$SyncMetadataTableOrderingComposer
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get lastShardSyncTimestamp => $composableBuilder(
-      column: $table.lastShardSyncTimestamp,
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get remoteType => $composableBuilder(
+      column: $table.remoteType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastSyncTimestamp => $composableBuilder(
+      column: $table.lastSyncTimestamp,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $$SyncMetadataTableAnnotationComposer
-    extends Composer<_$SyncDatabase, $SyncMetadataTable> {
-  $$SyncMetadataTableAnnotationComposer({
+class $$RemoteSettingsTableAnnotationComposer
+    extends Composer<_$SyncDatabase, $RemoteSettingsTable> {
+  $$RemoteSettingsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5259,73 +5835,478 @@ class $$SyncMetadataTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get lastShardSyncTimestamp => $composableBuilder(
-      column: $table.lastShardSyncTimestamp, builder: (column) => column);
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteType => $composableBuilder(
+      column: $table.remoteType, builder: (column) => column);
+
+  GeneratedColumn<int> get lastSyncTimestamp => $composableBuilder(
+      column: $table.lastSyncTimestamp, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> remoteSyncStateRefs<T extends Object>(
+      Expression<T> Function($$RemoteSyncStateTableAnnotationComposer a) f) {
+    final $$RemoteSyncStateTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.remoteSyncState,
+        getReferencedColumn: (t) => t.remoteId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RemoteSyncStateTableAnnotationComposer(
+              $db: $db,
+              $table: $db.remoteSyncState,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
-class $$SyncMetadataTableTableManager extends RootTableManager<
+class $$RemoteSettingsTableTableManager extends RootTableManager<
     _$SyncDatabase,
-    $SyncMetadataTable,
-    SyncMetadataData,
-    $$SyncMetadataTableFilterComposer,
-    $$SyncMetadataTableOrderingComposer,
-    $$SyncMetadataTableAnnotationComposer,
-    $$SyncMetadataTableCreateCompanionBuilder,
-    $$SyncMetadataTableUpdateCompanionBuilder,
-    (
-      SyncMetadataData,
-      BaseReferences<_$SyncDatabase, $SyncMetadataTable, SyncMetadataData>
-    ),
-    SyncMetadataData,
-    PrefetchHooks Function()> {
-  $$SyncMetadataTableTableManager(_$SyncDatabase db, $SyncMetadataTable table)
+    $RemoteSettingsTable,
+    RemoteSetting,
+    $$RemoteSettingsTableFilterComposer,
+    $$RemoteSettingsTableOrderingComposer,
+    $$RemoteSettingsTableAnnotationComposer,
+    $$RemoteSettingsTableCreateCompanionBuilder,
+    $$RemoteSettingsTableUpdateCompanionBuilder,
+    (RemoteSetting, $$RemoteSettingsTableReferences),
+    RemoteSetting,
+    PrefetchHooks Function({bool remoteSyncStateRefs})> {
+  $$RemoteSettingsTableTableManager(
+      _$SyncDatabase db, $RemoteSettingsTable table)
       : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$SyncMetadataTableFilterComposer($db: db, $table: table),
+              $$RemoteSettingsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$SyncMetadataTableOrderingComposer($db: db, $table: table),
+              $$RemoteSettingsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
+              $$RemoteSettingsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<int> lastShardSyncTimestamp = const Value.absent(),
+            Value<String> remoteId = const Value.absent(),
+            Value<String> remoteType = const Value.absent(),
+            Value<int> lastSyncTimestamp = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
           }) =>
-              SyncMetadataCompanion(
+              RemoteSettingsCompanion(
             id: id,
-            lastShardSyncTimestamp: lastShardSyncTimestamp,
+            remoteId: remoteId,
+            remoteType: remoteType,
+            lastSyncTimestamp: lastSyncTimestamp,
+            createdAt: createdAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<int> lastShardSyncTimestamp = const Value.absent(),
+            required String remoteId,
+            required String remoteType,
+            Value<int> lastSyncTimestamp = const Value.absent(),
+            required int createdAt,
           }) =>
-              SyncMetadataCompanion.insert(
+              RemoteSettingsCompanion.insert(
             id: id,
-            lastShardSyncTimestamp: lastShardSyncTimestamp,
+            remoteId: remoteId,
+            remoteType: remoteType,
+            lastSyncTimestamp: lastSyncTimestamp,
+            createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable(table),
+                    $$RemoteSettingsTableReferences(db, table, e)
+                  ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({remoteSyncStateRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (remoteSyncStateRefs) db.remoteSyncState
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (remoteSyncStateRefs)
+                    await $_getPrefetchedData<RemoteSetting,
+                            $RemoteSettingsTable, RemoteSyncStateData>(
+                        currentTable: table,
+                        referencedTable: $$RemoteSettingsTableReferences
+                            ._remoteSyncStateRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$RemoteSettingsTableReferences(db, table, p0)
+                                .remoteSyncStateRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.remoteId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
         ));
 }
 
-typedef $$SyncMetadataTableProcessedTableManager = ProcessedTableManager<
+typedef $$RemoteSettingsTableProcessedTableManager = ProcessedTableManager<
     _$SyncDatabase,
-    $SyncMetadataTable,
-    SyncMetadataData,
-    $$SyncMetadataTableFilterComposer,
-    $$SyncMetadataTableOrderingComposer,
-    $$SyncMetadataTableAnnotationComposer,
-    $$SyncMetadataTableCreateCompanionBuilder,
-    $$SyncMetadataTableUpdateCompanionBuilder,
-    (
-      SyncMetadataData,
-      BaseReferences<_$SyncDatabase, $SyncMetadataTable, SyncMetadataData>
-    ),
-    SyncMetadataData,
-    PrefetchHooks Function()>;
+    $RemoteSettingsTable,
+    RemoteSetting,
+    $$RemoteSettingsTableFilterComposer,
+    $$RemoteSettingsTableOrderingComposer,
+    $$RemoteSettingsTableAnnotationComposer,
+    $$RemoteSettingsTableCreateCompanionBuilder,
+    $$RemoteSettingsTableUpdateCompanionBuilder,
+    (RemoteSetting, $$RemoteSettingsTableReferences),
+    RemoteSetting,
+    PrefetchHooks Function({bool remoteSyncStateRefs})>;
+typedef $$RemoteSyncStateTableCreateCompanionBuilder = RemoteSyncStateCompanion
+    Function({
+  required int documentIriId,
+  required int remoteId,
+  Value<String?> etag,
+  Value<int> lastSyncedAt,
+  Value<int> rowid,
+});
+typedef $$RemoteSyncStateTableUpdateCompanionBuilder = RemoteSyncStateCompanion
+    Function({
+  Value<int> documentIriId,
+  Value<int> remoteId,
+  Value<String?> etag,
+  Value<int> lastSyncedAt,
+  Value<int> rowid,
+});
+
+final class $$RemoteSyncStateTableReferences extends BaseReferences<
+    _$SyncDatabase, $RemoteSyncStateTable, RemoteSyncStateData> {
+  $$RemoteSyncStateTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SyncIrisTable _documentIriIdTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias($_aliasNameGenerator(
+          db.remoteSyncState.documentIriId, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get documentIriId {
+    final $_column = $_itemColumn<int>('document_iri_id')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_documentIriIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $RemoteSettingsTable _remoteIdTable(_$SyncDatabase db) =>
+      db.remoteSettings.createAlias($_aliasNameGenerator(
+          db.remoteSyncState.remoteId, db.remoteSettings.id));
+
+  $$RemoteSettingsTableProcessedTableManager get remoteId {
+    final $_column = $_itemColumn<int>('remote_id')!;
+
+    final manager = $$RemoteSettingsTableTableManager($_db, $_db.remoteSettings)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_remoteIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$RemoteSyncStateTableFilterComposer
+    extends Composer<_$SyncDatabase, $RemoteSyncStateTable> {
+  $$RemoteSyncStateTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get etag => $composableBuilder(
+      column: $table.etag, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
+
+  $$SyncIrisTableFilterComposer get documentIriId {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.documentIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$RemoteSettingsTableFilterComposer get remoteId {
+    final $$RemoteSettingsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.remoteId,
+        referencedTable: $db.remoteSettings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RemoteSettingsTableFilterComposer(
+              $db: $db,
+              $table: $db.remoteSettings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RemoteSyncStateTableOrderingComposer
+    extends Composer<_$SyncDatabase, $RemoteSyncStateTable> {
+  $$RemoteSyncStateTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get etag => $composableBuilder(
+      column: $table.etag, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  $$SyncIrisTableOrderingComposer get documentIriId {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.documentIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$RemoteSettingsTableOrderingComposer get remoteId {
+    final $$RemoteSettingsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.remoteId,
+        referencedTable: $db.remoteSettings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RemoteSettingsTableOrderingComposer(
+              $db: $db,
+              $table: $db.remoteSettings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RemoteSyncStateTableAnnotationComposer
+    extends Composer<_$SyncDatabase, $RemoteSyncStateTable> {
+  $$RemoteSyncStateTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get etag =>
+      $composableBuilder(column: $table.etag, builder: (column) => column);
+
+  GeneratedColumn<int> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => column);
+
+  $$SyncIrisTableAnnotationComposer get documentIriId {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.documentIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$RemoteSettingsTableAnnotationComposer get remoteId {
+    final $$RemoteSettingsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.remoteId,
+        referencedTable: $db.remoteSettings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RemoteSettingsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.remoteSettings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RemoteSyncStateTableTableManager extends RootTableManager<
+    _$SyncDatabase,
+    $RemoteSyncStateTable,
+    RemoteSyncStateData,
+    $$RemoteSyncStateTableFilterComposer,
+    $$RemoteSyncStateTableOrderingComposer,
+    $$RemoteSyncStateTableAnnotationComposer,
+    $$RemoteSyncStateTableCreateCompanionBuilder,
+    $$RemoteSyncStateTableUpdateCompanionBuilder,
+    (RemoteSyncStateData, $$RemoteSyncStateTableReferences),
+    RemoteSyncStateData,
+    PrefetchHooks Function({bool documentIriId, bool remoteId})> {
+  $$RemoteSyncStateTableTableManager(
+      _$SyncDatabase db, $RemoteSyncStateTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RemoteSyncStateTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RemoteSyncStateTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RemoteSyncStateTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> documentIriId = const Value.absent(),
+            Value<int> remoteId = const Value.absent(),
+            Value<String?> etag = const Value.absent(),
+            Value<int> lastSyncedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RemoteSyncStateCompanion(
+            documentIriId: documentIriId,
+            remoteId: remoteId,
+            etag: etag,
+            lastSyncedAt: lastSyncedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int documentIriId,
+            required int remoteId,
+            Value<String?> etag = const Value.absent(),
+            Value<int> lastSyncedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RemoteSyncStateCompanion.insert(
+            documentIriId: documentIriId,
+            remoteId: remoteId,
+            etag: etag,
+            lastSyncedAt: lastSyncedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$RemoteSyncStateTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({documentIriId = false, remoteId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (documentIriId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.documentIriId,
+                    referencedTable: $$RemoteSyncStateTableReferences
+                        ._documentIriIdTable(db),
+                    referencedColumn: $$RemoteSyncStateTableReferences
+                        ._documentIriIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (remoteId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.remoteId,
+                    referencedTable:
+                        $$RemoteSyncStateTableReferences._remoteIdTable(db),
+                    referencedColumn:
+                        $$RemoteSyncStateTableReferences._remoteIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$RemoteSyncStateTableProcessedTableManager = ProcessedTableManager<
+    _$SyncDatabase,
+    $RemoteSyncStateTable,
+    RemoteSyncStateData,
+    $$RemoteSyncStateTableFilterComposer,
+    $$RemoteSyncStateTableOrderingComposer,
+    $$RemoteSyncStateTableAnnotationComposer,
+    $$RemoteSyncStateTableCreateCompanionBuilder,
+    $$RemoteSyncStateTableUpdateCompanionBuilder,
+    (RemoteSyncStateData, $$RemoteSyncStateTableReferences),
+    RemoteSyncStateData,
+    PrefetchHooks Function({bool documentIriId, bool remoteId})>;
 
 class $SyncDatabaseManager {
   final _$SyncDatabase _db;
@@ -5345,6 +6326,8 @@ class $SyncDatabaseManager {
           _db, _db.groupIndexSubscriptions);
   $$IndexIriIdSetVersionsTableTableManager get indexIriIdSetVersions =>
       $$IndexIriIdSetVersionsTableTableManager(_db, _db.indexIriIdSetVersions);
-  $$SyncMetadataTableTableManager get syncMetadata =>
-      $$SyncMetadataTableTableManager(_db, _db.syncMetadata);
+  $$RemoteSettingsTableTableManager get remoteSettings =>
+      $$RemoteSettingsTableTableManager(_db, _db.remoteSettings);
+  $$RemoteSyncStateTableTableManager get remoteSyncState =>
+      $$RemoteSyncStateTableTableManager(_db, _db.remoteSyncState);
 }

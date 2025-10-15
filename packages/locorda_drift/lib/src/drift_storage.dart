@@ -16,6 +16,7 @@ class DriftStorage implements Storage {
   final SyncDocumentDao documentDao;
   final SyncPropertyChangeDao propertyChangeDao;
   final IndexDao indexDao;
+  final RemoteSyncStateDao remoteSyncStateDao;
   final SyncDatabase _database;
   final RdfGraphCodec _codec;
   final IriTermFactory _iriTermFactory;
@@ -26,6 +27,7 @@ class DriftStorage implements Storage {
     required this.documentDao,
     required this.propertyChangeDao,
     required this.indexDao,
+    required this.remoteSyncStateDao,
     required SyncDatabase database,
     IriTermFactory iriTermFactory = IriTerm.validated,
   })  : _database = database,
@@ -44,17 +46,21 @@ class DriftStorage implements Storage {
         documentDao: database.syncDocumentDao,
         propertyChangeDao: database.syncPropertyChangeDao,
         indexDao: database.indexDao,
+        remoteSyncStateDao: database.remoteSyncStateDao,
         database: database,
         iriTermFactory: iriTermFactory);
   }
 
   /// Create DriftStorage with custom database instance (for testing)
-  factory DriftStorage.withDatabase(SyncDatabase database,
-      {IriTermFactory iriTermFactory = IriTerm.validated}) {
+  factory DriftStorage.withDatabase(
+    SyncDatabase database, {
+    IriTermFactory iriTermFactory = IriTerm.validated,
+  }) {
     return DriftStorage._(
       documentDao: database.syncDocumentDao,
       propertyChangeDao: database.syncPropertyChangeDao,
       indexDao: database.indexDao,
+      remoteSyncStateDao: database.remoteSyncStateDao,
       database: database,
       iriTermFactory: iriTermFactory,
     );
@@ -497,14 +503,51 @@ class DriftStorage implements Storage {
     return shardIris.map((iri) => (_iriTermFactory(iri.$1), iri.$2)).toList();
   }
 
+  // Note: Sync timestamp helpers are provided by SyncTimestampStorage extension
+  // from locorda_core. No need to duplicate them here.
+
+  // ========================================================================
+  // Remote ETag Management (Multi-Remote Support)
+  // ========================================================================
+  // All methods take RemoteId parameter to enable synchronization with
+  // multiple remote endpoints simultaneously.
+
   @override
-  Future<int> getLastShardSyncTimestamp() async {
-    return await indexDao.getLastShardSyncTimestamp();
+  Future<String?> getRemoteETag(RemoteId remoteId, IriTerm documentIri) async {
+    final documentIriId = await _getOrCreateIriId(documentIri.value);
+    final remoteIdInt = await remoteSyncStateDao.getOrCreateRemoteId(
+        remoteId.backend, remoteId.id);
+
+    return await remoteSyncStateDao.getETag(
+      documentIriId: documentIriId,
+      remoteId: remoteIdInt,
+    );
   }
 
   @override
-  Future<void> updateLastShardSyncTimestamp(int timestamp) async {
-    await indexDao.updateLastShardSyncTimestamp(timestamp);
+  Future<void> setRemoteETag(
+      RemoteId remoteId, IriTerm documentIri, String etag) async {
+    final documentIriId = await _getOrCreateIriId(documentIri.value);
+    final remoteIdInt = await remoteSyncStateDao.getOrCreateRemoteId(
+        remoteId.backend, remoteId.id);
+
+    await remoteSyncStateDao.setETag(
+      documentIriId: documentIriId,
+      remoteId: remoteIdInt,
+      etag: etag,
+    );
+  }
+
+  @override
+  Future<void> clearRemoteETag(RemoteId remoteId, IriTerm documentIri) async {
+    final documentIriId = await _getOrCreateIriId(documentIri.value);
+    final remoteIdInt = await remoteSyncStateDao.getOrCreateRemoteId(
+        remoteId.backend, remoteId.id);
+
+    await remoteSyncStateDao.clearETag(
+      documentIriId: documentIriId,
+      remoteId: remoteIdInt,
+    );
   }
 
   List<StoredDocument> _convertToStoredDocuments(
@@ -522,5 +565,20 @@ class DriftStorage implements Storage {
         ),
       );
     }).toList();
+  }
+
+  @override
+  Future<int> getLastRemoteSyncTimestamp(RemoteId remoteId) async {
+    final id = await remoteSyncStateDao.getOrCreateRemoteId(
+        remoteId.backend, remoteId.id);
+    return remoteSyncStateDao.getRemoteLastSyncTimestamp(id);
+  }
+
+  @override
+  Future<void> updateLastRemoteSyncTimestamp(
+      RemoteId remoteId, int timestamp) async {
+    final id = await remoteSyncStateDao.getOrCreateRemoteId(
+        remoteId.backend, remoteId.id);
+    await remoteSyncStateDao.updateRemoteLastSyncTimestamp(id, timestamp);
   }
 }

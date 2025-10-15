@@ -17,7 +17,9 @@ class InMemoryStorage implements Storage {
   // Index entry storage
   final Map<String, _IndexEntry> _indexEntries =
       {}; // key: "$shardIri|$resourceIri"
-  int _lastShardSyncTimestamp = 0;
+
+  // Note: Sync timestamps now stored in _settings via SyncTimestampStorage extension
+  // Remote ETags also stored in _settings
 
   // Group index subscription storage
   final Map<IriTerm, _GroupIndexSubscription> _groupIndexSubscriptions = {};
@@ -342,14 +344,44 @@ class InMemoryStorage implements Storage {
         .toList();
   }
 
+  // Sync timestamps now handled by SyncTimestampStorage extension using _settings
+
+  // ========================================================================
+  // Remote ETag Management (Multi-Remote Support)
+  // ========================================================================
+
   @override
-  Future<int> getLastShardSyncTimestamp() async {
-    return _lastShardSyncTimestamp;
+  Future<String?> getRemoteETag(RemoteId remoteId, IriTerm documentIri) async {
+    return _settings[
+        'remote.etag.${remoteId.backend}.${remoteId.id}.${documentIri.value}'];
   }
 
   @override
-  Future<void> updateLastShardSyncTimestamp(int timestamp) async {
-    _lastShardSyncTimestamp = timestamp;
+  Future<void> setRemoteETag(
+      RemoteId remoteId, IriTerm documentIri, String etag) async {
+    _settings[
+            'remote.etag.${remoteId.backend}.${remoteId.id}.${documentIri.value}'] =
+        etag;
+  }
+
+  @override
+  Future<void> clearRemoteETag(RemoteId remoteId, IriTerm documentIri) async {
+    _settings.remove(
+        'remote.etag.${remoteId.backend}.${remoteId.id}.${documentIri.value}');
+  }
+
+  @override
+  Future<int> getLastRemoteSyncTimestamp(RemoteId remoteId) async {
+    final lastSyncTimestamp =
+        _settings['sync.lastRemote.${remoteId.backend}.${remoteId.id}'];
+    return lastSyncTimestamp != null ? int.parse(lastSyncTimestamp) : 0;
+  }
+
+  @override
+  Future<void> updateLastRemoteSyncTimestamp(
+      RemoteId remoteId, int timestamp) async {
+    _settings['sync.lastRemote.${remoteId.backend}.${remoteId.id}'] =
+        timestamp.toString();
   }
 }
 

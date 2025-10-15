@@ -114,17 +114,67 @@ class GroupIndexSubscriptions extends Table {
 ///
 /// Singleton table (only one row) that tracks when we last synchronized
 /// shard documents. Used to determine which shards need updating.
-class SyncMetadata extends Table {
-  /// Primary key (always 1 for singleton)
-  IntColumn get id => integer().withDefault(const Constant(1))();
+/// Remote synchronization state per document and remote.
+///
+/// Tracks sync metadata (ETags, timestamps) for each document on each remote.
+/// Remote configuration and metadata storage.
+///
+/// Normalizes remote URLs (e.g., Solid Pod URLs) with integer IDs for efficient
+/// storage and queries. Tracks per-remote sync state like last sync timestamp.
+class RemoteSettings extends Table {
+  /// Auto-incrementing primary key
+  IntColumn get id => integer().autoIncrement()();
 
-  /// Physical clock timestamp of last successful shard sync (milliseconds since epoch)
-  /// Used to find shards with entries newer than this timestamp
-  IntColumn get lastShardSyncTimestamp =>
-      integer().withDefault(const Constant(0))();
+  /// Remote ID (e.g., 'https://alice.pod.example/')
+  /// Combined with remoteType must be unique per backend.
+  TextColumn get remoteId => text()();
+
+  /// Type of remote (e.g., 'solid-pod', 'generic-http')
+  /// Allows future extensibility for different remote types
+  TextColumn get remoteType => text()();
+
+  /// Timestamp of last successful sync with this remote (milliseconds since epoch)
+  /// Used for tracking overall remote sync progress
+  IntColumn get lastSyncTimestamp => integer().withDefault(const Constant(0))();
+
+  /// When this remote was first configured (milliseconds since epoch)
+  IntColumn get createdAt => integer()();
 
   @override
-  Set<Column> get primaryKey => {id};
+  List<Set<Column>> get uniqueKeys => [
+        {remoteType, remoteId}
+      ];
+}
+
+/// Per-document remote sync state tracking.
+///
+/// Tracks ETag and sync status for each document with each remote.
+/// This enables:
+/// - Multiple remotes/pods per backend (multi-remote support)
+/// - Conditional GET/PUT operations via ETags
+/// - Per-document sync timestamps
+/// - Type-safe IRI references via foreign keys
+class RemoteSyncState extends Table {
+  /// Foreign key to SyncIris table for the document IRI
+  IntColumn get documentIriId => integer().references(SyncIris, #id)();
+
+  /// Foreign key to RemoteSettings for efficient storage
+  /// Normalized reference instead of repeating URLs
+  IntColumn get remoteId => integer().references(RemoteSettings, #id)();
+
+  /// ETag from last GET/PUT for conditional requests
+  /// NULL if never synced or ETag not supported by remote
+  TextColumn get etag => text().nullable()();
+
+  /// Timestamp of last successful sync (milliseconds since epoch)
+  /// Used for tracking when document was last synced with this remote
+  IntColumn get lastSyncedAt => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {documentIriId, remoteId};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [];
 }
 
 /// Index Iri set versions for cursor tracking
@@ -559,7 +609,6 @@ class PropertyChangeInfo {
   GroupIndexSubscriptions,
   SyncIris,
   IndexIriIdSetVersions,
-  SyncMetadata,
 ])
 class IndexDao extends DatabaseAccessor<SyncDatabase>
     with _$IndexDaoMixin, IriBatchLoader {
@@ -828,27 +877,119 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
         .toList();
   }
 
-  /// Get the last shard sync timestamp from metadata.
+  // Note: Sync timestamps are now stored in SyncSettings table
+  // using SyncSettingKeys constants. See DriftStorage helper methods.
+}
+
+/// Data Access Object for remote sync state management
+///
+/// Handles both RemoteSettings (remote configuration) and RemoteSyncState
+/// (per-document sync state). Provides efficient remote ID lookup and caching.
+@DriftAccessor(tables: [RemoteSettings, RemoteSyncState, SyncIris])
+class RemoteSyncStateDao extends DatabaseAccessor<SyncDatabase>
+    with _$RemoteSyncStateDaoMixin, IriBatchLoader {
+  RemoteSyncStateDao(super.db);
+
+  /// Get or create remote ID for a given remote URL
   ///
-  /// Returns 0 if no sync has been performed yet.
-  Future<int> getLastShardSyncTimestamp() async {
-    final metadata = await (select(db.syncMetadata)
-          ..where((m) => m.id.equals(1)))
+  /// Returns the integer ID for efficient foreign key references.
+  /// Creates a new RemoteSettings entry if the remote id doesn't exist yet.
+  Future<int> getOrCreateRemoteId(String remoteType, String remoteId) async {
+    // Try to find existing remote
+    final existing = await (select(db.remoteSettings)
+          ..where((r) => r.remoteId.equals(remoteId)))
         .getSingleOrNull();
 
-    return metadata?.lastShardSyncTimestamp ?? 0;
-  }
+    if (existing != null) {
+      return existing.id;
+    }
 
-  /// Update the last shard sync timestamp in metadata.
-  ///
-  /// Creates the metadata row if it doesn't exist.
-  Future<void> updateLastShardSyncTimestamp(int timestamp) async {
-    await into(db.syncMetadata).insertOnConflictUpdate(
-      SyncMetadataCompanion.insert(
-        id: const Value(1),
-        lastShardSyncTimestamp: Value(timestamp),
+    // Create new remote entry
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return await into(db.remoteSettings).insert(
+      RemoteSettingsCompanion.insert(
+        remoteId: remoteId,
+        remoteType: remoteType,
+        createdAt: now,
       ),
     );
+  }
+
+  /// Get last sync timestamp for a remote
+  Future<int> getRemoteLastSyncTimestamp(int remoteId) async {
+    final remote = await (select(db.remoteSettings)
+          ..where((r) => r.id.equals(remoteId)))
+        .getSingleOrNull();
+
+    return remote?.lastSyncTimestamp ?? 0;
+  }
+
+  /// Update last sync timestamp for a remote
+  Future<void> updateRemoteLastSyncTimestamp(
+      int remoteId, int timestamp) async {
+    await (update(db.remoteSettings)..where((r) => r.id.equals(remoteId)))
+        .write(RemoteSettingsCompanion(
+      lastSyncTimestamp: Value(timestamp),
+    ));
+  }
+
+  /// Get ETag for a document on a specific remote
+  ///
+  /// Returns null if no ETag is stored for this document/remote combination
+  Future<String?> getETag({
+    required int documentIriId,
+    required int remoteId,
+  }) async {
+    final state = await (select(db.remoteSyncState)
+          ..where((s) =>
+              s.documentIriId.equals(documentIriId) &
+              s.remoteId.equals(remoteId)))
+        .getSingleOrNull();
+
+    return state?.etag;
+  }
+
+  /// Set ETag for a document on a specific remote
+  ///
+  /// Creates or updates the sync state entry
+  Future<void> setETag({
+    required int documentIriId,
+    required int remoteId,
+    required String etag,
+  }) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await into(db.remoteSyncState).insertOnConflictUpdate(
+      RemoteSyncStateCompanion.insert(
+        documentIriId: documentIriId,
+        remoteId: remoteId,
+        etag: Value(etag),
+        lastSyncedAt: Value(now),
+      ),
+    );
+  }
+
+  /// Clear ETag for a document on a specific remote
+  ///
+  /// Removes the entire sync state entry
+  Future<void> clearETag({
+    required int documentIriId,
+    required int remoteId,
+  }) async {
+    await (delete(db.remoteSyncState)
+          ..where((s) =>
+              s.documentIriId.equals(documentIriId) &
+              s.remoteId.equals(remoteId)))
+        .go();
+  }
+
+  /// Clear all ETags for a specific remote
+  ///
+  /// Useful when changing remote configuration or resetting sync state
+  Future<void> clearAllETagsForRemote(int remoteId) async {
+    await (delete(db.remoteSyncState)
+          ..where((s) => s.remoteId.equals(remoteId)))
+        .go();
   }
 }
 
@@ -897,9 +1038,10 @@ class DocumentWithIri {
     IndexEntries,
     GroupIndexSubscriptions,
     IndexIriIdSetVersions,
-    SyncMetadata,
+    RemoteSettings,
+    RemoteSyncState,
   ],
-  daos: [SyncDocumentDao, SyncPropertyChangeDao, IndexDao],
+  daos: [SyncDocumentDao, SyncPropertyChangeDao, IndexDao, RemoteSyncStateDao],
 )
 class SyncDatabase extends _$SyncDatabase {
   SyncDatabase({DriftWebOptions? web, DriftNativeOptions? native})
@@ -1016,13 +1158,20 @@ class SyncDatabase extends _$SyncDatabase {
             ''');
           }
           if (from < 5) {
-            // Create sync metadata table for tracking last sync timestamp
-            await m.createTable(syncMetadata);
+            // Create remote settings and remote sync state tables
+            await m.createTable(remoteSettings);
+            await m.createTable(remoteSyncState);
 
-            // Initialize with default row (id=1, lastShardSyncTimestamp=0)
+            // Create index for efficient lookup by remote
             await m.database.customStatement('''
-              INSERT INTO sync_metadata (id, last_shard_sync_timestamp) 
-              VALUES (1, 0);
+              CREATE INDEX IF NOT EXISTS idx_remote_sync_state_remote
+              ON remote_sync_state(remote_id);
+            ''');
+
+            // Create index for remote URL lookups
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_remote_settings_url
+              ON remote_settings(remote_url);
             ''');
           }
         },

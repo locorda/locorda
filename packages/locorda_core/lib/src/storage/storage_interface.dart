@@ -242,16 +242,50 @@ abstract interface class Storage {
   Future<List<(IriTerm iri, int maxPhysicalClock)>> getShardsToUpdate(
       int sinceTimestamp);
 
-  /// Get the timestamp of the last successful shard sync.
-  ///
-  /// Returns 0 if no sync has been performed yet.
-  Future<int> getLastShardSyncTimestamp();
+  // ========================================================================
+  // Remote Sync State Management (Multi-Remote Support)
+  // ========================================================================
+  // All remote-specific methods take a RemoteId parameter to support
+  // synchronization with multiple remotes simultaneously.
+  //
+  // Remote sync timestamps are stored in RemoteSettings table.
+  // Shard sync timestamp is stored in Settings table (local operation).
+  // ========================================================================
 
-  /// Update the timestamp of the last successful shard sync.
+  /// Get stored ETag for a document on a specific remote.
+  ///
+  /// Used for conditional GET requests to avoid re-downloading unchanged documents.
+  /// Returns null if no ETag is stored for this document/remote combination.
   ///
   /// Parameters:
-  /// - [timestamp]: Physical clock timestamp (milliseconds since epoch)
-  Future<void> updateLastShardSyncTimestamp(int timestamp);
+  /// - [remoteId]: The remote endpoint identifier
+  /// - [documentIri]: The document IRI to look up
+  Future<String?> getRemoteETag(RemoteId remoteId, IriTerm documentIri);
+
+  /// Store ETag for a document on a specific remote.
+  ///
+  /// Called after successful download or upload to cache the current version.
+  /// Updates both ETag and last sync timestamp for the document/remote pair.
+  ///
+  /// Parameters:
+  /// - [remoteId]: The remote endpoint identifier
+  /// - [documentIri]: The document IRI
+  /// - [etag]: The ETag value from HTTP response headers
+  Future<void> setRemoteETag(
+      RemoteId remoteId, IriTerm documentIri, String etag);
+
+  /// Clear ETag for a document on a specific remote.
+  ///
+  /// Called when local changes invalidate the cached remote state, or when
+  /// explicitly resetting sync state for a document.
+  ///
+  /// Parameters:
+  /// - [remoteId]: The remote endpoint identifier
+  /// - [documentIri]: The document IRI
+  Future<void> clearRemoteETag(RemoteId remoteId, IriTerm documentIri);
+
+  Future<int> getLastRemoteSyncTimestamp(RemoteId remoteId);
+  Future<void> updateLastRemoteSyncTimestamp(RemoteId remoteId, int timestamp);
 }
 
 /// Index entry with resolved resource IRI.

@@ -1,9 +1,11 @@
-import 'package:locorda_core/src/auth/auth_interface.dart';
-import 'package:locorda_core/src/mapping/resource_locator.dart';
 import 'package:locorda_core/src/storage/remote_storage.dart';
 
+/// Backend interface for remote synchronization.
+///
+/// Provides access to remote storage operations.
 abstract interface class Backend {
-  Auth get auth;
-  RemoteStorage get remoteStorage;
-  ResourceLocator get resourceLocator;
+  String get name;
+
+  /// Remote storage operations (GET/PUT/DELETE)
+  List<RemoteStorage> get remotes;
 }

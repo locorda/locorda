@@ -81,7 +81,7 @@ class LocordaSync {
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
   static Future<LocordaSync> setup({
-    required Backend backend,
+    required List<Backend> backends,
     required Storage storage,
     required SyncConfig config,
     required MapperInitializerFunction mapperInitializer,
@@ -126,7 +126,7 @@ class LocordaSync {
     final syncGraphConfig = toSyncGraphConfig(config, resourceTypeCache);
     // Setup the actual sync system
     final graphSync = await LocordaGraphSync.setup(
-      backend: backend,
+      backends: backends,
       storage: storage,
       config: syncGraphConfig,
       iriFactory: iriTermFactory,
