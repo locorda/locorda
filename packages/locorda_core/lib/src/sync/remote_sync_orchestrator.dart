@@ -1,5 +1,6 @@
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/remote_storage.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
@@ -23,18 +24,20 @@ class RemoteSyncOrchestrator {
   final RemoteDocumentMerger _merger;
   final SyncGraphConfig _config;
   final IndexRdfGenerator _indexRdfGenerator;
+  final ShardDeterminer _shardDeterminer;
+
   RemoteSyncOrchestrator({
     required Storage storage,
     required RemoteStorage remoteStorage,
     required SyncGraphConfig config,
     required IndexRdfGenerator indexRdfGenerator,
+    required ShardDeterminer shardDeterminer,
   })  : _storage = storage,
         _remoteStorage = remoteStorage,
         _config = config,
         _indexRdfGenerator = indexRdfGenerator,
-        _merger = RemoteDocumentMerger(storage: storage);
-
-  RemoteId get _remoteId => _remoteStorage.remoteId;
+        _merger = RemoteDocumentMerger(storage: storage),
+        _shardDeterminer = shardDeterminer;
 
   /// Execute complete remote synchronization cycle.
   ///
@@ -46,10 +49,10 @@ class RemoteSyncOrchestrator {
 
     try {
       // Phase A: Metadata Reconciliation & Queue Building
-      final syncContext = await _reconcileMetadata();
+      final syncContext = await _reconcileMetadata(lastSyncTimestamp);
 
       // Phase B: Document & Shard Finalization
-      await _syncDocumentsAndFinalizeShards(syncContext);
+      await _syncDocumentsAndFinalizeShards(syncContext, lastSyncTimestamp);
 
       _log.info('Remote synchronization cycle completed successfully');
     } catch (e, st) {
@@ -65,11 +68,11 @@ class RemoteSyncOrchestrator {
   /// 2. Build Document Sync Queue by comparing local and remote shards
   ///
   /// Returns: SyncContext with document queue and shard state
-  Future<SyncContext> _reconcileMetadata() async {
+  Future<SyncContext> _reconcileMetadata(int lastSyncTimestamp) async {
     _log.info('Phase A: Metadata Reconciliation & Queue Building');
 
     // Step 1: Sync Index Documents
-    final allIndices = await _syncIndexDocuments();
+    final allIndices = await _syncIndexDocuments(lastSyncTimestamp);
     final syncContext = SyncContext(indices: allIndices);
 
     // Step 2: Build Document Sync Queue
@@ -88,11 +91,12 @@ class RemoteSyncOrchestrator {
   ///
   /// Parameters:
   /// - [syncContext]: Context from Phase A containing document queue and shard state
-  Future<void> _syncDocumentsAndFinalizeShards(SyncContext syncContext) async {
+  Future<void> _syncDocumentsAndFinalizeShards(
+      SyncContext syncContext, int lastSyncTimestamp) async {
     _log.info('Phase B: Document & Shard Finalization');
 
     // Step 1: Process Document Sync Queue
-    await _processDocumentSyncQueue(syncContext);
+    await _processDocumentSyncQueue(syncContext, lastSyncTimestamp);
 
     // Step 2: Finalize Shards
     await _finalizeShards(syncContext);
@@ -107,7 +111,8 @@ class RemoteSyncOrchestrator {
   /// 2. Handle 200/304/404 responses
   /// 3. Merge if needed
   /// 4. Upload loop with retry on 412 conflict
-  Future<List<(IriTerm, ItemFetchPolicy)>> _syncIndexDocuments() async {
+  Future<List<(IriTerm, ItemFetchPolicy)>> _syncIndexDocuments(
+      int lastSyncTimestamp) async {
     _log.fine('Syncing index documents');
 
     final fullIndices = _config.resources.expand((resource) =>
@@ -123,82 +128,100 @@ class RemoteSyncOrchestrator {
     ];
 
     for (final (indexIri, _) in indices) {
-      await _syncSingleIndexDocument(indexIri);
+      final documentIri = indexIri.getDocumentIri();
+      await _syncDocument(documentIri, lastSyncTimestamp,
+          debugName: 'Index ${documentIri.debug}');
     }
     return indices;
   }
 
-  /// Sync a single index document with retry loop on 412
-  Future<void> _syncSingleIndexDocument(IriTerm indexIri) async {
-    _log.fine('Syncing index: $indexIri');
+  /// Sync a single document with retry loop on 412
+  Future<void> _syncDocument(IriTerm documentIri, int lastSyncTimestamp,
+      {String debugName = ''}) async {
+    _log.fine('Syncing ${debugName}');
 
     while (true) {
       try {
         // 1. Conditional GET
-        final indexDocumentIri = indexIri.getDocumentIri();
         final cachedETag = await _storage.getRemoteETag(
-          _remoteId,
-          indexDocumentIri,
+          _remoteStorage.remoteId,
+          documentIri,
         );
 
         final downloadResult = await _remoteStorage.download(
-          indexDocumentIri,
+          documentIri,
           ifNoneMatch: cachedETag,
         );
 
-        RdfGraph? preparedIndex;
+        RdfGraph? documentToUpload;
 
         // 2. Handle response cases
         if (downloadResult.notModified) {
           // Case: 304 Not Modified
-          _log.fine('Index $indexIri unchanged (304)');
-          // TODO: Determine if local index needs upload (check index items table)
-          // For now, assume no local changes needed - index is up-to-date
+          _log.fine('$debugName unchanged (304)');
+          final localDocument = await _getLocalDocument(documentIri,
+              ifChangedSincePhysicalClock: lastSyncTimestamp);
+          if (localDocument != null) {
+            documentToUpload = localDocument;
+          } else {
+            _log.fine('Local $debugName has no changes since last sync');
+          }
           break;
         } else if (downloadResult.graph != null) {
           // Case: 200 OK - Remote changed
-          _log.fine('Index $indexIri changed remotely');
-          final localIndex = await _getLocalIndexDocument(indexIri);
+          _log.fine('$debugName changed remotely');
+          // Theoretically, we could skip merge if local unchanged since last sync
+          // but just to be safe, always merge if remote changed
+          final localDocument = await _getLocalDocument(documentIri);
 
           // CRDT merge local + remote
           final mergeResult = await _merger.merge(
-            documentIri: indexIri,
-            localGraph: localIndex,
+            documentIri: documentIri,
+            localGraph: localDocument,
             remoteGraph: downloadResult.graph,
           );
 
-          preparedIndex = mergeResult.mergedGraph;
+          documentToUpload = mergeResult.mergedGraph;
+
+// FIXME: calculate shards here
+//await _shardDeterminer.calculateShards(type, resourceIri, documentIri, appData, oldAppData, oldFrameworkGraph);
 
           // Update ETag cache
           if (downloadResult.etag != null) {
             await _storage.setRemoteETag(
-                _remoteId, indexDocumentIri, downloadResult.etag!);
+              _remoteStorage.remoteId,
+              documentIri,
+              downloadResult.etag!,
+            );
           }
         } else {
           // Case: 404 Not Found - New index
-          _log.fine('Index $indexIri not found remotely (404)');
-          preparedIndex = await _getLocalIndexDocument(indexIri);
+          _log.fine('$debugName not found remotely (404)');
+          documentToUpload = await _getLocalDocument(documentIri);
         }
 
         // 3. Upload loop (if needed)
-        if (preparedIndex != null) {
-          final uploadSuccess = await _uploadWithRetry(
-            path: indexDocumentIri,
-            graph: preparedIndex,
+        if (documentToUpload != null) {
+          var uploadSuccess = await _uploadIfNoConflict(
+            documentIri: documentIri,
+            graph: documentToUpload,
             etag: downloadResult.etag,
           );
-
+          if (uploadSuccess) {
+            // FIXME: save locally - do not forget to perform the index updates afterwards!
+            //await _storage.saveDocument(documentIri, typeIri, document, metadata, changes)
+          }
           if (uploadSuccess) {
             break; // Success
           }
           // If upload returned false, we got 412 - retry entire step
-          _log.fine('Got 412 conflict, restarting index sync for $indexIri');
+          _log.fine('Got 412 conflict, restarting sync for $debugName');
           continue;
         }
 
         break; // No upload needed
       } catch (e, st) {
-        _log.warning('Error syncing index $indexIri', e, st);
+        _log.warning('Error syncing $debugName', e, st);
         rethrow;
       }
     }
@@ -234,7 +257,7 @@ class RemoteSyncOrchestrator {
 
     // 2. Conditional GET for remote shard
     final cachedETag =
-        await _storage.getRemoteETag(_remoteId, shardDocumentIri);
+        await _storage.getRemoteETag(_remoteStorage.remoteId, shardDocumentIri);
 
     final downloadResult = await _remoteStorage.download(
       shardDocumentIri,
@@ -267,7 +290,10 @@ class RemoteSyncOrchestrator {
       // Update ETag cache
       if (downloadResult.etag != null) {
         await _storage.setRemoteETag(
-            _remoteId, shardDocumentIri, downloadResult.etag!);
+          _remoteStorage.remoteId,
+          shardDocumentIri,
+          downloadResult.etag!,
+        );
       }
     } else if (localShardDoc != null) {
       // Case: 404 Not Found with local entries
@@ -341,85 +367,15 @@ class RemoteSyncOrchestrator {
   /// 1. Download & merge
   /// 2. Save locally
   /// 3. Upload if needed
-  Future<void> _processDocumentSyncQueue(SyncContext context) async {
+  Future<void> _processDocumentSyncQueue(
+    SyncContext context,
+    int lastSyncTimestamp,
+  ) async {
     _log.fine('Processing ${context.documentQueue.length} documents');
 
     for (final documentIri in context.documentQueue) {
-      await _processDocument(documentIri, context);
-    }
-  }
-
-  /// Process a single document: download, merge, save, upload
-  Future<void> _processDocument(
-      IriTerm documentIri, SyncContext context) async {
-    _log.fine('Processing document: $documentIri');
-
-    // 1. Conditional GET
-
-    final cachedETag = await _storage.getRemoteETag(_remoteId, documentIri);
-
-    RemoteDownloadResult downloadResult;
-    try {
-      downloadResult = await _remoteStorage.download(
-        documentIri,
-        ifNoneMatch: cachedETag,
-      );
-    } catch (e) {
-      // Treat as 404 - new document
-      downloadResult = RemoteDownloadResult(graph: null, etag: null);
-    }
-
-    // 2. Get local version
-    final localDoc = await _storage.getDocument(documentIri);
-
-    RdfGraph? mergedGraph;
-    bool needsUpload = false;
-
-    // 3. Handle response cases
-    if (downloadResult.notModified) {
-      // Case: 304 Not Modified - purely local change
-      _log.fine('Document $documentIri unchanged remotely (304)');
-      mergedGraph = localDoc?.document;
-      needsUpload = true;
-    } else if (downloadResult.graph != null) {
-      // Case: 200 OK - remote changed
-      _log.fine('Document $documentIri changed remotely');
-
-      // CRDT merge
-      final mergeResult = await _merger.merge(
-        documentIri: documentIri,
-        localGraph: localDoc?.document,
-        remoteGraph: downloadResult.graph,
-      );
-
-      mergedGraph = mergeResult.mergedGraph;
-      needsUpload = mergeResult.hasLocalChanges;
-
-      // Update ETag
-      if (downloadResult.etag != null) {
-        await _storage.setRemoteETag(
-            _remoteId, documentIri, downloadResult.etag!);
-      }
-    } else {
-      // Case: 404 Not Found - new local document
-      _log.fine('Document $documentIri not found remotely (404)');
-      mergedGraph = localDoc?.document;
-      needsUpload = true;
-    }
-
-    // 4. Save merged result locally
-    if (mergedGraph != null) {
-      // TODO: Save to local storage and update index items table
-      _log.warning('TODO: Save merged document $documentIri to storage');
-    }
-
-    // 5. Upload if needed (with retry loop)
-    if (needsUpload && mergedGraph != null) {
-      await _uploadDocumentWithRetry(
-        documentIri: documentIri,
-        graph: mergedGraph,
-        etag: downloadResult.etag,
-      );
+      await _syncDocument(documentIri, lastSyncTimestamp,
+          debugName: 'Document ${documentIri.debug}');
     }
   }
 
@@ -476,7 +432,10 @@ class RemoteSyncOrchestrator {
         // Success - update ETag
         if (uploadResult.etag != null) {
           await _storage.setRemoteETag(
-              _remoteId, shardDocumentIri, uploadResult.etag!);
+            _remoteStorage.remoteId,
+            shardDocumentIri,
+            uploadResult.etag!,
+          );
         }
 
         _log.fine('Shard $shardIri finalized successfully');
@@ -495,13 +454,13 @@ class RemoteSyncOrchestrator {
   /// Upload with retry loop on 412 conflict
   ///
   /// Returns true on success, false on 412 (caller should retry entire step)
-  Future<bool> _uploadWithRetry({
-    required IriTerm path,
+  Future<bool> _uploadIfNoConflict({
+    required IriTerm documentIri,
     required RdfGraph graph,
     String? etag,
   }) async {
     final uploadResult = await _remoteStorage.upload(
-      path,
+      documentIri,
       graph,
       ifMatch: etag,
     );
@@ -512,7 +471,11 @@ class RemoteSyncOrchestrator {
 
     // Success - cache new ETag
     if (uploadResult.etag != null) {
-      await _storage.setRemoteETag(_remoteId, path, uploadResult.etag!);
+      await _storage.setRemoteETag(
+        _remoteStorage.remoteId,
+        documentIri,
+        uploadResult.etag!,
+      );
     }
 
     return true;
@@ -554,15 +517,23 @@ class RemoteSyncOrchestrator {
 
       // Success
       if (uploadResult.etag != null) {
-        await _storage.setRemoteETag(_remoteId, remotePath, uploadResult.etag!);
+        await _storage.setRemoteETag(
+          _remoteStorage.remoteId,
+          remotePath,
+          uploadResult.etag!,
+        );
       }
       break;
     }
   }
 
-  /// Get local index document from storage
-  Future<RdfGraph?> _getLocalIndexDocument(IriTerm indexIri) async {
-    final doc = await _storage.getDocument(indexIri);
+  /// Get local document from storage
+  Future<RdfGraph?> _getLocalDocument(IriTerm documentIri,
+      {int? ifChangedSincePhysicalClock}) async {
+    final doc = await _storage.getDocument(
+      documentIri,
+      ifChangedSincePhysicalClock: ifChangedSincePhysicalClock,
+    );
     return doc?.document;
   }
 

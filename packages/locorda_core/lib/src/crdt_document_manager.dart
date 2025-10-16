@@ -290,23 +290,16 @@ class CrdtDocumentManager {
     required SyncGraphConfig config,
     required MergeContractLoader mergeContractLoader,
     required HlcService hlcService,
-    required ResourceLocator resourceLocator,
-    required PhysicalTimestampFactory physicalTimestampFactory,
     required IriTermFactory iriTermFactory,
     required CrdtTypeRegistry crdtTypeRegistry,
-    required IndexRdfGenerator indexRdfGenerator,
+    required ShardDeterminer shardDeterminer,
   })  : _storage = storage,
         _config = config,
         _mergeContractLoader = mergeContractLoader,
         _crdtTypeRegistry = crdtTypeRegistry,
         _hlcService = hlcService,
         _iriGenerator = FrameworkIriGenerator(iriTermFactory: iriTermFactory),
-        _shardDeterminer = ShardDeterminer(
-          storage: storage,
-          rdfGenerator: indexRdfGenerator,
-          shardManager: const ShardManager(),
-          config: config,
-        );
+        _shardDeterminer = shardDeterminer;
 
   /// Save an object with CRDT processing.
   ///
@@ -518,7 +511,8 @@ class CrdtDocumentManager {
               isUtc: true));
 
       // Calculate new shards based on current appData
-      final (allShards, removed, missingGroupIndices) = await _calculateShards(
+      final (allShards, removed, missingGroupIndices) =
+          await _shardDeterminer.calculateShards(
         type,
         resourceIri,
         documentIri,
@@ -567,6 +561,8 @@ class CrdtDocumentManager {
 
       crdtDocument = RdfGraph.fromTriples(documentTriples);
 
+      // TODO: maybe not set updatedAt to physical time of the crdt changes,
+      // but use PhysicalTimestampFactory to get "now"?
       final updatedAtTimestamp = physicalTimestamp;
 
       // 6. Create document metadata for storage
@@ -615,57 +611,6 @@ class CrdtDocumentManager {
       _log.severe('Save operation failed for type $type', e, stackTrace);
       rethrow;
     }
-  }
-
-  Future<
-      (
-        Set<IriTerm> all,
-        Set<IriTerm> removed,
-        List<MissingGroupIndex> missing
-      )> _calculateShards(
-    IriTerm type,
-    IriTerm resourceIri,
-    IriTerm documentIri,
-    RdfGraph appData,
-    RdfGraph? oldAppData,
-    RdfGraph? oldFrameworkGraph,
-  ) async {
-    // Calculate new shards based on current appData
-    final newShardResult = await _shardDeterminer.determineShards(
-      type,
-      resourceIri,
-      appData,
-    );
-    final newShards = newShardResult.shards;
-
-    // Calculate old shards based on previous appData (if exists)
-    // This is needed to determine which shards should be removed
-    final oldShardResult = oldAppData != null
-        ? await _shardDeterminer.determineShards(
-            type,
-            resourceIri,
-            oldAppData,
-          )
-        : const ShardDeterminationResult(
-            shards: const <IriTerm>{},
-            missingGroupIndices: const <MissingGroupIndex>[],
-          );
-    final oldCalculatedShards = oldShardResult.shards;
-    final removed = oldCalculatedShards.difference(newShards);
-
-    // Get shards from old framework graph for other installations
-    final oldStoredShards = oldFrameworkGraph?.getMultiValueObjects<IriTerm>(
-            documentIri, SyncManagedDocument.idxBelongsToIndexShard) ??
-        const <IriTerm>[];
-
-    // Only keep shards that are either:
-    // 1. In newShards (currently valid for this installation)
-    // 2. In oldStoredShards but NOT in removed (from other installations)
-    final shardsFromOtherInstallations = removed.isEmpty
-        ? oldStoredShards
-        : oldStoredShards.where((shard) => !removed.contains(shard));
-    final allShards = {...newShards, ...shardsFromOtherInstallations};
-    return (allShards, removed, newShardResult.missingGroupIndices);
   }
 
   void _throwIfUsedIn(StackTrace stackTrace, String context,

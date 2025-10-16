@@ -20,7 +20,10 @@ abstract interface class Storage {
       List<PropertyChange> changes);
 
   /// Get document with content and metadata by IRI.
-  Future<StoredDocument?> getDocument(IriTerm documentIri);
+  Future<StoredDocument?> getDocument(
+    IriTerm documentIri, {
+    int? ifChangedSincePhysicalClock = 0,
+  });
 
   /// Get property changes for a document, optionally filtered by logical clock.
   ///
@@ -168,7 +171,6 @@ abstract interface class Storage {
     required ItemFetchPolicy itemFetchPolicy,
     required int createdAt,
   });
-
 
   /// Watch subscribed group index IRIs for reactive updates.
   ///

@@ -6,28 +6,118 @@
 library;
 
 import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/rdf/xsd.dart';
 import 'package:rdf_core/rdf_core.dart';
 
-enum ItemFetchPolicy {
+sealed class ItemFetchPolicy {
   /// Proactive item fetching - all items referenced in the index are automatically
   /// downloaded from the pod to local when they are updated remotely or not already present locally.
-  prefetch,
+  static const prefetch = Prefetch._();
 
   /// Lazy item fetching - items are only downloaded from the pod to local
   /// when explicitly requested by the application. Once downloaded, items are
   /// automatically updated when remote changes occur.
-  onRequest;
+  static const onRequest = OnRequest._();
 
-  static ItemFetchPolicy fromString(String value) {
-    switch (value.toLowerCase()) {
+  const ItemFetchPolicy._();
+
+  /// Prefetch not all items, but only those that have a given predicate with one of the given object values
+  static PrefetchFiltered prefetchFiltered(
+          IriTerm predicate, Set<RdfObject> acceptedObjectValues) =>
+      PrefetchFiltered._(predicate, acceptedObjectValues);
+
+  /// Serialize to a JSON-compatible map for database storage
+  Map<String, dynamic> toMap();
+
+  /// Deserialize from a JSON-compatible map
+  static ItemFetchPolicy fromMap(Map<String, dynamic> map) {
+    final type = map['type'] as String;
+    switch (type) {
       case 'prefetch':
         return ItemFetchPolicy.prefetch;
-      case 'onrequest':
+      case 'onRequest':
         return ItemFetchPolicy.onRequest;
+      case 'prefetchFiltered':
+        return PrefetchFiltered._(
+          IriTerm(map['predicate'] as String),
+          (map['acceptedObjectValues'] as List<dynamic>)
+              .map((e) => _deserializeRdfObject(e as Map<String, dynamic>))
+              .toSet(),
+        );
       default:
-        throw ArgumentError('Invalid ItemFetchPolicy value: $value');
+        throw ArgumentError('Unknown ItemFetchPolicy type: $type');
     }
   }
+
+  static RdfObject _deserializeRdfObject(Map<String, dynamic> map) {
+    final objType = map['type'] as String;
+    switch (objType) {
+      case 'iri':
+        return IriTerm(map['value'] as String);
+      case 'literal':
+        return LiteralTerm(
+          map['value'] as String,
+          datatype: map['datatype'] != null
+              ? IriTerm(map['datatype'] as String)
+              : null,
+          language: map['language'] as String?,
+        );
+      case 'blank':
+        throw UnsupportedError(
+            'Blank nodes are not supported in ItemFetchPolicy serialization');
+      default:
+        throw ArgumentError('Unknown RdfObject type: $objType');
+    }
+  }
+
+  static Map<String, dynamic> _serializeRdfObject(RdfObject obj) {
+    if (obj is IriTerm) {
+      return {'type': 'iri', 'value': obj.value};
+    } else if (obj is LiteralTerm) {
+      return {
+        'type': 'literal',
+        'value': obj.value,
+        if (obj.datatype != Xsd.string && obj.datatype != Rdf.langString)
+          'datatype': obj.datatype.value,
+        if (obj.language != null) 'language': obj.language,
+      };
+    } else if (obj is BlankNodeTerm) {
+      throw UnsupportedError(
+          'Blank nodes are not supported in ItemFetchPolicy serialization');
+    }
+    throw ArgumentError('Unsupported RdfObject type: ${obj.runtimeType}');
+  }
+}
+
+class Prefetch extends ItemFetchPolicy {
+  const Prefetch._() : super._();
+
+  @override
+  Map<String, dynamic> toMap() => {'type': 'prefetch'};
+}
+
+class OnRequest extends ItemFetchPolicy {
+  const OnRequest._() : super._();
+
+  @override
+  Map<String, dynamic> toMap() => {'type': 'onRequest'};
+}
+
+class PrefetchFiltered extends ItemFetchPolicy {
+  final IriTerm filterPredicate;
+  final Set<RdfObject> acceptedObjectValues;
+
+  const PrefetchFiltered._(this.filterPredicate, this.acceptedObjectValues)
+      : super._();
+
+  @override
+  Map<String, dynamic> toMap() => {
+        'type': 'prefetchFiltered',
+        'predicate': filterPredicate.value,
+        'acceptedObjectValues': acceptedObjectValues
+            .map((obj) => ItemFetchPolicy._serializeRdfObject(obj))
+            .toList(),
+      };
 }
 
 /// Defines how index items are structured and deserialized.

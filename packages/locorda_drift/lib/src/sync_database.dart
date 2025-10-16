@@ -361,14 +361,19 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
   }
 
   /// Get document with metadata by IRI
-  Future<SyncDocument?> getDocument(String documentIri) async {
+  Future<SyncDocument?> getDocument(String documentIri,
+      {int? ifChangedSincePhysicalClock}) async {
     // For read operations, we should only get existing IRIs, not create them
     final documentIriId = await _getExistingIriId(documentIri);
     if (documentIriId == null) return null;
-
-    return await (select(syncDocuments)
-          ..where((d) => d.documentIriId.equals(documentIriId)))
-        .getSingleOrNull();
+    final query = select(syncDocuments)
+      ..where((d) => d.documentIriId.equals(documentIriId));
+    if (ifChangedSincePhysicalClock != null &&
+        ifChangedSincePhysicalClock > 0) {
+      query.where((d) =>
+          d.ourPhysicalClock.isBiggerThanValue(ifChangedSincePhysicalClock));
+    }
+    return await query.getSingleOrNull();
   }
 
   /// Get document ID by IRI (for property changes)

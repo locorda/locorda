@@ -71,7 +71,8 @@ class IndexPropertyResolver {
     }
 
     final shardGraph = shardDoc.document;
-    final shardResourceIri = IriTerm('${shardDocumentIri.value}#shard');
+    final shardResourceIri = shardGraph.expectSingleObject<IriTerm>(
+        shardDocumentIri, SyncManagedDocument.foafPrimaryTopic)!;
 
     // 2. Get parent index IRI via idx:isShardOf
     final indexIri = shardGraph.findSingleObject<IriTerm>(

@@ -12,6 +12,7 @@ import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/installation_service.dart'
     show InstallationService, InstallationIdFactory;
@@ -62,6 +63,7 @@ class LocordaGraphSync {
     required CrdtDocumentManager crdtDocumentManager,
     required IndexRdfGenerator indexRdfGenerator,
     required PhysicalTimestampFactory physicalTimestampFactory,
+    required ShardDeterminer shardDeterminer,
   })  : _storage = storage,
         _indexManager = indexManager,
         _config = config,
@@ -81,6 +83,7 @@ class LocordaGraphSync {
               backends: backends,
               config: config,
               indexRdfGenerator: indexRdfGenerator,
+              shardDeterminer: shardDeterminer,
             ),
             autoSyncConfig: config.autoSyncConfig,
             physicalTimestampFactory: physicalTimestampFactory),
@@ -114,7 +117,7 @@ class LocordaGraphSync {
     physicalTimestampFactory ??= defaultPhysicalTimestampFactory;
 
     // Automatically add configuration for Framework-Owned resources
-    final effectiveConfig = config.withResourcesAdded([
+    final intermediateConfig = config.withResourcesAdded([
       ResourceGraphConfig(
         typeIri: CrdtClientInstallation.classIri,
         crdtMapping: Uri.parse(
@@ -132,23 +135,49 @@ class LocordaGraphSync {
           // No indices for shards
           indices: []),
       ResourceGraphConfig(
-          typeIri: IdxFullIndex.classIri,
-          crdtMapping:
-              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
-          // No indices for indices
-          indices: []),
-      ResourceGraphConfig(
-          typeIri: IdxGroupIndexTemplate.classIri,
-          crdtMapping:
-              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
-          // No indices for indices
-          indices: []),
-      ResourceGraphConfig(
           typeIri: IdxGroupIndex.classIri,
           crdtMapping:
               Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
           // No indices for indices
           indices: []),
+    ]);
+
+    final allResourceIris = intermediateConfig.resources
+        .map((r) => r.typeIri)
+        .toSet()
+      ..addAll({IdxFullIndex.classIri, IdxGroupIndexTemplate.classIri});
+
+    final effectiveConfig = intermediateConfig.withResourcesAdded([
+      ResourceGraphConfig(
+          typeIri: IdxFullIndex.classIri,
+          crdtMapping:
+              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
+          // No indices for indices
+          indices: [
+            FullIndexGraphConfig(
+                localName: "lcrd-full-indices",
+                // We want to sync all indices of all resource types we handle,
+                // but not the others which we do not know anything about
+                itemFetchPolicy: ItemFetchPolicy.prefetchFiltered(
+                  IdxFullIndex.indexesClass,
+                  allResourceIris,
+                ))
+          ]),
+      ResourceGraphConfig(
+          typeIri: IdxGroupIndexTemplate.classIri,
+          crdtMapping:
+              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
+          // No indices for indices
+          indices: [
+            FullIndexGraphConfig(
+                localName: "lcrd-group-index-templates",
+                // We want to sync all indices of all resource types we handle,
+                // but not the others which we do not know anything about
+                itemFetchPolicy: ItemFetchPolicy.prefetchFiltered(
+                  IdxGroupIndexTemplate.indexesClass,
+                  allResourceIris,
+                ))
+          ]),
     ]);
 
     // Validate configuration before proceeding
@@ -190,17 +219,20 @@ class LocordaGraphSync {
     final shardManager = const ShardManager();
     final indexRdfGenerator = IndexRdfGenerator(
         resourceLocator: localResourceLocator, shardManager: shardManager);
-
+    final shardDeterminer = ShardDeterminer(
+      storage: storage,
+      rdfGenerator: indexRdfGenerator,
+      shardManager: shardManager,
+      config: config,
+    );
     final crdtDocumentManager = CrdtDocumentManager(
       storage: storage,
       config: effectiveConfig,
-      physicalTimestampFactory: physicalTimestampFactory,
-      resourceLocator: localResourceLocator,
+      shardDeterminer: shardDeterminer,
       mergeContractLoader: CachingMergeContractLoader(mergeContractLoader),
       crdtTypeRegistry: crdtTypeRegistry,
       hlcService: hlcService,
       iriTermFactory: iriFactory,
-      indexRdfGenerator: indexRdfGenerator,
     );
 
     // Initialize indices after installation document is created
@@ -214,15 +246,15 @@ class LocordaGraphSync {
     await indexManager.initializeIndices();
 
     final sync = LocordaGraphSync._(
-      backends: backends,
-      storage: storage,
-      indexManager: indexManager,
-      config: effectiveConfig,
-      resourceLocator: localResourceLocator,
-      crdtDocumentManager: crdtDocumentManager,
-      indexRdfGenerator: indexRdfGenerator,
-      physicalTimestampFactory: physicalTimestampFactory,
-    );
+        backends: backends,
+        storage: storage,
+        indexManager: indexManager,
+        config: effectiveConfig,
+        resourceLocator: localResourceLocator,
+        crdtDocumentManager: crdtDocumentManager,
+        indexRdfGenerator: indexRdfGenerator,
+        physicalTimestampFactory: physicalTimestampFactory,
+        shardDeterminer: shardDeterminer);
 
     // installation documents might be organized in indices, so we need to use graph sync instead of crdtDocumentManager directly
     await installationService.ensureDocumentSaved(sync);
@@ -336,41 +368,8 @@ Use the 'documentIriTemplate' property of the resource configuration to configur
       return;
     }
 
-    // 4a. Create any missing GroupIndex documents that were detected during save
-    // This must happen before updateIndices so the shards exist
-    for (final missing in saved.missingGroupIndices) {
-      _log.info(
-          'Creating missing GroupIndex for group "${missing.groupKey}" at ${missing.groupIndexIri}');
-      await _indexManager.createMissingGroupIndex(missing);
-    }
-
-    final crdtDocument = saved.crdtDocument;
-    final documentIri = saved.documentIri;
-
-    // 4. Update the Index Shards
-    final allShards = crdtDocument.getMultiValueObjects<IriTerm>(
-        documentIri, SyncManagedDocument.idxBelongsToIndexShard);
-
-    // Extract clock hash from the saved document
-    final clockHashLiteral = crdtDocument.findSingleObject<LiteralTerm>(
-        documentIri, SyncManagedDocument.crdtClockHash);
-    final clockHash = clockHashLiteral?.value;
-    if (clockHash == null) {
-      throw StateError(
-          'Saved document $documentIri is missing crdt:clockHash, cannot update indices.');
-    }
-
-    // 4a. Remove entries from shards where belongsToIndexShard was removed
-    // This must happen BEFORE updateIndices to ensure tombstones are created first
-    await _indexManager.removeTombstonedShardEntries(
-        resourceIri, crdtDocument, documentIri, saved.physicalTime);
-
-    // 5. Update the indices
-    await _indexManager.updateIndices(type, resourceIri, clockHash,
-        internalAppData, allShards, saved.physicalTime);
-
-    // Note: No manual emission needed - Drift's watch() streams will automatically
-    // detect the database changes and emit updates to any active hydration subscriptions
+    // 5. Update indices
+    await _indexManager.updateIndices(saved);
   }
 
   /// Ensures a resource is available locally, fetching it from the remote source if necessary.

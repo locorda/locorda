@@ -42,8 +42,15 @@ class InMemoryStorage implements Storage {
   }
 
   @override
-  Future<StoredDocument?> getDocument(IriTerm documentIri) async {
-    return _documents[documentIri];
+  Future<StoredDocument?> getDocument(IriTerm documentIri,
+      {int? ifChangedSincePhysicalClock}) async {
+    final doc = _documents[documentIri];
+    if (doc == null) return null;
+    if (ifChangedSincePhysicalClock != null &&
+        doc.metadata.ourPhysicalClock <= ifChangedSincePhysicalClock) {
+      return null;
+    }
+    return doc;
   }
 
   /// Get max updatedAt for all documents of a specific type.
@@ -244,7 +251,8 @@ class InMemoryStorage implements Storage {
   }
 
   @override
-  Future<List<(IriTerm, ItemFetchPolicy)>> getAllSubscribedGroupIndices() async {
+  Future<List<(IriTerm, ItemFetchPolicy)>>
+      getAllSubscribedGroupIndices() async {
     return _groupIndexSubscriptions.values
         .map((sub) => (sub.groupIndexIri, sub.itemFetchPolicy))
         .toList();

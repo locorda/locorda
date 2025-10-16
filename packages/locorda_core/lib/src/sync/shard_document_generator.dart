@@ -119,12 +119,8 @@ class ShardDocumentGenerator {
       return null;
     }
 
-    // 4. Create any missing GroupIndex documents
-    for (final missing in saveResult.missingGroupIndices) {
-      _log.info(
-          'Creating missing GroupIndex for group "${missing.groupKey}" at ${missing.groupIndexIri}');
-      await _indexManager.createMissingGroupIndex(missing);
-    }
+    // 4. Update indices for the saved document, e.g. create any missing GroupIndex documents
+    await _indexManager.updateIndices(saveResult);
 
     return saveResult;
   }

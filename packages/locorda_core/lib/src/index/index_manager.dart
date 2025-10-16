@@ -109,14 +109,14 @@ class IndexManager {
     // index document is saved last.
     if (!(await _documentManager
         .hasDocument(shardResourceIri.getDocumentIri()))) {
-      await _documentManager.save(
+      await _save(
         IdxShard.classIri,
         shardGraph,
       );
     }
 
     // Save index document
-    await _documentManager.save(
+    await _save(
       IdxFullIndex.classIri,
       indexGraph,
     );
@@ -145,7 +145,7 @@ class IndexManager {
     // Save template document
     // GroupIndexTemplate doesn't have shards - those are created per group
 
-    await _documentManager.save(
+    await _save(
       IdxGroupIndexTemplate.classIri,
       templateGraph,
     );
@@ -156,7 +156,7 @@ class IndexManager {
   /// This is a public wrapper around _createGroupIndex() that can be called
   /// by LocordaGraphSync to create GroupIndices that were reported as missing
   /// during document save.
-  Future<void> createMissingGroupIndex(MissingGroupIndex missing) async {
+  Future<void> _createMissingGroupIndex(MissingGroupIndex missing) async {
     await _createGroupIndex(
       missing.config,
       missing.typeIri,
@@ -198,11 +198,57 @@ class IndexManager {
     // Save shard document first (same pattern as FullIndex)
     if (!(await _documentManager
         .hasDocument(shardResourceIri.getDocumentIri()))) {
-      await _documentManager.save(IdxShard.classIri, shardGraph);
+      await _save(IdxShard.classIri, shardGraph);
     }
 
     // Save GroupIndex document
-    await _documentManager.save(IdxGroupIndex.classIri, groupIndexGraph);
+    await _save(IdxGroupIndex.classIri, groupIndexGraph);
+  }
+
+  Future<DocumentSaveResult?> _save(IriTerm type, RdfGraph appData) async {
+    final saved = await _documentManager.save(type, appData);
+    if (saved != null) {
+      await updateIndices(saved);
+    }
+    return saved;
+  }
+
+  Future<void> updateIndices(DocumentSaveResult saved) async {
+    //  Create any missing GroupIndex documents that were detected during save
+    // This must happen before updateIndices so the shards exist
+    for (final missing in saved.missingGroupIndices) {
+      _log.info(
+          'Creating missing GroupIndex for group "${missing.groupKey}" at ${missing.groupIndexIri}');
+      await _createMissingGroupIndex(missing);
+    }
+
+    final document = saved.crdtDocument;
+    final documentIri = saved.documentIri;
+
+    // Update the Index Shards
+    final allShards = document.getMultiValueObjects<IriTerm>(
+        documentIri, SyncManagedDocument.idxBelongsToIndexShard);
+
+    // Extract clock hash from the saved document
+    final clockHashLiteral = document.findSingleObject<LiteralTerm>(
+        documentIri, SyncManagedDocument.crdtClockHash);
+    final clockHash = clockHashLiteral?.value;
+    if (clockHash == null) {
+      throw StateError(
+          'Saved document $documentIri is missing crdt:clockHash, cannot update indices.');
+    }
+    final resourceIri = document.expectSingleObject<IriTerm>(
+        documentIri, SyncManagedDocument.foafPrimaryTopic)!;
+    final type = document.expectSingleObject<IriTerm>(resourceIri, Rdf.type)!;
+
+    // Remove entries from shards where belongsToIndexShard was removed
+    // This must happen BEFORE updateShardIndexEntries to ensure tombstones are created first
+    await _removeTombstonedShardEntries(
+        resourceIri, document, documentIri, saved.physicalTime);
+
+    // Update the indices
+    await _updateShardIndexEntries(
+        type, resourceIri, clockHash, document, allShards, saved.physicalTime);
   }
 
   /// Generates RDF graph for a GroupIndex resource.
@@ -247,13 +293,13 @@ class IndexManager {
   /// - [type]: The RDF type of the resource (e.g., schema:Recipe)
   /// - [resourceIri]: The IRI of the resource being indexed
   /// - [clockHash]: The clock hash from the saved CRDT document
-  /// - [internalAppData]: The resource's semantic data (for extracting header properties)
+  /// - [document]: The full document (for extracting header properties)
   /// - [allShards]: All shard IRIs the resource currently belongs to (from idx:belongsToIndexShard)
-  Future<void> updateIndices(
+  Future<void> _updateShardIndexEntries(
     IriTerm type,
     IriTerm resourceIri,
     String clockHash,
-    RdfGraph internalAppData,
+    RdfGraph document,
     Iterable<IriTerm> allShards,
     int physicalClock,
   ) async {
@@ -275,7 +321,7 @@ class IndexManager {
       // Extract property values from resource data
       final headerProperties = _extractHeaderProperties(
         resourceIri: resourceIri,
-        appData: internalAppData,
+        document: document,
         propertiesToExtract: indexedProperties,
       );
 
@@ -313,13 +359,13 @@ class IndexManager {
   ///
   /// Parameters:
   /// - [resourceIri]: The IRI of the resource to extract properties from
-  /// - [appData]: The resource's semantic RDF data
+  /// - [document]: The resource's semantic RDF data
   /// - [propertiesToExtract]: Set of property IRIs to extract (from index config)
   ///
   /// Returns: Map of property IRI to RdfObject, or null if no properties found
   Map<IriTerm, List<RdfObject>>? _extractHeaderProperties({
     required IriTerm resourceIri,
-    required RdfGraph appData,
+    required RdfGraph document,
     required Set<IriTerm> propertiesToExtract,
   }) {
     // If no properties configured, return null
@@ -331,7 +377,7 @@ class IndexManager {
     final headerProperties = <IriTerm, List<RdfObject>>{};
     for (final propertyIri in propertiesToExtract) {
       // Get all values for this property
-      final values = appData.getMultiValueObjects<RdfObject>(
+      final values = document.getMultiValueObjects<RdfObject>(
         resourceIri,
         propertyIri,
       );
@@ -371,11 +417,15 @@ class IndexManager {
   /// - [resourceIri]: The resource whose shard entries should be cleaned up
   /// - [crdtDocument]: The saved CRDT document containing potential tombstones
   /// - [documentIri]: The document IRI to search for tombstones
-  Future<void> removeTombstonedShardEntries(IriTerm resourceIri,
+  Future<void> _removeTombstonedShardEntries(IriTerm resourceIri,
       RdfGraph crdtDocument, IriTerm documentIri, int ourPhysicalClock) async {
     // Find all reified statements with crdt:deletedAt for idx:belongsToIndexShard
     final reifiedStmts =
         crdtDocument.findTriples(predicate: Rdf.subject, object: documentIri);
+
+    if (reifiedStmts.isEmpty) {
+      return; // No reified statements, nothing to clean up
+    }
 
     final tombstones = <Triple>[];
     for (final reifiedStmt in reifiedStmts) {

@@ -2,6 +2,7 @@ import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/storage/sync_timestamp_storage.dart';
 import 'package:locorda_core/src/sync/remote_sync_orchestrator.dart';
 import 'package:locorda_core/src/sync/shard_document_generator.dart';
@@ -36,6 +37,7 @@ class SyncFunction {
   final List<Backend> _backends;
   final SyncGraphConfig _config;
   final IndexRdfGenerator _indexRdfGenerator;
+  final ShardDeterminer _shardDeterminer;
 
   SyncFunction({
     required List<Backend> backends,
@@ -44,6 +46,7 @@ class SyncFunction {
     required IndexManager indexManager,
     required SyncGraphConfig config,
     required IndexRdfGenerator indexRdfGenerator,
+    required ShardDeterminer shardDeterminer,
   })  : _backends = backends,
         _storage = storage,
         _indexRdfGenerator = indexRdfGenerator,
@@ -52,7 +55,8 @@ class SyncFunction {
           documentManager: documentManager,
           indexManager: indexManager,
         ),
-        _config = config;
+        _config = config,
+        _shardDeterminer = shardDeterminer;
 
   Future<void> call(DateTime syncTime) async {
     // Phase 0: Sync Preparation (materialize local shard state)
@@ -116,11 +120,11 @@ class SyncFunction {
         }
 
         final remoteSyncOrchestrator = RemoteSyncOrchestrator(
-          storage: _storage,
-          remoteStorage: remote,
-          config: _config,
-          indexRdfGenerator: _indexRdfGenerator,
-        );
+            storage: _storage,
+            remoteStorage: remote,
+            config: _config,
+            indexRdfGenerator: _indexRdfGenerator,
+            shardDeterminer: _shardDeterminer);
 
         _log.info('Starting Phase A+B: Remote Synchronization');
 

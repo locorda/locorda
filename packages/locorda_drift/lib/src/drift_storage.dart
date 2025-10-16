@@ -1,6 +1,8 @@
 /// Drift-based implementation of Storage interface.
 library;
 
+import 'dart:convert';
+
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
@@ -129,8 +131,14 @@ class DriftStorage implements Storage {
   }
 
   @override
-  Future<StoredDocument?> getDocument(IriTerm documentIri) async {
-    final document = await documentDao.getDocument(documentIri.value);
+  Future<StoredDocument?> getDocument(
+    IriTerm documentIri, {
+    int? ifChangedSincePhysicalClock,
+  }) async {
+    final document = await documentDao.getDocument(
+      documentIri.value,
+      ifChangedSincePhysicalClock: ifChangedSincePhysicalClock,
+    );
     if (document == null) return null;
 
     // Parse RDF content
@@ -384,7 +392,7 @@ class DriftStorage implements Storage {
     return indexDao.saveGroupIndexSubscription(
       groupIndexIriId: groupIndexIriId,
       groupIndexTemplateIriId: groupIndexTemplateIriId,
-      itemFetchPolicy: itemFetchPolicy.name,
+      itemFetchPolicy: json.encode(itemFetchPolicy.toMap()),
       createdAt: createdAt,
     );
   }
@@ -396,8 +404,8 @@ class DriftStorage implements Storage {
 
     return subscriptions.map((subscription) {
       final indexIri = _iriTermFactory(subscription.groupIndexIri);
-      final fetchPolicy = ItemFetchPolicy.fromString(
-        subscription.itemFetchPolicy,
+      final fetchPolicy = ItemFetchPolicy.fromMap(
+        json.decode(subscription.itemFetchPolicy),
       );
       return (indexIri, fetchPolicy);
     }).toList();
