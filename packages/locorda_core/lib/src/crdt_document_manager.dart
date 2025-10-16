@@ -7,9 +7,7 @@ import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
-import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
-import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
@@ -470,7 +468,8 @@ class CrdtDocumentManager {
       // Validate resource graph structure
       _validateResourceGraph(documentIri, resourceIri, type, appData);
 
-      _log.fine('Saving resource $resourceIri to document $documentIri');
+      _log.fine(
+          'Saving resource ${resourceIri.debug} to document ${documentIri.debug}');
 
       // 3. Generate latest clock
       final oldClock = oldFrameworkGraph == null
@@ -501,7 +500,7 @@ class CrdtDocumentManager {
       final propertyChanges = crdtMetadata.propertyChanges;
       if (propertyChanges.isEmpty) {
         _log.info(
-            'No property changes detected for $resourceIri, skipping save');
+            'No property changes detected for ${resourceIri.debug}, skipping save');
         return null;
       }
       final createdAt = oldFrameworkGraph?.findSingleObject<LiteralTerm>(
@@ -582,12 +581,13 @@ class CrdtDocumentManager {
           propertyChanges,
         );
       } catch (e) {
-        _log.severe('Failed to save document $documentIri to storage: $e');
+        _log.severe(
+            'Failed to save document ${documentIri.debug} to storage: $e');
         rethrow; // Don't emit hydration event if storage failed
       }
 
       _log.info(
-          'Successfully saved document $documentIri with ${propertyChanges.length} property changes');
+          'Successfully saved document ${documentIri.debug} with ${propertyChanges.length} property changes');
       return (
         documentIri: documentIri,
         resourceIri: resourceIri,
@@ -599,7 +599,8 @@ class CrdtDocumentManager {
         physicalTime: clock.physicalTime,
       );
     } on UnidentifiedBlankNodeException catch (e, stackTrace) {
-      _log.severe('Save operation failed for type $type', e, stackTrace);
+      _log.severe(
+          'Save operation failed for type ${type.debug}', e, stackTrace);
       final blankNode = e.blankNode;
       _throwIfUsedIn(stackTrace, "Old Document", oldDocument, blankNode);
       _throwIfUsedIn(stackTrace, "New App Data", appData, blankNode);
@@ -608,7 +609,8 @@ class CrdtDocumentManager {
       _throwIfUsedIn(stackTrace, "New Document", crdtDocument, blankNode);
       rethrow;
     } catch (e, stackTrace) {
-      _log.severe('Save operation failed for type $type', e, stackTrace);
+      _log.severe(
+          'Save operation failed for type ${type.debug}', e, stackTrace);
       rethrow;
     }
   }

@@ -52,12 +52,23 @@
                     "shard_total": 1,
                     "shard_version": "1_0_0",
                     "expected_graph": "test_cases/save/01_first_save/expected_shard.ttl"
+                  },
+                  {
+                    "index_localName": "lcrd-full-indices",
+                    "shard_number": 0,
+                    "shard_total": 1,
+                    "shard_version": "1_0_0",
+                    "expected_graph": "test_cases/save/01_first_save/expected_lcrd-full-indices_shard.ttl"
                   }
                 ],
                 "index_documents": [
                   {
                     "localName": "recipe-index",
                     "expected_graph": "test_cases/save/01_first_save/expected_index.ttl"
+                  },
+                  {
+                    "localName": "lcrd-full-indices",
+                    "expected_graph": "test_cases/save/01_first_save/expected_lcrd-full-indices_index.ttl"
                   }
                 ]
               }

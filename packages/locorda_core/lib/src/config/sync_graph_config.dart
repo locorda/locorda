@@ -1,5 +1,4 @@
 import 'package:locorda_core/src/config/sync_config_base.dart';
-import 'package:locorda_core/src/generated/crdt/index.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/sync/sync_manager.dart';
 import 'package:rdf_core/rdf_core.dart';

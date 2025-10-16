@@ -21,6 +21,7 @@
      [ mc:predicate idx:indexesClass; algo:mergeWith algo:Immutable ],
      [ mc:predicate idx:indexedProperty; algo:mergeWith algo:OR_Set ],
      [ mc:predicate idx:hasShard; algo:mergeWith algo:OR_Set ],
+     [ mc:predicate idx:populationState; algo:mergeWith algo:LWW_Register ],
      # No path node identification for shardingAlgorithm because it should be treated as atomic and is immutable anyways
      [ mc:predicate idx:shardingAlgorithm; algo:mergeWith algo:Immutable; mc:disableBlankNodePathIdentification true ],
      [ mc:predicate idx:readBy; algo:mergeWith algo:OR_Set ] .

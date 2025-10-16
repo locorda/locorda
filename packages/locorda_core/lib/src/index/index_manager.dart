@@ -53,19 +53,38 @@ class IndexManager {
   /// Returns the number of indices created (useful for testing).
   Future<int> initializeIndices() async {
     var createdCount = 0;
+    final allIndices = _config.resources
+        .expand((r) => r.indices.map((i) => (i, r.typeIri)))
+        .toSet()
+        .toList();
+    // Important: sort indices to ensure deterministic creation order and to
+    // ensure that those indices that are used to index other indices are created first.
+    allIndices.sort((a, b) {
+      // Root indices first (FullIndex, GroupIndexTemplate), then by type IRI, then by index local name
+      final aIsRootIndex = a.$2 == IdxFullIndex.classIri ||
+          a.$2 == IdxGroupIndexTemplate.classIri;
+      final bIsRootIndex = b.$2 == IdxFullIndex.classIri ||
+          b.$2 == IdxGroupIndexTemplate.classIri;
+      if (aIsRootIndex && !bIsRootIndex) return -1;
+      if (!aIsRootIndex && bIsRootIndex) return 1;
 
-    for (final resource in _config.resources) {
-      for (final indexConfig in resource.indices) {
-        // Create index based on type
-        switch (indexConfig) {
-          case FullIndexGraphConfig _:
-            await _createFullIndex(indexConfig, resource.typeIri);
-          case GroupIndexGraphConfig _:
-            await _createGroupIndexTemplate(indexConfig, resource.typeIri);
-        }
+      final comparison = a.$2.value.compareTo(b.$2.value);
+      if (comparison != 0) return comparison;
 
-        createdCount++;
+      return a.$1.localName.compareTo(b.$1.localName);
+    });
+
+    // Make sure to create indices in the correct, deterministic order
+    for (final (indexConfig, resourceTypeIri) in allIndices) {
+      // Create index based on type
+      switch (indexConfig) {
+        case FullIndexGraphConfig _:
+          await _createFullIndex(indexConfig, resourceTypeIri);
+        case GroupIndexGraphConfig _:
+          await _createGroupIndexTemplate(indexConfig, resourceTypeIri);
       }
+
+      createdCount++;
     }
 
     return createdCount;

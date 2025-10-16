@@ -200,7 +200,7 @@ Consequences:
     // Process each index configuration
     for (final indexConfig in resourceConfig.indices) {
       switch (indexConfig) {
-        case FullIndexGraphConfig():
+        case FullIndexGraphConfig _:
           final indexShards = await _determineShardsForFullIndex(
             indexConfig,
             resourceIri,
@@ -208,7 +208,7 @@ Consequences:
           );
           shards.addAll(indexShards);
 
-        case GroupIndexGraphConfig():
+        case GroupIndexGraphConfig _:
           final result = await _determineShardsForGroupIndex(
             indexConfig,
             resourceIri,
@@ -256,8 +256,17 @@ Consequences:
 
     // Load the index document from storage
     final storedDoc = await _storage.getDocument(indexDocumentIri);
+
+    // Indices for FullIndex or for GroupIndexTemplate cannot exist yet if this
+    // is about creating the index for FullIndex or GroupIndexTemplate itself
+    final maySkip = typeIri == IdxFullIndex.classIri ||
+        typeIri == IdxGroupIndexTemplate.classIri;
+    assert(maySkip || storedDoc != null,
+        'FullIndex document should exist: ${indexDocumentIri.debug}');
     if (storedDoc == null) {
-      _log.warning('Index document not found: $indexDocumentIri');
+      if (!maySkip) {
+        _log.warning('Index document not found: ${indexDocumentIri.debug}');
+      }
       return [];
     }
 
@@ -266,7 +275,7 @@ Consequences:
         _shardManager.parseShardingConfig(storedDoc.document, indexResourceIri);
     if (shardingConfig == null) {
       _log.warning(
-          'Could not parse sharding config from index: $indexResourceIri');
+          'Could not parse sharding config from index: ${indexResourceIri.debug}');
       return [];
     }
 

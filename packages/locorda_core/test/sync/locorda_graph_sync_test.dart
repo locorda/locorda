@@ -7,10 +7,13 @@ import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/util/build_effective_config.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
 import '../util/rdf_test_utils.dart';
+import '../util/setup_logging.dart';
 import 'in_memory_backend.dart';
 import 'test_fetcher.dart';
 import 'test_physical_timestamp_factory.dart';
@@ -57,10 +60,12 @@ void main() {
           switch (suiteName) {
             case 'save':
             case 'group_index':
+              setupTestLogging(Level.WARNING);
               await _executeSaveTestWithSteps(testJson, testAssetsDir,
                   urlToPathMap, testBaseTimestamp, baseInstallationId);
               break;
             case 'save_error':
+              setupTestLogging(Level.OFF);
               await _executeSaveErrorTest(testJson, testAssetsDir, urlToPathMap,
                   testBaseTimestamp, baseInstallationId);
               break;
@@ -223,7 +228,7 @@ Future<void> _executeStep({
         expectedJson: expectedJson,
         testAssetsDir: testAssetsDir,
         storage: storage,
-        config: config,
+        config: buildEffectiveConfig(config),
         iriTranslator: iriTranslator,
       );
     }

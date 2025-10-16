@@ -22,6 +22,7 @@ import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
 import 'package:locorda_core/src/sync/sync_function.dart';
+import 'package:locorda_core/src/util/build_effective_config.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rxdart/rxdart.dart';
@@ -117,68 +118,7 @@ class LocordaGraphSync {
     physicalTimestampFactory ??= defaultPhysicalTimestampFactory;
 
     // Automatically add configuration for Framework-Owned resources
-    final intermediateConfig = config.withResourcesAdded([
-      ResourceGraphConfig(
-        typeIri: CrdtClientInstallation.classIri,
-        crdtMapping: Uri.parse(
-            'https://w3id.org/solid-crdt-sync/mappings/client-installation-v1'),
-        indices: [
-          FullIndexGraphConfig(
-              localName: 'lcrd-installation-index',
-              itemFetchPolicy: ItemFetchPolicy.onRequest)
-        ],
-      ),
-      ResourceGraphConfig(
-          typeIri: IdxShard.classIri,
-          crdtMapping:
-              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/shard-v1'),
-          // No indices for shards
-          indices: []),
-      ResourceGraphConfig(
-          typeIri: IdxGroupIndex.classIri,
-          crdtMapping:
-              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
-          // No indices for indices
-          indices: []),
-    ]);
-
-    final allResourceIris = intermediateConfig.resources
-        .map((r) => r.typeIri)
-        .toSet()
-      ..addAll({IdxFullIndex.classIri, IdxGroupIndexTemplate.classIri});
-
-    final effectiveConfig = intermediateConfig.withResourcesAdded([
-      ResourceGraphConfig(
-          typeIri: IdxFullIndex.classIri,
-          crdtMapping:
-              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
-          // No indices for indices
-          indices: [
-            FullIndexGraphConfig(
-                localName: "lcrd-full-indices",
-                // We want to sync all indices of all resource types we handle,
-                // but not the others which we do not know anything about
-                itemFetchPolicy: ItemFetchPolicy.prefetchFiltered(
-                  IdxFullIndex.indexesClass,
-                  allResourceIris,
-                ))
-          ]),
-      ResourceGraphConfig(
-          typeIri: IdxGroupIndexTemplate.classIri,
-          crdtMapping:
-              Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
-          // No indices for indices
-          indices: [
-            FullIndexGraphConfig(
-                localName: "lcrd-group-index-templates",
-                // We want to sync all indices of all resource types we handle,
-                // but not the others which we do not know anything about
-                itemFetchPolicy: ItemFetchPolicy.prefetchFiltered(
-                  IdxGroupIndexTemplate.indexesClass,
-                  allResourceIris,
-                ))
-          ]),
-    ]);
+    SyncGraphConfig effectiveConfig = buildEffectiveConfig(config);
 
     // Validate configuration before proceeding
     final configValidationResult =
@@ -261,6 +201,8 @@ class LocordaGraphSync {
 
     return sync;
   }
+
+  
 
   /// Configure subscription to a group index with the given group key.
   ///
