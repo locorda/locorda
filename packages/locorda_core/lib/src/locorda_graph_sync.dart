@@ -223,7 +223,7 @@ class LocordaGraphSync {
       storage: storage,
       rdfGenerator: indexRdfGenerator,
       shardManager: shardManager,
-      config: config,
+      config: effectiveConfig,
     );
     final crdtDocumentManager = CrdtDocumentManager(
       storage: storage,

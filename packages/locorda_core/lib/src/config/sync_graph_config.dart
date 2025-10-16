@@ -1,4 +1,5 @@
 import 'package:locorda_core/src/config/sync_config_base.dart';
+import 'package:locorda_core/src/generated/crdt/index.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/sync/sync_manager.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -239,11 +240,10 @@ class SyncGraphConfig extends SyncConfigBase {
     );
   }
 
-  ResourceGraphConfig getResourceConfig(IriTerm type) {
-    return resources.firstWhere((r) => r.typeIri == type,
-        orElse: () =>
-            throw ArgumentError('No resource config found for type: $type'));
-  }
+  ResourceGraphConfig getResourceConfig(IriTerm type) =>
+      resources.firstWhere((r) => r.typeIri == type,
+          orElse: () =>
+              throw ArgumentError('No resource config found for type: $type'));
 
   SyncGraphConfig withResourcesAdded(List<ResourceGraphConfig> newResources) {
     final updatedResources = List<ResourceGraphConfig>.from(resources)

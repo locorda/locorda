@@ -335,7 +335,7 @@ Future<void> _verifyExpectations({
     if (storedDataDocument == null) {
       fail(await _failMissing(storage, typeIri, documentIri));
     }
-    _expectEqualGraphs("$testId [step $stepIndex] - stored_graph",
+    _expectEqualGraphs("$testId [step $stepIndex] - expected_stored_graph",
         storedDataDocument.document, expectedStoredGraph);
   }
 
@@ -366,8 +366,8 @@ Future<void> _verifyExpectations({
       fail(await _failMissing(
           storage, CrdtClientInstallation.classIri, installationIri));
     }
-    _expectEqualGraphs("$testId [step $stepIndex]", storedInstallation.document,
-        expectedInstallation);
+    _expectEqualGraphs("$testId [step $stepIndex] - expected_installation",
+        storedInstallation.document, expectedInstallation);
   }
 
   // Verify index documents if expected
@@ -583,8 +583,10 @@ Future<void> _verifyGroupIndexDocuments(
     // Load expected graph
     final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
 
-    _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
-        storedGroupIndex.document, expectedGraph);
+    _expectEqualGraphs(
+        "${testId} - expected group index graph $expectedGraphPath",
+        storedGroupIndex.document,
+        expectedGraph);
   }
 }
 
