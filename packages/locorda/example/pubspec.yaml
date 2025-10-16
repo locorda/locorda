@@ -1,7 +1,7 @@
 name: personal_notes_app
 description: Simple offline-first personal notes app demonstrating locorda
 publish_to: none
-version: 1.0.0+1
+version: 0.1.0-dev
 
 environment:
   sdk: ^3.6.0
