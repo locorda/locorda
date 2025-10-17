@@ -17,6 +17,15 @@ class LRUCache<K, V> {
     return value;
   }
 
+  V putIfAbsent(K key, V ifAbsent(K key)) {
+    if (containsKey(key)) {
+      return this[key] as V;
+    } else {
+      this[key] = ifAbsent(key);
+      return this[key] as V;
+    }
+  }
+
   void operator []=(K key, V value) {
     // Remove oldest entry if cache is full and this is a new key
     if (_cache.length >= maxCacheSize && !_cache.containsKey(key)) {

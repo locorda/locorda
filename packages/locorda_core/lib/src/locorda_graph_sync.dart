@@ -58,7 +58,6 @@ class LocordaGraphSync {
   SyncManager get syncManager => _syncManager;
 
   LocordaGraphSync._({
-    required List<Backend> backends,
     required Storage storage,
     required IndexManager indexManager,
     required SyncGraphConfig config,
@@ -66,7 +65,7 @@ class LocordaGraphSync {
     required CrdtDocumentManager crdtDocumentManager,
     required IndexRdfGenerator indexRdfGenerator,
     required PhysicalTimestampFactory physicalTimestampFactory,
-    required ShardDeterminer shardDeterminer,
+    required SyncManager syncManager,
   })  : _storage = storage,
         _indexManager = indexManager,
         _config = config,
@@ -78,18 +77,7 @@ class LocordaGraphSync {
           resourceConfigs: config.resources,
         ),
         _crdtDocumentManager = crdtDocumentManager,
-        _syncManager = SyncManager(
-            syncFunction: SyncFunction(
-              storage: storage,
-              documentManager: crdtDocumentManager,
-              indexManager: indexManager,
-              backends: backends,
-              config: config,
-              indexRdfGenerator: indexRdfGenerator,
-              shardDeterminer: shardDeterminer,
-            ),
-            autoSyncConfig: config.autoSyncConfig,
-            physicalTimestampFactory: physicalTimestampFactory),
+        _syncManager = syncManager,
         _indexRdfGenerator = indexRdfGenerator,
         _physicalTimestampFactory = physicalTimestampFactory;
 
@@ -195,8 +183,20 @@ class LocordaGraphSync {
 
     await indexManager.initializeIndices();
 
+    final syncManager = SyncManager(
+        syncFunction: SyncFunction(
+          storage: storage,
+          documentManager: crdtDocumentManager,
+          indexManager: indexManager,
+          backends: backends,
+          config: config,
+          indexRdfGenerator: indexRdfGenerator,
+          shardDeterminer: shardDeterminer,
+        ),
+        autoSyncConfig: config.autoSyncConfig,
+        physicalTimestampFactory: physicalTimestampFactory);
+
     final sync = LocordaGraphSync._(
-        backends: backends,
         storage: storage,
         indexManager: indexManager,
         config: effectiveConfig,
@@ -204,7 +204,7 @@ class LocordaGraphSync {
         crdtDocumentManager: crdtDocumentManager,
         indexRdfGenerator: indexRdfGenerator,
         physicalTimestampFactory: physicalTimestampFactory,
-        shardDeterminer: shardDeterminer);
+        syncManager: syncManager);
 
     // installation documents might be organized in indices, so we need to use graph sync instead of crdtDocumentManager directly
     await installationService.ensureDocumentSaved(sync);
@@ -281,6 +281,7 @@ class LocordaGraphSync {
       await _storage.saveGroupIndexSubscription(
           groupIndexIri: groupIndexIri,
           groupIndexTemplateIri: groupIndexTemplateIri,
+          indexedType: resourceConfig.typeIri,
           itemFetchPolicy: itemFetchPolicy,
           createdAt: _physicalTimestampFactory().millisecondsSinceEpoch);
     }
@@ -319,7 +320,12 @@ Use the 'documentIriTemplate' property of the resource configuration to configur
     }
 
     // 5. Update indices
-    await _indexManager.updateIndices(saved);
+    await _indexManager.updateIndices(
+      document: saved.crdtDocument,
+      documentIri: saved.documentIri,
+      physicalTime: saved.physicalTime,
+      missingGroupIndices: saved.missingGroupIndices,
+    );
   }
 
   /// Ensures a resource is available locally, fetching it from the remote source if necessary.

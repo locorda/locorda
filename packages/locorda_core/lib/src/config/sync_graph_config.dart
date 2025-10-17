@@ -159,6 +159,8 @@ class DocumentIriTemplate {
 
 class ResourceGraphConfig extends ResourceConfigBase {
   final List<CrdtIndexGraphConfig> indices;
+  late final List<CrdtIndexGraphConfig> indicesInOrder = indices.toList()
+    ..sort((a, b) => a.localName.compareTo(b.localName));
 
   final IriTerm typeIri;
   final DocumentIriTemplate? documentIriTemplate;
@@ -216,6 +218,26 @@ class ResourceGraphConfig extends ResourceConfigBase {
 
 class SyncGraphConfig extends SyncConfigBase {
   final List<ResourceGraphConfig> resources;
+  late final Iterable<ResourceGraphConfig> resourcesInSyncOrder =
+      resources.toList()
+        ..sort((a, b) {
+          // Index-of-indices (root indices) first
+          final aIsRootIndex =
+              a == IdxFullIndex.classIri || a == IdxGroupIndexTemplate.classIri;
+          final bIsRootIndex =
+              b == IdxFullIndex.classIri || b == IdxGroupIndexTemplate.classIri;
+
+          if (aIsRootIndex && !bIsRootIndex) return -1;
+          if (!aIsRootIndex && bIsRootIndex) return 1;
+
+          // Within each group, sort by IRI value for determinism
+          return a.typeIri.value.compareTo(b.typeIri.value);
+        });
+  late final Iterable<
+          (CrdtIndexGraphConfig indexConfig, IriTerm indexedTypeIri)>
+      allIndicesInOrder = resourcesInSyncOrder
+          .expand((r) => r.indicesInOrder.map((i) => (i, r.typeIri)))
+          .toList();
 
   SyncGraphConfig({
     required this.resources,
@@ -266,27 +288,4 @@ class SyncGraphConfig extends SyncConfigBase {
     }
     return null;
   }
-
-  late final Iterable<
-          (CrdtIndexGraphConfig indexConfig, IriTerm indexedTypeIri)>
-      allIndices = resources
-          .expand((r) => r.indices.map((i) => (i, r.typeIri)))
-          .toSet()
-          .toList()
-        // Important: sort indices to ensure deterministic creation order and to
-        // ensure that those indices that are used to index other indices are created first.
-        ..sort((a, b) {
-          // Root indices first (FullIndex, GroupIndexTemplate), then by type IRI, then by index local name
-          final aIsRootIndex = a.$2 == IdxFullIndex.classIri ||
-              a.$2 == IdxGroupIndexTemplate.classIri;
-          final bIsRootIndex = b.$2 == IdxFullIndex.classIri ||
-              b.$2 == IdxGroupIndexTemplate.classIri;
-          if (aIsRootIndex && !bIsRootIndex) return -1;
-          if (!aIsRootIndex && bIsRootIndex) return 1;
-
-          final comparison = a.$2.value.compareTo(b.$2.value);
-          if (comparison != 0) return comparison;
-
-          return a.$1.localName.compareTo(b.$1.localName);
-        });
 }

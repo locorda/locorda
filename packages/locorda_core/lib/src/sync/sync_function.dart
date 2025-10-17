@@ -1,5 +1,7 @@
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
+import 'package:locorda_core/src/hlc_service.dart';
+import 'package:locorda_core/src/index/index_discovery.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
@@ -38,6 +40,8 @@ class SyncFunction {
   final SyncGraphConfig _config;
   final IndexRdfGenerator _indexRdfGenerator;
   final ShardDeterminer _shardDeterminer;
+  final IndexManager _indexManager;
+  final HlcService _hlcService;
 
   SyncFunction({
     required List<Backend> backends,
@@ -47,16 +51,19 @@ class SyncFunction {
     required SyncGraphConfig config,
     required IndexRdfGenerator indexRdfGenerator,
     required ShardDeterminer shardDeterminer,
+    required HlcService hlcService,
   })  : _backends = backends,
         _storage = storage,
         _indexRdfGenerator = indexRdfGenerator,
+        _indexManager = indexManager,
         _shardDocumentGenerator = ShardDocumentGenerator(
           storage: storage,
           documentManager: documentManager,
           indexManager: indexManager,
         ),
         _config = config,
-        _shardDeterminer = shardDeterminer;
+        _shardDeterminer = shardDeterminer,
+        _hlcService = hlcService;
 
   Future<void> call(DateTime syncTime) async {
     // Phase 0: Sync Preparation (materialize local shard state)
@@ -120,11 +127,14 @@ class SyncFunction {
         }
 
         final remoteSyncOrchestrator = RemoteSyncOrchestrator(
-            storage: _storage,
-            remoteStorage: remote,
-            config: _config,
-            indexRdfGenerator: _indexRdfGenerator,
-            shardDeterminer: _shardDeterminer);
+          storage: _storage,
+          remoteStorage: remote,
+          config: _config,
+          indexRdfGenerator: _indexRdfGenerator,
+          shardDeterminer: _shardDeterminer,
+          indexManager: _indexManager,
+          hlcService: _hlcService,
+        );
 
         _log.info('Starting Phase A+B: Remote Synchronization');
 

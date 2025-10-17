@@ -472,13 +472,11 @@ class CrdtDocumentManager {
           'Saving resource ${resourceIri.debug} to document ${documentIri.debug}');
 
       // 3. Generate latest clock
-      final oldClock = oldFrameworkGraph == null
-          ? null
-          : _extractCrdtClock(oldFrameworkGraph, documentIri);
-      final clock = oldClock == null
-          ? _hlcService.newClock(documentIri, physicalTime: physicalTime)
-          : _hlcService.incrementClock(documentIri, oldClock,
-              physicalTime: physicalTime);
+      final clock = _hlcService.createOrIncrementClock(
+        oldFrameworkGraph,
+        documentIri,
+        physicalTime: physicalTime,
+      );
       final physicalTimestamp = clock.physicalTime;
 
       // 4. Detect property changes between old and new app graphs and generate CRDT metadata
@@ -640,18 +638,6 @@ class CrdtDocumentManager {
   /// Close the sync system and free resources.
   Future<void> close() async {
     await _storage.close();
-  }
-
-  CrdtClock _extractCrdtClock(RdfGraph oldGraph, IriTerm documentIri) {
-    final clockEntries = oldGraph
-        .findTriples(
-            subject: documentIri,
-            predicate: SyncManagedDocument.crdtHasClockEntry)
-        .map((t) => t.object as RdfSubject);
-    return clockEntries.map((clockEntrySubject) {
-      final graph = oldGraph.matching(subject: clockEntrySubject);
-      return (clockEntrySubject, graph);
-    }).toList();
   }
 
   Iterable<IdentifiedRdfSubject> _getIdentifiedSubjects(

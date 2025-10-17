@@ -230,11 +230,13 @@ class InMemoryStorage implements Storage {
     required int createdAt,
     required IriTerm groupIndexIri,
     required IriTerm groupIndexTemplateIri,
+    required IriTerm indexedType,
     required ItemFetchPolicy itemFetchPolicy,
   }) async {
     _groupIndexSubscriptions[groupIndexIri] = _GroupIndexSubscription(
       groupIndexIri: groupIndexIri,
       groupIndexTemplateIri: groupIndexTemplateIri,
+      indexedType: indexedType,
       itemFetchPolicy: itemFetchPolicy,
       createdAt: createdAt,
     );
@@ -251,10 +253,11 @@ class InMemoryStorage implements Storage {
   }
 
   @override
-  Future<List<(IriTerm, ItemFetchPolicy)>>
-      getAllSubscribedGroupIndices() async {
+  Future<List<(IriTerm, IriTerm, ItemFetchPolicy)>> getSubscribedGroupIndices(
+      IriTerm indexedType) async {
     return _groupIndexSubscriptions.values
-        .map((sub) => (sub.groupIndexIri, sub.itemFetchPolicy))
+        .where((sub) => sub.indexedType == indexedType)
+        .map((sub) => (sub.groupIndexIri, sub.indexedType, sub.itemFetchPolicy))
         .toList();
   }
 
@@ -427,12 +430,14 @@ class _IndexEntry {
 class _GroupIndexSubscription {
   final IriTerm groupIndexIri;
   final IriTerm groupIndexTemplateIri;
+  final IriTerm indexedType;
   final ItemFetchPolicy itemFetchPolicy;
   final int createdAt;
 
   _GroupIndexSubscription({
     required this.groupIndexIri,
     required this.groupIndexTemplateIri,
+    required this.indexedType,
     required this.itemFetchPolicy,
     required this.createdAt,
   });

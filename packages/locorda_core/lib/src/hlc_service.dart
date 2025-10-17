@@ -58,7 +58,59 @@ class HlcService {
     return (clockEntryIri, RdfGraph.fromTriples(triples));
   }
 
-  CurrentCrdtClock newClock(IriTerm documentIri, {int? physicalTime}) {
+  CrdtClock _extractCrdtClock(RdfGraph oldGraph, IriTerm documentIri) {
+    final clockEntries = oldGraph
+        .findTriples(
+            subject: documentIri,
+            predicate: SyncManagedDocument.crdtHasClockEntry)
+        .map((t) => t.object as RdfSubject);
+    return clockEntries.map((clockEntrySubject) {
+      final graph = oldGraph.matching(subject: clockEntrySubject);
+      return (clockEntrySubject, graph);
+    }).toList();
+  }
+
+  CurrentCrdtClock createOrIncrementClock(
+    RdfGraph? document,
+    IriTerm documentIri, {
+    int? physicalTime,
+  }) {
+    final existingClock =
+        document == null ? null : _extractCrdtClock(document, documentIri);
+    if (existingClock == null || existingClock.isEmpty) {
+      return _newClock(documentIri, physicalTime: physicalTime);
+    }
+    return _incrementClock(documentIri, existingClock,
+        physicalTime: physicalTime);
+  }
+
+  CurrentCrdtClock getCurrentClock(RdfGraph document, IriTerm documentIri) {
+    final existingClock = _extractCrdtClock(document, documentIri);
+    if (existingClock.isEmpty) {
+      throw StateError(
+          'No existing CRDT clock found in document ${documentIri.debug}');
+    }
+
+    final ourClockEntryIri = _generateClockEntryIri(documentIri);
+    final logicalTime = document
+        .findSingleObject<LiteralTerm>(
+            ourClockEntryIri, CrdtClockEntry.logicalTime)
+        ?.integerValue;
+    final physicalTime = document
+        .findSingleObject<LiteralTerm>(
+            ourClockEntryIri, CrdtClockEntry.physicalTime)
+        ?.integerValue;
+
+    return (
+      // FIXME: is it OK to return 0 if we apparently have never updated this document ourselves?
+      logicalTime: logicalTime ?? 0,
+      physicalTime: physicalTime ?? 0,
+      fullClock: existingClock,
+      hash: _hashClock(existingClock)
+    );
+  }
+
+  CurrentCrdtClock _newClock(IriTerm documentIri, {int? physicalTime}) {
     physicalTime ??= _physicalTimestampFactory().millisecondsSinceEpoch;
     final logicalTime = 1;
 
@@ -73,7 +125,7 @@ class HlcService {
     );
   }
 
-  CurrentCrdtClock incrementClock(IriTerm documentIri, CrdtClock clock,
+  CurrentCrdtClock _incrementClock(IriTerm documentIri, CrdtClock clock,
       {int? physicalTime}) {
     physicalTime ??= _physicalTimestampFactory().millisecondsSinceEpoch;
     final ourClockEntryIri = _generateClockEntryIri(documentIri);

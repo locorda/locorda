@@ -1,6 +1,7 @@
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/rdf.dart';
 import 'package:locorda_core/src/rdf/xsd.dart';
+import 'package:locorda_core/src/util/lru_cache.dart';
 import 'package:locorda_core/src/util/structure_validation_logger.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -117,10 +118,17 @@ extension RdfGraphExtensions on RdfGraph {
 }
 
 extension IriTermExtensions on IriTerm {
-  String get debug {
+  static final LRUCache<IriTerm, String> _debugStringCache =
+      LRUCache<IriTerm, String>(maxCacheSize: 100);
+
+  // 'late final debug = _iriToDebugString(this);' would be much nicer,
+  // but isn't supported yet in extension methods
+  String get debug => _debugStringCache.putIfAbsent(this, _iriToDebugString);
+
+  static String _iriToDebugString(IriTerm iri) {
     try {
       final rl = LocalResourceLocator(iriTermFactory: IriTerm.new);
-      final r = rl.fromIriNoType(this);
+      final r = rl.fromIriNoType(iri);
       final type =
           r.typeIri.value.startsWith('https://w3id.org/solid-crdt-sync/vocab/')
               ? r.typeIri.value
@@ -129,7 +137,7 @@ extension IriTermExtensions on IriTerm {
               : r.typeIri.value;
       return '<${type} | ${r.id}${r.fragment != null ? ' | ${r.fragment!}' : ''}>';
     } catch (_) {
-      return value;
+      return iri.value;
     }
   }
 

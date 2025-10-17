@@ -55,7 +55,7 @@ class IndexManager {
     var createdCount = 0;
 
     // Make sure to create indices in the correct, deterministic order
-    for (final (indexConfig, resourceTypeIri) in _config.allIndices) {
+    for (final (indexConfig, resourceTypeIri) in _config.allIndicesInOrder) {
       // Create index based on type
       switch (indexConfig) {
         case FullIndexGraphConfig _:
@@ -233,22 +233,27 @@ class IndexManager {
   Future<DocumentSaveResult?> _save(IriTerm type, RdfGraph appData) async {
     final saved = await _documentManager.save(type, appData);
     if (saved != null) {
-      await updateIndices(saved);
+      await updateIndices(
+          document: saved.crdtDocument,
+          documentIri: saved.documentIri,
+          physicalTime: saved.physicalTime,
+          missingGroupIndices: saved.missingGroupIndices);
     }
     return saved;
   }
 
-  Future<void> updateIndices(DocumentSaveResult saved) async {
+  Future<void> updateIndices(
+      {required RdfGraph document,
+      required IriTerm documentIri,
+      required int physicalTime,
+      required Iterable<MissingGroupIndex> missingGroupIndices}) async {
     //  Create any missing GroupIndex documents that were detected during save
     // This must happen before updateIndices so the shards exist
-    for (final missing in saved.missingGroupIndices) {
+    for (final missing in missingGroupIndices) {
       _log.info(
           'Creating missing GroupIndex for group "${missing.groupKey}" at ${missing.groupIndexIri}');
       await _createMissingGroupIndex(missing);
     }
-
-    final document = saved.crdtDocument;
-    final documentIri = saved.documentIri;
 
     // Update the Index Shards
     final allShards = document.getMultiValueObjects<IriTerm>(
@@ -269,11 +274,11 @@ class IndexManager {
     // Remove entries from shards where belongsToIndexShard was removed
     // This must happen BEFORE updateShardIndexEntries to ensure tombstones are created first
     await _removeTombstonedShardEntries(
-        resourceIri, document, documentIri, saved.physicalTime);
+        resourceIri, document, documentIri, physicalTime);
 
     // Update the indices
     await _updateShardIndexEntries(
-        type, resourceIri, clockHash, document, allShards, saved.physicalTime);
+        type, resourceIri, clockHash, document, allShards, physicalTime);
   }
 
   /// Generates RDF graph for a GroupIndex resource.

@@ -222,7 +222,7 @@ class ShardDeterminer {
     ShardDeterminationMode mode = ShardDeterminationMode.lenient,
   }) async {
     // Calculate new shards based on current appData
-    final newShardResult = await _determineShards(
+    final newShardResult = await determineShards(
       type,
       resourceIri,
       appData,
@@ -233,7 +233,7 @@ class ShardDeterminer {
     // Calculate old shards based on previous appData (if exists)
     // This is needed to determine which shards should be removed
     final oldShardResult = oldAppData != null
-        ? await _determineShards(
+        ? await determineShards(
             type,
             resourceIri,
             oldAppData,
@@ -338,7 +338,7 @@ class ShardDeterminer {
   /// - [mode]: Controls error handling for missing index documents
   ///
   /// Returns: ShardDeterminationResult with shards and missing components
-  Future<ShardDeterminationResult> _determineShards(
+  Future<ShardDeterminationResult> determineShards(
     IriTerm type,
     IriTerm resourceIri,
     RdfGraph internalAppData, {

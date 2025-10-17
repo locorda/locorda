@@ -380,34 +380,39 @@ class DriftStorage implements Storage {
   Future<void> saveGroupIndexSubscription({
     required IriTerm groupIndexIri,
     required IriTerm groupIndexTemplateIri,
+    required IriTerm indexedType,
     required ItemFetchPolicy itemFetchPolicy,
     required int createdAt,
   }) async {
-    // Translate group index IRI to ID internally
+    // Translate IRIs to IDs internally
     final ids = await _getOrCreateIriIdsMap(
-      [groupIndexIri.value, groupIndexTemplateIri.value],
+      [groupIndexIri.value, groupIndexTemplateIri.value, indexedType.value],
     );
     final groupIndexIriId = ids[groupIndexIri.value]!;
     final groupIndexTemplateIriId = ids[groupIndexTemplateIri.value]!;
+    final indexedTypeIriId = ids[indexedType.value]!;
     return indexDao.saveGroupIndexSubscription(
       groupIndexIriId: groupIndexIriId,
       groupIndexTemplateIriId: groupIndexTemplateIriId,
+      indexedTypeIriId: indexedTypeIriId,
       itemFetchPolicy: json.encode(itemFetchPolicy.toMap()),
       createdAt: createdAt,
     );
   }
 
   @override
-  Future<List<(IriTerm, ItemFetchPolicy)>>
-      getAllSubscribedGroupIndices() async {
-    final subscriptions = await indexDao.getAllSubscribedGroupIndices();
+  Future<List<(IriTerm, IriTerm, ItemFetchPolicy)>> getSubscribedGroupIndices(
+      IriTerm indexedType) async {
+    final subscriptions =
+        await indexDao.getSubscribedGroupIndices(indexedType.value);
 
     return subscriptions.map((subscription) {
-      final indexIri = _iriTermFactory(subscription.groupIndexIri);
+      final groupIndexIri = _iriTermFactory(subscription.groupIndexIri);
+      final indexedTypeIri = _iriTermFactory(subscription.indexedTypeIri);
       final fetchPolicy = ItemFetchPolicy.fromMap(
         json.decode(subscription.itemFetchPolicy),
       );
-      return (indexIri, fetchPolicy);
+      return (groupIndexIri, indexedTypeIri, fetchPolicy);
     }).toList();
   }
 

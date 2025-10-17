@@ -100,6 +100,10 @@ class GroupIndexSubscriptions extends Table {
   IntColumn get groupIndexTemplateIriId =>
       integer().references(SyncIris, #id)();
 
+  /// The type IRI that this group index is indexing
+  @ReferenceName('indexedTypeIriId')
+  IntColumn get indexedTypeIriId => integer().references(SyncIris, #id)();
+
   /// Fetch policy: 'onRequest' or 'prefetch'
   TextColumn get itemFetchPolicy => text()();
 
@@ -726,6 +730,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   Future<void> saveGroupIndexSubscription({
     required int groupIndexIriId,
     required int groupIndexTemplateIriId,
+    required int indexedTypeIriId,
     required String itemFetchPolicy,
     required int createdAt,
   }) async {
@@ -733,6 +738,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
       GroupIndexSubscriptionsCompanion.insert(
         groupIndexIriId: Value(groupIndexIriId),
         groupIndexTemplateIriId: groupIndexTemplateIriId,
+        indexedTypeIriId: indexedTypeIriId,
         itemFetchPolicy: itemFetchPolicy,
         createdAt: createdAt,
       ),
@@ -758,25 +764,34 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
         .map((results) => results.map((row) => row.groupIndexIriId).toSet());
   }
 
-  /// Get all subscribed group indices with their IRIs and fetch policies.
+  /// Get subscribed group indices for a specific indexed type.
   ///
-  /// Returns records containing the group index IRI string and item fetch policy
-  /// for all currently subscribed group indices.
-  Future<List<SubscribedGroupIndexData>> getAllSubscribedGroupIndices() async {
+  /// Returns records containing the group index IRI string, indexed type IRI,
+  /// and item fetch policy for all group indices that index the given type.
+  /// Used during remote sync to determine which indices need synchronization.
+  Future<List<SubscribedGroupIndexData>> getSubscribedGroupIndices(
+      String indexedTypeIri) async {
     final query = select(db.groupIndexSubscriptions).join([
       innerJoin(
         db.syncIris,
         db.syncIris.id.equalsExp(db.groupIndexSubscriptions.groupIndexIriId),
       ),
-    ]);
+      innerJoin(
+        db.syncIris,
+        db.syncIris.id.equalsExp(db.groupIndexSubscriptions.indexedTypeIriId),
+        useColumns: false,
+      ),
+    ])
+      ..where(db.syncIris.iri.equals(indexedTypeIri));
 
     final results = await query.get();
 
     return results.map((row) {
       final subscription = row.readTable(db.groupIndexSubscriptions);
-      final iri = row.readTable(db.syncIris);
+      final groupIndexIri = row.readTable(db.syncIris);
       return SubscribedGroupIndexData(
-        groupIndexIri: iri.iri,
+        groupIndexIri: groupIndexIri.iri,
+        indexedTypeIri: indexedTypeIri, // We filtered by this
         itemFetchPolicy: subscription.itemFetchPolicy,
       );
     }).toList();
@@ -1036,10 +1051,12 @@ class DriftIndexEntry {
 /// Subscribed group index data with IRI and fetch policy
 class SubscribedGroupIndexData {
   final String groupIndexIri;
+  final String indexedTypeIri;
   final String itemFetchPolicy;
 
   SubscribedGroupIndexData({
     required this.groupIndexIri,
+    required this.indexedTypeIri,
     required this.itemFetchPolicy,
   });
 }

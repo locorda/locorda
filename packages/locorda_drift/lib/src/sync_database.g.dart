@@ -1648,6 +1648,15 @@ class $GroupIndexSubscriptionsTable extends GroupIndexSubscriptions
           requiredDuringInsert: true,
           defaultConstraints:
               GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+  static const VerificationMeta _indexedTypeIriIdMeta =
+      const VerificationMeta('indexedTypeIriId');
+  @override
+  late final GeneratedColumn<int> indexedTypeIriId = GeneratedColumn<int>(
+      'indexed_type_iri_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
   static const VerificationMeta _itemFetchPolicyMeta =
       const VerificationMeta('itemFetchPolicy');
   @override
@@ -1661,8 +1670,13 @@ class $GroupIndexSubscriptionsTable extends GroupIndexSubscriptions
       'created_at', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns =>
-      [groupIndexIriId, groupIndexTemplateIriId, itemFetchPolicy, createdAt];
+  List<GeneratedColumn> get $columns => [
+        groupIndexIriId,
+        groupIndexTemplateIriId,
+        indexedTypeIriId,
+        itemFetchPolicy,
+        createdAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1688,6 +1702,14 @@ class $GroupIndexSubscriptionsTable extends GroupIndexSubscriptions
               _groupIndexTemplateIriIdMeta));
     } else if (isInserting) {
       context.missing(_groupIndexTemplateIriIdMeta);
+    }
+    if (data.containsKey('indexed_type_iri_id')) {
+      context.handle(
+          _indexedTypeIriIdMeta,
+          indexedTypeIriId.isAcceptableOrUnknown(
+              data['indexed_type_iri_id']!, _indexedTypeIriIdMeta));
+    } else if (isInserting) {
+      context.missing(_indexedTypeIriIdMeta);
     }
     if (data.containsKey('item_fetch_policy')) {
       context.handle(
@@ -1717,6 +1739,8 @@ class $GroupIndexSubscriptionsTable extends GroupIndexSubscriptions
       groupIndexTemplateIriId: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}group_index_template_iri_id'])!,
+      indexedTypeIriId: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}indexed_type_iri_id'])!,
       itemFetchPolicy: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}item_fetch_policy'])!,
       createdAt: attachedDatabase.typeMapping
@@ -1735,6 +1759,9 @@ class GroupIndexSubscription extends DataClass
   final int groupIndexIriId;
   final int groupIndexTemplateIriId;
 
+  /// The type IRI that this group index is indexing
+  final int indexedTypeIriId;
+
   /// Fetch policy: 'onRequest' or 'prefetch'
   final String itemFetchPolicy;
 
@@ -1743,6 +1770,7 @@ class GroupIndexSubscription extends DataClass
   const GroupIndexSubscription(
       {required this.groupIndexIriId,
       required this.groupIndexTemplateIriId,
+      required this.indexedTypeIriId,
       required this.itemFetchPolicy,
       required this.createdAt});
   @override
@@ -1750,6 +1778,7 @@ class GroupIndexSubscription extends DataClass
     final map = <String, Expression>{};
     map['group_index_iri_id'] = Variable<int>(groupIndexIriId);
     map['group_index_template_iri_id'] = Variable<int>(groupIndexTemplateIriId);
+    map['indexed_type_iri_id'] = Variable<int>(indexedTypeIriId);
     map['item_fetch_policy'] = Variable<String>(itemFetchPolicy);
     map['created_at'] = Variable<int>(createdAt);
     return map;
@@ -1759,6 +1788,7 @@ class GroupIndexSubscription extends DataClass
     return GroupIndexSubscriptionsCompanion(
       groupIndexIriId: Value(groupIndexIriId),
       groupIndexTemplateIriId: Value(groupIndexTemplateIriId),
+      indexedTypeIriId: Value(indexedTypeIriId),
       itemFetchPolicy: Value(itemFetchPolicy),
       createdAt: Value(createdAt),
     );
@@ -1771,6 +1801,7 @@ class GroupIndexSubscription extends DataClass
       groupIndexIriId: serializer.fromJson<int>(json['groupIndexIriId']),
       groupIndexTemplateIriId:
           serializer.fromJson<int>(json['groupIndexTemplateIriId']),
+      indexedTypeIriId: serializer.fromJson<int>(json['indexedTypeIriId']),
       itemFetchPolicy: serializer.fromJson<String>(json['itemFetchPolicy']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
     );
@@ -1782,6 +1813,7 @@ class GroupIndexSubscription extends DataClass
       'groupIndexIriId': serializer.toJson<int>(groupIndexIriId),
       'groupIndexTemplateIriId':
           serializer.toJson<int>(groupIndexTemplateIriId),
+      'indexedTypeIriId': serializer.toJson<int>(indexedTypeIriId),
       'itemFetchPolicy': serializer.toJson<String>(itemFetchPolicy),
       'createdAt': serializer.toJson<int>(createdAt),
     };
@@ -1790,12 +1822,14 @@ class GroupIndexSubscription extends DataClass
   GroupIndexSubscription copyWith(
           {int? groupIndexIriId,
           int? groupIndexTemplateIriId,
+          int? indexedTypeIriId,
           String? itemFetchPolicy,
           int? createdAt}) =>
       GroupIndexSubscription(
         groupIndexIriId: groupIndexIriId ?? this.groupIndexIriId,
         groupIndexTemplateIriId:
             groupIndexTemplateIriId ?? this.groupIndexTemplateIriId,
+        indexedTypeIriId: indexedTypeIriId ?? this.indexedTypeIriId,
         itemFetchPolicy: itemFetchPolicy ?? this.itemFetchPolicy,
         createdAt: createdAt ?? this.createdAt,
       );
@@ -1808,6 +1842,9 @@ class GroupIndexSubscription extends DataClass
       groupIndexTemplateIriId: data.groupIndexTemplateIriId.present
           ? data.groupIndexTemplateIriId.value
           : this.groupIndexTemplateIriId,
+      indexedTypeIriId: data.indexedTypeIriId.present
+          ? data.indexedTypeIriId.value
+          : this.indexedTypeIriId,
       itemFetchPolicy: data.itemFetchPolicy.present
           ? data.itemFetchPolicy.value
           : this.itemFetchPolicy,
@@ -1820,6 +1857,7 @@ class GroupIndexSubscription extends DataClass
     return (StringBuffer('GroupIndexSubscription(')
           ..write('groupIndexIriId: $groupIndexIriId, ')
           ..write('groupIndexTemplateIriId: $groupIndexTemplateIriId, ')
+          ..write('indexedTypeIriId: $indexedTypeIriId, ')
           ..write('itemFetchPolicy: $itemFetchPolicy, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -1827,14 +1865,15 @@ class GroupIndexSubscription extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-      groupIndexIriId, groupIndexTemplateIriId, itemFetchPolicy, createdAt);
+  int get hashCode => Object.hash(groupIndexIriId, groupIndexTemplateIriId,
+      indexedTypeIriId, itemFetchPolicy, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is GroupIndexSubscription &&
           other.groupIndexIriId == this.groupIndexIriId &&
           other.groupIndexTemplateIriId == this.groupIndexTemplateIriId &&
+          other.indexedTypeIriId == this.indexedTypeIriId &&
           other.itemFetchPolicy == this.itemFetchPolicy &&
           other.createdAt == this.createdAt);
 }
@@ -1843,25 +1882,30 @@ class GroupIndexSubscriptionsCompanion
     extends UpdateCompanion<GroupIndexSubscription> {
   final Value<int> groupIndexIriId;
   final Value<int> groupIndexTemplateIriId;
+  final Value<int> indexedTypeIriId;
   final Value<String> itemFetchPolicy;
   final Value<int> createdAt;
   const GroupIndexSubscriptionsCompanion({
     this.groupIndexIriId = const Value.absent(),
     this.groupIndexTemplateIriId = const Value.absent(),
+    this.indexedTypeIriId = const Value.absent(),
     this.itemFetchPolicy = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   GroupIndexSubscriptionsCompanion.insert({
     this.groupIndexIriId = const Value.absent(),
     required int groupIndexTemplateIriId,
+    required int indexedTypeIriId,
     required String itemFetchPolicy,
     required int createdAt,
   })  : groupIndexTemplateIriId = Value(groupIndexTemplateIriId),
+        indexedTypeIriId = Value(indexedTypeIriId),
         itemFetchPolicy = Value(itemFetchPolicy),
         createdAt = Value(createdAt);
   static Insertable<GroupIndexSubscription> custom({
     Expression<int>? groupIndexIriId,
     Expression<int>? groupIndexTemplateIriId,
+    Expression<int>? indexedTypeIriId,
     Expression<String>? itemFetchPolicy,
     Expression<int>? createdAt,
   }) {
@@ -1869,6 +1913,7 @@ class GroupIndexSubscriptionsCompanion
       if (groupIndexIriId != null) 'group_index_iri_id': groupIndexIriId,
       if (groupIndexTemplateIriId != null)
         'group_index_template_iri_id': groupIndexTemplateIriId,
+      if (indexedTypeIriId != null) 'indexed_type_iri_id': indexedTypeIriId,
       if (itemFetchPolicy != null) 'item_fetch_policy': itemFetchPolicy,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -1877,12 +1922,14 @@ class GroupIndexSubscriptionsCompanion
   GroupIndexSubscriptionsCompanion copyWith(
       {Value<int>? groupIndexIriId,
       Value<int>? groupIndexTemplateIriId,
+      Value<int>? indexedTypeIriId,
       Value<String>? itemFetchPolicy,
       Value<int>? createdAt}) {
     return GroupIndexSubscriptionsCompanion(
       groupIndexIriId: groupIndexIriId ?? this.groupIndexIriId,
       groupIndexTemplateIriId:
           groupIndexTemplateIriId ?? this.groupIndexTemplateIriId,
+      indexedTypeIriId: indexedTypeIriId ?? this.indexedTypeIriId,
       itemFetchPolicy: itemFetchPolicy ?? this.itemFetchPolicy,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -1898,6 +1945,9 @@ class GroupIndexSubscriptionsCompanion
       map['group_index_template_iri_id'] =
           Variable<int>(groupIndexTemplateIriId.value);
     }
+    if (indexedTypeIriId.present) {
+      map['indexed_type_iri_id'] = Variable<int>(indexedTypeIriId.value);
+    }
     if (itemFetchPolicy.present) {
       map['item_fetch_policy'] = Variable<String>(itemFetchPolicy.value);
     }
@@ -1912,6 +1962,7 @@ class GroupIndexSubscriptionsCompanion
     return (StringBuffer('GroupIndexSubscriptionsCompanion(')
           ..write('groupIndexIriId: $groupIndexIriId, ')
           ..write('groupIndexTemplateIriId: $groupIndexTemplateIriId, ')
+          ..write('indexedTypeIriId: $indexedTypeIriId, ')
           ..write('itemFetchPolicy: $itemFetchPolicy, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2973,6 +3024,24 @@ final class $$SyncIrisTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$GroupIndexSubscriptionsTable,
+      List<GroupIndexSubscription>> _indexedTypeIriIdTable(
+          _$SyncDatabase db) =>
+      MultiTypedResultKey.fromTable(db.groupIndexSubscriptions,
+          aliasName: $_aliasNameGenerator(
+              db.syncIris.id, db.groupIndexSubscriptions.indexedTypeIriId));
+
+  $$GroupIndexSubscriptionsTableProcessedTableManager get indexedTypeIriId {
+    final manager = $$GroupIndexSubscriptionsTableTableManager(
+            $_db, $_db.groupIndexSubscriptions)
+        .filter(
+            (f) => f.indexedTypeIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_indexedTypeIriIdTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$RemoteSyncStateTable, List<RemoteSyncStateData>>
       _remoteSyncStateRefsTable(_$SyncDatabase db) =>
           MultiTypedResultKey.fromTable(db.remoteSyncState,
@@ -3185,6 +3254,29 @@ class $$SyncIrisTableFilterComposer
             getCurrentColumn: (t) => t.id,
             referencedTable: $db.groupIndexSubscriptions,
             getReferencedColumn: (t) => t.groupIndexTemplateIriId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$GroupIndexSubscriptionsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.groupIndexSubscriptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> indexedTypeIriId(
+      Expression<bool> Function($$GroupIndexSubscriptionsTableFilterComposer f)
+          f) {
+    final $$GroupIndexSubscriptionsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.groupIndexSubscriptions,
+            getReferencedColumn: (t) => t.indexedTypeIriId,
             builder: (joinBuilder,
                     {$addJoinBuilderToRootComposer,
                     $removeJoinBuilderFromRootComposer}) =>
@@ -3449,6 +3541,29 @@ class $$SyncIrisTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> indexedTypeIriId<T extends Object>(
+      Expression<T> Function($$GroupIndexSubscriptionsTableAnnotationComposer a)
+          f) {
+    final $$GroupIndexSubscriptionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.groupIndexSubscriptions,
+            getReferencedColumn: (t) => t.indexedTypeIriId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$GroupIndexSubscriptionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.groupIndexSubscriptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
   Expression<T> remoteSyncStateRefs<T extends Object>(
       Expression<T> Function($$RemoteSyncStateTableAnnotationComposer a) f) {
     final $$RemoteSyncStateTableAnnotationComposer composer = $composerBuilder(
@@ -3492,6 +3607,7 @@ class $$SyncIrisTableTableManager extends RootTableManager<
         bool indexResourceIri,
         bool groupIndexSubscriptionsRefs,
         bool groupIndexTemplateIriId,
+        bool indexedTypeIriId,
         bool remoteSyncStateRefs})> {
   $$SyncIrisTableTableManager(_$SyncDatabase db, $SyncIrisTable table)
       : super(TableManagerState(
@@ -3533,6 +3649,7 @@ class $$SyncIrisTableTableManager extends RootTableManager<
               indexResourceIri = false,
               groupIndexSubscriptionsRefs = false,
               groupIndexTemplateIriId = false,
+              indexedTypeIriId = false,
               remoteSyncStateRefs = false}) {
             return PrefetchHooks(
               db: db,
@@ -3546,6 +3663,7 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                 if (indexResourceIri) db.indexEntries,
                 if (groupIndexSubscriptionsRefs) db.groupIndexSubscriptions,
                 if (groupIndexTemplateIriId) db.groupIndexSubscriptions,
+                if (indexedTypeIriId) db.groupIndexSubscriptions,
                 if (remoteSyncStateRefs) db.remoteSyncState
               ],
               addJoins: null,
@@ -3665,6 +3783,19 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                             (item, referencedItems) => referencedItems.where(
                                 (e) => e.groupIndexTemplateIriId == item.id),
                         typedResults: items),
+                  if (indexedTypeIriId)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            GroupIndexSubscription>(
+                        currentTable: table,
+                        referencedTable: $$SyncIrisTableReferences
+                            ._indexedTypeIriIdTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0)
+                                .indexedTypeIriId,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.indexedTypeIriId == item.id),
+                        typedResults: items),
                   if (remoteSyncStateRefs)
                     await $_getPrefetchedData<SyncIri, $SyncIrisTable,
                             RemoteSyncStateData>(
@@ -3706,6 +3837,7 @@ typedef $$SyncIrisTableProcessedTableManager = ProcessedTableManager<
         bool indexResourceIri,
         bool groupIndexSubscriptionsRefs,
         bool groupIndexTemplateIriId,
+        bool indexedTypeIriId,
         bool remoteSyncStateRefs})>;
 typedef $$SyncDocumentsTableCreateCompanionBuilder = SyncDocumentsCompanion
     Function({
@@ -5226,6 +5358,7 @@ typedef $$GroupIndexSubscriptionsTableCreateCompanionBuilder
     = GroupIndexSubscriptionsCompanion Function({
   Value<int> groupIndexIriId,
   required int groupIndexTemplateIriId,
+  required int indexedTypeIriId,
   required String itemFetchPolicy,
   required int createdAt,
 });
@@ -5233,6 +5366,7 @@ typedef $$GroupIndexSubscriptionsTableUpdateCompanionBuilder
     = GroupIndexSubscriptionsCompanion Function({
   Value<int> groupIndexIriId,
   Value<int> groupIndexTemplateIriId,
+  Value<int> indexedTypeIriId,
   Value<String> itemFetchPolicy,
   Value<int> createdAt,
 });
@@ -5268,6 +5402,21 @@ final class $$GroupIndexSubscriptionsTableReferences extends BaseReferences<
         .filter((f) => f.id.sqlEquals($_column));
     final item =
         $_typedResult.readTableOrNull(_groupIndexTemplateIriIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SyncIrisTable _indexedTypeIriIdTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias($_aliasNameGenerator(
+          db.groupIndexSubscriptions.indexedTypeIriId, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get indexedTypeIriId {
+    final $_column = $_itemColumn<int>('indexed_type_iri_id')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_indexedTypeIriIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -5314,6 +5463,26 @@ class $$GroupIndexSubscriptionsTableFilterComposer
     final $$SyncIrisTableFilterComposer composer = $composerBuilder(
         composer: this,
         getCurrentColumn: (t) => t.groupIndexTemplateIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableFilterComposer get indexedTypeIriId {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.indexedTypeIriId,
         referencedTable: $db.syncIris,
         getReferencedColumn: (t) => t.id,
         builder: (joinBuilder,
@@ -5386,6 +5555,26 @@ class $$GroupIndexSubscriptionsTableOrderingComposer
             ));
     return composer;
   }
+
+  $$SyncIrisTableOrderingComposer get indexedTypeIriId {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.indexedTypeIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$GroupIndexSubscriptionsTableAnnotationComposer
@@ -5442,6 +5631,26 @@ class $$GroupIndexSubscriptionsTableAnnotationComposer
             ));
     return composer;
   }
+
+  $$SyncIrisTableAnnotationComposer get indexedTypeIriId {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.indexedTypeIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$GroupIndexSubscriptionsTableTableManager extends RootTableManager<
@@ -5456,7 +5665,9 @@ class $$GroupIndexSubscriptionsTableTableManager extends RootTableManager<
     (GroupIndexSubscription, $$GroupIndexSubscriptionsTableReferences),
     GroupIndexSubscription,
     PrefetchHooks Function(
-        {bool groupIndexIriId, bool groupIndexTemplateIriId})> {
+        {bool groupIndexIriId,
+        bool groupIndexTemplateIriId,
+        bool indexedTypeIriId})> {
   $$GroupIndexSubscriptionsTableTableManager(
       _$SyncDatabase db, $GroupIndexSubscriptionsTable table)
       : super(TableManagerState(
@@ -5474,24 +5685,28 @@ class $$GroupIndexSubscriptionsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> groupIndexIriId = const Value.absent(),
             Value<int> groupIndexTemplateIriId = const Value.absent(),
+            Value<int> indexedTypeIriId = const Value.absent(),
             Value<String> itemFetchPolicy = const Value.absent(),
             Value<int> createdAt = const Value.absent(),
           }) =>
               GroupIndexSubscriptionsCompanion(
             groupIndexIriId: groupIndexIriId,
             groupIndexTemplateIriId: groupIndexTemplateIriId,
+            indexedTypeIriId: indexedTypeIriId,
             itemFetchPolicy: itemFetchPolicy,
             createdAt: createdAt,
           ),
           createCompanionCallback: ({
             Value<int> groupIndexIriId = const Value.absent(),
             required int groupIndexTemplateIriId,
+            required int indexedTypeIriId,
             required String itemFetchPolicy,
             required int createdAt,
           }) =>
               GroupIndexSubscriptionsCompanion.insert(
             groupIndexIriId: groupIndexIriId,
             groupIndexTemplateIriId: groupIndexTemplateIriId,
+            indexedTypeIriId: indexedTypeIriId,
             itemFetchPolicy: itemFetchPolicy,
             createdAt: createdAt,
           ),
@@ -5502,7 +5717,9 @@ class $$GroupIndexSubscriptionsTableTableManager extends RootTableManager<
                   ))
               .toList(),
           prefetchHooksCallback: (
-              {groupIndexIriId = false, groupIndexTemplateIriId = false}) {
+              {groupIndexIriId = false,
+              groupIndexTemplateIriId = false,
+              indexedTypeIriId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -5541,6 +5758,17 @@ class $$GroupIndexSubscriptionsTableTableManager extends RootTableManager<
                         .id,
                   ) as T;
                 }
+                if (indexedTypeIriId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.indexedTypeIriId,
+                    referencedTable: $$GroupIndexSubscriptionsTableReferences
+                        ._indexedTypeIriIdTable(db),
+                    referencedColumn: $$GroupIndexSubscriptionsTableReferences
+                        ._indexedTypeIriIdTable(db)
+                        .id,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -5565,7 +5793,9 @@ typedef $$GroupIndexSubscriptionsTableProcessedTableManager
         (GroupIndexSubscription, $$GroupIndexSubscriptionsTableReferences),
         GroupIndexSubscription,
         PrefetchHooks Function(
-            {bool groupIndexIriId, bool groupIndexTemplateIriId})>;
+            {bool groupIndexIriId,
+            bool groupIndexTemplateIriId,
+            bool indexedTypeIriId})>;
 typedef $$IndexIriIdSetVersionsTableCreateCompanionBuilder
     = IndexIriIdSetVersionsCompanion Function({
   Value<int> id,
