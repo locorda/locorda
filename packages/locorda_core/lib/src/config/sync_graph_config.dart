@@ -1,4 +1,5 @@
 import 'package:locorda_core/src/config/sync_config_base.dart';
+import 'package:locorda_core/src/generated/idx/index.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/sync/sync_manager.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -265,4 +266,27 @@ class SyncGraphConfig extends SyncConfigBase {
     }
     return null;
   }
+
+  late final Iterable<
+          (CrdtIndexGraphConfig indexConfig, IriTerm indexedTypeIri)>
+      allIndices = resources
+          .expand((r) => r.indices.map((i) => (i, r.typeIri)))
+          .toSet()
+          .toList()
+        // Important: sort indices to ensure deterministic creation order and to
+        // ensure that those indices that are used to index other indices are created first.
+        ..sort((a, b) {
+          // Root indices first (FullIndex, GroupIndexTemplate), then by type IRI, then by index local name
+          final aIsRootIndex = a.$2 == IdxFullIndex.classIri ||
+              a.$2 == IdxGroupIndexTemplate.classIri;
+          final bIsRootIndex = b.$2 == IdxFullIndex.classIri ||
+              b.$2 == IdxGroupIndexTemplate.classIri;
+          if (aIsRootIndex && !bIsRootIndex) return -1;
+          if (!aIsRootIndex && bIsRootIndex) return 1;
+
+          final comparison = a.$2.value.compareTo(b.$2.value);
+          if (comparison != 0) return comparison;
+
+          return a.$1.localName.compareTo(b.$1.localName);
+        });
 }
