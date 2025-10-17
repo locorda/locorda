@@ -24,10 +24,47 @@ import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart'
     show IndexEntryWithIri;
 import 'package:locorda_core/src/util/build_effective_config.dart';
+import 'package:locorda_core/src/util/lru_cache.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 final _log = Logger('IndexDiscovery');
+
+/// Cache entry for parsed index configurations.
+///
+/// Contains the parsed config and the clockHash used for validation.
+class _ParsedIndexCacheEntry {
+  final CrdtIndexGraphConfig config;
+  final String clockHash;
+
+  const _ParsedIndexCacheEntry({
+    required this.config,
+    required this.clockHash,
+  });
+}
+
+/// Metadata for an index IRI tracked in the cache.
+///
+/// Contains the current clockHash to enable efficient staleness detection.
+class _IndexMetadata {
+  final IriTerm indexIri;
+  final String clockHash;
+
+  const _IndexMetadata({
+    required this.indexIri,
+    required this.clockHash,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _IndexMetadata &&
+          indexIri == other.indexIri &&
+          clockHash == other.clockHash;
+
+  @override
+  int get hashCode => indexIri.hashCode ^ clockHash.hashCode;
+}
 
 /// Discovers indices from storage for resource types.
 ///
@@ -42,17 +79,29 @@ class IndexDiscovery {
   final IndexRdfGenerator _rdfGenerator;
   final SyncGraphConfig _config;
 
-  /// Watch-based cache: indexed class → set of FullIndex IRIs
+  /// Watch-based cache: indexed class → set of FullIndex metadata
   ///
   /// Updated automatically via storage watches on the fullIndices index-of-indices.
   /// Only contains entries for resource types configured in effectiveConfig.
-  final Map<IriTerm, Set<IriTerm>> _indexedClassToFullIndexIris = {};
+  /// Stores both IRI and clockHash for staleness detection.
+  final Map<IriTerm, Set<_IndexMetadata>> _indexedClassToFullIndexMetadata = {};
 
-  /// Watch-based cache: indexed class → set of GroupIndexTemplate IRIs
+  /// Watch-based cache: indexed class → set of GroupIndexTemplate metadata
   ///
   /// Updated automatically via storage watches on the groupIndexTemplates index-of-indices.
   /// Only contains entries for resource types configured in effectiveConfig.
-  final Map<IriTerm, Set<IriTerm>> _indexedClassToTemplateIris = {};
+  /// Stores both IRI and clockHash for staleness detection.
+  final Map<IriTerm, Set<_IndexMetadata>> _indexedClassToTemplateMetadata = {};
+
+  /// LRU cache of parsed index configurations.
+  ///
+  /// Key: Index IRI string value
+  /// Value: Parsed config with clockHash for validation
+  ///
+  /// Bounded size to prevent memory bloat with many foreign indices.
+  /// ClockHash validation ensures we always use current version.
+  final LRUCache<String, _ParsedIndexCacheEntry> _parsedConfigCache =
+      LRUCache(maxCacheSize: 100);
 
   /// Subscriptions to storage watches for automatic cache updates
   late final List<StreamSubscription> _watchSubscriptions;
@@ -105,9 +154,9 @@ class IndexDiscovery {
       indexIris: [fullIndicesIndexIri],
       cursorTimestamp: null, // Start from beginning
     ).listen(
-      (entries) => _updateIndexIriCache(
+      (entries) => _updateIndexMetadataCache(
         entries,
-        _indexedClassToFullIndexIris,
+        _indexedClassToFullIndexMetadata,
         'FullIndex',
       ),
       onError: (error, stackTrace) {
@@ -122,9 +171,9 @@ class IndexDiscovery {
       indexIris: [groupIndexTemplatesIndexIri],
       cursorTimestamp: null, // Start from beginning
     ).listen(
-      (entries) => _updateIndexIriCache(
+      (entries) => _updateIndexMetadataCache(
         entries,
-        _indexedClassToTemplateIris,
+        _indexedClassToTemplateMetadata,
         'GroupIndexTemplate',
       ),
       onError: (error, stackTrace) {
@@ -138,27 +187,31 @@ class IndexDiscovery {
     return watchSubscriptions;
   }
 
-  /// Updates the cache map based on index entries from storage watches.
+  /// Updates the metadata cache based on index entries from storage watches.
   ///
   /// Process:
   /// 1. For each entry, extract idx:indexesClass from headerProperties
-  /// 2. Update cache: indexedClass → set of index IRIs
+  /// 2. Update cache: indexedClass → set of index metadata (IRI + clockHash)
   /// 3. Handle deletions (isDeleted flag)
   /// 4. Filter to only configured resource types
+  /// 5. Invalidate parsed config cache for changed indices
   ///
   /// Error handling: Always strict - watches run continuously in background,
   /// so data consistency is critical. Any issues indicate corrupted state.
-  Future<void> _updateIndexIriCache(
+  Future<void> _updateIndexMetadataCache(
     List<IndexEntryWithIri> entries,
-    Map<IriTerm, Set<IriTerm>> cache,
+    Map<IriTerm, Set<_IndexMetadata>> cache,
     String indexTypeName,
   ) async {
     for (final entry in entries) {
       final indexIri = entry.resourceIri;
+      final clockHash = entry.clockHash;
 
       if (entry.isDeleted) {
         // Remove from cache
         _removeIndexFromCache(cache, indexIri);
+        // Invalidate parsed config cache
+        _parsedConfigCache.remove(indexIri.value);
         _log.fine('Removed $indexTypeName from cache: $indexIri');
         continue;
       }
@@ -196,18 +249,38 @@ class IndexDiscovery {
         continue;
       }
 
-      // Update cache
-      cache.putIfAbsent(indexedClass, () => {}).add(indexIri);
-      _log.fine('Added $indexTypeName to cache: $indexedClass → $indexIri');
+      // Create metadata with current clockHash
+      final metadata = _IndexMetadata(
+        indexIri: indexIri,
+        clockHash: clockHash,
+      );
+
+      // Update cache - replace old metadata for this IRI if present
+      final metadataSet = cache.putIfAbsent(indexedClass, () => {});
+      // Remove old metadata with same IRI (different clockHash)
+      metadataSet.removeWhere((m) => m.indexIri == indexIri);
+      // Add new metadata
+      metadataSet.add(metadata);
+
+      // Invalidate parsed config cache if clockHash changed
+      final cachedEntry = _parsedConfigCache[indexIri.value];
+      if (cachedEntry != null && cachedEntry.clockHash != clockHash) {
+        _parsedConfigCache.remove(indexIri.value);
+        _log.fine(
+            'Invalidated parsed config cache for $indexTypeName $indexIri (clockHash changed)');
+      }
+
+      _log.fine(
+          'Updated $indexTypeName metadata: $indexedClass → $indexIri (clockHash: $clockHash)');
     }
   }
 
-  /// Removes an index IRI from the cache.
+  /// Removes an index IRI from the metadata cache.
   void _removeIndexFromCache(
-      Map<IriTerm, Set<IriTerm>> cache, IriTerm indexIri) {
-    // Find and remove the IRI from all sets
+      Map<IriTerm, Set<_IndexMetadata>> cache, IriTerm indexIri) {
+    // Find and remove the metadata with matching IRI from all sets
     for (final set in cache.values) {
-      set.remove(indexIri);
+      set.removeWhere((m) => m.indexIri == indexIri);
     }
     // Remove empty sets
     cache.removeWhere((key, value) => value.isEmpty);
@@ -239,16 +312,19 @@ class IndexDiscovery {
   /// Discovers all indices for the given indexed class.
   ///
   /// Process:
-  /// 1. Look up FullIndex IRIs from watch-based cache (fast, synchronous)
-  /// 2. Look up GroupIndexTemplate IRIs from watch-based cache (fast, synchronous)
-  /// 3. Load and parse each index/template document
-  /// 4. Return complete configuration objects
+  /// 1. Look up FullIndex metadata from watch-based cache (fast, synchronous)
+  /// 2. Look up GroupIndexTemplate metadata from watch-based cache (fast, synchronous)
+  /// 3. For each index, check parsed config cache with clockHash validation
+  /// 4. Load and parse documents only if cache miss or stale clockHash
+  /// 5. Return complete configuration objects
   ///
   /// Returns an iterable of CrdtIndexGraphConfig (FullIndexGraphConfig or GroupIndexGraphConfig).
   /// Returns empty iterable if no indices are found.
   ///
-  /// Performance: Fast synchronous cache lookups for IRI resolution,
-  /// then async document loading and parsing on-demand.
+  /// Performance:
+  /// - Fast synchronous cache lookups for IRI + clockHash resolution
+  /// - LRU cache minimizes document loading and parsing
+  /// - ClockHash validation ensures correctness
   ///
   /// Error handling depends on [mode]:
   /// - Strict: Throws on missing documents or parse errors (sync context)
@@ -260,23 +336,35 @@ class IndexDiscovery {
     final configs = <CrdtIndexGraphConfig>[];
 
     // Fast synchronous lookups from watch-based caches
-    final fullIndexIris = _indexedClassToFullIndexIris[indexedClass] ?? {};
-    final templateIris = _indexedClassToTemplateIris[indexedClass] ?? {};
+    final fullIndexMetadata =
+        _indexedClassToFullIndexMetadata[indexedClass] ?? {};
+    final templateMetadata =
+        _indexedClassToTemplateMetadata[indexedClass] ?? {};
 
-    _log.fine('Discovered ${fullIndexIris.length} FullIndex + '
-        '${templateIris.length} GroupIndexTemplate for $indexedClass');
+    _log.fine('Discovered ${fullIndexMetadata.length} FullIndex + '
+        '${templateMetadata.length} GroupIndexTemplate for $indexedClass');
 
-    // Load and parse FullIndex documents
-    for (final indexIri in fullIndexIris) {
-      final config = await _loadAndParseFullIndex(indexIri, mode: mode);
+    // Load and parse FullIndex documents (with cache)
+    for (final metadata in fullIndexMetadata) {
+      final config = await _getOrLoadIndexConfig<FullIndexGraphConfig>(
+        metadata,
+        'FullIndex',
+        _loadAndParseFullIndex,
+        mode: mode,
+      );
       if (config != null) {
         configs.add(config);
       }
     }
 
-    // Load and parse GroupIndexTemplate documents
-    for (final templateIri in templateIris) {
-      final config = await _loadAndParseTemplate(templateIri, mode: mode);
+    // Load and parse GroupIndexTemplate documents (with cache)
+    for (final metadata in templateMetadata) {
+      final config = await _getOrLoadIndexConfig<GroupIndexGraphConfig>(
+        metadata,
+        'GroupIndexTemplate',
+        _loadAndParseTemplate,
+        mode: mode,
+      );
       if (config != null) {
         configs.add(config);
       }
@@ -285,20 +373,74 @@ class IndexDiscovery {
     return configs;
   }
 
-  /// Loads and parses a FullIndex document.
+  /// Gets or loads an index configuration with cache and clockHash validation.
+  ///
+  /// Generic method that handles both FullIndex and GroupIndexTemplate.
+  ///
+  /// Process:
+  /// 1. Check parsed config cache with clockHash validation
+  /// 2. If cache hit with matching clockHash, return cached config
+  /// 3. If cache miss or stale clockHash, load and parse document via loader
+  /// 4. Store in cache with current clockHash
   ///
   /// Error handling depends on [mode]:
   /// - Strict: Throws if document missing or parse fails
   /// - Lenient: Returns null and logs warning
-  Future<FullIndexGraphConfig?> _loadAndParseFullIndex(
-    IriTerm indexIri, {
+  Future<T?> _getOrLoadIndexConfig<T extends CrdtIndexGraphConfig>(
+    _IndexMetadata metadata,
+    String indexTypeName,
+    Future<T?> Function(IriTerm, ShardDeterminationMode) loader, {
     required ShardDeterminationMode mode,
   }) async {
+    final indexIri = metadata.indexIri;
+    final expectedClockHash = metadata.clockHash;
+
+    // Check cache
+    final cachedEntry = _parsedConfigCache[indexIri.value];
+    if (cachedEntry != null && cachedEntry.clockHash == expectedClockHash) {
+      // Cache hit with matching clockHash
+      _log.fine('Cache hit for $indexTypeName: $indexIri');
+      return cachedEntry.config as T;
+    }
+
+    // Cache miss or stale - load and parse
+    if (cachedEntry != null) {
+      _log.fine(
+          'Cache stale for $indexTypeName: $indexIri (expected: $expectedClockHash, cached: ${cachedEntry.clockHash})');
+    } else {
+      _log.fine('Cache miss for $indexTypeName: $indexIri');
+    }
+
+    final config = await loader(indexIri, mode);
+    if (config != null) {
+      // Store in cache with current clockHash
+      _parsedConfigCache[indexIri.value] = _ParsedIndexCacheEntry(
+        config: config,
+        clockHash: expectedClockHash,
+      );
+    }
+    return config;
+  }
+
+  /// Generic method to load and parse an index document.
+  ///
+  /// Handles document loading, parsing, and mode-dependent error handling
+  /// for any index type.
+  ///
+  /// Error handling depends on [mode]:
+  /// - Strict: Throws if document missing or parse fails
+  /// - Lenient: Returns null and logs warning
+  Future<T?> _loadAndParseIndexDocument<T extends CrdtIndexGraphConfig>(
+    IriTerm indexIri,
+    String indexTypeName,
+    T? Function(RdfGraph, IriTerm) parser,
+    ShardDeterminationMode mode,
+  ) async {
     final documentIri = indexIri.getDocumentIri();
     final doc = await _storage.getDocument(documentIri);
 
     if (doc == null) {
-      final message = 'FullIndex document not found: $documentIri';
+      final message = '$indexTypeName document not found: $documentIri';
       if (mode == ShardDeterminationMode.strict) {
         throw StateError('$message (strict mode)');
       }
@@ -307,18 +449,18 @@ class IndexDiscovery {
     }
 
     try {
-      final parsed = _parser.parseFullIndex(doc.document, indexIri);
-      if (parsed == null) {
-        final message = 'Failed to parse FullIndex: $indexIri';
+      final config = parser(doc.document, indexIri);
+      if (config == null) {
+        final message = 'Failed to parse $indexTypeName: $indexIri';
         if (mode == ShardDeterminationMode.strict) {
           throw StateError('$message (strict mode)');
         }
         _log.warning('$message (lenient mode)');
         return null;
       }
-      return parsed.config;
+      return config;
     } catch (e, st) {
-      final message = 'Error parsing FullIndex: $indexIri';
+      final message = 'Error parsing $indexTypeName: $indexIri';
       if (mode == ShardDeterminationMode.strict) {
         _log.severe('$message (strict mode)', e, st);
         rethrow;
@@ -327,47 +469,28 @@ class IndexDiscovery {
       return null;
     }
   }
+
+  /// Loads and parses a FullIndex document.
+  Future<FullIndexGraphConfig?> _loadAndParseFullIndex(
+    IriTerm indexIri,
+    ShardDeterminationMode mode,
+  ) =>
+      _loadAndParseIndexDocument(
+        indexIri,
+        'FullIndex',
+        (graph, iri) => _parser.parseFullIndex(graph, iri)?.config,
+        mode,
+      );
 
   /// Loads and parses a GroupIndexTemplate document.
-  ///
-  /// Error handling depends on [mode]:
-  /// - Strict: Throws if document missing or parse fails
-  /// - Lenient: Returns null and logs warning
   Future<GroupIndexGraphConfig?> _loadAndParseTemplate(
-    IriTerm templateIri, {
-    required ShardDeterminationMode mode,
-  }) async {
-    final documentIri = templateIri.getDocumentIri();
-    final doc = await _storage.getDocument(documentIri);
-
-    if (doc == null) {
-      final message = 'GroupIndexTemplate document not found: $documentIri';
-      if (mode == ShardDeterminationMode.strict) {
-        throw StateError('$message (strict mode)');
-      }
-      _log.warning('$message (lenient mode)');
-      return null;
-    }
-
-    try {
-      final parsed = _parser.parseGroupIndexTemplate(doc.document, templateIri);
-      if (parsed == null) {
-        final message = 'Failed to parse GroupIndexTemplate: $templateIri';
-        if (mode == ShardDeterminationMode.strict) {
-          throw StateError('$message (strict mode)');
-        }
-        _log.warning('$message (lenient mode)');
-        return null;
-      }
-      return parsed.config;
-    } catch (e, st) {
-      final message = 'Error parsing GroupIndexTemplate: $templateIri';
-      if (mode == ShardDeterminationMode.strict) {
-        _log.severe('$message (strict mode)', e, st);
-        rethrow;
-      }
-      _log.warning('$message (lenient mode)', e, st);
-      return null;
-    }
-  }
+    IriTerm templateIri,
+    ShardDeterminationMode mode,
+  ) =>
+      _loadAndParseIndexDocument(
+        templateIri,
+        'GroupIndexTemplate',
+        (graph, iri) => _parser.parseGroupIndexTemplate(graph, iri)?.config,
+        mode,
+      );
 }
