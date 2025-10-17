@@ -192,6 +192,7 @@ class LocordaGraphSync {
           config: config,
           indexRdfGenerator: indexRdfGenerator,
           shardDeterminer: shardDeterminer,
+          hlcService: hlcService,
         ),
         autoSyncConfig: config.autoSyncConfig,
         physicalTimestampFactory: physicalTimestampFactory);

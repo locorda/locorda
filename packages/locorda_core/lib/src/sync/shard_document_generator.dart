@@ -120,7 +120,12 @@ class ShardDocumentGenerator {
     }
 
     // 4. Update indices for the saved document, e.g. create any missing GroupIndex documents
-    await _indexManager.updateIndices(saveResult);
+    await _indexManager.updateIndices(
+      document: saveResult.crdtDocument,
+      documentIri: saveResult.documentIri,
+      physicalTime: saveResult.physicalTime,
+      missingGroupIndices: saveResult.missingGroupIndices,
+    );
 
     return saveResult;
   }
