@@ -10,7 +10,9 @@ import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
+import 'package:locorda_core/src/index/index_discovery.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
+import 'package:locorda_core/src/index/index_parser.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
@@ -159,11 +161,19 @@ class LocordaGraphSync {
     final shardManager = const ShardManager();
     final indexRdfGenerator = IndexRdfGenerator(
         resourceLocator: localResourceLocator, shardManager: shardManager);
+    final indexParser = IndexParser(
+        knownConfig: effectiveConfig, rdfGenerator: indexRdfGenerator);
+    final indexDiscovery = IndexDiscovery(
+      storage: storage,
+      parser: indexParser,
+      rdfGenerator: indexRdfGenerator,
+      config: effectiveConfig,
+    );
     final shardDeterminer = ShardDeterminer(
       storage: storage,
       rdfGenerator: indexRdfGenerator,
       shardManager: shardManager,
-      config: effectiveConfig,
+      indexDiscovery: indexDiscovery,
     );
     final crdtDocumentManager = CrdtDocumentManager(
       storage: storage,
@@ -201,8 +211,6 @@ class LocordaGraphSync {
 
     return sync;
   }
-
-  
 
   /// Configure subscription to a group index with the given group key.
   ///

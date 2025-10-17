@@ -2,6 +2,15 @@ import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/crdt/index.dart';
 import 'package:locorda_core/src/generated/idx/index.dart';
 
+class IndexNames {
+  static const fullIndices = "lcrd-full-indices";
+  static const installations = "lcrd-installation-index";
+  static const groupIndexTemplates = "lcrd-group-index-templates";
+}
+
+/// The index item configuration for the index of indices.
+final indexIndexItemConfig = IndexItemGraphConfig({IdxFullIndex.indexesClass});
+
 SyncGraphConfig buildEffectiveConfig(SyncGraphConfig config) {
   // Automatically add configuration for Framework-Owned resources
   final intermediateConfig = config.withResourcesAdded([
@@ -11,7 +20,7 @@ SyncGraphConfig buildEffectiveConfig(SyncGraphConfig config) {
           'https://w3id.org/solid-crdt-sync/mappings/client-installation-v1'),
       indices: [
         FullIndexGraphConfig(
-            localName: 'lcrd-installation-index',
+            localName: IndexNames.installations,
             itemFetchPolicy: ItemFetchPolicy.onRequest)
       ],
     ),
@@ -42,8 +51,8 @@ SyncGraphConfig buildEffectiveConfig(SyncGraphConfig config) {
         // No indices for indices
         indices: [
           FullIndexGraphConfig(
-              localName: "lcrd-full-indices",
-              item: IndexItemGraphConfig({IdxFullIndex.indexesClass}),
+              localName: IndexNames.fullIndices,
+              item: indexIndexItemConfig,
               // We want to sync all indices of all resource types we handle,
               // but not the others which we do not know anything about
               itemFetchPolicy: ItemFetchPolicy.prefetchFiltered(
@@ -58,8 +67,8 @@ SyncGraphConfig buildEffectiveConfig(SyncGraphConfig config) {
         // No indices for indices
         indices: [
           FullIndexGraphConfig(
-              localName: "lcrd-group-index-templates",
-              item: IndexItemGraphConfig({IdxFullIndex.indexesClass}),
+              localName: IndexNames.groupIndexTemplates,
+              item: indexIndexItemConfig,
               // We want to sync all indices of all resource types we handle,
               // but not the others which we do not know anything about
               itemFetchPolicy: ItemFetchPolicy.prefetchFiltered(

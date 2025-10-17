@@ -175,9 +175,35 @@ class IndexManager {
   /// This is a public wrapper around _createGroupIndex() that can be called
   /// by LocordaGraphSync to create GroupIndices that were reported as missing
   /// during document save.
+  ///
+  /// Retrieves the GroupIndexGraphConfig from the resource configuration
+  /// based on the template IRI and group key.
   Future<void> _createMissingGroupIndex(MissingGroupIndex missing) async {
+    // Get resource config for this type
+    final resourceConfig = _config.getResourceConfig(missing.typeIri);
+
+    // Find the matching GroupIndexGraphConfig
+    // We need to identify which GroupIndexGraphConfig this missing GroupIndex belongs to
+    // by matching the template IRI structure
+    GroupIndexGraphConfig? matchingConfig;
+    for (final indexConfig in resourceConfig.indices) {
+      if (indexConfig is GroupIndexGraphConfig) {
+        final templateIri = _rdfGenerator.generateGroupIndexTemplateIri(
+            indexConfig, missing.typeIri);
+        if (templateIri == missing.templateIri) {
+          matchingConfig = indexConfig;
+          break;
+        }
+      }
+    }
+
+    if (matchingConfig == null) {
+      throw StateError(
+          'Could not find GroupIndexGraphConfig for template ${missing.templateIri}');
+    }
+
     await _createGroupIndex(
-      missing.config,
+      matchingConfig,
       missing.typeIri,
       missing.templateIri,
       missing.groupKey,

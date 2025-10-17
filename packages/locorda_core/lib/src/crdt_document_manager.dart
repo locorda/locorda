@@ -510,7 +510,9 @@ class CrdtDocumentManager {
               isUtc: true));
 
       // Calculate new shards based on current appData
-      final (allShards, removed, missingGroupIndices) =
+      // Use lenient mode for user-initiated saves - we proceed even if indices
+      // haven't been synced yet. Missing shards will be self-healing on next sync.
+      final (allShards, removed, missingGroupIndices, missingIndexDocuments) =
           await _shardDeterminer.calculateShards(
         type,
         resourceIri,
@@ -518,7 +520,14 @@ class CrdtDocumentManager {
         appData,
         oldAppData,
         oldFrameworkGraph,
+        mode: ShardDeterminationMode.lenient,
       );
+
+      if (missingIndexDocuments.isNotEmpty) {
+        _log.info(
+            'Some index documents not yet available for ${resourceIri.debug}, '
+            'shards will be recalculated on next sync: $missingIndexDocuments');
+      }
 
       // 5. Construct complete CRDT document with framework metadata
       final documentTriples = _constructCrdtDocument(

@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:locorda_core/src/config/sync_graph_config.dart';
 import 'package:locorda_core/src/generated/_index.dart';
-import 'package:locorda_core/src/index/group_index_template_parser.dart';
+import 'package:locorda_core/src/index/index_parser.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
@@ -23,7 +23,7 @@ void main() {
   final testSuites = allTestsJson['test_suites'] as List<dynamic>;
 
   late IndexRdfGenerator generator;
-  late GroupIndexTemplateParser parser;
+  late IndexParser parser;
   final resourceLocator =
       LocalResourceLocator(iriTermFactory: IriTerm.validated);
 
@@ -32,7 +32,10 @@ void main() {
       resourceLocator: resourceLocator,
       shardManager: const ShardManager(),
     );
-    parser = const GroupIndexTemplateParser();
+    // Parser without knownConfig for these tests (testing unknown indices)
+    // Empty config means all indices are treated as unknown
+    final emptyConfig = SyncGraphConfig(resources: []);
+    parser = IndexParser(knownConfig: emptyConfig, rdfGenerator: generator);
   });
 
   // Group tests by suite
@@ -138,7 +141,7 @@ Future<void> _executeGenerateTest(
 Future<void> _executeParseTest(
   Map<String, dynamic> testJson,
   Directory testAssetsDir,
-  GroupIndexTemplateParser parser,
+  IndexParser parser,
 ) async {
   final templateGraphPath = testJson['template_graph'] as String;
   final expectedJson = testJson['expected'] as Map<String, dynamic>;
@@ -148,26 +151,29 @@ Future<void> _executeParseTest(
 
   final templateResourceIri = IriTerm('https://example.org/indices/#it');
 
-  // Parse grouping properties
-  final properties = parser.parseGroupingProperties(graph, templateResourceIri);
-  final indexedClass = parser.parseIndexedClass(graph, templateResourceIri);
+  // Parse complete config with indexed class
+  final parsed = parser.parseGroupIndexTemplate(graph, templateResourceIri);
+  expect(parsed, isNotNull, reason: 'Should parse valid GroupIndexTemplate');
+
+  final properties = parsed!.config.groupingProperties;
+  final indexedClass = parsed.indexedClass;
 
   // Verify indexed class
   final expectedIndexedClass = expectedJson['indexedClass'] as String?;
   if (expectedIndexedClass != null) {
-    expect(indexedClass?.value, equals(expectedIndexedClass));
+    expect(indexedClass.value, equals(expectedIndexedClass));
   }
 
   // Verify properties count
   final expectedCount = expectedJson['groupingPropertiesCount'] as int;
-  expect(properties?.length, equals(expectedCount));
+  expect(properties.length, equals(expectedCount));
 
   // Verify individual properties
   if (expectedJson.containsKey('properties')) {
     final expectedProps = expectedJson['properties'] as List<dynamic>;
     for (var i = 0; i < expectedProps.length; i++) {
       final expectedProp = expectedProps[i] as Map<String, dynamic>;
-      final actualProp = properties![i];
+      final actualProp = properties[i];
 
       expect(actualProp.predicate.value, equals(expectedProp['predicate']));
       expect(actualProp.hierarchyLevel, equals(expectedProp['hierarchyLevel']));
@@ -217,7 +223,7 @@ Future<void> _executeIriGenerationTest(
 Future<void> _executeRoundtripTest(
   Map<String, dynamic> testJson,
   IndexRdfGenerator generator,
-  GroupIndexTemplateParser parser,
+  IndexParser parser,
   LocalResourceLocator resourceLocator,
 ) async {
   final typeIri = IriTerm(testJson['typeIri'] as String);
@@ -238,27 +244,26 @@ Future<void> _executeRoundtripTest(
     installationIri: installationIri,
   );
 
-  // Parse RDF back to config
-  final parsedProperties = parser.parseGroupingProperties(graph, originalIri);
-  final parsedIndexedClass = parser.parseIndexedClass(graph, originalIri);
+  // Parse RDF back to complete config with indexed class
+  final parsed = parser.parseGroupIndexTemplate(graph, originalIri);
+  expect(parsed, isNotNull, reason: 'Should parse valid GroupIndexTemplate');
 
-  expect(parsedProperties, isNotNull);
-  expect(parsedIndexedClass, isNotNull);
+  final parsedIndexedClass = parsed!.indexedClass;
 
-  // Create new config from parsed data
+  // Create config with parsed data for IRI comparison
   final localName = testJson.containsKey('config_after_parse')
       ? (testJson['config_after_parse'] as Map<String, dynamic>)['localName']
           as String
       : 'parsed';
 
-  final parsedConfig = GroupIndexGraphConfig(
+  final configForIri = GroupIndexGraphConfig(
     localName: localName,
-    groupingProperties: parsedProperties!,
+    groupingProperties: parsed.config.groupingProperties,
   );
 
   // Generate IRI from parsed config
-  final parsedIri = generator.generateGroupIndexTemplateIri(
-      parsedConfig, parsedIndexedClass!);
+  final parsedIri =
+      generator.generateGroupIndexTemplateIri(configForIri, parsedIndexedClass);
 
   // IRIs should match
   final shouldMatch = expectedJson['iri_matches_after_roundtrip'] as bool;

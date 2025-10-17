@@ -114,6 +114,7 @@ class IndexRdfGenerator {
 
   IriTerm generateIndexOrTemplateIri(
           CrdtIndexGraphConfig index, IriTerm typeIri) =>
+      // FIXME: lru cache these IRIs?
       switch (index) {
         FullIndexGraphConfig _ => generateFullIndexIri(index, typeIri),
         GroupIndexGraphConfig() => generateGroupIndexTemplateIri(index, typeIri)

@@ -81,9 +81,9 @@
 ### Priority 4: Backend Implementations
 - [x] Refine concept for actual sync algorithm
 - [x] We need prefetch_filtered fetching in addition to prefetch and onRequest
-- [ ] We need an index of indices (full and group templates)
-- [ ] RemoteSyncOrchestrator: the sync loop needs to run per resource type, not try to sync all at once, fully syncing index of indices (and thus all indices) first
+- [x] We need an index of indices (full and group templates)
 - [ ] Fix the ShardDeterminer to use the actual full index and group index documents instead of the configuration as a base
+- [ ] RemoteSyncOrchestrator: the sync loop needs to run per resource type, not try to sync all at once, fully syncing index of indices (and thus all indices) first
 - [ ] RemoteSyncOrchestrator: 
   - Ensure that the shards are calculated by the ShardDeterminer based on the merged document before proceeding
   - store locally in _syncDocument, calling the indexManager to update shards
