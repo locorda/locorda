@@ -7,6 +7,7 @@ import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
+import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/mapping/metadata_generator.dart';
@@ -343,20 +344,18 @@ class RemoteSyncOrchestrator {
           );
           final clock =
               _hlcService.getCurrentClock(documentToUpload, documentIri);
-          final algorithmIri = mergeContract.getEffectiveMergeWith(
-              typeIri, SyncManagedDocument.idxBelongsToIndexShard);
-          final crdtType = _crdtTypeRegistry.getType(algorithmIri);
 
-          crdtType.localValueChange(
-              oldPropertyValue: oldPropertyValue,
-              newPropertyValue: newPropertyValue,
-              oldFrameworkGraph: documentToUpload,
-              mergeContext: CrdtMergeContext(
-                iriGenerator: _iriGenerator,
-                metadataGenerator: _metadataGenerator,
-              ),
-              physicalClock: clock.physicalTime);
-          // FIXME: how do we cleanly apply the shards to the documentToUpload (with cleanly I mean: so that it complies with merging rules and creates & adds metadata where possible)?
+          // Replace shards in the document and generate metadata for the change
+          final updatedDocument = await _replaceShardsInDocument(
+            documentIri: documentIri,
+            document: documentToUpload,
+            resourceIri: resourceIri,
+            newShards: shards.shards,
+            mergeContract: mergeContract,
+            physicalClock: clock.physicalTime,
+          );
+
+          documentToUpload = updatedDocument;
           var uploadSuccess = await _uploadIfNoConflict(
             documentIri: documentIri,
             graph: documentToUpload,
@@ -708,6 +707,102 @@ class RemoteSyncOrchestrator {
       ifChangedSincePhysicalClock: ifChangedSincePhysicalClock,
     );
     return doc?.document;
+  }
+
+  /// Replaces shard references in a document and generates appropriate CRDT metadata.
+  ///
+  /// This method:
+  /// 1. Extracts old shard references from the document
+  /// 2. Compares with new shard list
+  /// 3. Generates CRDT metadata for the change (using the merge contract's algorithm)
+  /// 4. Applies metadata changes (add new statements, remove old tombstones)
+  /// 5. Updates the document with new shard references
+  ///
+  /// Returns a new RdfGraph with updated shards and proper CRDT metadata.
+  Future<RdfGraph> _replaceShardsInDocument({
+    required IriTerm documentIri,
+    required RdfGraph document,
+    required IriTerm resourceIri,
+    required Iterable<IriTerm> newShards,
+    required MergeContract mergeContract,
+    required int physicalClock,
+  }) async {
+    // Extract old shards
+    final oldShards = document
+        .findTriples(
+          subject: documentIri,
+          predicate: SyncManagedDocument.idxBelongsToIndexShard,
+        )
+        .map((t) => t.object as IriTerm)
+        .toList();
+
+    // If shards haven't changed, return original document
+    final oldShardsSet = oldShards.toSet();
+    final newShardsSet = newShards.toSet();
+    if (SetEquality().equals(oldShardsSet, newShardsSet)) {
+      return document;
+    }
+
+    // Get the resource type
+    final typeIri = document.expectSingleObject<IriTerm>(
+        documentIri, SyncManagedDocument.managedResourceType)!;
+
+    // Determine CRDT algorithm for idx:belongsToIndexShard
+    final algorithmIri = mergeContract.getEffectiveMergeWith(
+        typeIri, SyncManagedDocument.idxBelongsToIndexShard);
+    final crdtType = _crdtTypeRegistry.getType(algorithmIri);
+
+    // Generate CRDT metadata for the shard change
+    final metadata = crdtType.localValueChange(
+      oldPropertyValue: oldShards.isNotEmpty
+          ? (
+              documentIri: documentIri,
+              appData:
+                  document, // Using document as appData since shards are framework metadata
+              blankNodes: IdentifiedBlankNodes.empty<IriTerm>(),
+              subject: documentIri,
+              predicate: SyncManagedDocument.idxBelongsToIndexShard,
+              values: oldShards.cast<RdfObject>(),
+            )
+          : null,
+      newPropertyValue: (
+        documentIri: documentIri,
+        appData: document,
+        blankNodes: IdentifiedBlankNodes.empty<IriTerm>(),
+        subject: documentIri,
+        predicate: SyncManagedDocument.idxBelongsToIndexShard,
+        values: newShards.cast<RdfObject>().toList(),
+      ),
+      oldFrameworkGraph: document,
+      mergeContext: CrdtMergeContext(
+        iriGenerator: _iriGenerator,
+        metadataGenerator: _metadataGenerator,
+      ),
+      physicalClock: physicalClock,
+    );
+
+    // Build updated document
+    final updatedTriples = document.triples.toList();
+
+    // Remove old shard triples
+    updatedTriples.removeWhere((t) =>
+        t.subject == documentIri &&
+        t.predicate == SyncManagedDocument.idxBelongsToIndexShard);
+
+    // Add new shard triples
+    updatedTriples.addAll(newShards.map((shard) => Triple(
+        documentIri, SyncManagedDocument.idxBelongsToIndexShard, shard)));
+
+    // Apply metadata changes
+    for (final node in metadata.statementsToAdd) {
+      updatedTriples
+          .addNodes(documentIri, SyncManagedDocument.hasStatement, [node]);
+    }
+    for (final triple in metadata.triplesToRemove) {
+      updatedTriples.remove(triple);
+    }
+
+    return RdfGraph.fromTriples(updatedTriples);
   }
 
   /// Get final entry set for a shard from index items table

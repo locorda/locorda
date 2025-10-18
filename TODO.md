@@ -89,7 +89,7 @@
 - [x] Fix the ShardDeterminer to use the actual full index and group index documents instead of the configuration as a base
 - [x] RemoteSyncOrchestrator: the sync loop needs to run per resource type, not try to sync all at once, fully syncing index of indices (and thus all indices) first
 - [x] undeletions in OR-Sets: OrSet muss in localValueChange prüfen, ob es tombstones für die neuen Werte gibt, und ggf. diese Tombstones entfernen (achtung:  die statements nur wenn sie nicht für andere predicates benutzt werden - sonst nur die crdt:deletedAt values), 
-- [ ] save in _syncDocument: 
+- [x] save in _syncDocument: 
   - shards berechnen für merged_doc, 
   - merged_doc_new durch Ersetzen von shards mit neuer shard liste, 
   - crdt_types.localValueChange anwenden (bzw. reduzierte Version von CrdtDocumenManager._generateCrdtMetadataForChanges) - das muss ggf. alte tombstones wieder entfernen
