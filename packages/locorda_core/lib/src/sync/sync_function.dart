@@ -1,10 +1,10 @@
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/hlc_service.dart';
-import 'package:locorda_core/src/index/index_discovery.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
+import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/storage/sync_timestamp_storage.dart';
 import 'package:locorda_core/src/sync/remote_sync_orchestrator.dart';
 import 'package:locorda_core/src/sync/shard_document_generator.dart';
@@ -42,6 +42,7 @@ class SyncFunction {
   final ShardDeterminer _shardDeterminer;
   final IndexManager _indexManager;
   final HlcService _hlcService;
+  final MergeContractLoader _mergeContractLoader;
 
   SyncFunction({
     required List<Backend> backends,
@@ -52,6 +53,7 @@ class SyncFunction {
     required IndexRdfGenerator indexRdfGenerator,
     required ShardDeterminer shardDeterminer,
     required HlcService hlcService,
+    required MergeContractLoader mergeContractLoader,
   })  : _backends = backends,
         _storage = storage,
         _indexRdfGenerator = indexRdfGenerator,
@@ -63,7 +65,8 @@ class SyncFunction {
         ),
         _config = config,
         _shardDeterminer = shardDeterminer,
-        _hlcService = hlcService;
+        _hlcService = hlcService,
+        _mergeContractLoader = mergeContractLoader;
 
   Future<void> call(DateTime syncTime) async {
     // Phase 0: Sync Preparation (materialize local shard state)
@@ -134,6 +137,7 @@ class SyncFunction {
           shardDeterminer: _shardDeterminer,
           indexManager: _indexManager,
           hlcService: _hlcService,
+          mergeContractLoader: _mergeContractLoader,
         );
 
         _log.info('Starting Phase A+B: Remote Synchronization');

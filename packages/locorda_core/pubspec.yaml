@@ -27,6 +27,7 @@ dependencies:
   # RDF
   rdf_core: ^0.9.23
   http: ^1.5.0
+  collection: ^1.19.1
   
 
 dev_dependencies:

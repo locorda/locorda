@@ -139,12 +139,13 @@ class LocordaGraphSync {
     final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes();
 
     // TODO: the HttpRdfGraphFetcher should be db-cached (ideally with initialization from deployment and etag)
-    final mergeContractLoader = StandardMergeContractLoader(
-        RecursiveRdfLoader(
-            fetcher:
-                StandardRdfGraphFetcher(fetcher: fetcher, rdfCore: rdfCore),
-            iriFactory: iriFactory),
-        crdtTypeRegistry);
+    final mergeContractLoader = CachingMergeContractLoader(
+        StandardMergeContractLoader(
+            RecursiveRdfLoader(
+                fetcher:
+                    StandardRdfGraphFetcher(fetcher: fetcher, rdfCore: rdfCore),
+                iriFactory: iriFactory),
+            crdtTypeRegistry));
 
     final shardManager = const ShardManager();
     final indexRdfGenerator = IndexRdfGenerator(
@@ -167,7 +168,7 @@ class LocordaGraphSync {
       storage: storage,
       config: effectiveConfig,
       shardDeterminer: shardDeterminer,
-      mergeContractLoader: CachingMergeContractLoader(mergeContractLoader),
+      mergeContractLoader: mergeContractLoader,
       crdtTypeRegistry: crdtTypeRegistry,
       hlcService: hlcService,
       iriTermFactory: iriFactory,
@@ -193,6 +194,7 @@ class LocordaGraphSync {
           indexRdfGenerator: indexRdfGenerator,
           shardDeterminer: shardDeterminer,
           hlcService: hlcService,
+          mergeContractLoader: mergeContractLoader,
         ),
         autoSyncConfig: config.autoSyncConfig,
         physicalTimestampFactory: physicalTimestampFactory);

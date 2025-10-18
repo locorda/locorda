@@ -88,7 +88,7 @@
   - Good foundation for understanding backend interface
 - [x] Fix the ShardDeterminer to use the actual full index and group index documents instead of the configuration as a base
 - [x] RemoteSyncOrchestrator: the sync loop needs to run per resource type, not try to sync all at once, fully syncing index of indices (and thus all indices) first
-- [ ] undeletions in OR-Sets: OrSet muss in localValueChange prüfen, ob es tombstones für die neuen Werte gibt, und ggf. diese Tombstones entfernen (achtung: nicht die statements - nur die crdt:deletedAt values), und eigentlich auch tombstones (incl. statements) für die crdt:deletedAt values erzeugen
+- [x] undeletions in OR-Sets: OrSet muss in localValueChange prüfen, ob es tombstones für die neuen Werte gibt, und ggf. diese Tombstones entfernen (achtung:  die statements nur wenn sie nicht für andere predicates benutzt werden - sonst nur die crdt:deletedAt values), 
 - [ ] save in _syncDocument: 
   - shards berechnen für merged_doc, 
   - merged_doc_new durch Ersetzen von shards mit neuer shard liste, 

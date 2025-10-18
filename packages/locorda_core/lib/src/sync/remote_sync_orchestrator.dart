@@ -1,11 +1,14 @@
+import 'package:collection/collection.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/_index.dart';
-import 'package:locorda_core/src/generated/idx/classes/index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
+import 'package:locorda_core/src/mapping/merge_contract.dart';
+import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/storage/remote_storage.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:locorda_core/src/sync/remote_document_merger.dart';
 import 'package:logging/logging.dart';
@@ -30,6 +33,7 @@ class RemoteSyncOrchestrator {
   final IndexManager _indexManager;
   final ShardDeterminer _shardDeterminer;
   final HlcService _hlcService;
+  final MergeContractLoader _mergeContractLoader;
 
   RemoteSyncOrchestrator({
     required Storage storage,
@@ -39,6 +43,7 @@ class RemoteSyncOrchestrator {
     required ShardDeterminer shardDeterminer,
     required IndexManager indexManager,
     required HlcService hlcService,
+    required MergeContractLoader mergeContractLoader,
   })  : _storage = storage,
         _remoteStorage = remoteStorage,
         _config = config,
@@ -46,7 +51,8 @@ class RemoteSyncOrchestrator {
         _merger = RemoteDocumentMerger(storage: storage),
         _indexManager = indexManager,
         _shardDeterminer = shardDeterminer,
-        _hlcService = hlcService;
+        _hlcService = hlcService,
+        _mergeContractLoader = mergeContractLoader;
 
   /// Execute complete remote synchronization cycle.
   ///
@@ -227,6 +233,7 @@ class RemoteSyncOrchestrator {
         );
 
         RdfGraph? documentToUpload;
+        MergeContract? mergeContract;
 
         // 2. Handle response cases
         if (downloadResult.notModified) {
@@ -236,6 +243,8 @@ class RemoteSyncOrchestrator {
               ifChangedSincePhysicalClock: lastSyncTimestamp);
           if (localDocument != null) {
             documentToUpload = localDocument;
+            mergeContract = await _mergeContractLoader.load(_mergeContractLoader
+                .extractGovernanceIris(localDocument, documentIri));
           } else {
             _log.fine('Local $debugName has no changes since last sync');
           }
@@ -246,16 +255,25 @@ class RemoteSyncOrchestrator {
           // Theoretically, we could skip merge if local unchanged since last sync
           // but just to be safe, always merge if remote changed
           final localDocument = await _getLocalDocument(documentIri);
-
+          final governanceIris = _getMergedGovernanceIris(
+              localDocument, documentIri, downloadResult);
+          mergeContract = await _mergeContractLoader.load(governanceIris);
           // CRDT merge local + remote
           final mergeResult = await _merger.merge(
+            mergeContract: mergeContract,
             documentIri: documentIri,
             localGraph: localDocument,
             remoteGraph: downloadResult.graph,
           );
+          final actualGovernanceIris = _mergeContractLoader
+              .extractGovernanceIris(mergeResult.mergedGraph, documentIri);
+          if (!ListEquality().equals(actualGovernanceIris, governanceIris)) {
+            _log.severe('Governance IRIs mismatch after merge for $debugName. '
+                'Expected: $governanceIris, '
+                'Found: $actualGovernanceIris');
+          }
 
           documentToUpload = mergeResult.mergedGraph;
-
           // Update ETag cache
           if (downloadResult.etag != null) {
             await _storage.setRemoteETag(
@@ -268,10 +286,18 @@ class RemoteSyncOrchestrator {
           // Case: 404 Not Found - New index
           _log.fine('$debugName not found remotely (404)');
           documentToUpload = await _getLocalDocument(documentIri);
+          if (documentToUpload != null) {
+            mergeContract = await _mergeContractLoader.load(_mergeContractLoader
+                .extractGovernanceIris(documentToUpload, documentIri));
+          }
         }
 
         // 3. Upload loop (if needed)
         if (documentToUpload != null) {
+          if (mergeContract == null) {
+            _log.severe('No merge contract available for uploading $debugName');
+            throw StateError('Missing merge contract for $debugName');
+          }
           final resourceIri = documentToUpload.expectSingleObject<IriTerm>(
               documentIri, SyncManagedDocument.foafPrimaryTopic)!;
           final typeIri = documentToUpload.expectSingleObject<IriTerm>(
@@ -328,6 +354,23 @@ class RemoteSyncOrchestrator {
         rethrow;
       }
     }
+  }
+
+  List<IriTerm> _getMergedGovernanceIris(RdfGraph? localDocument,
+      IriTerm documentIri, RemoteDownloadResult downloadResult) {
+    final localGovernanceIris = localDocument == null
+        ? const <IriTerm>[]
+        : _mergeContractLoader.extractGovernanceIris(
+            localDocument, documentIri);
+    final remoteGovernanceIris = _mergeContractLoader.extractGovernanceIris(
+        downloadResult.graph!, documentIri);
+    final remoteGovernanceIrisSet = remoteGovernanceIris.toSet();
+    final governanceIris = [
+      ...remoteGovernanceIris,
+      ...localGovernanceIris
+          .where((element) => !remoteGovernanceIrisSet.contains(element))
+    ];
+    return governanceIris;
   }
 
   /// Step A.2: Build Document Sync Queue for a specific resource type.
@@ -406,9 +449,12 @@ class RemoteSyncOrchestrator {
       // Case: 200 OK - Remote changed
       _log.fine('Shard $shardIri changed remotely');
       originalRemoteShard = downloadResult.graph;
-
+      final govIris = _getMergedGovernanceIris(
+          localShardDoc?.document, shardDocumentIri, downloadResult);
+      final mergeContract = await _mergeContractLoader.load(govIris);
       // CRDT merge current_local_shard_state with remote
       final mergeResult = await _merger.merge(
+        mergeContract: mergeContract,
         documentIri: shardIri,
         localGraph: localShardDoc?.document,
         remoteGraph: downloadResult.graph,

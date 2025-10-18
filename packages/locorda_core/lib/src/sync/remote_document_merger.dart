@@ -1,3 +1,4 @@
+import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -48,6 +49,7 @@ class RemoteDocumentMerger {
   ///
   /// Returns: Merge result indicating merged state and sync direction.
   Future<MergeResult> merge({
+    required MergeContract mergeContract,
     required IriTerm documentIri,
     required RdfGraph? localGraph,
     required RdfGraph? remoteGraph,

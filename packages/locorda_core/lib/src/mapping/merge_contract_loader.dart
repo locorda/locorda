@@ -29,7 +29,7 @@ class DocumentMappingDependencyExtractor implements DependencyExtractor {
   }
 }
 
-class CachingMergeContractLoader implements MergeContractLoader {
+class CachingMergeContractLoader extends MergeContractLoader {
   final MergeContractLoader _inner;
   final LRUCache<String, Future<MergeContract>> _cache;
 
@@ -64,9 +64,14 @@ class CachingMergeContractLoader implements MergeContractLoader {
 
 abstract interface class MergeContractLoader {
   Future<MergeContract> load(List<IriTerm> isGovernedBy);
+
+  List<IriTerm> extractGovernanceIris(RdfGraph document, IriTerm documentIri) {
+    return document.getListObjects<IriTerm>(
+        documentIri, SyncManagedDocument.isGovernedBy);
+  }
 }
 
-class StandardMergeContractLoader implements MergeContractLoader {
+class StandardMergeContractLoader extends MergeContractLoader {
   final RecursiveRdfLoader fetcher;
   final CrdtTypeRegistry _crdtRegistry;
 
