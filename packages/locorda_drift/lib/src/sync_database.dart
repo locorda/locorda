@@ -308,13 +308,26 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
     with _$SyncDocumentDaoMixin, IriBatchLoader {
   SyncDocumentDao(super.db);
 
-  /// Save a document with content and timestamps, returning the document ID
+  /// Save a document with content and timestamps, returning the document ID.
+  ///
+  /// Supports optimistic locking via [ifMatchUpdatedAt]:
+  /// - If null: unconditional save (no conflict check)
+  /// - If non-null: save only if current updatedAt matches expected value
+  /// - Returns null on conflict (optimistic lock failed)
+  ///
+  /// Uses updatedAt (not ourPhysicalClock) as the version marker because:
+  /// - updatedAt is updated on every save (local and remote)
+  /// - ourPhysicalClock only changes when we make local modifications
+  /// - updatedAt provides true monotonic versioning
+  ///
+  /// Throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<int> saveDocument({
     required String documentIri,
     required String typeIri,
     required String content,
     required int ourPhysicalClock,
     required int updatedAt,
+    int? ifMatchUpdatedAt,
   }) async {
     // Use the mixin for consistency
     final iriToIdMap = await getOrCreateIriIdsBatch({documentIri, typeIri});
@@ -327,18 +340,39 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
         .getSingleOrNull();
 
     if (existingDocument != null) {
-      // Update existing document
-      await (update(syncDocuments)
-            ..where((d) => d.id.equals(existingDocument.id)))
-          .write(SyncDocumentsCompanion(
+      // Update existing document with optimistic locking in WHERE clause
+      // Include ifMatchUpdatedAt in the WHERE condition for atomic check-and-set
+      final updateQuery = update(syncDocuments)
+        ..where((d) => d.id.equals(existingDocument.id));
+
+      if (ifMatchUpdatedAt != null) {
+        updateQuery.where((d) => d.updatedAt.equals(ifMatchUpdatedAt));
+      }
+
+      final rowsAffected = await updateQuery.write(SyncDocumentsCompanion(
         typeIriId: Value(typeIriId),
         documentContent: Value(content),
         ourPhysicalClock: Value(ourPhysicalClock),
         updatedAt: Value(updatedAt),
       ));
+
+      // If optimistic lock was requested and update affected 0 rows, conflict detected
+      if (ifMatchUpdatedAt != null && rowsAffected == 0) {
+        // Conflict: document exists but updatedAt didn't match
+        throw ConcurrentUpdateException(
+            "Conflict: document exists but updatedAt didn't match");
+      }
+
       return existingDocument.id;
     } else {
       // Insert new document
+      // For new documents, ifMatchUpdatedAt should be null (no previous version exists)
+      if (ifMatchUpdatedAt != null) {
+        // Trying to conditionally update a non-existent document
+        throw ConcurrentUpdateException(
+            "Trying to conditionally update a non-existent document");
+      }
+
       return await into(syncDocuments).insert(
         SyncDocumentsCompanion(
           documentIriId: Value(documentIriId),

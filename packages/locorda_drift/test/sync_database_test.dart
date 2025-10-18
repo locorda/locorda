@@ -322,6 +322,7 @@ void main() {
           ourPhysicalClock: 1000,
           updatedAt: 2000,
         );
+        expect(documentId, isNotNull);
 
         final changes = [
           PropertyChange(
@@ -396,6 +397,7 @@ void main() {
           ourPhysicalClock: 1000,
           updatedAt: 2000,
         );
+        expect(documentId, isNotNull);
 
         final changes = [
           PropertyChange(
@@ -442,8 +444,7 @@ void main() {
         );
       });
 
-      testWidgets('handles multiple resources and properties efficiently',
-          (tester) async {
+      testWidgets('handles large batch of property changes', (tester) async {
         // Arrange
         final documentId = await documentDao.saveDocument(
           documentIri: 'https://example.com/doc1',
@@ -452,6 +453,7 @@ void main() {
           ourPhysicalClock: 1000,
           updatedAt: 2000,
         );
+        expect(documentId, isNotNull);
 
         final changes = <PropertyChange>[];
         for (int i = 0; i < 100; i++) {
@@ -518,6 +520,7 @@ void main() {
           ourPhysicalClock: 1000,
           updatedAt: 2000,
         );
+        expect(documentId, isNotNull);
 
         // Act & Assert - Should not throw for valid document ID
         await propertyDao.recordPropertyChangesBatch(

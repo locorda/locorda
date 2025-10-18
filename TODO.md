@@ -89,15 +89,17 @@
 - [x] Fix the ShardDeterminer to use the actual full index and group index documents instead of the configuration as a base
 - [x] RemoteSyncOrchestrator: the sync loop needs to run per resource type, not try to sync all at once, fully syncing index of indices (and thus all indices) first
 - [x] undeletions in OR-Sets: OrSet muss in localValueChange prüfen, ob es tombstones für die neuen Werte gibt, und ggf. diese Tombstones entfernen (achtung:  die statements nur wenn sie nicht für andere predicates benutzt werden - sonst nur die crdt:deletedAt values), 
+- [x] RemoteSyncOrchestrator: 
+  - Ensure that the shards are calculated by the ShardDeterminer based on the merged document before proceeding
+  - store locally in _syncDocument, calling the indexManager to update shards
 - [x] save in _syncDocument: 
   - shards berechnen für merged_doc, 
   - merged_doc_new durch Ersetzen von shards mit neuer shard liste, 
   - crdt_types.localValueChange anwenden (bzw. reduzierte Version von CrdtDocumenManager._generateCrdtMetadataForChanges) - das muss ggf. alte tombstones wieder entfernen
   - diese Version für upload und lokales speicher nutzen
 - [ ] SEHR Wichtig: conditional save! So wie wir etags nutzen um sicherzustellen, dass unsere uploads sich auf den korrekten state beziehen, müssen wir das auch für save machen! Und achtung: Reihenfolge bei sync zw. remote und local nochmal prüfen/diskutieren
-- [ ] RemoteSyncOrchestrator: 
-  - Ensure that the shards are calculated by the ShardDeterminer based on the merged document before proceeding
-  - store locally in _syncDocument, calling the indexManager to update shards
+- [ ] RemoteSyncOrchestrator:
+  - Review and implement TODOs/FIXMEs - the LLM used to generate some code
 - [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
 - [ ] Implement Solid backend with actual Pod storage operations
   - Most complex but enables the full vision

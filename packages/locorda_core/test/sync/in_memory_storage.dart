@@ -73,7 +73,19 @@ class InMemoryStorage implements Storage {
       IriTerm typeIri,
       RdfGraph document,
       DocumentMetadata metadata,
-      List<PropertyChange> changes) async {
+      List<PropertyChange> changes,
+      {int? ifMatchUpdatedAt}) async {
+    // Check optimistic lock if required
+    if (ifMatchUpdatedAt != null) {
+      final existingDocument = _documents[documentIri];
+      if (existingDocument != null &&
+          existingDocument.metadata.updatedAt != ifMatchUpdatedAt) {
+        // Conflict detected - document was modified since expected version
+        throw ConcurrentUpdateException(
+            'Optimistic concurrency check failed for document $documentIri: expected updatedAt=$ifMatchUpdatedAt, actual updatedAt=${existingDocument.metadata.updatedAt}');
+      }
+    }
+
     // Get previous max cursor for this type (not for this document!)
     final previousTimestamp = _getMaxUpdatedAtForType(typeIri);
     final previousCursor = previousTimestamp?.toString();

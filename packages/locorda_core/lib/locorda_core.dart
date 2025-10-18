@@ -103,6 +103,9 @@ export 'src/storage/storage_interface.dart'
         PropertyChange,
         SaveDocumentResult,
         DocumentsResult;
+export 'src/storage/concurrent_update_exception.dart'
+    show ConcurrentUpdateException;
+
 // NOTE: CRDT annotations have been moved to locorda_annotations package
 // Use that package for @CrdtLwwRegister, @CrdtOrSet, etc. annotations
 

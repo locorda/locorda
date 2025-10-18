@@ -27,6 +27,7 @@ import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
 import 'package:locorda_core/src/sync/remote_sync_orchestrator.dart';
 import 'package:locorda_core/src/sync/sync_function.dart';
 import 'package:locorda_core/src/util/build_effective_config.dart';
+import 'package:locorda_core/src/util/retry.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rxdart/rxdart.dart';
@@ -328,7 +329,9 @@ Use the 'documentIriTemplate' property of the resource configuration to configur
     }
 
     // 4. save (with CRDT processing, diffing etc)
-    final saved = await _crdtDocumentManager.save(type, internalAppData);
+    final saved = await retry(
+        () => _crdtDocumentManager.save(type, internalAppData),
+        debugOperationName: 'save for ${resourceIri.debug}');
     if (saved == null) {
       // nothing changed, nothing to do
       return;

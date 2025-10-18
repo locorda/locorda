@@ -265,17 +265,20 @@ class RemoteSyncOrchestrator {
 
         RdfGraph? documentToUpload;
         MergeContract? mergeContract;
+        StoredDocument?
+            loadedLocalDocument; // Track loaded document with metadata for optimistic locking
 
         // 2. Handle response cases
         if (downloadResult.notModified) {
           // Case: 304 Not Modified
           _log.fine('$debugName unchanged (304)');
-          final localDocument = await _getLocalDocument(documentIri,
+          loadedLocalDocument = await _getLocalDocumentWithMetadata(documentIri,
               ifChangedSincePhysicalClock: lastSyncTimestamp);
-          if (localDocument != null) {
-            documentToUpload = localDocument;
-            mergeContract = await _mergeContractLoader.load(_mergeContractLoader
-                .extractGovernanceIris(localDocument, documentIri));
+          if (loadedLocalDocument != null) {
+            documentToUpload = loadedLocalDocument.document;
+            mergeContract = await _mergeContractLoader.load(
+                _mergeContractLoader.extractGovernanceIris(
+                    loadedLocalDocument.document, documentIri));
           } else {
             _log.fine('Local $debugName has no changes since last sync');
           }
@@ -285,7 +288,9 @@ class RemoteSyncOrchestrator {
           _log.fine('$debugName changed remotely');
           // Theoretically, we could skip merge if local unchanged since last sync
           // but just to be safe, always merge if remote changed
-          final localDocument = await _getLocalDocument(documentIri);
+          loadedLocalDocument =
+              await _getLocalDocumentWithMetadata(documentIri);
+          final localDocument = loadedLocalDocument?.document;
           final governanceIris = _getMergedGovernanceIris(
               localDocument, documentIri, downloadResult);
           mergeContract = await _mergeContractLoader.load(governanceIris);
@@ -316,7 +321,9 @@ class RemoteSyncOrchestrator {
         } else {
           // Case: 404 Not Found - New index
           _log.fine('$debugName not found remotely (404)');
-          documentToUpload = await _getLocalDocument(documentIri);
+          loadedLocalDocument =
+              await _getLocalDocumentWithMetadata(documentIri);
+          documentToUpload = loadedLocalDocument?.document;
           if (documentToUpload != null) {
             mergeContract = await _mergeContractLoader.load(_mergeContractLoader
                 .extractGovernanceIris(documentToUpload, documentIri));
@@ -363,18 +370,35 @@ class RemoteSyncOrchestrator {
           );
           if (uploadSuccess) {
             final int physicalTime = clock.physicalTime;
-            // save locally - and really important: perform the index updates afterwards!
-            await _storage.saveDocument(
-              documentIri,
-              typeIri,
-              documentToUpload,
-              DocumentMetadata(
-                  ourPhysicalClock: physicalTime,
-                  updatedAt: syncTime.millisecondsSinceEpoch),
-              // no property changes - this is a concept for user-triggered edits
-              // that is supposed to help us with crdt merges, so we leave it empty here
-              const <PropertyChange>[],
-            );
+
+            // Optimistic locking for local save: prevent lost updates from concurrent local changes
+            // Use updatedAt as version marker - it's updated on EVERY save (local + remote),
+            // unlike ourPhysicalClock which only changes when WE modify the document.
+            // This ensures we catch conflicts even if the concurrent change was a remote merge.
+            final expectedUpdatedAt = loadedLocalDocument?.metadata.updatedAt;
+
+            // save locally with optimistic lock - retry if conflict detected
+            try {
+              await _storage.saveDocument(
+                documentIri,
+                typeIri,
+                documentToUpload,
+                DocumentMetadata(
+                    ourPhysicalClock: physicalTime,
+                    updatedAt: syncTime.millisecondsSinceEpoch),
+                // no property changes - this is a concept for user-triggered edits
+                // that is supposed to help us with crdt merges, so we leave it empty here
+                const <PropertyChange>[],
+                ifMatchUpdatedAt: expectedUpdatedAt,
+              );
+            } on ConcurrentUpdateException catch (e) {
+              // Local conflict detected! Document was modified locally since we read it.
+              // This can happen if user edits document while sync is running.
+              _log.info(
+                  'Local save conflict for $debugName - document changed since merge: ${e.message}, restarting');
+              continue; // Restart entire sync cycle for this document
+            }
+
             await _indexManager.updateIndices(
               document: documentToUpload,
               documentIri: documentIri,
@@ -699,14 +723,13 @@ class RemoteSyncOrchestrator {
     return true;
   }
 
-  /// Get local document from storage
-  Future<RdfGraph?> _getLocalDocument(IriTerm documentIri,
+  /// Get local document with metadata from storage
+  Future<StoredDocument?> _getLocalDocumentWithMetadata(IriTerm documentIri,
       {int? ifChangedSincePhysicalClock}) async {
-    final doc = await _storage.getDocument(
+    return await _storage.getDocument(
       documentIri,
       ifChangedSincePhysicalClock: ifChangedSincePhysicalClock,
     );
-    return doc?.document;
   }
 
   /// Replaces shard references in a document and generates appropriate CRDT metadata.

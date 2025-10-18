@@ -11,6 +11,7 @@ import 'package:locorda_core/src/index/index_property_resolver.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/util/retry.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -108,16 +109,18 @@ class IndexManager {
     // index document is saved last.
     if (!(await _documentManager
         .hasDocument(shardResourceIri.getDocumentIri()))) {
-      await _save(
+      await _saveWithRetry(
         IdxShard.classIri,
         shardGraph,
+        context: 'shard for FullIndex $indexResourceIri',
       );
     }
 
     // Save index document
-    await _save(
+    await _saveWithRetry(
       IdxFullIndex.classIri,
       indexGraph,
+      context: 'FullIndex $indexResourceIri',
     );
   }
 
@@ -144,9 +147,10 @@ class IndexManager {
     // Save template document
     // GroupIndexTemplate doesn't have shards - those are created per group
 
-    await _save(
+    await _saveWithRetry(
       IdxGroupIndexTemplate.classIri,
       templateGraph,
+      context: 'GroupIndexTemplate $templateResourceIri',
     );
   }
 
@@ -223,13 +227,35 @@ class IndexManager {
     // Save shard document first (same pattern as FullIndex)
     if (!(await _documentManager
         .hasDocument(shardResourceIri.getDocumentIri()))) {
-      await _save(IdxShard.classIri, shardGraph);
+      await _saveWithRetry(
+        IdxShard.classIri,
+        shardGraph,
+        context: 'shard for GroupIndex $groupIndexIri',
+      );
     }
 
     // Save GroupIndex document
-    await _save(IdxGroupIndex.classIri, groupIndexGraph);
+    await _saveWithRetry(
+      IdxGroupIndex.classIri,
+      groupIndexGraph,
+      context: 'GroupIndex $groupIndexIri',
+    );
   }
 
+  /// Saves a document and updates indices with retry logic for concurrent updates.
+  ///
+  /// Retries up to 3 times on [ConcurrentUpdateException].
+  /// Throws [StateError] if all retries fail.
+  Future<DocumentSaveResult?> _saveWithRetry(
+    IriTerm type,
+    RdfGraph appData, {
+    required String context,
+  }) async {
+    return retry(() => _save(type, appData),
+        debugOperationName: 'save $context', log: _log);
+  }
+
+  /// Internal save method that throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<DocumentSaveResult?> _save(IriTerm type, RdfGraph appData) async {
     final saved = await _documentManager.save(type, appData);
     if (saved != null) {

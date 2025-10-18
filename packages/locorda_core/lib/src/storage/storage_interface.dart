@@ -12,12 +12,24 @@ abstract interface class Storage {
   ///
   /// Storage handles RDF serialization and persists all data in a single transaction.
   /// Returns cursor information including the previous cursor for gap detection.
+  ///
+  /// Supports optimistic locking via [ifMatchUpdatedAt]:
+  /// - If null: unconditional save (no conflict check)
+  /// - If non-null: save only if current updatedAt matches expected value
+  /// - Returns null on conflict (like HTTP 412 Precondition Failed)
+  ///
+  /// This prevents lost updates in concurrent scenarios (e.g., user edit during sync).
+  /// Uses updatedAt (not ourPhysicalClock) because it's monotonically increasing
+  /// across all saves (local and remote), making it a true "version number".
+  ///
+  /// Throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<SaveDocumentResult> saveDocument(
       IriTerm documentIri,
       IriTerm typeIri,
       RdfGraph document,
       DocumentMetadata metadata,
-      List<PropertyChange> changes);
+      List<PropertyChange> changes,
+      {int? ifMatchUpdatedAt});
 
   /// Get document with content and metadata by IRI.
   Future<StoredDocument?> getDocument(

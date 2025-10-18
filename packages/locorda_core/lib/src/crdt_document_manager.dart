@@ -310,6 +310,8 @@ class CrdtDocumentManager {
   /// 2. Store locally in sync system
   /// 3. Hydration stream automatically emits update
   /// 4. Schedule async Pod sync
+  ///
+  /// Throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<DocumentSaveResult?> save(IriTerm type, RdfGraph appData) async {
     // Validate input parameters
     if (appData.isEmpty) {
@@ -336,48 +338,15 @@ class CrdtDocumentManager {
       oldAppData: oldAppData,
       oldFrameworkGraph: oldFrameworkGraph,
       mergeContract: mergeContract,
-      governedByFiles: governedByFiles
+      governedByFiles: governedByFiles,
+      oldUpdatedAt: oldUpdatedAt,
     ) = await _prepare(type, documentIri);
-    return _save(type, resourceIri, documentIri, appData, oldAppData,
-        oldFrameworkGraph, mergeContract, governedByFiles);
+    return await _save(type, resourceIri, documentIri, appData, oldAppData,
+        oldFrameworkGraph, mergeContract, governedByFiles,
+        oldUpdatedAt: oldUpdatedAt);
   }
 
-  Future<DocumentSaveResult?> patch(IriTerm type, IriTerm primaryResourceIri,
-      IriTerm predicate, Node node) async {
-    final r = await modify(type, primaryResourceIri, (oldAppData) {
-      // TODO: the patch implementation is very naive and inefficient - we might want to optimize this in the future
-      final hasEntry = oldAppData.hasTriples(
-          subject: primaryResourceIri, predicate: predicate, object: node.$1);
-      final triplesToRemove = oldAppData.subgraph(node.$1).triples.toSet();
-
-      var entry = Triple(primaryResourceIri, predicate, node.$1);
-      final removeEntry = node.$2.isEmpty;
-      final addEntry = !hasEntry && !removeEntry;
-      if (removeEntry) {
-        triplesToRemove.add(entry);
-      }
-      final appData = RdfGraph.fromTriples([
-        ...oldAppData.triples.where((t) => !triplesToRemove.contains(t)),
-        if (addEntry) entry,
-        ...node.$2.triples
-      ]);
-      return appData;
-    });
-    if (r == null) {
-      return null;
-    }
-    return (
-      appData: node.$2,
-      crdtDocument: r.crdtDocument,
-      currentCursor: r.currentCursor,
-      documentIri: r.documentIri,
-      previousCursor: r.previousCursor,
-      resourceIri: node.$1,
-      missingGroupIndices: r.missingGroupIndices,
-      physicalTime: r.physicalTime,
-    );
-  }
-
+  /// Throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<DocumentSaveResult?> modify(IriTerm type, IriTerm primaryResourceIri,
       RdfGraph Function(RdfGraph oldAppData) modifier,
       {int? physicalTime, bool acceptMissing = false}) async {
@@ -388,7 +357,8 @@ class CrdtDocumentManager {
       oldAppData: oldAppData,
       oldFrameworkGraph: oldFrameworkGraph,
       mergeContract: mergeContract,
-      governedByFiles: governedByFiles
+      governedByFiles: governedByFiles,
+      oldUpdatedAt: oldUpdatedAt,
     ) = await _prepare(type, documentIri);
     if (oldAppData == null && !acceptMissing) {
       throw ArgumentError(
@@ -408,6 +378,7 @@ class CrdtDocumentManager {
       mergeContract,
       governedByFiles,
       physicalTime: physicalTime,
+      oldUpdatedAt: oldUpdatedAt,
     );
   }
 
@@ -416,7 +387,8 @@ class CrdtDocumentManager {
         RdfGraph? oldAppData,
         RdfGraph? oldFrameworkGraph,
         MergeContract mergeContract,
-        List<IriTerm> governedByFiles
+        List<IriTerm> governedByFiles,
+        int? oldUpdatedAt, // For optimistic locking - use updatedAt not ourPhysicalClock
       })> _prepare(IriTerm type, IriTerm documentIri) async {
     StoredDocument? existingStoredDocument;
     try {
@@ -426,6 +398,11 @@ class CrdtDocumentManager {
       // Continue with save - treat as new document
     }
     final oldDocument = existingStoredDocument?.document;
+    // Use updatedAt (not ourPhysicalClock) for optimistic locking because:
+    // - updatedAt changes on every save (local AND remote merges)
+    // - ourPhysicalClock only changes when we make local modifications
+    // - updatedAt provides monotonic versioning across all operations
+    final oldUpdatedAt = existingStoredDocument?.metadata.updatedAt;
 
     final governedByFiles =
         _computeIsGovernedBy(oldDocument, documentIri, _config, type);
@@ -441,10 +418,12 @@ class CrdtDocumentManager {
       oldAppData: oldAppData,
       oldFrameworkGraph: oldFrameworkGraph,
       mergeContract: mergeContract,
-      governedByFiles: governedByFiles
+      governedByFiles: governedByFiles,
+      oldUpdatedAt: oldUpdatedAt,
     );
   }
 
+  /// Throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<DocumentSaveResult?> _save(
     IriTerm type,
     IriTerm resourceIri,
@@ -455,6 +434,8 @@ class CrdtDocumentManager {
     MergeContract mergeContract,
     List<IriTerm> governedByFiles, {
     int? physicalTime,
+    int?
+        oldUpdatedAt, // For optimistic locking - use updatedAt (changes on every save)
   }) async {
     RdfGraph? oldDocument;
     RdfGraph? crdtDocument;
@@ -584,6 +565,7 @@ class CrdtDocumentManager {
       );
 
       // 7. Save to storage atomically (document + metadata + property changes)
+      // Use optimistic locking to prevent lost updates from concurrent modifications
       late final SaveDocumentResult saveResult;
       try {
         saveResult = await _storage.saveDocument(
@@ -592,7 +574,11 @@ class CrdtDocumentManager {
           crdtDocument,
           documentMetadata,
           propertyChanges,
+          ifMatchUpdatedAt: oldUpdatedAt,
         );
+      } on ConcurrentUpdateException {
+        // concurrent update detected, will be retried by caller
+        rethrow;
       } catch (e) {
         _log.severe(
             'Failed to save document ${documentIri.debug} to storage: $e');

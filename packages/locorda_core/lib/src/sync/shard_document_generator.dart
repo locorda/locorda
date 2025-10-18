@@ -5,7 +5,9 @@ import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/storage/concurrent_update_exception.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
+import 'package:locorda_core/src/util/retry.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -64,11 +66,22 @@ class ShardDocumentGenerator {
   /// - By the sync timer for shards with changes
   /// - Manually after save operations in tests (via save_and_sync step)
   ///
+  /// Retries up to 3 times on [ConcurrentUpdateException].
+  ///
   /// Parameters:
   /// - [shardIri]: The IRI of the shard resource to sync
   ///
   /// Returns: SaveResult if changes were made, null if shard was up-to-date
+  /// Throws: [StateError] if all retries fail due to concurrent updates
   Future<DocumentSaveResult?> syncShard(
+          IriTerm shardIri, int maxPhysicalClock) =>
+      retry(() => _syncShardAttempt(shardIri, maxPhysicalClock),
+          debugOperationName: 'syncing shard ${shardIri.debug}');
+
+  /// Internal method that performs a single shard sync attempt.
+  ///
+  /// Throws [ConcurrentUpdateException] on optimistic lock failure.
+  Future<DocumentSaveResult?> _syncShardAttempt(
       IriTerm shardIri, int maxPhysicalClock) async {
     final shardDocumentIri = shardIri.getDocumentIri();
 

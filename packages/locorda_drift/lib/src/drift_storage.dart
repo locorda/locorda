@@ -82,13 +82,15 @@ class DriftStorage implements Storage {
     }
   }
 
+  /// Throws [ConcurrentUpdateException] on optimistic lock failure.
   @override
   Future<SaveDocumentResult> saveDocument(
       IriTerm documentIri,
       IriTerm typeIri,
       RdfGraph document,
       DocumentMetadata metadata,
-      List<PropertyChange> changes) async {
+      List<PropertyChange> changes,
+      {int? ifMatchUpdatedAt}) async {
     return await _database.transaction(() async {
       // Get previous cursor for this type
       final previousTimestamp =
@@ -107,12 +109,14 @@ class DriftStorage implements Storage {
       final content = _codec.encode(document, baseUri: documentIri.value);
 
       // Save document with metadata and get the document ID
+      // Throws [ConcurrentUpdateException] on optimistic lock failure
       final documentId = await documentDao.saveDocument(
         documentIri: documentIri.value,
         typeIri: typeIri.value,
         content: content,
         ourPhysicalClock: metadata.ourPhysicalClock,
         updatedAt: metadata.updatedAt,
+        ifMatchUpdatedAt: ifMatchUpdatedAt,
       );
 
       // Save property changes in batch
