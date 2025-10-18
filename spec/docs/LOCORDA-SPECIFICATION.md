@@ -2,9 +2,39 @@
 
 **Locorda** — the rope that connects and weaves local data together.
 
+# Locorda: Sync offline-first apps using your user's remote storage
+
+> **⚠️ CRITICAL: SPECIFICATION OUTDATED - DO NOT USE FOR IMPLEMENTATION**
+>
+> **This specification is an early experimental version that has been superseded during implementation.**
+>
+> The documented architecture, CRDT algorithms, merge contracts, indexing strategies, and sync protocols **DO NOT reflect the current implementation** of the locorda libraries. Significant architectural changes and discoveries during development have invalidated large portions of this specification.
+>
+> **Known Issues:**
+> - CRDT merge algorithms (especially OR-Set with tombstones) require complete revision
+> - Document-level vs property-level tombstone semantics need clarification
+> - RemoteDocumentMerger implementation is placeholder only
+> - Sync orchestration implementation differs significantly from specification
+> - Index management and sharding strategies evolved during development
+> - Blank node identification patterns changed from original design
+> - Error handling and recovery mechanisms differ from documented patterns
+>
+> **DO NOT:**
+> - Use this specification as implementation guide
+> - Cite this as authoritative architectural documentation
+> - Assume examples represent current best practices
+> - Build new implementations based on this version
+>
+> **What to do instead:**
+> - Contact project maintainers for current architecture
+> - Review actual implementation code in packages/locorda_core
+> - Wait for specification revision before starting new work
+>
+> **Specification Update Status:** Major revision required. Large sections need complete rewrite based on implementation experience.
+
 **Version:** 0.10.0-draft
 **Last Updated:** September 2025
-**Status:** Draft Specification
+**Status:** Draft Specification - **OUTDATED AND SUPERSEDED**
 **Authors:** Klas Kalaß
 **Target Audience:** Library implementers, application developers, storage backend integrators
 

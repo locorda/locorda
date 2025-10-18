@@ -2,6 +2,26 @@
 
 **Locorda: Sync offline-first apps using your user's remote storage**
 
+> **⚠️ CRITICAL: SPECIFICATION OUTDATED - DO NOT USE FOR IMPLEMENTATION**
+>
+> **This specification is an early experimental version that has been superseded during implementation.**
+>
+> The documented architecture, CRDT algorithms, merge contracts, indexing strategies, and sync protocols **DO NOT reflect the current implementation** of the locorda libraries. Significant architectural changes and discoveries during development have invalidated large portions of this specification.
+>
+> **Known Issues:**
+> - CRDT merge algorithms described here are incomplete or incorrect
+> - Blank node identification patterns have changed
+> - Sync orchestration differs from specification
+> - Index management implementation diverged from design
+> - Error handling patterns evolved significantly
+>
+> **DO NOT:**
+> - Use this specification for new implementations
+> - Cite this as authoritative design
+> - Assume examples represent working code
+>
+> **Specification Update Status:** Major revision required before this can be considered stable.
+
 **Version:** 0.10.0-draft
 **Last Updated:** September 2025
 **Status:** Documentation Index

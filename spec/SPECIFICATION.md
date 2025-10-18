@@ -2,6 +2,26 @@
 
 **Locorda: Sync offline-first apps using your user's remote storage**
 
+> **⚠️ CRITICAL: SPECIFICATION OUTDATED - DO NOT USE FOR IMPLEMENTATION**
+>
+> **This specification is an early experimental version that has been superseded during implementation.**
+>
+> The documented architecture, CRDT algorithms, merge contracts, indexing strategies, and sync protocols **DO NOT reflect the current implementation** of the locorda libraries. Significant architectural changes and discoveries during development have invalidated large portions of this specification.
+>
+> **Known Issues:**
+> - CRDT merge algorithms (especially OR-Set) require revision
+> - RemoteDocumentMerger is placeholder - not implemented per spec
+> - Sync orchestration patterns differ from documented design
+> - Index management and sharding implementation diverged
+> - Blank node identification rules evolved during implementation
+>
+> **DO NOT:**
+> - Use this specification for new implementations
+> - Cite this as authoritative design documentation
+> - Assume code examples represent working patterns
+>
+> **Specification Update Status:** Major revision in progress. Contact maintainers before using.
+
 **Locorda** — the rope that connects and weaves local data together.
 
 This document serves as the main entry point for the **Locorda Specification** - a comprehensive framework for building offline-first, collaborative, and interoperable applications using passive storage backends with RDF and CRDT synchronization.

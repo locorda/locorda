@@ -2,6 +2,18 @@
 
 **Locorda** — the rope that connects and weaves local data together.
 
+> **⚠️ EARLY EXPERIMENTAL VERSION - SPECIFICATION OUTDATED**
+>
+> **WARNING:** This specification represents an **early experimental design** that has been **superseded during actual implementation** of the locorda libraries. The documented architecture, algorithms, and APIs **do not reflect the current implementation** and require significant updates.
+>
+> **Current Status:**
+> - ❌ Specification is **NOT implementation-ready** - contains theoretical concepts that proved impractical
+> - ❌ Examples and code patterns **do not match** the actual library implementation
+> - ❌ Architecture decisions have **evolved significantly** during development
+> - 🚧 Active implementation work is **discovering and resolving** specification gaps and inconsistencies
+>
+> **If you're considering using or implementing this specification:** Please contact the project maintainers first to understand the current state and planned updates. Do not rely on the documented specification for production use.
+
 A comprehensive specification and Dart/Flutter implementation for building **offline-first applications** that sync seamlessly with **passive storage backends** like Solid Pods, Google Drive, or any file storage system. Users bring their own backend, developers get easy cross-device sync.
 
 ## Overview
@@ -106,11 +118,13 @@ This work aligns with and wants to eventually contribute to:
 
 ## Implementation Status
 
+> **⚠️ Note:** The specification status below does **not** reflect that the documented specification is outdated. See warning at top of document.
+
 | Component | Status | Notes |
 |-----------|--------|-------|
-| **Specification** | ✅ Draft Complete | Ready for community review |
-| **Dart Library** | 🚧 In Development | Dart/Flutter implementation in progress |
-| **JavaScript Library** | 📋 Future | Community implementation welcomed |
+| **Specification** | ⚠️ Outdated | Superseded during implementation - major revision needed |
+| **Dart Library** | 🚧 In Development | Implementation revealing specification gaps |
+| **JavaScript Library** | 📋 Future | Awaiting specification stabilization |
 
 ## Contributing
 
