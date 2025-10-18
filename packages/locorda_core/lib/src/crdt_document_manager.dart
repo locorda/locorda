@@ -288,7 +288,7 @@ class CrdtDocumentManager {
     required SyncGraphConfig config,
     required MergeContractLoader mergeContractLoader,
     required HlcService hlcService,
-    required IriTermFactory iriTermFactory,
+    required FrameworkIriGenerator frameworkIriGenerator,
     required CrdtTypeRegistry crdtTypeRegistry,
     required ShardDeterminer shardDeterminer,
   })  : _storage = storage,
@@ -296,7 +296,7 @@ class CrdtDocumentManager {
         _mergeContractLoader = mergeContractLoader,
         _crdtTypeRegistry = crdtTypeRegistry,
         _hlcService = hlcService,
-        _iriGenerator = FrameworkIriGenerator(iriTermFactory: iriTermFactory),
+        _iriGenerator = frameworkIriGenerator,
         _shardDeterminer = shardDeterminer;
 
   /// Save an object with CRDT processing.
@@ -733,7 +733,7 @@ class CrdtDocumentManager {
               blankNodes: appBlankNodes,
               subject: subjectTerm,
               predicate: predicate,
-              values: values.cast<RdfObject>(),
+              values: values,
             ),
             mergeContext: context,
             physicalClock: clock.physicalTime,
@@ -841,18 +841,8 @@ class CrdtDocumentManager {
   CrdtType _getCrdtAlgorithm(MergeContract mergeContract, IriTerm? resourceType,
       RdfPredicate predicate) {
     // Get CRDT algorithm for this property
-    final rule =
-        mergeContract.getEffectivePredicateRule(resourceType, predicate);
-    final algorithmIri = rule?.mergeWith;
-    if (algorithmIri == null) {
-      if (rule == null) {
-        _log.warning(
-            'No predicate rule found for $predicate on $resourceType, using ${CrdtTypeRegistry.fallback.iri.value}.');
-      } else {
-        _log.fine(
-            'No merge algorithm found in rule for $predicate on $resourceType, using ${CrdtTypeRegistry.fallback.iri.value}.');
-      }
-    }
+    final algorithmIri =
+        mergeContract.getEffectiveMergeWith(resourceType, predicate);
     return _crdtTypeRegistry.getType(algorithmIri);
   }
 

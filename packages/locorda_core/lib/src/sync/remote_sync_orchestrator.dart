@@ -1,12 +1,15 @@
 import 'package:collection/collection.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
+import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
+import 'package:locorda_core/src/mapping/metadata_generator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/remote_storage.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
@@ -15,6 +18,42 @@ import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 final _log = Logger('RemoteSyncOrchestrator');
+
+class RemoteSyncOrchestratorBackend {
+  final Storage _storage;
+  final RemoteDocumentMerger _merger;
+  final SyncGraphConfig _config;
+  final IndexRdfGenerator _indexRdfGenerator;
+  final IndexManager _indexManager;
+  final ShardDeterminer _shardDeterminer;
+  final HlcService _hlcService;
+  final MergeContractLoader _mergeContractLoader;
+  final CrdtTypeRegistry _crdtTypeRegistry;
+  final FrameworkIriGenerator _iriGenerator;
+  late final MetadataGenerator _metadataGenerator =
+      MetadataGenerator(frameworkIriGenerator: _iriGenerator);
+
+  RemoteSyncOrchestratorBackend({
+    required Storage storage,
+    required SyncGraphConfig config,
+    required IndexRdfGenerator indexRdfGenerator,
+    required ShardDeterminer shardDeterminer,
+    required IndexManager indexManager,
+    required HlcService hlcService,
+    required MergeContractLoader mergeContractLoader,
+    required CrdtTypeRegistry crdtTypeRegistry,
+    required FrameworkIriGenerator iriGenerator,
+  })  : _storage = storage,
+        _config = config,
+        _indexRdfGenerator = indexRdfGenerator,
+        _merger = RemoteDocumentMerger(storage: storage),
+        _indexManager = indexManager,
+        _shardDeterminer = shardDeterminer,
+        _hlcService = hlcService,
+        _mergeContractLoader = mergeContractLoader,
+        _crdtTypeRegistry = crdtTypeRegistry,
+        _iriGenerator = iriGenerator;
+}
 
 /// Orchestrates remote synchronization following the revised algorithm.
 ///
@@ -25,34 +64,23 @@ final _log = Logger('RemoteSyncOrchestrator');
 /// Assumes Phase 0 (Sync Preparation) has already been completed by
 /// _ensureShardDocumentsAreUpToDate, which materialized shard state in DB.
 class RemoteSyncOrchestrator {
-  final Storage _storage;
+  final RemoteSyncOrchestratorBackend _backend;
   final RemoteStorage _remoteStorage;
-  final RemoteDocumentMerger _merger;
-  final SyncGraphConfig _config;
-  final IndexRdfGenerator _indexRdfGenerator;
-  final IndexManager _indexManager;
-  final ShardDeterminer _shardDeterminer;
-  final HlcService _hlcService;
-  final MergeContractLoader _mergeContractLoader;
+  late final _mergeContractLoader = _backend._mergeContractLoader;
+  late final _merger = _backend._merger;
+  late final _storage = _backend._storage;
+  late final _shardDeterminer = _backend._shardDeterminer;
+  late final _hlcService = _backend._hlcService;
+  late final _crdtTypeRegistry = _backend._crdtTypeRegistry;
+  late final _iriGenerator = _backend._iriGenerator;
+  late final _metadataGenerator = _backend._metadataGenerator;
+  late final _indexManager = _backend._indexManager;
 
-  RemoteSyncOrchestrator({
-    required Storage storage,
-    required RemoteStorage remoteStorage,
-    required SyncGraphConfig config,
-    required IndexRdfGenerator indexRdfGenerator,
-    required ShardDeterminer shardDeterminer,
-    required IndexManager indexManager,
-    required HlcService hlcService,
-    required MergeContractLoader mergeContractLoader,
-  })  : _storage = storage,
-        _remoteStorage = remoteStorage,
-        _config = config,
-        _indexRdfGenerator = indexRdfGenerator,
-        _merger = RemoteDocumentMerger(storage: storage),
-        _indexManager = indexManager,
-        _shardDeterminer = shardDeterminer,
-        _hlcService = hlcService,
-        _mergeContractLoader = mergeContractLoader;
+  RemoteSyncOrchestrator(
+      {required RemoteSyncOrchestratorBackend backend,
+      required RemoteStorage remoteStorage})
+      : _backend = backend,
+        _remoteStorage = remoteStorage;
 
   /// Execute complete remote synchronization cycle.
   ///
@@ -72,7 +100,7 @@ class RemoteSyncOrchestrator {
     try {
       // Sync each resource type completely before moving to next
       for (final resourceType
-          in _config.resourcesInSyncOrder.map((r) => r.typeIri)) {
+          in _backend._config.resourcesInSyncOrder.map((r) => r.typeIri)) {
         _log.info('Syncing resource type: ${resourceType.debug}');
 
         // Phase A: Metadata Reconciliation & Queue Building for this type
@@ -171,18 +199,20 @@ class RemoteSyncOrchestrator {
 
     // Get resource config for this type
     final resourceConfig =
-        _config.resources.firstWhere((r) => r.typeIri == resourceType);
+        _backend._config.resources.firstWhere((r) => r.typeIri == resourceType);
 
     // Collect FullIndex IRIs for this type
     final fullIndices =
         resourceConfig.indices.whereType<FullIndexGraphConfig>().map((index) {
-      final iri = _indexRdfGenerator.generateFullIndexIri(index, resourceType);
+      final iri =
+          _backend._indexRdfGenerator.generateFullIndexIri(index, resourceType);
       return (iri, index.itemFetchPolicy);
     }).toList();
 
     // Collect subscribed GroupIndex IRIs for this type
     // Storage now filters by indexed type automatically
-    final groupIndices = await _storage.getSubscribedGroupIndices(resourceType);
+    final groupIndices =
+        await _backend._storage.getSubscribedGroupIndices(resourceType);
 
     // Convert from 3-tuple to 2-tuple (drop indexedType since we know it)
     final groupIndexTuples = groupIndices
@@ -313,6 +343,19 @@ class RemoteSyncOrchestrator {
           );
           final clock =
               _hlcService.getCurrentClock(documentToUpload, documentIri);
+          final algorithmIri = mergeContract.getEffectiveMergeWith(
+              typeIri, SyncManagedDocument.idxBelongsToIndexShard);
+          final crdtType = _crdtTypeRegistry.getType(algorithmIri);
+
+          crdtType.localValueChange(
+              oldPropertyValue: oldPropertyValue,
+              newPropertyValue: newPropertyValue,
+              oldFrameworkGraph: documentToUpload,
+              mergeContext: CrdtMergeContext(
+                iriGenerator: _iriGenerator,
+                metadataGenerator: _metadataGenerator,
+              ),
+              physicalClock: clock.physicalTime);
           // FIXME: how do we cleanly apply the shards to the documentToUpload (with cleanly I mean: so that it complies with merging rules and creates & adds metadata where possible)?
           var uploadSuccess = await _uploadIfNoConflict(
             documentIri: documentIri,

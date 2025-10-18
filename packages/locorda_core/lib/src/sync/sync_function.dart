@@ -1,10 +1,6 @@
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
-import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
-import 'package:locorda_core/src/index/index_rdf_generator.dart';
-import 'package:locorda_core/src/index/shard_determiner.dart';
-import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/storage/sync_timestamp_storage.dart';
 import 'package:locorda_core/src/sync/remote_sync_orchestrator.dart';
 import 'package:locorda_core/src/sync/shard_document_generator.dart';
@@ -37,36 +33,22 @@ class SyncFunction {
   final ShardDocumentGenerator _shardDocumentGenerator;
   final Storage _storage;
   final List<Backend> _backends;
-  final SyncGraphConfig _config;
-  final IndexRdfGenerator _indexRdfGenerator;
-  final ShardDeterminer _shardDeterminer;
-  final IndexManager _indexManager;
-  final HlcService _hlcService;
-  final MergeContractLoader _mergeContractLoader;
+  final RemoteSyncOrchestratorBackend _backend;
 
   SyncFunction({
     required List<Backend> backends,
     required Storage storage,
     required CrdtDocumentManager documentManager,
     required IndexManager indexManager,
-    required SyncGraphConfig config,
-    required IndexRdfGenerator indexRdfGenerator,
-    required ShardDeterminer shardDeterminer,
-    required HlcService hlcService,
-    required MergeContractLoader mergeContractLoader,
+    required RemoteSyncOrchestratorBackend remoteSyncOrchestratorBackend,
   })  : _backends = backends,
         _storage = storage,
-        _indexRdfGenerator = indexRdfGenerator,
-        _indexManager = indexManager,
         _shardDocumentGenerator = ShardDocumentGenerator(
           storage: storage,
           documentManager: documentManager,
           indexManager: indexManager,
         ),
-        _config = config,
-        _shardDeterminer = shardDeterminer,
-        _hlcService = hlcService,
-        _mergeContractLoader = mergeContractLoader;
+        _backend = remoteSyncOrchestratorBackend;
 
   Future<void> call(DateTime syncTime) async {
     // Phase 0: Sync Preparation (materialize local shard state)
@@ -130,14 +112,8 @@ class SyncFunction {
         }
 
         final remoteSyncOrchestrator = RemoteSyncOrchestrator(
-          storage: _storage,
+          backend: _backend,
           remoteStorage: remote,
-          config: _config,
-          indexRdfGenerator: _indexRdfGenerator,
-          shardDeterminer: _shardDeterminer,
-          indexManager: _indexManager,
-          hlcService: _hlcService,
-          mergeContractLoader: _mergeContractLoader,
         );
 
         _log.info('Starting Phase A+B: Remote Synchronization');

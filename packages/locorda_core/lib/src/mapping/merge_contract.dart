@@ -199,6 +199,21 @@ class MergeContract {
     _log.fine('MergeContract:\n$buffer');
   }
 
+  IriTerm? getEffectiveMergeWith(IriTerm? typeIri, RdfPredicate propertyIri) {
+    final rule = getEffectivePredicateRule(typeIri, propertyIri);
+    final algorithmIri = rule?.mergeWith;
+    if (algorithmIri == null) {
+      if (rule == null) {
+        _log.warning(
+            'No predicate rule found for $propertyIri on $typeIri, using ${CrdtTypeRegistry.fallback.iri.value}.');
+      } else {
+        _log.fine(
+            'No merge algorithm found in rule for $propertyIri on $typeIri, using ${CrdtTypeRegistry.fallback.iri.value}.');
+      }
+    }
+    return rule?.mergeWith;
+  }
+
   PredicateMergeRule? getEffectivePredicateRule(
       IriTerm? typeIri, RdfPredicate propertyIri) {
     final globalRule = _predicateRules[propertyIri];

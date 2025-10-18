@@ -18,11 +18,13 @@ import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/installation_service.dart'
     show InstallationService, InstallationIdFactory;
+import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
+import 'package:locorda_core/src/sync/remote_sync_orchestrator.dart';
 import 'package:locorda_core/src/sync/sync_function.dart';
 import 'package:locorda_core/src/util/build_effective_config.dart';
 import 'package:logging/logging.dart';
@@ -164,6 +166,8 @@ class LocordaGraphSync {
       shardManager: shardManager,
       indexDiscovery: indexDiscovery,
     );
+    final frameworkIriGenerator =
+        FrameworkIriGenerator(iriTermFactory: iriFactory);
     final crdtDocumentManager = CrdtDocumentManager(
       storage: storage,
       config: effectiveConfig,
@@ -171,7 +175,7 @@ class LocordaGraphSync {
       mergeContractLoader: mergeContractLoader,
       crdtTypeRegistry: crdtTypeRegistry,
       hlcService: hlcService,
-      iriTermFactory: iriFactory,
+      frameworkIriGenerator: frameworkIriGenerator,
     );
 
     // Initialize indices after installation document is created
@@ -184,17 +188,25 @@ class LocordaGraphSync {
 
     await indexManager.initializeIndices();
 
+    final remoteSyncOrchestratorBackend = RemoteSyncOrchestratorBackend(
+      storage: storage,
+      indexManager: indexManager,
+      iriGenerator: frameworkIriGenerator,
+      config: config,
+      indexRdfGenerator: indexRdfGenerator,
+      shardDeterminer: shardDeterminer,
+      hlcService: hlcService,
+      mergeContractLoader: mergeContractLoader,
+      crdtTypeRegistry: crdtTypeRegistry,
+    );
+
     final syncManager = SyncManager(
         syncFunction: SyncFunction(
           storage: storage,
           documentManager: crdtDocumentManager,
           indexManager: indexManager,
           backends: backends,
-          config: config,
-          indexRdfGenerator: indexRdfGenerator,
-          shardDeterminer: shardDeterminer,
-          hlcService: hlcService,
-          mergeContractLoader: mergeContractLoader,
+          remoteSyncOrchestratorBackend: remoteSyncOrchestratorBackend,
         ),
         autoSyncConfig: config.autoSyncConfig,
         physicalTimestampFactory: physicalTimestampFactory);
