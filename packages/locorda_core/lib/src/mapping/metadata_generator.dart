@@ -45,7 +45,7 @@ class MetadataGenerator {
     RdfPredicate? predicate,
     IdTerm<RdfObject>? value,
   }) {
-    final expandedSubject = expandLocalSubjectIris(subject);
+    final expandedSubject = subject.localSubjectIris;
     final List<RdfObject>? expandedObject = switch (value?.value) {
       LiteralTerm lt => [lt],
       IriTerm iri => [iri],
@@ -93,13 +93,19 @@ class MetadataGenerator {
       if (obj != null) Triple(idSubject, RdfStatement.object, obj),
     ];
   }
+}
 
-  List<IriTerm> expandLocalSubjectIris(IdTerm<RdfSubject> subject) {
-    final result = switch (subject.value) {
+extension IdTermSubjectExtension on IdTerm<RdfSubject> {
+  List<IriTerm> get subjectIris {
+    return switch (value) {
       IriTerm iri => [iri],
       BlankNodeTerm bn =>
-        subject.identifiers ?? (throw UnidentifiedBlankNodeException(bn)),
+        identifiers ?? (throw UnidentifiedBlankNodeException(bn)),
     };
+  }
+
+  List<IriTerm> get localSubjectIris {
+    final result = subjectIris;
     if (!result.every(LocalResourceLocator.isLocalIri)) {
       throw ArgumentError(
           'Resource metadata cannot be created for local IRIs: $result');

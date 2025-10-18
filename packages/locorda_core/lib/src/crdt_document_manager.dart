@@ -491,6 +491,7 @@ class CrdtDocumentManager {
         appData,
         appBlankNodes,
         oldAppData,
+        oldFrameworkGraph,
         oldAppBlankNodes,
         mergeContract,
         clock,
@@ -531,7 +532,7 @@ class CrdtDocumentManager {
       final documentTriples = _constructCrdtDocument(
         documentIri,
         oldFrameworkGraph,
-        crdtMetadata.metadataGraph,
+        crdtMetadata.statements,
         governedByFiles,
         resourceIri,
         type,
@@ -547,6 +548,7 @@ class CrdtDocumentManager {
         _identifiedBlankNodeBuilder.computeCanonicalBlankNodes(
             documentIri, frameworkGraph, mergeContract),
         oldFrameworkGraph,
+        oldFrameworkGraph,
         oldFrameworkGraph == null
             ? IdentifiedBlankNodes.empty<IriTerm>()
             : _identifiedBlankNodeBuilder.computeCanonicalBlankNodes(
@@ -560,7 +562,11 @@ class CrdtDocumentManager {
 
       // Add all framework metadata triples
       documentTriples.addNodes(documentIri, SyncManagedDocument.hasStatement,
-          frameworkMetadata.metadataGraph);
+          frameworkMetadata.statements);
+
+      // And cleanup: remove any triples that are marked for removal, e.g. tombstones and statements that need to be removed eg. because their value re-occured.
+      crdtMetadata.triplesToRemove.forEach(documentTriples.remove);
+      frameworkMetadata.triplesToRemove.forEach(documentTriples.remove);
 
       // Add all app data triples
       documentTriples.addAll(appData.triples);
@@ -659,11 +665,13 @@ class CrdtDocumentManager {
       RdfGraph appData,
       IdentifiedBlankNodes<IriTerm> appBlankNodes,
       RdfGraph? oldAppGraph,
+      RdfGraph? oldFrameworkGraph,
       IdentifiedBlankNodes<IriTerm> oldAppBlankNodes,
       MergeContract mergeContract,
       CurrentCrdtClock clock,
       {bool isFrameworkData = false}) {
-    final metadataGraphs = <Node>[];
+    final statements = <Node>[];
+    final triplesToRemove = <Triple>{};
     final propertyChanges = <PropertyChange>[];
 
     // Get all identifiable subjects from both graphs
@@ -688,7 +696,7 @@ class CrdtDocumentManager {
     // Process deleted subjects - add resource tombstones
     for (final deletedSubject in deletedSubjects) {
       _log.fine('Deleted subject detected: ${deletedSubject.subject} ');
-      metadataGraphs.addAll(_metadataGenerator.createResourceMetadata(
+      statements.addAll(_metadataGenerator.createResourceMetadata(
           documentIri,
           IdTerm.create(deletedSubject.subject, oldAppBlankNodes),
           (metadataSubject) => [
@@ -718,20 +726,21 @@ class CrdtDocumentManager {
 
         // Generate initial value metadata
         final metadataGraph = crdtType.localValueChange(
-          oldPropertyValue: null,
-          newPropertyValue: (
-            documentIri: documentIri,
-            appData: appData,
-            blankNodes: appBlankNodes,
-            subject: subjectTerm,
-            predicate: predicate,
-            values: values.cast<RdfObject>(),
-          ),
-          mergeContext: context,
-          physicalClock: clock.physicalTime,
-        );
+            oldPropertyValue: null,
+            newPropertyValue: (
+              documentIri: documentIri,
+              appData: appData,
+              blankNodes: appBlankNodes,
+              subject: subjectTerm,
+              predicate: predicate,
+              values: values.cast<RdfObject>(),
+            ),
+            mergeContext: context,
+            physicalClock: clock.physicalTime,
+            oldFrameworkGraph: oldFrameworkGraph);
 
-        metadataGraphs.addAll(metadataGraph);
+        statements.addAll(metadataGraph.statementsToAdd);
+        triplesToRemove.addAll(metadataGraph.triplesToRemove);
 
         // Record property change using canonical IRI (for identified blank nodes) or IRI
         for (final propertyChangeIri in addedSubject.propertyChangeIris) {
@@ -802,9 +811,11 @@ class CrdtDocumentManager {
           ),
           mergeContext: context,
           physicalClock: clock.physicalTime,
+          oldFrameworkGraph: oldFrameworkGraph,
         );
 
-        metadataGraphs.addAll(metadataGraph);
+        statements.addAll(metadataGraph.statementsToAdd);
+        triplesToRemove.addAll(metadataGraph.triplesToRemove);
 
         // Record property change using canonical IRI (for identified blank nodes) or IRI
         for (final propertyChangeIri in entry.key.propertyChangeIris) {
@@ -821,7 +832,8 @@ class CrdtDocumentManager {
     }
 
     return _CrdtMetadataResult(
-      metadataGraph: metadataGraphs,
+      statements: statements,
+      triplesToRemove: triplesToRemove,
       propertyChanges: propertyChanges,
     );
   }
@@ -981,11 +993,13 @@ bool _isEqualSet<T>(Set<T> set, Set<T> set2) {
 
 /// Result of CRDT metadata generation containing metadata triples and property changes
 class _CrdtMetadataResult {
-  final List<Node> metadataGraph;
+  final List<Node> statements;
+  final Set<Triple> triplesToRemove;
   final List<PropertyChange> propertyChanges;
 
   _CrdtMetadataResult({
-    required this.metadataGraph,
+    required this.statements,
+    required this.triplesToRemove,
     required this.propertyChanges,
   });
 }

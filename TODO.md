@@ -82,16 +82,23 @@
 - [x] Refine concept for actual sync algorithm
 - [x] We need prefetch_filtered fetching in addition to prefetch and onRequest
 - [x] We need an index of indices (full and group templates)
-- [ ] Fix the ShardDeterminer to use the actual full index and group index documents instead of the configuration as a base
-- [ ] RemoteSyncOrchestrator: the sync loop needs to run per resource type, not try to sync all at once, fully syncing index of indices (and thus all indices) first
-- [ ] RemoteSyncOrchestrator: 
-  - Ensure that the shards are calculated by the ShardDeterminer based on the merged document before proceeding
-  - store locally in _syncDocument, calling the indexManager to update shards
-- [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
 - [x] Implement in-memory backend for testing and development
   - Simpler to implement than Solid backend
   - Enables testing without external dependencies
   - Good foundation for understanding backend interface
+- [x] Fix the ShardDeterminer to use the actual full index and group index documents instead of the configuration as a base
+- [x] RemoteSyncOrchestrator: the sync loop needs to run per resource type, not try to sync all at once, fully syncing index of indices (and thus all indices) first
+- [ ] undeletions in OR-Sets: OrSet muss in localValueChange prüfen, ob es tombstones für die neuen Werte gibt, und ggf. diese Tombstones entfernen (achtung: nicht die statements - nur die crdt:deletedAt values), und eigentlich auch tombstones (incl. statements) für die crdt:deletedAt values erzeugen
+- [ ] save in _syncDocument: 
+  - shards berechnen für merged_doc, 
+  - merged_doc_new durch Ersetzen von shards mit neuer shard liste, 
+  - crdt_types.localValueChange anwenden (bzw. reduzierte Version von CrdtDocumenManager._generateCrdtMetadataForChanges) - das muss ggf. alte tombstones wieder entfernen
+  - diese Version für upload und lokales speicher nutzen
+- [ ] SEHR Wichtig: conditional save! So wie wir etags nutzen um sicherzustellen, dass unsere uploads sich auf den korrekten state beziehen, müssen wir das auch für save machen! Und achtung: Reihenfolge bei sync zw. remote und local nochmal prüfen/diskutieren
+- [ ] RemoteSyncOrchestrator: 
+  - Ensure that the shards are calculated by the ShardDeterminer based on the merged document before proceeding
+  - store locally in _syncDocument, calling the indexManager to update shards
+- [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
 - [ ] Implement Solid backend with actual Pod storage operations
   - Most complex but enables the full vision
   - Requires Pod operations, authentication integration

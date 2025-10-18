@@ -851,10 +851,10 @@ packages:
     dependency: "direct main"
     description:
       name: rdf_core
-      sha256: cc114b5a6d4d0caf2f19e9e7993126330ddd3cff3a3681a54a5e1c5f00cba908
+      sha256: "4953730790878569cfb9b91e3b9477fcf88fbed11639887bc33e376721f52ae4"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.22"
+    version: "0.9.23"
   rdf_mapper:
     dependency: "direct main"
     description:
