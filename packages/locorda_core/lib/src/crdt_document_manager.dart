@@ -717,13 +717,16 @@ class CrdtDocumentManager {
             _getCrdtAlgorithm(mergeContract, resourceType, predicate);
 
         // Generate initial value metadata
-        final metadataGraph = crdtType.initialValue(
-          documentIri: documentIri,
-          appData: appData,
-          blankNodes: appBlankNodes,
-          subject: subjectTerm,
-          predicate: predicate,
-          values: values.cast<RdfObject>(),
+        final metadataGraph = crdtType.localValueChange(
+          oldPropertyValue: null,
+          newPropertyValue: (
+            documentIri: documentIri,
+            appData: appData,
+            blankNodes: appBlankNodes,
+            subject: subjectTerm,
+            predicate: predicate,
+            values: values.cast<RdfObject>(),
+          ),
           mergeContext: context,
           physicalClock: clock.physicalTime,
         );
@@ -781,16 +784,22 @@ class CrdtDocumentManager {
 
         // Generate change metadata
         final metadataGraph = crdtType.localValueChange(
-          documentIri: documentIri,
-          oldAppData: oldAppGraph,
-          oldBlankNodes: oldAppBlankNodes,
-          oldSubject: oldSubjectTerm,
-          newAppData: appData,
-          newBlankNodes: appBlankNodes,
-          newSubject: subjectTerm,
-          predicate: predicate,
-          oldValues: oldValues,
-          newValues: newValues,
+          oldPropertyValue: (
+            documentIri: documentIri,
+            appData: oldAppGraph,
+            blankNodes: oldAppBlankNodes,
+            subject: oldSubjectTerm,
+            predicate: predicate,
+            values: oldValues,
+          ),
+          newPropertyValue: (
+            documentIri: documentIri,
+            appData: appData,
+            blankNodes: appBlankNodes,
+            subject: subjectTerm,
+            predicate: predicate,
+            values: newValues,
+          ),
           mergeContext: context,
           physicalClock: clock.physicalTime,
         );

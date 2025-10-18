@@ -10,6 +10,15 @@ import 'package:rdf_core/rdf_core.dart';
 /// Defines the state-based CRDT algorithms used for property-level
 /// merge strategies as outlined in the crdt-algorithms vocabulary.
 
+typedef PropertyValueContext = ({
+  IriTerm documentIri,
+  RdfGraph appData,
+  IdentifiedBlankNodes<IriTerm> blankNodes,
+  RdfSubject subject,
+  RdfPredicate predicate,
+  List<RdfObject> values,
+});
+
 /// Base interface for all CRDT types.
 abstract interface class CrdtType {
   const CrdtType();
@@ -18,35 +27,11 @@ abstract interface class CrdtType {
 
   IriTerm get iri;
 
-  /// Creates the initial metadata triples for a property value addition.
-  /// The returned graph may be empty if no metadata is needed.
-  ///
-  /// Note that you should not simply duplicate the property triples here,
-  /// as they are added separately by the merge logic.
-  /// Only add true metadata triples needed for the CRDT algorithm like tombstones, counter increments etc.
-  Iterable<Node> initialValue(
-      {required IriTerm documentIri,
-      required RdfGraph appData,
-      required IdentifiedBlankNodes<IriTerm> blankNodes,
-      required RdfSubject subject,
-      required RdfPredicate predicate,
-      required List<RdfObject> values,
-      required CrdtMergeContext mergeContext,
-      required int physicalClock});
-
   /// Creates the metadata triples for a local property value change.
   /// The returned graph may be empty if no metadata is needed.
   Iterable<Node> localValueChange({
-    required IriTerm documentIri,
-    required RdfGraph oldAppData,
-    required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
-    required RdfSubject oldSubject,
-    required RdfGraph newAppData,
-    required IdentifiedBlankNodes<IriTerm> newBlankNodes,
-    required RdfSubject newSubject,
-    required RdfPredicate predicate,
-    required List<RdfObject> oldValues,
-    required List<RdfObject> newValues,
+    required PropertyValueContext? oldPropertyValue,
+    required PropertyValueContext newPropertyValue,
     required CrdtMergeContext mergeContext,
     required int physicalClock,
   });
@@ -63,32 +48,9 @@ class LwwRegister implements CrdtType {
   bool get isSingleValueSupported => true;
 
   @override
-  Iterable<Node> initialValue({
-    required IriTerm documentIri,
-    required RdfGraph appData,
-    required IdentifiedBlankNodes<IriTerm> blankNodes,
-    required RdfSubject subject,
-    required RdfPredicate predicate,
-    required List<RdfObject> values,
-    required CrdtMergeContext mergeContext,
-    required int physicalClock,
-  }) {
-    // No metadata needed for adding a LWW Register value
-    return const <Node>[];
-  }
-
-  @override
   Iterable<Node> localValueChange({
-    required IriTerm documentIri,
-    required RdfGraph oldAppData,
-    required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
-    required RdfSubject oldSubject,
-    required RdfGraph newAppData,
-    required IdentifiedBlankNodes<IriTerm> newBlankNodes,
-    required RdfSubject newSubject,
-    required RdfPredicate predicate,
-    required List<RdfObject> oldValues,
-    required List<RdfObject> newValues,
+    required PropertyValueContext? oldPropertyValue,
+    required PropertyValueContext newPropertyValue,
     required CrdtMergeContext mergeContext,
     required int physicalClock,
   }) {
@@ -107,32 +69,9 @@ class Immutable implements CrdtType {
   bool get isSingleValueSupported => true;
 
   @override
-  Iterable<Node> initialValue({
-    required IriTerm documentIri,
-    required RdfGraph appData,
-    required IdentifiedBlankNodes<IriTerm> blankNodes,
-    required RdfSubject subject,
-    required RdfPredicate predicate,
-    required List<RdfObject> values,
-    required CrdtMergeContext mergeContext,
-    required int physicalClock,
-  }) {
-    // No metadata needed
-    return const <Node>[];
-  }
-
-  @override
   Iterable<Node> localValueChange({
-    required IriTerm documentIri,
-    required RdfGraph oldAppData,
-    required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
-    required RdfSubject oldSubject,
-    required RdfGraph newAppData,
-    required IdentifiedBlankNodes<IriTerm> newBlankNodes,
-    required RdfSubject newSubject,
-    required RdfPredicate predicate,
-    required List<RdfObject> oldValues,
-    required List<RdfObject> newValues,
+    required PropertyValueContext? oldPropertyValue,
+    required PropertyValueContext newPropertyValue,
     required CrdtMergeContext mergeContext,
     required int physicalClock,
   }) {
@@ -151,32 +90,9 @@ class FwwRegister implements CrdtType {
   bool get isSingleValueSupported => true;
 
   @override
-  Iterable<Node> initialValue({
-    required IriTerm documentIri,
-    required RdfGraph appData,
-    required IdentifiedBlankNodes<IriTerm> blankNodes,
-    required RdfSubject subject,
-    required RdfPredicate predicate,
-    required List<RdfObject> values,
-    required CrdtMergeContext mergeContext,
-    required int physicalClock,
-  }) {
-    // No metadata needed for adding a FWW Register value
-    return const <Node>[];
-  }
-
-  @override
   Iterable<Node> localValueChange({
-    required IriTerm documentIri,
-    required RdfGraph oldAppData,
-    required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
-    required RdfSubject oldSubject,
-    required RdfGraph newAppData,
-    required IdentifiedBlankNodes<IriTerm> newBlankNodes,
-    required RdfSubject newSubject,
-    required RdfPredicate predicate,
-    required List<RdfObject> oldValues,
-    required List<RdfObject> newValues,
+    required PropertyValueContext? oldPropertyValue,
+    required PropertyValueContext newPropertyValue,
     required CrdtMergeContext mergeContext,
     required int physicalClock,
   }) {
@@ -193,21 +109,6 @@ class OrSet implements CrdtType {
 
   bool get isSingleValueSupported => false;
 
-  @override
-  Iterable<Node> initialValue(
-      {required IriTerm documentIri,
-      required RdfGraph appData,
-      required IdentifiedBlankNodes<IriTerm> blankNodes,
-      required RdfSubject subject,
-      required RdfPredicate predicate,
-      required List<RdfObject> values,
-      required CrdtMergeContext mergeContext,
-      required int physicalClock}) {
-    validateBlankNodeValues(values, blankNodes, "Or Set values");
-    // No metadata needed for adding a OR Set value
-    return const <Node>[];
-  }
-
   void validateBlankNodeValues(List<RdfObject> values,
       IdentifiedBlankNodes<IriTerm> blankNodes, String lbl) {
     for (final value in values) {
@@ -220,25 +121,28 @@ class OrSet implements CrdtType {
   }
 
   @override
-  Iterable<Node> localValueChange(
-      {required IriTerm documentIri,
-      required RdfGraph oldAppData,
-      required IdentifiedBlankNodes<IriTerm> oldBlankNodes,
-      required RdfSubject oldSubject,
-      required RdfGraph newAppData,
-      required IdentifiedBlankNodes<IriTerm> newBlankNodes,
-      required RdfSubject newSubject,
-      required RdfPredicate predicate,
-      required List<RdfObject> oldValues,
-      required List<RdfObject> newValues,
-      required CrdtMergeContext mergeContext,
-      required int physicalClock}) {
-    validateBlankNodeValues(newValues, newBlankNodes, "Or Set values");
-    validateBlankNodeValues(oldValues, oldBlankNodes, "Old Or Set values");
-    final identifiedNewValues =
-        newValues.map((v) => _identify(v, newBlankNodes)).toSet();
-    final identifiedOldValues =
-        oldValues.map((v) => _identify(v, oldBlankNodes)).toSet();
+  Iterable<Node> localValueChange({
+    required PropertyValueContext? oldPropertyValue,
+    required PropertyValueContext newPropertyValue,
+    required CrdtMergeContext mergeContext,
+    required int physicalClock,
+  }) {
+    validateBlankNodeValues(
+        newPropertyValue.values, newPropertyValue.blankNodes, "Or Set values");
+    if (oldPropertyValue == null) {
+      // Initial value - no deletions
+      return const <Node>[];
+    }
+    assert(oldPropertyValue.documentIri == newPropertyValue.documentIri);
+    assert(oldPropertyValue.predicate == newPropertyValue.predicate);
+    validateBlankNodeValues(oldPropertyValue.values,
+        oldPropertyValue.blankNodes, "Old Or Set values");
+    final identifiedNewValues = newPropertyValue.values
+        .map((v) => _identify(v, newPropertyValue.blankNodes))
+        .toSet();
+    final identifiedOldValues = oldPropertyValue.values
+        .map((v) => _identify(v, oldPropertyValue.blankNodes))
+        .toSet();
     // for an OR set, we need to add tombstones for removed values
     final removedValues = identifiedOldValues.toSet();
     removedValues.removeAll(identifiedNewValues);
@@ -255,10 +159,11 @@ class OrSet implements CrdtType {
             })
         .expand((value) => mergeContext.metadataGenerator
             .createPropertyValueMetadata(
-                documentIri,
-                IdTerm.create(newSubject, newBlankNodes),
-                predicate,
-                IdTerm.create(value, oldBlankNodes),
+                newPropertyValue.documentIri,
+                IdTerm.create(
+                    newPropertyValue.subject, newPropertyValue.blankNodes),
+                newPropertyValue.predicate,
+                IdTerm.create(value, oldPropertyValue.blankNodes),
                 (metadataSubject) => removedValues
                     .map((rv) => Triple(metadataSubject,
                         RdfStatement.crdtDeletedAt, deletionDateTerm))
