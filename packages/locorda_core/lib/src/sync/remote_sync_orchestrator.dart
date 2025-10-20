@@ -446,7 +446,7 @@ class RemoteSyncOrchestrator {
     // unlike ourPhysicalClock which only changes when WE modify the document.
     // This ensures we catch conflicts even if the concurrent change was a remote merge.
     final expectedUpdatedAt = localUpdatedAt;
-
+    final updatedAtTimestamp = syncTime.millisecondsSinceEpoch;
     // save locally with optimistic lock - retry if conflict detected
     try {
       await _storage.saveDocument(
@@ -454,8 +454,7 @@ class RemoteSyncOrchestrator {
         typeIri,
         documentToUpload,
         DocumentMetadata(
-            ourPhysicalClock: physicalTime,
-            updatedAt: syncTime.millisecondsSinceEpoch),
+            ourPhysicalClock: physicalTime, updatedAt: updatedAtTimestamp),
         // no property changes - this is a concept for user-triggered edits
         // that is supposed to help us with crdt merges, so we leave it empty here
         const <PropertyChange>[],
@@ -483,6 +482,7 @@ class RemoteSyncOrchestrator {
       documentIri: documentIri,
       physicalTime: physicalTime,
       missingGroupIndices: missingGroupIndices,
+      updatedAt: updatedAtTimestamp,
     );
     // Success
   }

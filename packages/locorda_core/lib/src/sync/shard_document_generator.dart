@@ -140,6 +140,7 @@ class ShardDocumentGenerator {
       document: saveResult.crdtDocument,
       documentIri: saveResult.documentIri,
       physicalTime: saveResult.physicalTime,
+      updatedAt: saveResult.updatedAt,
       missingGroupIndices: saveResult.missingGroupIndices,
     );
 

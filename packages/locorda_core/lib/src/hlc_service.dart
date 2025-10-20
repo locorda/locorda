@@ -15,7 +15,10 @@ DateTime defaultPhysicalTimestampFactory() => DateTime.now();
 
 typedef CrdtClock = List<Node>;
 typedef CurrentCrdtClock = ({
+  /// Will be 0 if no existing clock entry for us
   int logicalTime,
+
+  /// Will be 0 if no existing clock entry for us
   int physicalTime,
   CrdtClock fullClock,
   String hash
@@ -102,7 +105,6 @@ class HlcService {
         ?.integerValue;
 
     return (
-      // FIXME: is it OK to return 0 if we apparently have never updated this document ourselves?
       logicalTime: logicalTime ?? 0,
       physicalTime: physicalTime ?? 0,
       fullClock: existingClock,

@@ -27,6 +27,7 @@ typedef DocumentSaveResult = ({
   RdfGraph crdtDocument,
   RdfGraph appData,
   int physicalTime,
+  int updatedAt,
   List<
       MissingGroupIndex> missingGroupIndices // GroupIndices that need to be created
 });
@@ -578,6 +579,7 @@ class CrdtDocumentManager {
         currentCursor: saveResult.currentCursor,
         missingGroupIndices: missingGroupIndices,
         physicalTime: clock.physicalTime,
+        updatedAt: updatedAtTimestamp
       );
     } on UnidentifiedBlankNodeException catch (e, stackTrace) {
       _log.severe(

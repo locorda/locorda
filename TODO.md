@@ -100,16 +100,19 @@
 - [x] SEHR Wichtig: conditional save! So wie wir etags nutzen um sicherzustellen, dass unsere uploads sich auf den korrekten state beziehen, müssen wir das auch für save machen! Und achtung: Reihenfolge bei sync zw. remote und local nochmal prüfen/diskutieren
 - [x] RemoteSyncOrchestrator: Restructure to reduce memory overhead and complexity, make sure to process each resource type / index / shard / document hierarchical
 - [x] RemoteSyncOrchestrator: Review and implement TODOs/FIXMEs - the LLM used to generate some code
-- [ ] Implement Partial Index Sync (items in our indexed items table that are from foreign shards ) see [001-partial-foreign-shard-sync.md]
-- [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
+- [x] on save metadata computation: Don't we have to check for existing tombstone entries and remove them ? What happens to those? will we get endless tombstone chains? => should be fixed by revised OrSet implementation
+- [x] Implement Partial Index Sync (items in our indexed items table that are from foreign shards ) see [001-partial-foreign-shard-sync.md]
+- [x] Should we prepare the remote sync code for the possibility to have different remotes? Maybe by prefixing the etags? => yes, it is remote specific now
+- [x] How do we get foreign shard indices to our DB? Are we missing something here? Actually, I think no: we only want to sync those entries from foreign indices that we already know about, and those will eventually end up in the documentsToSync queue. And when the documents are synced, their shards (old and new) are updated in our DB - so our DB index entries should be correct and up-to-date.
+- [x] Is our physical timestamp handling in _syncDocument in the remote_sync_orchestrator correct? => should be now - index entries get their timestamps from the indexed document, physical clock always is "ours" setting remote-only values to zero
+- [ ] Implement real CRDT Merge (and tests)
+- [ ] Implement actual syncing to a backend
 - [ ] Implement Solid backend with actual Pod storage operations
   - Most complex but enables the full vision
   - Requires Pod operations, authentication integration
   - Can reuse patterns from in-memory backend
 - [ ] Thoroughly test, for example
   - Foreign indices/shards that are referenced, but not yet downloaded when an item is saved!
-- [ ] on save metadata computation: Don't we have to check for existing tombstone entries and remove them ? What happens to those? will we get endless tombstone chains?
-- [ ] Should we prepare the remote sync code for the possibility to have different remotes? Maybe by prefixing the etags?
 
 ### Priority 5: Implement Delete
 - [ ] Deletion support is part of the concept and the example app has deletion usecases, but it is not fully implemented yet

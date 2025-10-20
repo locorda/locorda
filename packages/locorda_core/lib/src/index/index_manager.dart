@@ -263,6 +263,7 @@ class IndexManager {
           document: saved.crdtDocument,
           documentIri: saved.documentIri,
           physicalTime: saved.physicalTime,
+          updatedAt: saved.updatedAt,
           missingGroupIndices: saved.missingGroupIndices);
     }
     return saved;
@@ -272,6 +273,7 @@ class IndexManager {
       {required RdfGraph document,
       required IriTerm documentIri,
       required int physicalTime,
+      required int updatedAt,
       required Iterable<MissingGroupIndex> missingGroupIndices}) async {
     //  Create any missing GroupIndex documents that were detected during save
     // This must happen before updateIndices so the shards exist
@@ -300,11 +302,11 @@ class IndexManager {
     // Remove entries from shards where belongsToIndexShard was removed
     // This must happen BEFORE updateShardIndexEntries to ensure tombstones are created first
     await _removeTombstonedShardEntries(
-        resourceIri, document, documentIri, physicalTime);
+        resourceIri, document, documentIri, physicalTime, updatedAt);
 
     // Update the indices
-    await _updateShardIndexEntries(
-        type, resourceIri, clockHash, document, allShards, physicalTime);
+    await _updateShardIndexEntries(type, resourceIri, clockHash, document,
+        allShards, physicalTime, updatedAt);
   }
 
   /// Generates RDF graph for a GroupIndex resource.
@@ -358,6 +360,7 @@ class IndexManager {
     RdfGraph document,
     Iterable<IriTerm> allShards,
     int physicalClock,
+    int updatedAt,
   ) async {
     // Process each shard the resource belongs to
     for (final shardIri in allShards) {
@@ -396,7 +399,7 @@ class IndexManager {
         resourceIri: resourceIri,
         clockHash: clockHash,
         headerProperties: headerPropertiesTurtle,
-        updatedAt: physicalClock,
+        updatedAt: updatedAt,
         ourPhysicalClock: physicalClock,
       );
     }
@@ -473,8 +476,13 @@ class IndexManager {
   /// - [resourceIri]: The resource whose shard entries should be cleaned up
   /// - [crdtDocument]: The saved CRDT document containing potential tombstones
   /// - [documentIri]: The document IRI to search for tombstones
-  Future<void> _removeTombstonedShardEntries(IriTerm resourceIri,
-      RdfGraph crdtDocument, IriTerm documentIri, int ourPhysicalClock) async {
+  Future<void> _removeTombstonedShardEntries(
+    IriTerm resourceIri,
+    RdfGraph crdtDocument,
+    IriTerm documentIri,
+    int ourPhysicalClock,
+    int updatedAt,
+  ) async {
     // Find all reified statements with crdt:deletedAt for idx:belongsToIndexShard
     final reifiedStmts =
         crdtDocument.findTriples(predicate: Rdf.subject, object: documentIri);
@@ -553,7 +561,7 @@ class IndexManager {
         headerProperties: null,
         isDeleted: true,
         ourPhysicalClock: ourPhysicalClock,
-        updatedAt: ourPhysicalClock,
+        updatedAt: updatedAt,
       );
     }
   }

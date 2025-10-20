@@ -362,6 +362,7 @@ Use the 'documentIriTemplate' property of the resource configuration to configur
       document: saved.crdtDocument,
       documentIri: saved.documentIri,
       physicalTime: saved.physicalTime,
+      updatedAt: saved.updatedAt,
       missingGroupIndices: saved.missingGroupIndices,
     );
   }
