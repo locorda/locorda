@@ -534,6 +534,52 @@ class DriftStorage implements Storage {
     return shardIris.map((iri) => (_iriTermFactory(iri.$1), iri.$2)).toList();
   }
 
+  @override
+  Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
+    required int sinceTimestamp,
+    required Set<IriTerm> excludeIndexIris,
+    required Set<IriTerm> alreadySyncedShards,
+  }) async {
+    // Convert IRIs to IDs for efficient querying
+    final excludeIndexIriIds = excludeIndexIris.isEmpty
+        ? <int>{}
+        : (await _getOrCreateIriIdsMap(
+                excludeIndexIris.map((iri) => iri.value).toList()))
+            .values
+            .toSet();
+
+    final alreadySyncedShardIds = alreadySyncedShards.isEmpty
+        ? <int>{}
+        : (await _getOrCreateIriIdsMap(
+                alreadySyncedShards.map((iri) => iri.value).toList()))
+            .values
+            .toSet();
+
+    final result = await indexDao.getForeignIndexShardsToSync(
+      sinceTimestamp: sinceTimestamp,
+      excludeIndexIriIds: excludeIndexIriIds,
+      alreadySyncedShardIds: alreadySyncedShardIds,
+    );
+
+    // Convert back to IRI terms
+    final iriMap = <IriTerm, Map<IriTerm, Set<IriTerm>>>{};
+    for (final indexEntry in result.entries) {
+      final indexIri = _iriTermFactory(indexEntry.key);
+      final shardMap = <IriTerm, Set<IriTerm>>{};
+
+      for (final shardEntry in indexEntry.value.entries) {
+        final shardIri = _iriTermFactory(shardEntry.key);
+        final resourceIris =
+            shardEntry.value.map((s) => _iriTermFactory(s)).toSet();
+        shardMap[shardIri] = resourceIris;
+      }
+
+      iriMap[indexIri] = shardMap;
+    }
+
+    return iriMap;
+  }
+
   // Note: Sync timestamp helpers are provided by SyncTimestampStorage extension
   // from locorda_core. No need to duplicate them here.
 

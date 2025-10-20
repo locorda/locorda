@@ -955,7 +955,74 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
         .toList();
   }
 
-  // Note: Sync timestamps are now stored in SyncSettings table
+  /// Get foreign index shards that need partial sync.
+  ///
+  /// Finds shards from indices NOT in excludeIndexIriIds that need sync because:
+  /// 1. Shard has dirty entries: ANY entry modified since sinceTimestamp
+  /// 2. Shard is uncovered: shard NOT in alreadySyncedShardIds
+  ///
+  /// A shard qualifies if it has ANY entry where:
+  /// - Entry is dirty (ourPhysicalClock > sinceTimestamp), OR
+  /// - Shard is uncovered (shard_iri NOT IN alreadySyncedShardIds)
+  ///
+  /// INCLUDES deleted entries (tombstones) because:
+  /// - Dirty deleted entries must be pushed to remote (deletions are changes)
+  /// - Uncovered deleted entries must be pulled from remote (for proper CRDT merge)
+  ///
+  /// This correctly implements: "shards with dirty entries" OR "uncovered shards"
+  ///
+  /// Returns: Map of index IRI -> Map of (shard IRI -> Set of resource IRIs)
+  Future<Map<String, Map<String, Set<String>>>> getForeignIndexShardsToSync({
+    required int sinceTimestamp,
+    required Set<int> excludeIndexIriIds,
+    required Set<int> alreadySyncedShardIds,
+  }) async {
+    // Build WHERE conditions using Dart collection-if
+    final whereClause = [
+      // Exclude configured/subscribed indices
+      if (excludeIndexIriIds.isNotEmpty)
+        'e.index_iri_id NOT IN (${excludeIndexIriIds.join(',')})',
+      // Dirty entries OR uncovered shards
+      '(${[
+        'e.our_physical_clock > ?',
+        if (alreadySyncedShardIds.isNotEmpty)
+          'e.shard_iri NOT IN (${alreadySyncedShardIds.join(',')})'
+      ].join(' OR ')})'
+    ].join(' AND ');
+
+    // Query finds (index, shard, resource) triples where:
+    // - Index is not in excluded set (not configured/subscribed)
+    // - Entry is dirty (modified since timestamp) OR shard is uncovered
+    // Note: NO is_deleted filter - we need tombstones for partial sync!
+    final results = await customSelect(
+      '''
+      SELECT 
+        idx.iri as index_iri,
+        shard.iri as shard_iri,
+        res.iri as resource_iri
+      FROM index_entries e
+      JOIN sync_iris idx ON idx.id = e.index_iri_id
+      JOIN sync_iris shard ON shard.id = e.shard_iri
+      JOIN sync_iris res ON res.id = e.resource_iri_id
+      WHERE $whereClause
+      ''',
+      variables: [Variable.withInt(sinceTimestamp)],
+      readsFrom: {db.indexEntries, db.syncIris},
+    ).get();
+
+    // Group by index -> shard -> resources
+    final indexToShards = <String, Map<String, Set<String>>>{};
+    for (final row in results) {
+      final indexIri = row.read<String>('index_iri');
+      final shardIri = row.read<String>('shard_iri');
+      final resourceIri = row.read<String>('resource_iri');
+
+      final shardMap = indexToShards.putIfAbsent(indexIri, () => {});
+      shardMap.putIfAbsent(shardIri, () => <String>{}).add(resourceIri);
+    }
+
+    return indexToShards;
+  } // Note: Sync timestamps are now stored in SyncSettings table
   // using SyncSettingKeys constants. See DriftStorage helper methods.
 }
 

@@ -266,6 +266,27 @@ abstract interface class Storage {
   Future<List<(IriTerm iri, int maxPhysicalClock)>> getShardsToUpdate(
       int sinceTimestamp);
 
+  /// Get foreign index shards that need partial sync.
+  ///
+  /// Finds shards from indices not in [excludeIndexIris] that contain:
+  /// 1. Entries modified since [sinceTimestamp] (dirty entries)
+  /// 2. Entries not covered by [alreadySyncedShards] (uncovered entries)
+  ///
+  /// Used for foreign index discovery to determine which non-configured
+  /// indices need partial sync for upload-only operations.
+  ///
+  /// Parameters:
+  /// - [sinceTimestamp]: Physical clock timestamp - entries modified after this need sync
+  /// - [excludeIndexIris]: Configured/subscribed index IRIs to exclude
+  /// - [alreadySyncedShards]: Shard IRIs already synced (to avoid redundant syncs)
+  ///
+  /// Returns: Map of index IRI to map of (shard IRI -> set of resource IRIs)
+  Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
+    required int sinceTimestamp,
+    required Set<IriTerm> excludeIndexIris,
+    required Set<IriTerm> alreadySyncedShards,
+  });
+
   // ========================================================================
   // Remote Sync State Management (Multi-Remote Support)
   // ========================================================================

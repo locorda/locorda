@@ -61,7 +61,10 @@ final class FullShardSync extends ShardSyncSpec {
   const FullShardSync({required super.shardIri, required this.fetchPolicy});
 }
 
+/// Partial shard sync for foreign indices.
+/// Only syncs specific resources from the shard (upload-only, no prefetch).
 final class PartialShardSync extends ShardSyncSpec {
+  /// Specific resource IRIs to sync in this shard
   final Set<IriTerm> resourceIris;
 
   const PartialShardSync({
@@ -233,12 +236,29 @@ class RemoteSyncOrchestrator {
             FullIndexSync(tuple.$1, tuple.$3)) // (indexIri, fetchPolicy)
         .toList();
 
-    final indices = <IndexSyncSpec>[
+    final configuredIndices = <IndexSyncSpec>[
       ...fullIndices,
       ...groupIndexTuples,
     ];
 
-    _log.fine('Found ${indices.length} indices for ${resourceType.debug}');
+    // Collect configured index IRIs for deduplication
+    final configuredIndexIris =
+        configuredIndices.map((spec) => spec.indexIri).toSet();
+
+    // Find foreign indices: indices with dirty/uncovered entries but not configured
+    final foreignIndices = await _findForeignIndices(
+      resourceType: resourceType,
+      configuredIndexIris: configuredIndexIris,
+      configuredShards: {}, // Will be populated during full index sync
+    );
+
+    final indices = <IndexSyncSpec>[
+      ...configuredIndices,
+      ...foreignIndices,
+    ];
+
+    _log.fine(
+        'Found ${configuredIndices.length} configured indices and ${foreignIndices.length} foreign indices for ${resourceType.debug}');
 
     // Make sure each index document is synced - this should not actually do much
     // in most cases because the index-of-indices sync should already have
@@ -638,6 +658,52 @@ class RemoteSyncOrchestrator {
     }
 
     return entries.toSet();
+  }
+
+  /// Find foreign indices that need partial sync for a given resource type.
+  ///
+  /// Foreign indices are those not explicitly configured/subscribed but containing
+  /// items that:
+  /// 1. Were modified locally (dirty entries need upload)
+  /// 2. Are present in our local DB but not covered by any configured shard
+  ///
+  /// Returns PartialIndexSync specs for each foreign index with its shards.
+  Future<List<PartialIndexSync>> _findForeignIndices({
+    required IriTerm resourceType,
+    required Set<IriTerm> configuredIndexIris,
+    required Set<IriTerm> configuredShards,
+  }) async {
+    // Get last sync timestamp to find dirty entries
+    final lastSync =
+        await _storage.getLastRemoteSyncTimestamp(_remoteStorage.remoteId);
+
+    // Query for foreign index shards
+    // This finds indices (not in configured set) with:
+    // - Entries modified since last sync (dirty), OR
+    // - Entries in shards not yet synced (uncovered)
+    final foreignIndexShards = await _storage.getForeignIndexShardsToSync(
+      sinceTimestamp: lastSync,
+      excludeIndexIris: configuredIndexIris,
+      alreadySyncedShards: configuredShards,
+    );
+
+    // Convert to PartialIndexSync specs
+    final foreignIndices = foreignIndexShards.entries
+        .map((entry) => PartialIndexSync(
+              indexIri: entry.key,
+              shardItems: entry.value,
+            ))
+        .toList();
+
+    if (foreignIndices.isNotEmpty) {
+      final totalShards = foreignIndices
+          .map((i) => i.shardItems.length)
+          .reduce((a, b) => a + b);
+      _log.info(
+          'Found ${foreignIndices.length} foreign indices with $totalShards shards to sync for ${resourceType.debug}');
+    }
+
+    return foreignIndices;
   }
 
   Future<void> _syncResourceType(

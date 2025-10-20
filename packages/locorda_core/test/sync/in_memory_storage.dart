@@ -369,9 +369,41 @@ class InMemoryStorage implements Storage {
 
     // Filter shards where max > sinceTimestamp and return as list of tuples
     return shardMaxClocks.entries
-        .where((e) => e.value > sinceTimestamp)
-        .map((e) => (e.key, e.value))
+        .where((entry) => entry.value > sinceTimestamp)
+        .map((entry) => (entry.key, entry.value))
         .toList();
+  }
+
+  @override
+  Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
+    required int sinceTimestamp,
+    required Set<IriTerm> excludeIndexIris,
+    required Set<IriTerm> alreadySyncedShards,
+  }) async {
+    // Group entries by index, then by shard, collecting resource IRIs
+    final result = <IriTerm, Map<IriTerm, Set<IriTerm>>>{};
+
+    for (final entry in _indexEntries.values) {
+      // Skip deleted entries
+      if (entry.isDeleted) continue;
+
+      // Skip excluded indices
+      if (excludeIndexIris.contains(entry.indexIri)) continue;
+
+      // Check if entry is dirty (modified since timestamp)
+      // OR if shard is uncovered (not already synced)
+      final isDirty = entry.ourPhysicalClock > sinceTimestamp;
+      final isUncovered = !alreadySyncedShards.contains(entry.shardIri);
+
+      if (isDirty || isUncovered) {
+        result
+            .putIfAbsent(entry.indexIri, () => {})
+            .putIfAbsent(entry.shardIri, () => {})
+            .add(entry.resourceIri);
+      }
+    }
+
+    return result;
   }
 
   // Sync timestamps now handled by SyncTimestampStorage extension using _settings
