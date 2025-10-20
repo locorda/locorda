@@ -957,44 +957,64 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
 
   /// Get foreign index shards that need partial sync.
   ///
-  /// Finds shards from indices NOT in excludeIndexIriIds that need sync because:
-  /// 1. Shard has dirty entries: ANY entry modified since sinceTimestamp
-  /// 2. Shard is uncovered: shard NOT in alreadySyncedShardIds
+  /// Foreign indices are those NOT explicitly configured/subscribed.
+  /// We need to sync their shards when they contain resources that:
+  /// 1. Were modified locally (dirty entries need upload)
+  /// 2. Are not yet covered by any configured index shard (uncovered resources)
   ///
-  /// A shard qualifies if it has ANY entry where:
-  /// - Entry is dirty (ourPhysicalClock > sinceTimestamp), OR
-  /// - Shard is uncovered (shard_iri NOT IN alreadySyncedShardIds)
+  /// Parameters:
+  /// - [sinceTimestamp]: Physical clock timestamp - entries modified after this are dirty
+  /// - [excludeIndexIriIds]: Configured/subscribed index IRI IDs to exclude from foreign sync
+  ///
+  /// A foreign shard needs sync if it contains ANY resource where:
+  /// - Resource is dirty (our_physical_clock > sinceTimestamp), OR
+  /// - Resource is not in any configured index shard (uncovered)
   ///
   /// INCLUDES deleted entries (tombstones) because:
-  /// - Dirty deleted entries must be pushed to remote (deletions are changes)
-  /// - Uncovered deleted entries must be pulled from remote (for proper CRDT merge)
+  /// - Dirty tombstones must be pushed to remote (deletions are changes)
+  /// - Uncovered tombstones must be pulled from remote (for proper CRDT merge)
   ///
-  /// This correctly implements: "shards with dirty entries" OR "uncovered shards"
+  /// Performance optimization: Uses two separate queries instead of expensive NOT IN subquery:
+  /// - Query 1: Dirty foreign index entries (simple timestamp filter)
+  /// - Query 2: Uncovered foreign index entries (efficient LEFT JOIN with IS NULL)
   ///
   /// Returns: Map of index IRI -> Map of (shard IRI -> Set of resource IRIs)
   Future<Map<String, Map<String, Set<String>>>> getForeignIndexShardsToSync({
     required int sinceTimestamp,
     required Set<int> excludeIndexIriIds,
-    required Set<int> alreadySyncedShardIds,
   }) async {
-    // Build WHERE conditions using Dart collection-if
-    final whereClause = [
-      // Exclude configured/subscribed indices
+    final indexToShards = <String, Map<String, Set<String>>>{};
+
+    // Query 1: Get dirty foreign index entries (fast - simple timestamp filter)
+    final dirtyResults = await _queryDirtyForeignEntries(
+      sinceTimestamp: sinceTimestamp,
+      excludeIndexIriIds: excludeIndexIriIds,
+    );
+    _groupResults(dirtyResults, indexToShards);
+
+    // Query 2: Get uncovered foreign index entries (optimized LEFT JOIN)
+    // If no configured indices exist (excludeIndexIriIds.isEmpty), this finds ALL
+    // foreign index entries since all resources are "uncovered" by definition
+    final uncoveredResults = await _queryUncoveredForeignEntries(
+      excludeIndexIriIds: excludeIndexIriIds,
+    );
+    _groupResults(uncoveredResults, indexToShards);
+
+    return indexToShards;
+  }
+
+  /// Query dirty foreign index entries - modified since timestamp.
+  Future<List<QueryRow>> _queryDirtyForeignEntries({
+    required int sinceTimestamp,
+    required Set<int> excludeIndexIriIds,
+  }) async {
+    final whereConditions = <String>[
       if (excludeIndexIriIds.isNotEmpty)
         'e.index_iri_id NOT IN (${excludeIndexIriIds.join(',')})',
-      // Dirty entries OR uncovered shards
-      '(${[
-        'e.our_physical_clock > ?',
-        if (alreadySyncedShardIds.isNotEmpty)
-          'e.shard_iri NOT IN (${alreadySyncedShardIds.join(',')})'
-      ].join(' OR ')})'
-    ].join(' AND ');
+      'e.our_physical_clock > ?',
+    ];
 
-    // Query finds (index, shard, resource) triples where:
-    // - Index is not in excluded set (not configured/subscribed)
-    // - Entry is dirty (modified since timestamp) OR shard is uncovered
-    // Note: NO is_deleted filter - we need tombstones for partial sync!
-    final results = await customSelect(
+    return await customSelect(
       '''
       SELECT 
         idx.iri as index_iri,
@@ -1004,14 +1024,64 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
       JOIN sync_iris idx ON idx.id = e.index_iri_id
       JOIN sync_iris shard ON shard.id = e.shard_iri
       JOIN sync_iris res ON res.id = e.resource_iri_id
-      WHERE $whereClause
+      WHERE ${whereConditions.join(' AND ')}
       ''',
       variables: [Variable.withInt(sinceTimestamp)],
       readsFrom: {db.indexEntries, db.syncIris},
     ).get();
+  }
 
-    // Group by index -> shard -> resources
-    final indexToShards = <String, Map<String, Set<String>>>{};
+  /// Query uncovered foreign index entries - not in any configured index.
+  /// If excludeIndexIriIds is empty, all entries are uncovered (no configured indices exist).
+  /// Uses LEFT JOIN for better performance than NOT IN subquery.
+  Future<List<QueryRow>> _queryUncoveredForeignEntries({
+    required Set<int> excludeIndexIriIds,
+  }) async {
+    if (excludeIndexIriIds.isEmpty) {
+      // No configured indices - all entries are uncovered
+      return await customSelect(
+        '''
+        SELECT 
+          idx.iri as index_iri,
+          shard.iri as shard_iri,
+          res.iri as resource_iri
+        FROM index_entries e
+        JOIN sync_iris idx ON idx.id = e.index_iri_id
+        JOIN sync_iris shard ON shard.id = e.shard_iri
+        JOIN sync_iris res ON res.id = e.resource_iri_id
+        ''',
+        variables: [],
+        readsFrom: {db.indexEntries, db.syncIris},
+      ).get();
+    }
+
+    // Normal case: check which resources are not in configured indices
+    return await customSelect(
+      '''
+      SELECT 
+        idx.iri as index_iri,
+        shard.iri as shard_iri,
+        res.iri as resource_iri
+      FROM index_entries e
+      JOIN sync_iris idx ON idx.id = e.index_iri_id
+      JOIN sync_iris shard ON shard.id = e.shard_iri
+      JOIN sync_iris res ON res.id = e.resource_iri_id
+      LEFT JOIN index_entries configured 
+        ON e.resource_iri_id = configured.resource_iri_id 
+        AND configured.index_iri_id IN (${excludeIndexIriIds.join(',')})
+      WHERE e.index_iri_id NOT IN (${excludeIndexIriIds.join(',')})
+        AND configured.resource_iri_id IS NULL
+      ''',
+      variables: [],
+      readsFrom: {db.indexEntries, db.syncIris},
+    ).get();
+  }
+
+  /// Group query results into nested map structure.
+  void _groupResults(
+    List<QueryRow> results,
+    Map<String, Map<String, Set<String>>> indexToShards,
+  ) {
     for (final row in results) {
       final indexIri = row.read<String>('index_iri');
       final shardIri = row.read<String>('shard_iri');
@@ -1020,8 +1090,6 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
       final shardMap = indexToShards.putIfAbsent(indexIri, () => {});
       shardMap.putIfAbsent(shardIri, () => <String>{}).add(resourceIri);
     }
-
-    return indexToShards;
   } // Note: Sync timestamps are now stored in SyncSettings table
   // using SyncSettingKeys constants. See DriftStorage helper methods.
 }

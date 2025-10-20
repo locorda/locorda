@@ -268,23 +268,22 @@ abstract interface class Storage {
 
   /// Get foreign index shards that need partial sync.
   ///
-  /// Finds shards from indices not in [excludeIndexIris] that contain:
-  /// 1. Entries modified since [sinceTimestamp] (dirty entries)
-  /// 2. Entries not covered by [alreadySyncedShards] (uncovered entries)
+  /// Foreign indices are those NOT explicitly configured/subscribed.
+  /// We need to sync their shards when they contain resources that:
+  /// 1. Were modified locally (dirty entries need upload)
+  /// 2. Are not yet covered by any configured index shard (uncovered resources)
   ///
-  /// Used for foreign index discovery to determine which non-configured
-  /// indices need partial sync for upload-only operations.
+  /// This avoids redundant syncing: resources already managed via configured
+  /// indices don't need to be synced again through foreign indices.
   ///
   /// Parameters:
-  /// - [sinceTimestamp]: Physical clock timestamp - entries modified after this need sync
-  /// - [excludeIndexIris]: Configured/subscribed index IRIs to exclude
-  /// - [alreadySyncedShards]: Shard IRIs already synced (to avoid redundant syncs)
+  /// - [sinceTimestamp]: Physical clock timestamp - entries modified after this are dirty
+  /// - [excludeIndexIris]: Configured/subscribed index IRIs to exclude from foreign sync
   ///
   /// Returns: Map of index IRI to map of (shard IRI -> set of resource IRIs)
   Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,
-    required Set<IriTerm> alreadySyncedShards,
   });
 
   // ========================================================================

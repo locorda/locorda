@@ -538,7 +538,6 @@ class DriftStorage implements Storage {
   Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,
-    required Set<IriTerm> alreadySyncedShards,
   }) async {
     // Convert IRIs to IDs for efficient querying
     final excludeIndexIriIds = excludeIndexIris.isEmpty
@@ -548,17 +547,9 @@ class DriftStorage implements Storage {
             .values
             .toSet();
 
-    final alreadySyncedShardIds = alreadySyncedShards.isEmpty
-        ? <int>{}
-        : (await _getOrCreateIriIdsMap(
-                alreadySyncedShards.map((iri) => iri.value).toList()))
-            .values
-            .toSet();
-
     final result = await indexDao.getForeignIndexShardsToSync(
       sinceTimestamp: sinceTimestamp,
       excludeIndexIriIds: excludeIndexIriIds,
-      alreadySyncedShardIds: alreadySyncedShardIds,
     );
 
     // Convert back to IRI terms

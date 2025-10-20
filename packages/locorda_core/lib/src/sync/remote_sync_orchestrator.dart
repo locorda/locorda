@@ -183,42 +183,6 @@ class RemoteSyncOrchestrator {
     final resourceConfig =
         _config.resources.firstWhere((r) => r.typeIri == resourceType);
 
-    // Index and Shard Sync Strategy:
-    //
-    // Current Implementation Status:
-    // We currently sync only configured/subscribed indices and their complete shard sets.
-    // This approach is insufficient - we also need partial sync for foreign indices.
-    //
-    // 1. Foreign Index Sync Requirements:
-    //    Items may belong to multiple indices (configured + foreign).
-    //    We must sync shards from foreign indices when:
-    //    - They contain items we modified locally (dirty entries need upload)
-    //    - They contain items present in our local DB not yet covered by any synced shard
-    //
-    // 2. Partial Index Sync Strategy:
-    //    For foreign indices (not explicitly configured/subscribed):
-    //
-    //    a) Index Metadata Discovery (IMPLEMENTED):
-    //       - Index documents obtained via index-of-indices with filtered prefetch
-    //       - Enables shard-to-index association for items
-    //
-    //    b) Selective Shard Sync (TODO - NOT IMPLEMENTED):
-    //       - Sync only shards containing specific items from our index items table
-    //       - Shard selection criteria:
-    //         * Shards with dirty entries (local changes need upload)
-    //         * Shards with entries present in local DB not yet covered by any synced shard
-    //       - Important: Among multiple foreign indices containing same item,
-    //         syncing one shard is sufficient (avoid redundant syncs)
-    //
-    // 3. Implementation Requirements:
-    //    a) Query index items table for all referenced shards (not just configured indices)
-    //    b) Distinguish sync modes per index:
-    //       - Full sync: All shards, with ItemFetchPolicy (download new remote items)
-    //       - Partial sync: Selected shards only, no ItemFetchPolicy (upload-only for known items)
-    //    c) Track which items are already covered by synced shards to avoid redundant syncs
-    //
-    // TODO: Determine and include partial sync indices in our indices list below
-
     // Collect FullIndex IRIs for this type
     final fullIndices =
         resourceConfig.indices.whereType<FullIndexGraphConfig>().map((index) {
@@ -249,7 +213,6 @@ class RemoteSyncOrchestrator {
     final foreignIndices = await _findForeignIndices(
       resourceType: resourceType,
       configuredIndexIris: configuredIndexIris,
-      configuredShards: {}, // Will be populated during full index sync
     );
 
     final indices = <IndexSyncSpec>[
@@ -671,7 +634,6 @@ class RemoteSyncOrchestrator {
   Future<List<PartialIndexSync>> _findForeignIndices({
     required IriTerm resourceType,
     required Set<IriTerm> configuredIndexIris,
-    required Set<IriTerm> configuredShards,
   }) async {
     // Get last sync timestamp to find dirty entries
     final lastSync =
@@ -684,7 +646,6 @@ class RemoteSyncOrchestrator {
     final foreignIndexShards = await _storage.getForeignIndexShardsToSync(
       sinceTimestamp: lastSync,
       excludeIndexIris: configuredIndexIris,
-      alreadySyncedShards: configuredShards,
     );
 
     // Convert to PartialIndexSync specs

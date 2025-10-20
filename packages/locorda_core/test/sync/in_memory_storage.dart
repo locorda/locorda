@@ -378,23 +378,27 @@ class InMemoryStorage implements Storage {
   Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,
-    required Set<IriTerm> alreadySyncedShards,
   }) async {
-    // Group entries by index, then by shard, collecting resource IRIs
     final result = <IriTerm, Map<IriTerm, Set<IriTerm>>>{};
 
-    for (final entry in _indexEntries.values) {
-      // Skip deleted entries
-      if (entry.isDeleted) continue;
+    // Build set of covered resources from configured indices
+    final coveredResources = _indexEntries.values
+        .where((entry) => excludeIndexIris.contains(entry.indexIri))
+        .map((entry) => entry.resourceIri)
+        .toSet();
 
-      // Skip excluded indices
+    // Find foreign index entries that are either dirty or uncovered
+    for (final entry in _indexEntries.values) {
+      // Skip excluded (configured) indices
       if (excludeIndexIris.contains(entry.indexIri)) continue;
 
       // Check if entry is dirty (modified since timestamp)
-      // OR if shard is uncovered (not already synced)
       final isDirty = entry.ourPhysicalClock > sinceTimestamp;
-      final isUncovered = !alreadySyncedShards.contains(entry.shardIri);
 
+      // Check if resource is uncovered (not in any configured index)
+      final isUncovered = !coveredResources.contains(entry.resourceIri);
+
+      // Include tombstones - they need to be synced for proper CRDT merge
       if (isDirty || isUncovered) {
         result
             .putIfAbsent(entry.indexIri, () => {})
