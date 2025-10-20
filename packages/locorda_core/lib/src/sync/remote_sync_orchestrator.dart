@@ -513,7 +513,7 @@ class RemoteSyncOrchestrator {
       mergedETag,
     );
 
-    // FIXME: how do we assure that the updateIndices call is also
+    // TODO: how do we assure that the updateIndices call is also
     // executed if sync was aborted shortly before here (e.g. app crash)?
     await _indexManager.updateIndices(
       document: documentToUpload,
@@ -808,8 +808,25 @@ class RemoteSyncOrchestrator {
       // Add new/current entries
       updatedShardDocument = withoutEntries.withNodes(
           shardIri, IdxShard.containsEntry, newShardNodes);
-      final clock =
+
+      // Determine if we need to increment the clock for this shard.
+      // Shard documents contain derived state from index items, but they participate
+      // in CRDT synchronization. We increment our clock when we have local changes
+      // to reflect in the shard - i.e., when any of our local index entries are
+      // newer than the merged shard's current clock.
+      final ourCurrentShardClock =
           _hlcService.getCurrentClock(merged.mergedDocument, shardDocumentIri);
+
+      // Check if any of our final entry set items have a higher physical clock
+      // than our current clock entry in the merged shard document.
+      // This indicates we have local changes that need to be reflected.
+      final bool hasLocalChanges = finalEntrySet.any((entry) =>
+          entry.ourPhysicalClock > ourCurrentShardClock.physicalTime);
+
+      final clock = hasLocalChanges
+          ? _hlcService.createOrIncrementClock(
+              merged.mergedDocument, shardDocumentIri)
+          : ourCurrentShardClock;
 
       final (oldBlankNodes: _, newBlankNodes: _, metadata: metadata) =
           _localDocumentMerger.generateMetadata(
@@ -818,7 +835,6 @@ class RemoteSyncOrchestrator {
         merged.mergedDocument,
         merged.mergedDocument,
         merged.mergeContract,
-        // FIXME: is this correct? (when) do we need to increment the clock for shard documents?
         clock,
         // optimization: shard documents should not have blank nodes
         computeCanonicalBlankNodes: false,
@@ -827,7 +843,6 @@ class RemoteSyncOrchestrator {
           updatedShardDocument, metadata, shardDocumentIri);
 
       // TODO: the extra reconcileDocument looks like overkill, can we avoid it? I think it is reasonably cheap currently though, because there are no indices-of-shards.
-      // TODO: is this clock correct? (When) do we have to increment the clock for shard documents?
       final (_, documentToUpload, clock2, missingGroupIndices) =
           await _reconcileDocument(
         shardDocumentIri,
