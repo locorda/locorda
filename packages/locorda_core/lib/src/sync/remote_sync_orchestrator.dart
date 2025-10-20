@@ -80,47 +80,12 @@ typedef _DownloadAndMergeResult = ({
   String? etag,
   int? localUpdatedAt
 });
+
 typedef PreparedShardSync = ({
   IriTerm shardIri,
   _DownloadAndMergeResult merged,
   ShardSyncSpec shardSpec,
 });
-
-class RemoteSyncOrchestratorBackend {
-  final Storage _storage;
-  final RemoteDocumentMerger _merger;
-  final SyncGraphConfig _config;
-  final IndexRdfGenerator _indexRdfGenerator;
-  final IndexManager _indexManager;
-  final ShardDeterminer _shardDeterminer;
-  final HlcService _hlcService;
-  final MergeContractLoader _mergeContractLoader;
-  final CrdtTypeRegistry _crdtTypeRegistry;
-  final FrameworkIriGenerator _iriGenerator;
-  late final MetadataGenerator _metadataGenerator =
-      MetadataGenerator(frameworkIriGenerator: _iriGenerator);
-
-  RemoteSyncOrchestratorBackend({
-    required Storage storage,
-    required SyncGraphConfig config,
-    required IndexRdfGenerator indexRdfGenerator,
-    required ShardDeterminer shardDeterminer,
-    required IndexManager indexManager,
-    required HlcService hlcService,
-    required MergeContractLoader mergeContractLoader,
-    required CrdtTypeRegistry crdtTypeRegistry,
-    required FrameworkIriGenerator iriGenerator,
-  })  : _storage = storage,
-        _config = config,
-        _indexRdfGenerator = indexRdfGenerator,
-        _merger = RemoteDocumentMerger(storage: storage),
-        _indexManager = indexManager,
-        _shardDeterminer = shardDeterminer,
-        _hlcService = hlcService,
-        _mergeContractLoader = mergeContractLoader,
-        _crdtTypeRegistry = crdtTypeRegistry,
-        _iriGenerator = iriGenerator;
-}
 
 /// Orchestrates remote synchronization following the revised algorithm.
 ///
@@ -131,23 +96,44 @@ class RemoteSyncOrchestratorBackend {
 /// Assumes Phase 0 (Sync Preparation) has already been completed by
 /// _ensureShardDocumentsAreUpToDate, which materialized shard state in DB.
 class RemoteSyncOrchestrator {
-  final RemoteSyncOrchestratorBackend _backend;
   final RemoteStorage _remoteStorage;
-  late final _mergeContractLoader = _backend._mergeContractLoader;
-  late final _merger = _backend._merger;
-  late final _storage = _backend._storage;
-  late final _shardDeterminer = _backend._shardDeterminer;
-  late final _hlcService = _backend._hlcService;
-  late final _crdtTypeRegistry = _backend._crdtTypeRegistry;
-  late final _iriGenerator = _backend._iriGenerator;
-  late final _metadataGenerator = _backend._metadataGenerator;
-  late final _indexManager = _backend._indexManager;
+  final Storage _storage;
+  final RemoteDocumentMerger _merger;
+  final SyncGraphConfig _config;
+  final IndexRdfGenerator _indexRdfGenerator;
+  final IndexManager _indexManager;
+  final ShardDeterminer _shardDeterminer;
+  final HlcService _hlcService;
+  final MergeContractLoader _mergeContractLoader;
+  final CrdtTypeRegistry _crdtTypeRegistry;
+  final FrameworkIriGenerator _iriGenerator;
+  final MetadataGenerator _metadataGenerator;
 
   RemoteSyncOrchestrator(
-      {required RemoteSyncOrchestratorBackend backend,
-      required RemoteStorage remoteStorage})
-      : _backend = backend,
-        _remoteStorage = remoteStorage;
+      {required RemoteStorage remoteStorage,
+      required Storage storage,
+      required RemoteDocumentMerger merger,
+      required SyncGraphConfig config,
+      required IndexRdfGenerator indexRdfGenerator,
+      required IndexManager indexManager,
+      required ShardDeterminer shardDeterminer,
+      required HlcService hlcService,
+      required MergeContractLoader mergeContractLoader,
+      required CrdtTypeRegistry crdtTypeRegistry,
+      required FrameworkIriGenerator iriGenerator,
+      required MetadataGenerator metadataGenerator})
+      : _remoteStorage = remoteStorage,
+        _storage = storage,
+        _merger = merger,
+        _config = config,
+        _indexRdfGenerator = indexRdfGenerator,
+        _indexManager = indexManager,
+        _shardDeterminer = shardDeterminer,
+        _hlcService = hlcService,
+        _mergeContractLoader = mergeContractLoader,
+        _crdtTypeRegistry = crdtTypeRegistry,
+        _iriGenerator = iriGenerator,
+        _metadataGenerator = metadataGenerator;
 
   /// Execute complete remote synchronization cycle.
   ///
@@ -167,7 +153,7 @@ class RemoteSyncOrchestrator {
     try {
       // Sync each resource type completely before moving to next
       for (final resourceType
-          in _backend._config.resourcesInSyncOrder.map((r) => r.typeIri)) {
+          in _config.resourcesInSyncOrder.map((r) => r.typeIri)) {
         _syncResourceType(resourceType, lastSyncTimestamp, syncTime);
       }
 
@@ -197,7 +183,7 @@ class RemoteSyncOrchestrator {
 
     // Get resource config for this type
     final resourceConfig =
-        _backend._config.resources.firstWhere((r) => r.typeIri == resourceType);
+        _config.resources.firstWhere((r) => r.typeIri == resourceType);
 
     // Index and Shard Sync Strategy:
     //
@@ -238,15 +224,13 @@ class RemoteSyncOrchestrator {
     // Collect FullIndex IRIs for this type
     final fullIndices =
         resourceConfig.indices.whereType<FullIndexGraphConfig>().map((index) {
-      final iri =
-          _backend._indexRdfGenerator.generateFullIndexIri(index, resourceType);
+      final iri = _indexRdfGenerator.generateFullIndexIri(index, resourceType);
       return FullIndexSync(iri, index.itemFetchPolicy);
     }).toList();
 
     // Collect subscribed GroupIndex IRIs for this type
     // Storage now filters by indexed type automatically
-    final groupIndices =
-        await _backend._storage.getSubscribedGroupIndices(resourceType);
+    final groupIndices = await _storage.getSubscribedGroupIndices(resourceType);
 
     // Convert from 3-tuple to 2-tuple (drop indexedType since we know it)
     final groupIndexTuples = groupIndices

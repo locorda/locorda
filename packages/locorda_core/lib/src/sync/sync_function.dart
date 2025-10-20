@@ -33,14 +33,16 @@ class SyncFunction {
   final ShardDocumentGenerator _shardDocumentGenerator;
   final Storage _storage;
   final List<Backend> _backends;
-  final RemoteSyncOrchestratorBackend _backend;
+  final RemoteSyncOrchestrator Function(RemoteStorage remote)
+      _remoteSyncOrchestratorFactory;
 
   SyncFunction({
     required List<Backend> backends,
     required Storage storage,
     required CrdtDocumentManager documentManager,
     required IndexManager indexManager,
-    required RemoteSyncOrchestratorBackend remoteSyncOrchestratorBackend,
+    required RemoteSyncOrchestrator Function(RemoteStorage remote)
+        remoteSyncOrchestratorFactory,
   })  : _backends = backends,
         _storage = storage,
         _shardDocumentGenerator = ShardDocumentGenerator(
@@ -48,7 +50,7 @@ class SyncFunction {
           documentManager: documentManager,
           indexManager: indexManager,
         ),
-        _backend = remoteSyncOrchestratorBackend;
+        _remoteSyncOrchestratorFactory = remoteSyncOrchestratorFactory;
 
   Future<void> call(DateTime syncTime) async {
     // Phase 0: Sync Preparation (materialize local shard state)
@@ -111,9 +113,8 @@ class SyncFunction {
           return;
         }
 
-        final remoteSyncOrchestrator = RemoteSyncOrchestrator(
-          backend: _backend,
-          remoteStorage: remote,
+        final remoteSyncOrchestrator = _remoteSyncOrchestratorFactory(
+          remote,
         );
 
         _log.info('Starting Phase A+B: Remote Synchronization');

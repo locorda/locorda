@@ -21,9 +21,11 @@ import 'package:locorda_core/src/installation_service.dart'
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
+import 'package:locorda_core/src/mapping/metadata_generator.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
+import 'package:locorda_core/src/sync/remote_document_merger.dart';
 import 'package:locorda_core/src/sync/remote_sync_orchestrator.dart';
 import 'package:locorda_core/src/sync/sync_function.dart';
 import 'package:locorda_core/src/util/build_effective_config.dart';
@@ -188,18 +190,25 @@ class LocordaGraphSync {
         config: effectiveConfig);
 
     await indexManager.initializeIndices();
+    final remoteDocumentMerger = RemoteDocumentMerger(storage: storage);
+    final metadataGenerator =
+        MetadataGenerator(frameworkIriGenerator: frameworkIriGenerator);
 
-    final remoteSyncOrchestratorBackend = RemoteSyncOrchestratorBackend(
-      storage: storage,
-      indexManager: indexManager,
-      iriGenerator: frameworkIriGenerator,
-      config: config,
-      indexRdfGenerator: indexRdfGenerator,
-      shardDeterminer: shardDeterminer,
-      hlcService: hlcService,
-      mergeContractLoader: mergeContractLoader,
-      crdtTypeRegistry: crdtTypeRegistry,
-    );
+    final remoteSyncOrchestratorFactory =
+        (RemoteStorage remoteStorage) => RemoteSyncOrchestrator(
+              remoteStorage: remoteStorage,
+              storage: storage,
+              merger: remoteDocumentMerger,
+              config: config,
+              indexRdfGenerator: indexRdfGenerator,
+              indexManager: indexManager,
+              shardDeterminer: shardDeterminer,
+              hlcService: hlcService,
+              mergeContractLoader: mergeContractLoader,
+              crdtTypeRegistry: crdtTypeRegistry,
+              iriGenerator: frameworkIriGenerator,
+              metadataGenerator: metadataGenerator,
+            );
 
     final syncManager = SyncManager(
         syncFunction: SyncFunction(
@@ -207,7 +216,7 @@ class LocordaGraphSync {
           documentManager: crdtDocumentManager,
           indexManager: indexManager,
           backends: backends,
-          remoteSyncOrchestratorBackend: remoteSyncOrchestratorBackend,
+          remoteSyncOrchestratorFactory: remoteSyncOrchestratorFactory,
         ),
         autoSyncConfig: config.autoSyncConfig,
         physicalTimestampFactory: physicalTimestampFactory);
