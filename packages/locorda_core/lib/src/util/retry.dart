@@ -3,7 +3,7 @@ import 'package:logging/logging.dart';
 
 final Logger _log = Logger('RetryUtil');
 
-Future<T> retry<T>(Future<T> Function() operation,
+Future<T> retryOnConflict<T>(Future<T> Function() operation,
     {int maxRetries = 3, String debugOperationName = '', Logger? log}) async {
   log ??= _log;
 

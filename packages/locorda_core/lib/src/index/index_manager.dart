@@ -251,7 +251,7 @@ class IndexManager {
     RdfGraph appData, {
     required String context,
   }) async {
-    return retry(() => _save(type, appData),
+    return retryOnConflict(() => _save(type, appData),
         debugOperationName: 'save $context', log: _log);
   }
 

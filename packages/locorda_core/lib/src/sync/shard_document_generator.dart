@@ -75,7 +75,7 @@ class ShardDocumentGenerator {
   /// Throws: [StateError] if all retries fail due to concurrent updates
   Future<DocumentSaveResult?> syncShard(
           IriTerm shardIri, int maxPhysicalClock) =>
-      retry(() => _syncShardAttempt(shardIri, maxPhysicalClock),
+      retryOnConflict(() => _syncShardAttempt(shardIri, maxPhysicalClock),
           debugOperationName: 'syncing shard ${shardIri.debug}');
 
   /// Internal method that performs a single shard sync attempt.

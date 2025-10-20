@@ -15,10 +15,76 @@ import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/remote_storage.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:locorda_core/src/sync/remote_document_merger.dart';
+import 'package:locorda_core/src/util/retry.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 final _log = Logger('RemoteSyncOrchestrator');
+
+/// Specification for syncing an index with its shards
+sealed class IndexSyncSpec {
+  /// The IRI of the index to sync
+  final IriTerm indexIri;
+
+  const IndexSyncSpec({required this.indexIri});
+}
+
+/// Full index sync: Download all shards and apply fetch policy for new items
+final class FullIndexSync extends IndexSyncSpec {
+  /// Policy determining which items to download from remote
+  final ItemFetchPolicy fetchPolicy;
+
+  const FullIndexSync(
+    IriTerm indexIri,
+    this.fetchPolicy,
+  ) : super(indexIri: indexIri);
+}
+
+/// Partial index sync: Upload-only for specific shards containing known items
+final class PartialIndexSync extends IndexSyncSpec {
+  /// Map of shard IRIs to the set of resource IRIs we need to sync in that shard
+  /// Only these specific items will be synced (upload local changes, no remote downloads)
+  final Map<IriTerm /*shardIri*/, Set<IriTerm /*resourceIri*/ >> shardItems;
+
+  const PartialIndexSync({
+    required super.indexIri,
+    required this.shardItems,
+  });
+}
+
+sealed class ShardSyncSpec {
+  final IriTerm shardIri;
+
+  const ShardSyncSpec({required this.shardIri});
+}
+
+final class FullShardSync extends ShardSyncSpec {
+  final ItemFetchPolicy fetchPolicy;
+  const FullShardSync({required super.shardIri, required this.fetchPolicy});
+}
+
+final class PartialShardSync extends ShardSyncSpec {
+  final Set<IriTerm> resourceIris;
+
+  const PartialShardSync({
+    required super.shardIri,
+    required this.resourceIris,
+  });
+}
+
+typedef _DownloadAndMergeResult = ({
+  RdfGraph mergedDocument,
+  RdfGraph? originalLocalDocument,
+  RdfGraph? originalRemoteDocument,
+  MergeContract mergeContract,
+  String? etag,
+  int? localUpdatedAt
+});
+typedef PreparedShardSync = ({
+  IriTerm shardIri,
+  _DownloadAndMergeResult merged,
+  ShardSyncSpec shardSpec,
+});
 
 class RemoteSyncOrchestratorBackend {
   final Storage _storage;
@@ -102,84 +168,15 @@ class RemoteSyncOrchestrator {
       // Sync each resource type completely before moving to next
       for (final resourceType
           in _backend._config.resourcesInSyncOrder.map((r) => r.typeIri)) {
-        _log.info('Syncing resource type: ${resourceType.debug}');
-
-        // Phase A: Metadata Reconciliation & Queue Building for this type
-        final syncContext =
-            await _reconcileMetadata(resourceType, lastSyncTimestamp, syncTime);
-
-        // Phase B: Document & Shard Finalization for this type
-        await _syncDocumentsAndFinalizeShards(
-          resourceType,
-          syncContext,
-          lastSyncTimestamp,
-          syncTime,
-        );
-
-        _log.info('Completed sync for resource type: ${resourceType.debug}');
+        _syncResourceType(resourceType, lastSyncTimestamp, syncTime);
       }
 
       _log.info('Remote synchronization cycle completed successfully');
     } catch (e, st) {
+      // TODO: should we catch the exception per resource type and continue with others?
       _log.severe('Remote synchronization cycle failed', e, st);
       rethrow;
     }
-  }
-
-  /// Phase A: Metadata Reconciliation & Queue Building for a resource type.
-  ///
-  /// Process:
-  /// 1. Sync Index Documents for this type (conditional GET + upload loop with retry)
-  /// 2. Build Document Sync Queue by comparing local and remote shards
-  ///
-  /// Returns: SyncContext with document queue and shard state for this type
-  Future<SyncContext> _reconcileMetadata(
-    IriTerm resourceType,
-    int lastSyncTimestamp,
-    DateTime syncTime,
-  ) async {
-    _log.info(
-        'Phase A: Metadata Reconciliation & Queue Building for ${resourceType.debug}');
-
-    // Step 1: Sync Index Documents for this type
-    final allIndices =
-        await _syncIndexDocuments(resourceType, lastSyncTimestamp, syncTime);
-    final syncContext = SyncContext(indices: allIndices);
-
-    // Step 2: Build Document Sync Queue for this type
-    await _buildDocumentSyncQueue(resourceType, syncContext);
-
-    _log.info(
-        'Phase A complete for ${resourceType.debug}: ${syncContext.documentQueue.length} documents queued');
-    return syncContext;
-  }
-
-  /// Phase B: Document & Shard Finalization for a resource type.
-  ///
-  /// Process:
-  /// 1. Process Document Sync Queue (download + merge + upload each document)
-  /// 2. Finalize Shards (transactional loop with retry on 412)
-  ///
-  /// Parameters:
-  /// - [resourceType]: The resource type being synced
-  /// - [syncContext]: Context from Phase A containing document queue and shard state
-  /// - [lastSyncTimestamp]: Timestamp of last successful sync
-  Future<void> _syncDocumentsAndFinalizeShards(
-    IriTerm resourceType,
-    SyncContext syncContext,
-    int lastSyncTimestamp,
-    DateTime syncTime,
-  ) async {
-    _log.info(
-        'Phase B: Document & Shard Finalization for ${resourceType.debug}');
-
-    // Step 1: Process Document Sync Queue for this type
-    await _processDocumentSyncQueue(syncContext, lastSyncTimestamp, syncTime);
-
-    // Step 2: Finalize Shards for this type
-    await _finalizeShards(syncContext);
-
-    _log.info('Phase B complete for ${resourceType.debug}');
   }
 
   /// Step A.1: Sync Index Documents for a specific resource type.
@@ -191,7 +188,7 @@ class RemoteSyncOrchestrator {
   /// 4. Upload loop with retry on 412 conflict
   ///
   /// Returns list of (indexIri, fetchPolicy) tuples for this type.
-  Future<List<(IriTerm, ItemFetchPolicy)>> _syncIndexDocuments(
+  Future<List<IndexSyncSpec>> _syncIndexDocuments(
     IriTerm resourceType,
     int lastSyncTimestamp,
     DateTime syncTime,
@@ -202,12 +199,48 @@ class RemoteSyncOrchestrator {
     final resourceConfig =
         _backend._config.resources.firstWhere((r) => r.typeIri == resourceType);
 
+    // Index and Shard Sync Strategy:
+    //
+    // Current Implementation Status:
+    // We currently sync only configured/subscribed indices and their complete shard sets.
+    // This approach is insufficient - we also need partial sync for foreign indices.
+    //
+    // 1. Foreign Index Sync Requirements:
+    //    Items may belong to multiple indices (configured + foreign).
+    //    We must sync shards from foreign indices when:
+    //    - They contain items we modified locally (dirty entries need upload)
+    //    - They contain items present in our local DB not yet covered by any synced shard
+    //
+    // 2. Partial Index Sync Strategy:
+    //    For foreign indices (not explicitly configured/subscribed):
+    //
+    //    a) Index Metadata Discovery (IMPLEMENTED):
+    //       - Index documents obtained via index-of-indices with filtered prefetch
+    //       - Enables shard-to-index association for items
+    //
+    //    b) Selective Shard Sync (TODO - NOT IMPLEMENTED):
+    //       - Sync only shards containing specific items from our index items table
+    //       - Shard selection criteria:
+    //         * Shards with dirty entries (local changes need upload)
+    //         * Shards with entries present in local DB not yet covered by any synced shard
+    //       - Important: Among multiple foreign indices containing same item,
+    //         syncing one shard is sufficient (avoid redundant syncs)
+    //
+    // 3. Implementation Requirements:
+    //    a) Query index items table for all referenced shards (not just configured indices)
+    //    b) Distinguish sync modes per index:
+    //       - Full sync: All shards, with ItemFetchPolicy (download new remote items)
+    //       - Partial sync: Selected shards only, no ItemFetchPolicy (upload-only for known items)
+    //    c) Track which items are already covered by synced shards to avoid redundant syncs
+    //
+    // TODO: Determine and include partial sync indices in our indices list below
+
     // Collect FullIndex IRIs for this type
     final fullIndices =
         resourceConfig.indices.whereType<FullIndexGraphConfig>().map((index) {
       final iri =
           _backend._indexRdfGenerator.generateFullIndexIri(index, resourceType);
-      return (iri, index.itemFetchPolicy);
+      return FullIndexSync(iri, index.itemFetchPolicy);
     }).toList();
 
     // Collect subscribed GroupIndex IRIs for this type
@@ -217,19 +250,23 @@ class RemoteSyncOrchestrator {
 
     // Convert from 3-tuple to 2-tuple (drop indexedType since we know it)
     final groupIndexTuples = groupIndices
-        .map((tuple) => (tuple.$1, tuple.$3)) // (indexIri, fetchPolicy)
+        .map((tuple) =>
+            FullIndexSync(tuple.$1, tuple.$3)) // (indexIri, fetchPolicy)
         .toList();
 
-    final indices = <(IriTerm, ItemFetchPolicy)>[
+    final indices = <IndexSyncSpec>[
       ...fullIndices,
       ...groupIndexTuples,
     ];
 
     _log.fine('Found ${indices.length} indices for ${resourceType.debug}');
 
-    // Sync each index document
-    for (final (indexIri, _) in indices) {
-      final documentIri = indexIri.getDocumentIri();
+    // Make sure each index document is synced - this should not actually do much
+    // in most cases because the index-of-indices sync should already have
+    // ensured that the index documents are up to date, but we do it here for completeness
+    // and to be on the safe side.
+    for (final spec in indices) {
+      final documentIri = spec.indexIri.getDocumentIri();
       await _syncDocument(
         documentIri,
         lastSyncTimestamp,
@@ -241,6 +278,92 @@ class RemoteSyncOrchestrator {
     return indices;
   }
 
+  Future<_DownloadAndMergeResult?> _downloadAndMerge(
+    IriTerm documentIri,
+    int lastSyncTimestamp, {
+    String debugName = '',
+  }) async {
+    // 1. Conditional GET
+    final cachedETag = await _storage.getRemoteETag(
+      _remoteStorage.remoteId,
+      documentIri,
+    );
+
+    final downloadResult = await _remoteStorage.download(
+      documentIri,
+      ifNoneMatch: cachedETag,
+    );
+
+    late final RdfGraph documentToUpload;
+    late final MergeContract mergeContract;
+    StoredDocument?
+        loadedLocalDocument; // Track loaded document with metadata for optimistic locking
+
+    // 2. Handle response cases
+    if (downloadResult.notModified) {
+      // Case: 304 Not Modified
+      _log.fine('$debugName unchanged (304)');
+      loadedLocalDocument = await _getLocalDocumentWithMetadata(documentIri,
+          ifChangedSincePhysicalClock: lastSyncTimestamp);
+      if (loadedLocalDocument != null) {
+        documentToUpload = loadedLocalDocument.document;
+        mergeContract = await _mergeContractLoader.load(_mergeContractLoader
+            .extractGovernanceIris(loadedLocalDocument.document, documentIri));
+      } else {
+        _log.fine('Local $debugName has no changes since last sync');
+      }
+      // Return null to indicate no changes
+      return null;
+    } else if (downloadResult.graph != null) {
+      // Case: 200 OK - Remote changed
+      _log.fine('$debugName changed remotely');
+      // Theoretically, we could skip merge if local unchanged since last sync
+      // but just to be safe, always merge if remote changed
+      loadedLocalDocument = await _getLocalDocumentWithMetadata(documentIri);
+      final localDocument = loadedLocalDocument?.document;
+      final governanceIris =
+          _getMergedGovernanceIris(localDocument, documentIri, downloadResult);
+      mergeContract = await _mergeContractLoader.load(governanceIris);
+      // CRDT merge local + remote
+      final mergeResult = await _merger.merge(
+        mergeContract: mergeContract,
+        documentIri: documentIri,
+        localGraph: localDocument,
+        remoteGraph: downloadResult.graph,
+      );
+      final actualGovernanceIris = _mergeContractLoader.extractGovernanceIris(
+          mergeResult.mergedGraph, documentIri);
+      if (!ListEquality().equals(actualGovernanceIris, governanceIris)) {
+        _log.severe('Governance IRIs mismatch after merge for $debugName. '
+            'Expected: $governanceIris, '
+            'Found: $actualGovernanceIris');
+      }
+
+      documentToUpload = mergeResult.mergedGraph;
+    } else {
+      // Case: 404 Not Found - New index
+      _log.fine('$debugName not found remotely (404)');
+      loadedLocalDocument = await _getLocalDocumentWithMetadata(documentIri);
+      if (loadedLocalDocument == null) {
+        _log.warning(
+            '$debugName was found neither remotely nor locally, will skip');
+        return null; // Nothing to upload
+      }
+      documentToUpload = loadedLocalDocument.document;
+      mergeContract = await _mergeContractLoader.load(_mergeContractLoader
+          .extractGovernanceIris(documentToUpload, documentIri));
+    }
+
+    return (
+      mergedDocument: documentToUpload,
+      originalLocalDocument: loadedLocalDocument?.document,
+      originalRemoteDocument: downloadResult.graph,
+      mergeContract: mergeContract,
+      etag: downloadResult.etag,
+      localUpdatedAt: loadedLocalDocument?.metadata.updatedAt
+    );
+  }
+
   /// Sync a single document with retry loop on 412
   Future<void> _syncDocument(
     IriTerm documentIri,
@@ -250,176 +373,151 @@ class RemoteSyncOrchestrator {
   }) async {
     _log.fine('Syncing ${debugName}');
 
-    while (true) {
+    await retryOnConflict(() async {
       try {
-        // 1. Conditional GET
-        final cachedETag = await _storage.getRemoteETag(
-          _remoteStorage.remoteId,
+        final merged = await _downloadAndMerge(documentIri, lastSyncTimestamp,
+            debugName: debugName);
+        if (merged == null) {
+          return; // No changes, nothing to do
+        }
+        final (typeIri, documentToUpload, clock, missingGroupIndices) =
+            await _reconcileDocument(
           documentIri,
+          merged.mergedDocument,
+          merged.mergeContract,
         );
 
-        final downloadResult = await _remoteStorage.download(
-          documentIri,
-          ifNoneMatch: cachedETag,
+        // Will throw [ConcurrentUpdateException] on conflict
+        await _applyAndStoreMergedDocument(
+          documentIri: documentIri,
+          clock: clock,
+          documentToUpload: documentToUpload,
+          localUpdatedAt: merged.localUpdatedAt,
+          missingGroupIndices: missingGroupIndices,
+          syncTime: syncTime,
+          typeIri: typeIri,
+          etag: merged.etag,
         );
-
-        RdfGraph? documentToUpload;
-        MergeContract? mergeContract;
-        StoredDocument?
-            loadedLocalDocument; // Track loaded document with metadata for optimistic locking
-
-        // 2. Handle response cases
-        if (downloadResult.notModified) {
-          // Case: 304 Not Modified
-          _log.fine('$debugName unchanged (304)');
-          loadedLocalDocument = await _getLocalDocumentWithMetadata(documentIri,
-              ifChangedSincePhysicalClock: lastSyncTimestamp);
-          if (loadedLocalDocument != null) {
-            documentToUpload = loadedLocalDocument.document;
-            mergeContract = await _mergeContractLoader.load(
-                _mergeContractLoader.extractGovernanceIris(
-                    loadedLocalDocument.document, documentIri));
-          } else {
-            _log.fine('Local $debugName has no changes since last sync');
-          }
-          break;
-        } else if (downloadResult.graph != null) {
-          // Case: 200 OK - Remote changed
-          _log.fine('$debugName changed remotely');
-          // Theoretically, we could skip merge if local unchanged since last sync
-          // but just to be safe, always merge if remote changed
-          loadedLocalDocument =
-              await _getLocalDocumentWithMetadata(documentIri);
-          final localDocument = loadedLocalDocument?.document;
-          final governanceIris = _getMergedGovernanceIris(
-              localDocument, documentIri, downloadResult);
-          mergeContract = await _mergeContractLoader.load(governanceIris);
-          // CRDT merge local + remote
-          final mergeResult = await _merger.merge(
-            mergeContract: mergeContract,
-            documentIri: documentIri,
-            localGraph: localDocument,
-            remoteGraph: downloadResult.graph,
-          );
-          final actualGovernanceIris = _mergeContractLoader
-              .extractGovernanceIris(mergeResult.mergedGraph, documentIri);
-          if (!ListEquality().equals(actualGovernanceIris, governanceIris)) {
-            _log.severe('Governance IRIs mismatch after merge for $debugName. '
-                'Expected: $governanceIris, '
-                'Found: $actualGovernanceIris');
-          }
-
-          documentToUpload = mergeResult.mergedGraph;
-          // Update ETag cache
-          if (downloadResult.etag != null) {
-            await _storage.setRemoteETag(
-              _remoteStorage.remoteId,
-              documentIri,
-              downloadResult.etag!,
-            );
-          }
-        } else {
-          // Case: 404 Not Found - New index
-          _log.fine('$debugName not found remotely (404)');
-          loadedLocalDocument =
-              await _getLocalDocumentWithMetadata(documentIri);
-          documentToUpload = loadedLocalDocument?.document;
-          if (documentToUpload != null) {
-            mergeContract = await _mergeContractLoader.load(_mergeContractLoader
-                .extractGovernanceIris(documentToUpload, documentIri));
-          }
-        }
-
-        // 3. Upload loop (if needed)
-        if (documentToUpload != null) {
-          if (mergeContract == null) {
-            _log.severe('No merge contract available for uploading $debugName');
-            throw StateError('Missing merge contract for $debugName');
-          }
-          final resourceIri = documentToUpload.expectSingleObject<IriTerm>(
-              documentIri, SyncManagedDocument.foafPrimaryTopic)!;
-          final typeIri = documentToUpload.expectSingleObject<IriTerm>(
-              documentIri, Rdf.type)!;
-          final shards = await _shardDeterminer.determineShards(
-            typeIri,
-            resourceIri,
-            // app data is requested here, but since this is an rdf graph
-            // we can simply pass in the full document which contains the app data (amongst the framework data)
-            documentToUpload,
-            // Important: we really have to be able to compute all shards here, better be strict and fail early.
-            mode: ShardDeterminationMode.strict,
-          );
-          final clock =
-              _hlcService.getCurrentClock(documentToUpload, documentIri);
-
-          // Replace shards in the document and generate metadata for the change
-          final updatedDocument = await _replaceShardsInDocument(
-            documentIri: documentIri,
-            document: documentToUpload,
-            resourceIri: resourceIri,
-            newShards: shards.shards,
-            mergeContract: mergeContract,
-            physicalClock: clock.physicalTime,
-          );
-
-          documentToUpload = updatedDocument;
-          var uploadSuccess = await _uploadIfNoConflict(
-            documentIri: documentIri,
-            graph: documentToUpload,
-            etag: downloadResult.etag,
-          );
-          if (uploadSuccess) {
-            final int physicalTime = clock.physicalTime;
-
-            // Optimistic locking for local save: prevent lost updates from concurrent local changes
-            // Use updatedAt as version marker - it's updated on EVERY save (local + remote),
-            // unlike ourPhysicalClock which only changes when WE modify the document.
-            // This ensures we catch conflicts even if the concurrent change was a remote merge.
-            final expectedUpdatedAt = loadedLocalDocument?.metadata.updatedAt;
-
-            // save locally with optimistic lock - retry if conflict detected
-            try {
-              await _storage.saveDocument(
-                documentIri,
-                typeIri,
-                documentToUpload,
-                DocumentMetadata(
-                    ourPhysicalClock: physicalTime,
-                    updatedAt: syncTime.millisecondsSinceEpoch),
-                // no property changes - this is a concept for user-triggered edits
-                // that is supposed to help us with crdt merges, so we leave it empty here
-                const <PropertyChange>[],
-                ifMatchUpdatedAt: expectedUpdatedAt,
-              );
-            } on ConcurrentUpdateException catch (e) {
-              // Local conflict detected! Document was modified locally since we read it.
-              // This can happen if user edits document while sync is running.
-              _log.info(
-                  'Local save conflict for $debugName - document changed since merge: ${e.message}, restarting');
-              continue; // Restart entire sync cycle for this document
-            }
-
-            await _indexManager.updateIndices(
-              document: documentToUpload,
-              documentIri: documentIri,
-              physicalTime: physicalTime,
-              missingGroupIndices: shards.missingGroupIndices,
-            );
-          }
-          if (uploadSuccess) {
-            break; // Success
-          }
-          // If upload returned false, we got 412 - retry entire step
-          _log.fine('Got 412 conflict, restarting sync for $debugName');
-          continue;
-        }
-
-        break; // No upload needed
+      } on ConcurrentUpdateException {
+        // Conflict detected during upload or local save - retry entire download+merge+upload
+        _log.fine('Conflict detected while syncing $debugName, retrying...');
+        rethrow;
       } catch (e, st) {
         _log.warning('Error syncing $debugName', e, st);
         rethrow;
       }
+    });
+  }
+
+  Future<
+      (
+        IriTerm typeIri,
+        RdfGraph document,
+        CurrentCrdtClock clock,
+        List<MissingGroupIndex> missingGroupIndices
+      )> _reconcileDocument(
+    IriTerm documentIri,
+    RdfGraph mergedDocument,
+    MergeContract mergeContract,
+  ) async {
+    final resourceIri = mergedDocument.expectSingleObject<IriTerm>(
+        documentIri, SyncManagedDocument.foafPrimaryTopic)!;
+    final typeIri =
+        mergedDocument.expectSingleObject<IriTerm>(documentIri, Rdf.type)!;
+    final shards = await _shardDeterminer.determineShards(
+      typeIri,
+      resourceIri,
+      // app data is requested here, but since this is an rdf graph
+      // we can simply pass in the full document which contains the app data (amongst the framework data)
+      mergedDocument,
+      // Important: we really have to be able to compute all shards here, better be strict and fail early.
+      mode: ShardDeterminationMode.strict,
+    );
+    final clock = _hlcService.getCurrentClock(mergedDocument, documentIri);
+
+    // Replace shards in the document and generate metadata for the change
+    final document = await _replaceShardsInDocument(
+      documentIri: documentIri,
+      document: mergedDocument,
+      resourceIri: resourceIri,
+      newShards: shards.shards,
+      mergeContract: mergeContract,
+      physicalClock: clock.physicalTime,
+    );
+    return (typeIri, document, clock, shards.missingGroupIndices);
+  }
+
+  ///
+  /// Throws [ConcurrentUpdateException] on conflict
+  Future<void> _applyAndStoreMergedDocument({
+    required IriTerm typeIri,
+    required IriTerm documentIri,
+    required RdfGraph documentToUpload,
+    required String? etag,
+    required CurrentCrdtClock clock,
+    required int? localUpdatedAt,
+    required Iterable<MissingGroupIndex> missingGroupIndices,
+    required DateTime syncTime,
+    String debugName = '',
+  }) async {
+    final uploadResult = await _remoteStorage.upload(
+      documentIri,
+      documentToUpload,
+      ifMatch: etag,
+    );
+
+    final String mergedETag = switch (uploadResult) {
+      ConflictUploadResult() => throw ConcurrentUpdateException(
+          'Remote document $debugName changed during upload'),
+      SuccessUploadResult() => uploadResult.etag,
+    };
+
+    final int physicalTime = clock.physicalTime;
+
+    // Optimistic locking for local save: prevent lost updates from concurrent local changes
+    // Use updatedAt as version marker - it's updated on EVERY save (local + remote),
+    // unlike ourPhysicalClock which only changes when WE modify the document.
+    // This ensures we catch conflicts even if the concurrent change was a remote merge.
+    final expectedUpdatedAt = localUpdatedAt;
+
+    // save locally with optimistic lock - retry if conflict detected
+    try {
+      await _storage.saveDocument(
+        documentIri,
+        typeIri,
+        documentToUpload,
+        DocumentMetadata(
+            ourPhysicalClock: physicalTime,
+            updatedAt: syncTime.millisecondsSinceEpoch),
+        // no property changes - this is a concept for user-triggered edits
+        // that is supposed to help us with crdt merges, so we leave it empty here
+        const <PropertyChange>[],
+        ifMatchUpdatedAt: expectedUpdatedAt,
+      );
+    } on ConcurrentUpdateException {
+      // Local conflict detected! Document was modified locally since we read it.
+      // This can happen if user edits document while sync is running - rethrow it
+      rethrow;
     }
+
+    // Now that the locally stored document is based on the remote version,
+    // we need to update the stored ETag for future conditional requests.
+    // Success - cache new ETag
+    await _storage.setRemoteETag(
+      _remoteStorage.remoteId,
+      documentIri,
+      mergedETag,
+    );
+
+    // FIXME: how do we assure that the updateIndices call is also
+    // executed if sync was aborted shortly before here (e.g. app crash)?
+    await _indexManager.updateIndices(
+      document: documentToUpload,
+      documentIri: documentIri,
+      physicalTime: physicalTime,
+      missingGroupIndices: missingGroupIndices,
+    );
+    // Success
   }
 
   List<IriTerm> _getMergedGovernanceIris(RdfGraph? localDocument,
@@ -439,132 +537,31 @@ class RemoteSyncOrchestrator {
     return governanceIris;
   }
 
-  /// Step A.2: Build Document Sync Queue for a specific resource type.
-  ///
-  /// For each shard in each index of this type:
-  /// 1. Conditional GET for shard
-  /// 2. Create merged_shell (current_local_shard_state merged with remote)
-  /// 3. Populate document queue based on differences
-  Future<void> _buildDocumentSyncQueue(
-    IriTerm resourceType,
-    SyncContext context,
+  Future<List<ShardSyncSpec>> _buildShardSyncSpecs(
+    IndexSyncSpec idxSpec,
   ) async {
-    _log.fine('Building document sync queue for ${resourceType.debug}');
-
     // Context indices were already filtered by resourceType in _reconcileMetadata
     // Extract shards from all synced indices
-    final shards = <IriTerm>[];
-    for (final (indexIri, _) in context.indices) {
-      final indexDocumentIri = indexIri.getDocumentIri();
-      final indexDoc = await _storage.getDocument(indexDocumentIri);
-
-      if (indexDoc == null) {
-        _log.warning('Index document not found: $indexDocumentIri');
-        continue;
-      }
-
-      // Parse idx:hasShard triples from index document
-      // Both FullIndex and GroupIndex use IdxIndex.hasShard
-      final shardTriples = indexDoc.document.triples.where(
-        (t) => t.subject == indexIri && t.predicate == IdxIndex.hasShard,
-      );
-
-      for (final triple in shardTriples) {
-        if (triple.object is IriTerm) {
-          shards.add(triple.object as IriTerm);
-        }
-      }
-    }
-
-    _log.fine('Found ${shards.length} shards for ${resourceType.debug}');
-
-    for (final shardIri in shards) {
-      await _processSingleShard(shardIri, context);
-    }
-  }
-
-  /// Process a single shard to build queue and merged_shell
-  Future<void> _processSingleShard(
-      IriTerm shardIri, SyncContext context) async {
-    _log.fine('Processing shard: $shardIri');
-
-    final shardDocumentIri = shardIri.getDocumentIri();
-
-    // 1. Get current_local_shard_state (from DB after Phase 0)
-    final localShardDoc = await _storage.getDocument(shardDocumentIri);
-
-    // 2. Conditional GET for remote shard
-    final cachedETag =
-        await _storage.getRemoteETag(_remoteStorage.remoteId, shardDocumentIri);
-
-    final downloadResult = await _remoteStorage.download(
-      shardDocumentIri,
-      ifNoneMatch: cachedETag,
-    );
-
-    RdfGraph mergedShell;
-    RdfGraph? originalRemoteShard;
-
-    // 3. Handle response and create merged_shell
-    if (downloadResult.notModified) {
-      // Case: 304 Not Modified
-      _log.fine('Shard $shardIri unchanged (304)');
-      mergedShell = localShardDoc!.document;
-      originalRemoteShard = localShardDoc.document; // Remote hasn't changed
-    } else if (downloadResult.graph != null) {
-      // Case: 200 OK - Remote changed
-      _log.fine('Shard $shardIri changed remotely');
-      originalRemoteShard = downloadResult.graph;
-      final govIris = _getMergedGovernanceIris(
-          localShardDoc?.document, shardDocumentIri, downloadResult);
-      final mergeContract = await _mergeContractLoader.load(govIris);
-      // CRDT merge current_local_shard_state with remote
-      final mergeResult = await _merger.merge(
-        mergeContract: mergeContract,
-        documentIri: shardIri,
-        localGraph: localShardDoc?.document,
-        remoteGraph: downloadResult.graph,
-      );
-
-      mergedShell = mergeResult.mergedGraph;
-
-      // Update ETag cache
-      if (downloadResult.etag != null) {
-        await _storage.setRemoteETag(
-          _remoteStorage.remoteId,
-          shardDocumentIri,
-          downloadResult.etag!,
-        );
-      }
-    } else if (localShardDoc != null) {
-      // Case: 404 Not Found with local entries
-      _log.fine('Shard $shardIri not found remotely, using local');
-      mergedShell = localShardDoc.document;
-      originalRemoteShard = null;
-    } else {
-      // Case: 404 with no local entries - skip
-      _log.fine('Shard $shardIri does not exist yet, skipping');
-      return;
-    }
-
-    // 4. Store merged_shell for Phase B
-    context.mergedShells[shardIri] = mergedShell;
-    context.shardETags[shardIri] = downloadResult.etag;
-
-    // 5. Populate document queue
-    await _populateDocumentQueue(
-      shardIri,
-      originalRemoteShard,
-      context,
-    );
+    return switch (idxSpec) {
+      FullIndexSync() =>
+        (await _storage.getDocument(idxSpec.indexIri.getDocumentIri()))!
+            .document // we synced it at least once already, must be present
+            .getMultiValueObjects<IriTerm>(idxSpec.indexIri, IdxIndex.hasShard)
+            .map((shardIri) => FullShardSync(
+                shardIri: shardIri, fetchPolicy: idxSpec.fetchPolicy))
+            .toList(),
+      PartialIndexSync() => Future.value(idxSpec.shardItems.entries
+          .map((entry) =>
+              PartialShardSync(shardIri: entry.key, resourceIris: entry.value))
+          .toList()),
+    };
   }
 
   /// Populate document queue by comparing local and remote shard entries
-  Future<void> _populateDocumentQueue(
+  Iterable<IriTerm> _buildDocumentQueue(
     IriTerm shardIri,
     RdfGraph? originalRemoteShard,
-    SyncContext context,
-  ) async {
+  ) sync* {
     // TODO: Parse entries from local index items table
     final localEntries = <IriTerm, String>{}; // resourceIri -> clockHash
     _log.warning('TODO: Parse local index entries for shard $shardIri');
@@ -578,7 +575,7 @@ class RemoteSyncOrchestrator {
     // 1. Local but not in remote (new local documents)
     for (final localIri in localEntries.keys) {
       if (!remoteEntries.containsKey(localIri)) {
-        context.documentQueue.add(localIri.getDocumentIri());
+        yield localIri.getDocumentIri();
       }
     }
 
@@ -586,7 +583,7 @@ class RemoteSyncOrchestrator {
     for (final localIri in localEntries.keys) {
       if (remoteEntries.containsKey(localIri) &&
           remoteEntries[localIri] != localEntries[localIri]) {
-        context.documentQueue.add(localIri.getDocumentIri());
+        yield localIri.getDocumentIri();
       }
     }
 
@@ -596,95 +593,8 @@ class RemoteSyncOrchestrator {
     if (isEagerSynced) {
       for (final remoteIri in remoteEntries.keys) {
         if (!localEntries.containsKey(remoteIri)) {
-          context.documentQueue.add(remoteIri.getDocumentIri());
+          yield remoteIri.getDocumentIri();
         }
-      }
-    }
-  }
-
-  /// Step B.1: Process Document Sync Queue
-  ///
-  /// For each document in queue:
-  /// 1. Download & merge
-  /// 2. Save locally
-  /// 3. Upload if needed
-  Future<void> _processDocumentSyncQueue(
-    SyncContext context,
-    int lastSyncTimestamp,
-    DateTime syncTime,
-  ) async {
-    _log.fine('Processing ${context.documentQueue.length} documents');
-
-    for (final documentIri in context.documentQueue) {
-      await _syncDocument(documentIri, lastSyncTimestamp, syncTime,
-          debugName: 'Document ${documentIri.debug}');
-    }
-  }
-
-  /// Step B.2: Finalize Shards
-  ///
-  /// For each shard:
-  /// 1. Determine final_entry_set from updated index items table
-  /// 2. Reconcile merged_shell with final_entry_set
-  /// 3. Upload with retry loop on 412
-  Future<void> _finalizeShards(SyncContext context) async {
-    _log.fine('Finalizing ${context.mergedShells.length} shards');
-
-    for (final entry in context.mergedShells.entries) {
-      await _finalizeSingleShard(entry.key, entry.value, context);
-    }
-  }
-
-  /// Finalize a single shard with transactional retry loop
-  Future<void> _finalizeSingleShard(
-    IriTerm shardIri,
-    RdfGraph mergedShell,
-    SyncContext context,
-  ) async {
-    _log.fine('Finalizing shard: $shardIri');
-
-    while (true) {
-      try {
-        // 1. Determine final_entry_set from index items table
-        final finalEntrySet = await _getFinalEntrySet(shardIri);
-
-        // 2. Reconcile merged_shell with final_entry_set
-        final finalShardDocument = await _reconcileShardWithEntries(
-          mergedShell,
-          finalEntrySet,
-        );
-
-        // 3. Upload with conditional PUT
-        final shardDocumentIri = shardIri.getDocumentIri();
-        final etag = context.shardETags[shardIri];
-
-        final uploadResult = await _remoteStorage.upload(
-          shardDocumentIri,
-          finalShardDocument,
-          ifMatch: etag,
-        );
-
-        if (uploadResult.conflict) {
-          // Got 412 - restart from Phase A.2 for this shard
-          _log.warning('Got 412 conflict on shard $shardIri, restarting');
-          await _processSingleShard(shardIri, context);
-          continue;
-        }
-
-        // Success - update ETag
-        if (uploadResult.etag != null) {
-          await _storage.setRemoteETag(
-            _remoteStorage.remoteId,
-            shardDocumentIri,
-            uploadResult.etag!,
-          );
-        }
-
-        _log.fine('Shard $shardIri finalized successfully');
-        break;
-      } catch (e, st) {
-        _log.warning('Error finalizing shard $shardIri', e, st);
-        rethrow;
       }
     }
   }
@@ -692,36 +602,6 @@ class RemoteSyncOrchestrator {
   // =========================================================================
   // Helper Methods
   // =========================================================================
-
-  /// Upload with retry loop on 412 conflict
-  ///
-  /// Returns true on success, false on 412 (caller should retry entire step)
-  Future<bool> _uploadIfNoConflict({
-    required IriTerm documentIri,
-    required RdfGraph graph,
-    String? etag,
-  }) async {
-    final uploadResult = await _remoteStorage.upload(
-      documentIri,
-      graph,
-      ifMatch: etag,
-    );
-
-    if (uploadResult.conflict) {
-      return false; // Signal caller to retry
-    }
-
-    // Success - cache new ETag
-    if (uploadResult.etag != null) {
-      await _storage.setRemoteETag(
-        _remoteStorage.remoteId,
-        documentIri,
-        uploadResult.etag!,
-      );
-    }
-
-    return true;
-  }
 
   /// Get local document with metadata from storage
   Future<StoredDocument?> _getLocalDocumentWithMetadata(IriTerm documentIri,
@@ -850,21 +730,94 @@ class RemoteSyncOrchestrator {
     _log.warning('TODO: Implement shard reconciliation');
     return mergedShell; // Placeholder
   }
-}
 
-/// Context object carrying state through sync phases
-class SyncContext {
-  final List<(IriTerm, ItemFetchPolicy)> indices;
+  Future<void> _syncResourceType(
+      IriTerm resourceType, int lastSyncTimestamp, DateTime syncTime) async {
+    _log.info('Syncing resource type: ${resourceType.debug}');
 
-  /// Documents that need to be processed (IRI set)
-  final Set<IriTerm> documentQueue = {};
+    // Step 1: Sync Index Documents for this type
+    final allIndices =
+        await _syncIndexDocuments(resourceType, lastSyncTimestamp, syncTime);
+    for (final index in allIndices) {
+      await _syncIndex(resourceType, index, lastSyncTimestamp, syncTime);
+    }
 
-  /// Merged shard shells created in Phase A (shardIri -> merged RDF)
-  final Map<IriTerm, RdfGraph> mergedShells = {};
+    _log.info('Completed sync for resource type: ${resourceType.debug}');
+  }
 
-  /// ETags for shards from Phase A (shardIri -> ETag)
-  final Map<IriTerm, String?> shardETags = {};
+  Future<void> _syncIndex(IriTerm resourceType, IndexSyncSpec index,
+      int lastSyncTimestamp, DateTime syncTime) async {
+    _log.fine('Syncing index: ${index.indexIri.debug}');
 
-  SyncContext({List<(IriTerm, ItemFetchPolicy)> indices = const []})
-      : indices = List.unmodifiable(indices);
+    final allShards = await _buildShardSyncSpecs(index);
+    for (final shard in allShards) {
+      await _syncShard(resourceType, index, shard, lastSyncTimestamp, syncTime);
+    }
+
+    _log.info('Completed sync for index: ${index.indexIri.debug}');
+  }
+
+  Future<void> _syncShard(IriTerm resourceType, IndexSyncSpec index,
+      ShardSyncSpec shard, int lastSyncTimestamp, DateTime syncTime) async {
+    final shardIri = shard.shardIri;
+    final debugName = 'Shard ${shardIri.debug}';
+    _log.fine('Syncing: ${debugName}');
+    retryOnConflict(() async {
+      // Build Document Sync Queue for this type
+      final shardDocumentIri = shardIri.getDocumentIri();
+      final merged = await _downloadAndMerge(
+          shardDocumentIri, lastSyncTimestamp,
+          debugName: debugName);
+      if (merged == null) {
+        // We do ensure the shards are up to date in Phase 0 of sync function, so
+        // we can assume that if there are no changes here, the local and remote shards are
+        // already up to date.
+        // No changes, nothing to do
+        return;
+      }
+      final originalRemoteShard = merged.originalRemoteDocument;
+
+      final documentQueue = _buildDocumentQueue(
+        shardIri,
+        originalRemoteShard,
+      );
+
+      // sync all the documents in the queue right away
+      for (final documentIri in documentQueue) {
+        await _syncDocument(documentIri, lastSyncTimestamp, syncTime,
+            debugName:
+                'Document ${documentIri.debug} (as part of shard ${shardIri.debug})');
+      }
+
+      // Phase B: Document & Shard Finalization for this type
+      // 1. Determine final_entry_set from index items table
+      final finalEntrySet = await _getFinalEntrySet(shardIri);
+
+      // 2. Reconcile merged_shell with final_entry_set
+      final finalShardDocument = await _reconcileShardWithEntries(
+        merged.mergedDocument,
+        finalEntrySet,
+      );
+
+      // TODO: is this clock correct? I guess not actually...
+      final (_, documentToUpload, clock, missingGroupIndices) =
+          await _reconcileDocument(
+        shardDocumentIri,
+        finalShardDocument,
+        merged.mergeContract,
+      );
+
+      // 3. Upload with conditional PUT - this might throw ConcurrentUpdateException
+      await _applyAndStoreMergedDocument(
+        documentIri: shardDocumentIri,
+        clock: clock,
+        documentToUpload: documentToUpload,
+        localUpdatedAt: merged.localUpdatedAt,
+        missingGroupIndices: missingGroupIndices,
+        syncTime: syncTime,
+        typeIri: resourceType,
+        etag: merged.etag,
+      );
+    });
+  }
 }

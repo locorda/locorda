@@ -329,7 +329,7 @@ Use the 'documentIriTemplate' property of the resource configuration to configur
     }
 
     // 4. save (with CRDT processing, diffing etc)
-    final saved = await retry(
+    final saved = await retryOnConflict(
         () => _crdtDocumentManager.save(type, internalAppData),
         debugOperationName: 'save for ${resourceIri.debug}');
     if (saved == null) {

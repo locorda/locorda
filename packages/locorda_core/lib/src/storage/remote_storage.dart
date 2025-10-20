@@ -19,18 +19,24 @@ class RemoteDownloadResult {
 }
 
 /// Result of a remote upload operation with ETag support.
-class RemoteUploadResult {
-  final String? etag;
-  final bool conflict; // true if 412 Precondition Failed
+sealed class RemoteUploadResult {
+  const RemoteUploadResult();
 
-  RemoteUploadResult({
-    required this.etag,
-    this.conflict = false,
-  });
+  factory RemoteUploadResult.conflict() {
+    return const ConflictUploadResult();
+  }
+  factory RemoteUploadResult.success(String etag) {
+    return SuccessUploadResult(etag);
+  }
+}
 
-  RemoteUploadResult.conflict()
-      : etag = null,
-        conflict = true;
+final class ConflictUploadResult extends RemoteUploadResult {
+  const ConflictUploadResult();
+}
+
+final class SuccessUploadResult extends RemoteUploadResult {
+  final String etag;
+  const SuccessUploadResult(this.etag);
 }
 
 /// Abstract interface for remote storage operations.

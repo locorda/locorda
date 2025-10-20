@@ -77,7 +77,7 @@ class InMemoryRemoteStorage implements RemoteStorage {
       final newEtag = _generateETag();
       _documents[iri] = _StoredDocument(graph: graph, etag: newEtag);
 
-      return RemoteUploadResult(etag: newEtag);
+      return RemoteUploadResult.success(newEtag);
     }
 
     // ifMatch: <etag> → If-Match: <etag> (update only if unchanged)
@@ -95,7 +95,7 @@ class InMemoryRemoteStorage implements RemoteStorage {
     final newEtag = _generateETag();
     _documents[iri] = _StoredDocument(graph: graph, etag: newEtag);
 
-    return RemoteUploadResult(etag: newEtag);
+    return RemoteUploadResult.success(newEtag);
   }
 
   @override

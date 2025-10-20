@@ -148,30 +148,5 @@ void main() {
           reason:
               'Should not use original name since this is treated as unknown index');
     });
-
-    test('pre-computes IRI-to-localName map in constructor', () {
-      // Create parser with known config
-      final parser = IndexParser(
-        knownConfig: knownConfig,
-        rdfGenerator: generator,
-      );
-
-      // The map should be built during construction
-      // We verify this indirectly by checking that lookups work correctly
-      final typeIri = IriTerm('https://schema.org/Recipe');
-      final groupConfig =
-          knownConfig.resources.first.indices.first as GroupIndexGraphConfig;
-      final fullIndexConfig =
-          knownConfig.resources.first.indices[1] as FullIndexGraphConfig;
-
-      final groupIri =
-          generator.generateGroupIndexTemplateIri(groupConfig, typeIri);
-      final fullIndexIri =
-          generator.generateFullIndexIri(fullIndexConfig, typeIri);
-
-      // Both IRIs should be in the map (verified by parsing tests above working)
-      expect(groupIri, isNotNull);
-      expect(fullIndexIri, isNotNull);
-    });
   });
 }

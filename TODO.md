@@ -97,9 +97,10 @@
   - merged_doc_new durch Ersetzen von shards mit neuer shard liste, 
   - crdt_types.localValueChange anwenden (bzw. reduzierte Version von CrdtDocumenManager._generateCrdtMetadataForChanges) - das muss ggf. alte tombstones wieder entfernen
   - diese Version für upload und lokales speicher nutzen
-- [ ] SEHR Wichtig: conditional save! So wie wir etags nutzen um sicherzustellen, dass unsere uploads sich auf den korrekten state beziehen, müssen wir das auch für save machen! Und achtung: Reihenfolge bei sync zw. remote und local nochmal prüfen/diskutieren
-- [ ] RemoteSyncOrchestrator:
-  - Review and implement TODOs/FIXMEs - the LLM used to generate some code
+- [x] SEHR Wichtig: conditional save! So wie wir etags nutzen um sicherzustellen, dass unsere uploads sich auf den korrekten state beziehen, müssen wir das auch für save machen! Und achtung: Reihenfolge bei sync zw. remote und local nochmal prüfen/diskutieren
+- [x] RemoteSyncOrchestrator: Restructure to reduce memory overhead and complexity, make sure to process each resource type / index / shard / document hierarchical
+- [ ] RemoteSyncOrchestrator: Review and implement TODOs/FIXMEs - the LLM used to generate some code
+- [ ] Implement Partial Index Sync (items in our indexed items table that are from foreign shards ) see [001-partial-foreign-shard-sync.md]
 - [ ] Implement actual syncing to a backend, this requires implementing CRDT merging
 - [ ] Implement Solid backend with actual Pod storage operations
   - Most complex but enables the full vision
