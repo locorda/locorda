@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
+import 'package:locorda_core/src/crdt_document_merger.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
@@ -21,12 +22,12 @@ import 'package:locorda_core/src/installation_service.dart'
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
-import 'package:locorda_core/src/mapping/metadata_generator.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
 import 'package:locorda_core/src/sync/remote_document_merger.dart';
 import 'package:locorda_core/src/sync/remote_sync_orchestrator.dart';
+import 'package:locorda_core/src/sync/shard_document_generator.dart';
 import 'package:locorda_core/src/sync/sync_function.dart';
 import 'package:locorda_core/src/util/build_effective_config.dart';
 import 'package:locorda_core/src/util/retry.dart';
@@ -153,32 +154,42 @@ class LocordaGraphSync {
             crdtTypeRegistry));
 
     final shardManager = const ShardManager();
+
     final indexRdfGenerator = IndexRdfGenerator(
         resourceLocator: localResourceLocator, shardManager: shardManager);
+
     final indexParser = IndexParser(
         knownConfig: effectiveConfig, rdfGenerator: indexRdfGenerator);
+
     final indexDiscovery = IndexDiscovery(
       storage: storage,
       parser: indexParser,
       rdfGenerator: indexRdfGenerator,
       config: effectiveConfig,
     );
+
     final shardDeterminer = ShardDeterminer(
       storage: storage,
       rdfGenerator: indexRdfGenerator,
       shardManager: shardManager,
       indexDiscovery: indexDiscovery,
     );
+
     final frameworkIriGenerator =
         FrameworkIriGenerator(iriTermFactory: iriFactory);
+
+    final localDocumentMerger = LocalDocumentMerger(
+      frameworkIriGenerator: frameworkIriGenerator,
+      crdtTypeRegistry: crdtTypeRegistry,
+    );
+
     final crdtDocumentManager = CrdtDocumentManager(
       storage: storage,
       config: effectiveConfig,
       shardDeterminer: shardDeterminer,
       mergeContractLoader: mergeContractLoader,
-      crdtTypeRegistry: crdtTypeRegistry,
+      localDocumentMerger: localDocumentMerger,
       hlcService: hlcService,
-      frameworkIriGenerator: frameworkIriGenerator,
     );
 
     // Initialize indices after installation document is created
@@ -191,9 +202,11 @@ class LocordaGraphSync {
 
     await indexManager.initializeIndices();
     final remoteDocumentMerger = RemoteDocumentMerger(storage: storage);
-    final metadataGenerator =
-        MetadataGenerator(frameworkIriGenerator: frameworkIriGenerator);
-
+    final shardDocumentGenerator = ShardDocumentGenerator(
+      storage: storage,
+      documentManager: crdtDocumentManager,
+      indexManager: indexManager,
+    );
     final remoteSyncOrchestratorFactory =
         (RemoteStorage remoteStorage) => RemoteSyncOrchestrator(
               remoteStorage: remoteStorage,
@@ -205,16 +218,14 @@ class LocordaGraphSync {
               shardDeterminer: shardDeterminer,
               hlcService: hlcService,
               mergeContractLoader: mergeContractLoader,
-              crdtTypeRegistry: crdtTypeRegistry,
-              iriGenerator: frameworkIriGenerator,
-              metadataGenerator: metadataGenerator,
+              localDocumentMerger: localDocumentMerger,
+              shardDocumentGenerator: shardDocumentGenerator,
             );
 
     final syncManager = SyncManager(
         syncFunction: SyncFunction(
           storage: storage,
-          documentManager: crdtDocumentManager,
-          indexManager: indexManager,
+          shardDocumentGenerator: shardDocumentGenerator,
           backends: backends,
           remoteSyncOrchestratorFactory: remoteSyncOrchestratorFactory,
         ),

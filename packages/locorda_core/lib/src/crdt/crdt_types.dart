@@ -16,7 +16,7 @@ typedef PropertyValueContext = ({
   IdentifiedBlankNodes<IriTerm> blankNodes,
   RdfSubject subject,
   RdfPredicate predicate,
-  List<RdfObject> values,
+  Iterable<RdfObject> values,
 });
 
 /// Metadata changes resulting from a CRDT value change operation.
@@ -133,7 +133,7 @@ class OrSet implements CrdtType {
 
   bool get isSingleValueSupported => false;
 
-  void validateBlankNodeValues(List<RdfObject> values,
+  void validateBlankNodeValues(Iterable<RdfObject> values,
       IdentifiedBlankNodes<IriTerm> blankNodes, String lbl) {
     for (final value in values) {
       if (value is BlankNodeTerm) {

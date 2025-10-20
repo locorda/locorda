@@ -1,6 +1,4 @@
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/crdt_document_manager.dart';
-import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/storage/sync_timestamp_storage.dart';
 import 'package:locorda_core/src/sync/remote_sync_orchestrator.dart';
 import 'package:locorda_core/src/sync/shard_document_generator.dart';
@@ -39,17 +37,12 @@ class SyncFunction {
   SyncFunction({
     required List<Backend> backends,
     required Storage storage,
-    required CrdtDocumentManager documentManager,
-    required IndexManager indexManager,
     required RemoteSyncOrchestrator Function(RemoteStorage remote)
         remoteSyncOrchestratorFactory,
+    required ShardDocumentGenerator shardDocumentGenerator,
   })  : _backends = backends,
         _storage = storage,
-        _shardDocumentGenerator = ShardDocumentGenerator(
-          storage: storage,
-          documentManager: documentManager,
-          indexManager: indexManager,
-        ),
+        _shardDocumentGenerator = shardDocumentGenerator,
         _remoteSyncOrchestratorFactory = remoteSyncOrchestratorFactory;
 
   Future<void> call(DateTime syncTime) async {

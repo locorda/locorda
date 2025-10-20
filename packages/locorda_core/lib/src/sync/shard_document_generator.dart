@@ -97,11 +97,14 @@ class ShardDocumentGenerator {
           'Shard $shardIri has ${entries.length} active entries, generating document');
     }
     // 2. Generate RDF graph for shard document from entries
-    final newTriples = _generateShardTriples(
+    final newTriples = generateShardNodes(
       shardDocumentIri: shardDocumentIri,
       shardResourceIri: shardIri,
       entries: entries,
-    );
+    ).expand((node) => [
+          Triple(shardIri, IdxShard.containsEntry, node.$1),
+          ...node.$2.triples
+        ]);
 
     // 3. Modify shard document
     // DocumentManager will:
@@ -154,12 +157,12 @@ class ShardDocumentGenerator {
   ///
   /// All installations must generate identical graphs for the same entries
   /// to ensure CRDT convergence.
-  List<Triple> _generateShardTriples({
+  List<Node> generateShardNodes({
     required IriTerm shardDocumentIri,
     required IriTerm shardResourceIri,
-    required List<IndexEntryWithIri> entries,
+    required Iterable<IndexEntryWithIri> entries,
   }) {
-    final triples = <Triple>[];
+    final nodes = <Node>[];
     for (final entry in entries) {
       if (entry.isDeleted) {
         // Skip deleted entries - they are handled by DocumentManager tombstones
@@ -190,14 +193,11 @@ class ShardDocumentGenerator {
         headerProperties: headerProperties,
       );
 
-      // Add containsEntry link
-      triples.add(Triple(shardResourceIri, IdxShard.containsEntry, entryIri));
-
       // Add entry fragment triples
-      triples.addAll(entryGraph.triples);
+      nodes.add((shardResourceIri, entryGraph));
     }
 
-    return triples;
+    return nodes;
   }
 
   /// Generates RDF graph for an index entry.

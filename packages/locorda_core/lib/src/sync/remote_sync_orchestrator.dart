@@ -1,20 +1,18 @@
 import 'package:collection/collection.dart';
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/crdt/crdt_types.dart';
+import 'package:locorda_core/src/crdt_document_merger.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
-import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
-import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
-import 'package:locorda_core/src/mapping/metadata_generator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/remote_storage.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:locorda_core/src/sync/remote_document_merger.dart';
+import 'package:locorda_core/src/sync/shard_document_generator.dart';
 import 'package:locorda_core/src/util/retry.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -105,24 +103,22 @@ class RemoteSyncOrchestrator {
   final ShardDeterminer _shardDeterminer;
   final HlcService _hlcService;
   final MergeContractLoader _mergeContractLoader;
-  final CrdtTypeRegistry _crdtTypeRegistry;
-  final FrameworkIriGenerator _iriGenerator;
-  final MetadataGenerator _metadataGenerator;
+  final LocalDocumentMerger _localDocumentMerger;
+  final ShardDocumentGenerator _shardDocumentGenerator;
 
-  RemoteSyncOrchestrator(
-      {required RemoteStorage remoteStorage,
-      required Storage storage,
-      required RemoteDocumentMerger merger,
-      required SyncGraphConfig config,
-      required IndexRdfGenerator indexRdfGenerator,
-      required IndexManager indexManager,
-      required ShardDeterminer shardDeterminer,
-      required HlcService hlcService,
-      required MergeContractLoader mergeContractLoader,
-      required CrdtTypeRegistry crdtTypeRegistry,
-      required FrameworkIriGenerator iriGenerator,
-      required MetadataGenerator metadataGenerator})
-      : _remoteStorage = remoteStorage,
+  RemoteSyncOrchestrator({
+    required RemoteStorage remoteStorage,
+    required Storage storage,
+    required RemoteDocumentMerger merger,
+    required SyncGraphConfig config,
+    required IndexRdfGenerator indexRdfGenerator,
+    required IndexManager indexManager,
+    required ShardDeterminer shardDeterminer,
+    required HlcService hlcService,
+    required MergeContractLoader mergeContractLoader,
+    required LocalDocumentMerger localDocumentMerger,
+    required ShardDocumentGenerator shardDocumentGenerator,
+  })  : _remoteStorage = remoteStorage,
         _storage = storage,
         _merger = merger,
         _config = config,
@@ -131,9 +127,8 @@ class RemoteSyncOrchestrator {
         _shardDeterminer = shardDeterminer,
         _hlcService = hlcService,
         _mergeContractLoader = mergeContractLoader,
-        _crdtTypeRegistry = crdtTypeRegistry,
-        _iriGenerator = iriGenerator,
-        _metadataGenerator = metadataGenerator;
+        _localDocumentMerger = localDocumentMerger,
+        _shardDocumentGenerator = shardDocumentGenerator;
 
   /// Execute complete remote synchronization cycle.
   ///
@@ -420,14 +415,19 @@ class RemoteSyncOrchestrator {
     final clock = _hlcService.getCurrentClock(mergedDocument, documentIri);
 
     // Replace shards in the document and generate metadata for the change
-    final document = await _replaceShardsInDocument(
-      documentIri: documentIri,
-      document: mergedDocument,
-      resourceIri: resourceIri,
-      newShards: shards.shards,
-      mergeContract: mergeContract,
-      physicalClock: clock.physicalTime,
-    );
+    final document = await _localDocumentMerger.replaceInDocument(
+        documentIri: documentIri,
+        document: mergedDocument,
+        mergeContract: mergeContract,
+        physicalClock: clock.physicalTime,
+        changes: [
+          (
+            subject: documentIri,
+            subjectTypeIri: SyncManagedDocument.classIri,
+            predicate: SyncManagedDocument.idxBelongsToIndexShard,
+            newObjects: shards.shards,
+          )
+        ]);
     return (typeIri, document, clock, shards.missingGroupIndices);
   }
 
@@ -542,45 +542,74 @@ class RemoteSyncOrchestrator {
   }
 
   /// Populate document queue by comparing local and remote shard entries
-  Iterable<IriTerm> _buildDocumentQueue(
-    IriTerm shardIri,
+  ///
+  /// Implements the 3-category system from the specification:
+  /// 1. Local entries not in remote (new local documents)
+  /// 2. Entries in both with different clockHash (concurrent changes)
+  /// 3. Remote entries not in local (eager synced indices only)
+  Future<Set<IriTerm>> _buildDocumentQueue(
+    ShardSyncSpec shard,
     RdfGraph? originalRemoteShard,
-  ) sync* {
-    // TODO: Parse entries from local index items table
+  ) async {
+    switch (shard) {
+      case PartialShardSync():
+        // For partial shard sync, just enqueue the specified resource IRIs
+        return shard.resourceIris
+            .map((resourceIri) => resourceIri.getDocumentIri())
+            .toSet();
+      case FullShardSync():
+        // Continue to full sync logic below
+        break;
+    }
+
+    final shardIri = shard.shardIri;
+    final documentQueue = <IriTerm>{};
+
+    // Parse local entries from index items table
     final localEntries = <IriTerm, String>{}; // resourceIri -> clockHash
-    _log.warning('TODO: Parse local index entries for shard $shardIri');
+    final localIndexEntries =
+        await _storage.getActiveIndexEntriesForShard(shardIri);
+    for (final entry in localIndexEntries) {
+      localEntries[entry.resourceIri] = entry.clockHash;
+    }
 
-    // TODO: Parse entries from original remote shard
+    // Parse remote entries from original remote shard document
     final remoteEntries = <IriTerm, String>{}; // resourceIri -> clockHash
-    _log.warning('TODO: Parse remote shard entries');
-
-    // Add documents to queue based on differences:
-
-    // 1. Local but not in remote (new local documents)
-    for (final localIri in localEntries.keys) {
-      if (!remoteEntries.containsKey(localIri)) {
-        yield localIri.getDocumentIri();
-      }
-    }
-
-    // 2. In both but different clockHash (concurrent changes)
-    for (final localIri in localEntries.keys) {
-      if (remoteEntries.containsKey(localIri) &&
-          remoteEntries[localIri] != localEntries[localIri]) {
-        yield localIri.getDocumentIri();
-      }
-    }
-
-    // 3. For eager synced indices: Remote but not local
-    // TODO: Check if index is eager synced
-    final isEagerSynced = true; // Placeholder
-    if (isEagerSynced) {
-      for (final remoteIri in remoteEntries.keys) {
-        if (!localEntries.containsKey(remoteIri)) {
-          yield remoteIri.getDocumentIri();
+    if (originalRemoteShard != null) {
+      // Find all idx:containsEntry links (shardIri is the resource IRI)
+      for (final entryIri in originalRemoteShard.getMultiValueObjects<IriTerm>(
+          shardIri, IdxShard.containsEntry)) {
+        // Extract idx:resource and cm:clockHash from entry
+        final resourceIri = originalRemoteShard.expectSingleObject<IriTerm>(
+            entryIri, IdxShardEntry.resource);
+        final clockHash = originalRemoteShard.expectSingleObject<LiteralTerm>(
+            entryIri, IdxShardEntry.crdtClockHash);
+        if (resourceIri != null && clockHash != null) {
+          remoteEntries[resourceIri] = clockHash.value;
         }
       }
     }
+
+    for (final localIri in localEntries.keys) {
+      // Category 1: Local but not in remote (new local documents)
+      if (!remoteEntries.containsKey(localIri)) {
+        documentQueue.add(localIri.getDocumentIri());
+      } else if (remoteEntries[localIri] != localEntries[localIri]) {
+        // Category 2: In both but different clockHash (concurrent changes)
+        documentQueue.add(localIri.getDocumentIri());
+      }
+    }
+
+    // Category 3: For eager synced indices: Remote but not local
+    if (shard.fetchPolicy == ItemFetchPolicy.prefetch) {
+      for (final remoteIri in remoteEntries.keys) {
+        if (!localEntries.containsKey(remoteIri)) {
+          documentQueue.add(remoteIri.getDocumentIri());
+        }
+      }
+    }
+
+    return documentQueue;
   }
 
   // =========================================================================
@@ -596,123 +625,10 @@ class RemoteSyncOrchestrator {
     );
   }
 
-  /// Replaces shard references in a document and generates appropriate CRDT metadata.
-  ///
-  /// This method:
-  /// 1. Extracts old shard references from the document
-  /// 2. Compares with new shard list
-  /// 3. Generates CRDT metadata for the change (using the merge contract's algorithm)
-  /// 4. Applies metadata changes (add new statements, remove old tombstones)
-  /// 5. Updates the document with new shard references
-  ///
-  /// Returns a new RdfGraph with updated shards and proper CRDT metadata.
-  Future<RdfGraph> _replaceShardsInDocument({
-    required IriTerm documentIri,
-    required RdfGraph document,
-    required IriTerm resourceIri,
-    required Iterable<IriTerm> newShards,
-    required MergeContract mergeContract,
-    required int physicalClock,
-  }) async {
-    // Extract old shards
-    final oldShards = document
-        .findTriples(
-          subject: documentIri,
-          predicate: SyncManagedDocument.idxBelongsToIndexShard,
-        )
-        .map((t) => t.object as IriTerm)
-        .toList();
-
-    // If shards haven't changed, return original document
-    final oldShardsSet = oldShards.toSet();
-    final newShardsSet = newShards.toSet();
-    if (SetEquality().equals(oldShardsSet, newShardsSet)) {
-      return document;
-    }
-
-    // Get the resource type
-    final typeIri = document.expectSingleObject<IriTerm>(
-        documentIri, SyncManagedDocument.managedResourceType)!;
-
-    // Determine CRDT algorithm for idx:belongsToIndexShard
-    final algorithmIri = mergeContract.getEffectiveMergeWith(
-        typeIri, SyncManagedDocument.idxBelongsToIndexShard);
-    final crdtType = _crdtTypeRegistry.getType(algorithmIri);
-
-    // Generate CRDT metadata for the shard change
-    final metadata = crdtType.localValueChange(
-      oldPropertyValue: oldShards.isNotEmpty
-          ? (
-              documentIri: documentIri,
-              appData:
-                  document, // Using document as appData since shards are framework metadata
-              blankNodes: IdentifiedBlankNodes.empty<IriTerm>(),
-              subject: documentIri,
-              predicate: SyncManagedDocument.idxBelongsToIndexShard,
-              values: oldShards.cast<RdfObject>(),
-            )
-          : null,
-      newPropertyValue: (
-        documentIri: documentIri,
-        appData: document,
-        blankNodes: IdentifiedBlankNodes.empty<IriTerm>(),
-        subject: documentIri,
-        predicate: SyncManagedDocument.idxBelongsToIndexShard,
-        values: newShards.cast<RdfObject>().toList(),
-      ),
-      oldFrameworkGraph: document,
-      mergeContext: CrdtMergeContext(
-        iriGenerator: _iriGenerator,
-        metadataGenerator: _metadataGenerator,
-      ),
-      physicalClock: physicalClock,
-    );
-
-    // Build updated document
-    final updatedTriples = document.triples.toList();
-
-    // Remove old shard triples
-    updatedTriples.removeWhere((t) =>
-        t.subject == documentIri &&
-        t.predicate == SyncManagedDocument.idxBelongsToIndexShard);
-
-    // Add new shard triples
-    updatedTriples.addAll(newShards.map((shard) => Triple(
-        documentIri, SyncManagedDocument.idxBelongsToIndexShard, shard)));
-
-    // Apply metadata changes
-    for (final node in metadata.statementsToAdd) {
-      updatedTriples
-          .addNodes(documentIri, SyncManagedDocument.hasStatement, [node]);
-    }
-    for (final triple in metadata.triplesToRemove) {
-      updatedTriples.remove(triple);
-    }
-
-    return RdfGraph.fromTriples(updatedTriples);
-  }
-
   /// Get final entry set for a shard from index items table
   Future<Set<IndexEntryWithIri>> _getFinalEntrySet(IriTerm shardIri) async {
     final entries = await _storage.getActiveIndexEntriesForShard(shardIri);
     return entries.toSet();
-  }
-
-  /// Reconcile merged_shell with final_entry_set
-  ///
-  /// Applies final entries to merged_shell:
-  /// - Add/update entries from final_entry_set
-  /// - Create tombstones for entries NOT in final_entry_set
-  Future<RdfGraph> _reconcileShardWithEntries(
-    RdfGraph mergedShell,
-    Set<IndexEntryWithIri> finalEntrySet,
-  ) async {
-    // TODO: Implement shard reconciliation
-    // 1. Parse existing entries from merged_shell
-    // 2. Add/update entries from final_entry_set
-    // 3. Create tombstones for removed entries
-    _log.warning('TODO: Implement shard reconciliation');
-    return mergedShell; // Placeholder
   }
 
   Future<void> _syncResourceType(
@@ -761,8 +677,8 @@ class RemoteSyncOrchestrator {
       }
       final originalRemoteShard = merged.originalRemoteDocument;
 
-      final documentQueue = _buildDocumentQueue(
-        shardIri,
+      final documentQueue = await _buildDocumentQueue(
+        shard,
         originalRemoteShard,
       );
 
@@ -770,7 +686,7 @@ class RemoteSyncOrchestrator {
       for (final documentIri in documentQueue) {
         await _syncDocument(documentIri, lastSyncTimestamp, syncTime,
             debugName:
-                'Document ${documentIri.debug} (as part of shard ${shardIri.debug})');
+                'Document ${documentIri.debug} (as part of ${debugName})');
       }
 
       // Phase B: Document & Shard Finalization for this type
@@ -778,13 +694,42 @@ class RemoteSyncOrchestrator {
       final finalEntrySet = await _getFinalEntrySet(shardIri);
 
       // 2. Reconcile merged_shell with final_entry_set
-      final finalShardDocument = await _reconcileShardWithEntries(
-        merged.mergedDocument,
-        finalEntrySet,
+      final newShardNodes = _shardDocumentGenerator.generateShardNodes(
+          shardDocumentIri: shardDocumentIri,
+          shardResourceIri: shardIri,
+          entries: finalEntrySet);
+      final withoutEntries = merged.mergedDocument.subgraph(
+        shardDocumentIri,
+        filter: (triple, depth) {
+          if (triple.predicate == IdxShard.containsEntry) {
+            return TraversalDecision.skip;
+          }
+          return TraversalDecision.include;
+        },
       );
+      final updatedShardDocument = withoutEntries.withTriples((<Triple>[])
+        ..addNodes(shardIri, IdxShard.containsEntry, newShardNodes));
+      final clock =
+          _hlcService.getCurrentClock(merged.mergedDocument, shardDocumentIri);
 
-      // TODO: is this clock correct? I guess not actually...
-      final (_, documentToUpload, clock, missingGroupIndices) =
+      final (oldBlankNodes: _, newBlankNodes: _, metadata: metadata) =
+          _localDocumentMerger.generateMetadata(
+        shardDocumentIri,
+        updatedShardDocument,
+        merged.mergedDocument,
+        merged.mergedDocument,
+        merged.mergeContract,
+        // FIXME: is this correct? (when) do we need to increment the clock for shard documents?
+        clock,
+        // optimization: shard documents should not have blank nodes
+        computeCanonicalBlankNodes: false,
+      );
+      final finalShardDocument = _applyMetadataToDocument(
+          updatedShardDocument, metadata, shardDocumentIri);
+
+      // TODO: the extra reconcileDocument looks like overkill, can we avoid it? I think it is reasonably cheap currently though, because there are no indices-of-shards.
+      // TODO: is this clock correct? (When) do we have to increment the clock for shard documents?
+      final (_, documentToUpload, clock2, missingGroupIndices) =
           await _reconcileDocument(
         shardDocumentIri,
         finalShardDocument,
@@ -794,7 +739,7 @@ class RemoteSyncOrchestrator {
       // 3. Upload with conditional PUT - this might throw ConcurrentUpdateException
       await _applyAndStoreMergedDocument(
         documentIri: shardDocumentIri,
-        clock: clock,
+        clock: clock2,
         documentToUpload: documentToUpload,
         localUpdatedAt: merged.localUpdatedAt,
         missingGroupIndices: missingGroupIndices,
@@ -803,5 +748,18 @@ class RemoteSyncOrchestrator {
         etag: merged.etag,
       );
     });
+  }
+
+  RdfGraph _applyMetadataToDocument(RdfGraph document,
+      CrdtMetadataResult metadata, IriTerm shardDocumentIri) {
+    if (metadata.triplesToRemove.isEmpty && metadata.statements.isEmpty) {
+      return document;
+    }
+    final finalShardDocumentTriples = document.triples.toSet();
+    finalShardDocumentTriples.removeAll(metadata.triplesToRemove);
+    finalShardDocumentTriples.addNodes(shardDocumentIri,
+        SyncManagedDocument.hasStatement, metadata.statements);
+    final finalShardDocument = RdfGraph.fromTriples(finalShardDocumentTriples);
+    return finalShardDocument;
   }
 }
