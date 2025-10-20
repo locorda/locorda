@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
-import 'package:locorda_core/src/crdt_document_merger.dart';
+import 'package:locorda_core/src/local_document_merger.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/group_index_subscription_manager.dart';

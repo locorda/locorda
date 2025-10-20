@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/crdt_document_merger.dart';
+import 'package:locorda_core/src/local_document_merger.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
