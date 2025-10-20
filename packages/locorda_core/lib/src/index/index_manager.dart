@@ -282,7 +282,7 @@ class IndexManager {
     }
 
     // Update the Index Shards
-    final allShards = document.getMultiValueObjects<IriTerm>(
+    final allShards = document.getMultiValueObjectList<IriTerm>(
         documentIri, SyncManagedDocument.idxBelongsToIndexShard);
 
     // Extract clock hash from the saved document
@@ -433,7 +433,7 @@ class IndexManager {
     final headerProperties = <IriTerm, List<RdfObject>>{};
     for (final propertyIri in propertiesToExtract) {
       // Get all values for this property
-      final values = document.getMultiValueObjects<RdfObject>(
+      final values = document.getMultiValueObjectList<RdfObject>(
         resourceIri,
         propertyIri,
       );

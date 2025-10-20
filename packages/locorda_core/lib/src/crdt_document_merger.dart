@@ -244,7 +244,7 @@ class LocalDocumentMerger {
 
       for (final predicate in predicates) {
         final values =
-            subjectTriples.getMultiValueObjects(subjectTerm, predicate);
+            subjectTriples.getMultiValueObjectList(subjectTerm, predicate);
 
         // Get CRDT algorithm for this property
         final crdtType =
@@ -303,9 +303,9 @@ class LocalDocumentMerger {
 
       for (final predicate in allPredicates) {
         final newValues =
-            newTriples.getMultiValueObjects(subjectTerm, predicate);
+            newTriples.getMultiValueObjectList(subjectTerm, predicate);
         final oldValues =
-            oldTriples.getMultiValueObjects(oldSubjectTerm, predicate);
+            oldTriples.getMultiValueObjectList(oldSubjectTerm, predicate);
 
         // Check if values changed (considering blank node deep equality)
         if (_valuesEqual(oldValues, newValues, oldAppGraph, appData,
@@ -478,8 +478,10 @@ class LocalDocumentMerger {
 
     // Check each predicate's values
     for (final predicate in oldProps) {
-      final oldValues = oldGraph.getMultiValueObjects(oldBlankNode, predicate);
-      final newValues = newGraph.getMultiValueObjects(newBlankNode, predicate);
+      final oldValues =
+          oldGraph.getMultiValueObjectList(oldBlankNode, predicate);
+      final newValues =
+          newGraph.getMultiValueObjectList(newBlankNode, predicate);
 
       if (!_valuesEqual(oldValues, newValues, oldGraph, newGraph, oldBlankNodes,
           newBlankNodes)) {

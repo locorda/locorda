@@ -90,13 +90,22 @@ extension RdfGraphExtensions on RdfGraph {
 /*
 * Gets a list of RdfObjects from a multi-valued property (i.e. multiple triples with the same predicate)
 */
-  List<T> getMultiValueObjects<T extends RdfObject>(
+  List<T> getMultiValueObjectList<T extends RdfObject>(
       RdfSubject subject, RdfPredicate predicate) {
     final obj = findTriples(subject: subject, predicate: predicate);
     if (obj.isEmpty) {
       return [];
     }
     return obj.map((t) => t.object).whereType<T>().toList();
+  }
+
+  Set<T> getMultiValueObjects<T extends RdfObject>(
+      RdfSubject subject, RdfPredicate predicate) {
+    final obj = findTriples(subject: subject, predicate: predicate);
+    if (obj.isEmpty) {
+      return {};
+    }
+    return obj.map((t) => t.object).whereType<T>().toSet();
   }
 
   List<T> traverseListObjects<T extends RdfObject>(RdfSubject listRoot) {
@@ -114,6 +123,23 @@ extension RdfGraphExtensions on RdfGraph {
       }
       return TraversalDecision.skip;
     }).triples.map((t) => t.object).whereType<T>().toList();
+  }
+
+  RdfGraph withNodes(
+      RdfSubject subject, RdfPredicate predicate, Iterable<Node> nodes) {
+    final triples = List<Triple>.from(this.triples);
+    for (final node in nodes) {
+      {
+        final (objectTerm, graph) = node;
+        triples.add(Triple(
+          subject,
+          predicate,
+          objectTerm,
+        ));
+        triples.addAll(graph.triples);
+      }
+    }
+    return RdfGraph.fromTriples(triples);
   }
 }
 

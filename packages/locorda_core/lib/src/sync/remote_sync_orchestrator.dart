@@ -577,8 +577,8 @@ class RemoteSyncOrchestrator {
     final remoteEntries = <IriTerm, String>{}; // resourceIri -> clockHash
     if (originalRemoteShard != null) {
       // Find all idx:containsEntry links (shardIri is the resource IRI)
-      for (final entryIri in originalRemoteShard.getMultiValueObjects<IriTerm>(
-          shardIri, IdxShard.containsEntry)) {
+      for (final entryIri in originalRemoteShard
+          .getMultiValueObjectList<IriTerm>(shardIri, IdxShard.containsEntry)) {
         // Extract idx:resource and cm:clockHash from entry
         final resourceIri = originalRemoteShard.expectSingleObject<IriTerm>(
             entryIri, IdxShardEntry.resource);
@@ -626,8 +626,17 @@ class RemoteSyncOrchestrator {
   }
 
   /// Get final entry set for a shard from index items table
-  Future<Set<IndexEntryWithIri>> _getFinalEntrySet(IriTerm shardIri) async {
+  Future<Set<IndexEntryWithIri>> _getFinalEntrySet(IriTerm shardIri,
+      {Set<IriTerm>? limitToResourceIris}) async {
     final entries = await _storage.getActiveIndexEntriesForShard(shardIri);
+
+    // For partial shard sync, filter to only the specified resources
+    if (limitToResourceIris != null) {
+      return entries
+          .where((entry) => limitToResourceIris.contains(entry.resourceIri))
+          .toSet();
+    }
+
     return entries.toSet();
   }
 
@@ -691,24 +700,48 @@ class RemoteSyncOrchestrator {
 
       // Phase B: Document & Shard Finalization for this type
       // 1. Determine final_entry_set from index items table
-      final finalEntrySet = await _getFinalEntrySet(shardIri);
+      //
+      // For full shard sync: Use all entries from index items table
+      // For partial shard sync (foreign indices): Only use entries for resources
+      // we explicitly synced (from documentQueue). This ensures we don't remove
+      // remote entries we haven't seen - we only update our own items.
+      final Set<IriTerm>? limitToResources = switch (shard) {
+        FullShardSync() => null, // All entries
+        PartialShardSync() => documentQueue, // Only synced resources
+      };
 
-      // 2. Reconcile merged_shell with final_entry_set
+      final finalEntrySet = await _getFinalEntrySet(shardIri,
+          limitToResourceIris: limitToResources);
+
+      // 2. Generate shard nodes from final entry set
+      //
+      // For partial sync, we need to merge these with existing remote entries
+      // rather than replacing everything
       final newShardNodes = _shardDocumentGenerator.generateShardNodes(
           shardDocumentIri: shardDocumentIri,
           shardResourceIri: shardIri,
           entries: finalEntrySet);
+
+      final RdfGraph updatedShardDocument;
+      final entriesToKeep = _computeEntriesToKeep(
+          shard, merged.mergedDocument, shardIri, documentQueue);
+
+      // Build document with kept entries but without the other old ones
       final withoutEntries = merged.mergedDocument.subgraph(
         shardDocumentIri,
         filter: (triple, depth) {
-          if (triple.predicate == IdxShard.containsEntry) {
+          if (triple.predicate == IdxShard.containsEntry &&
+              (entriesToKeep == null ||
+                  !entriesToKeep.contains(triple.object))) {
             return TraversalDecision.skip;
           }
           return TraversalDecision.include;
         },
       );
-      final updatedShardDocument = withoutEntries.withTriples((<Triple>[])
-        ..addNodes(shardIri, IdxShard.containsEntry, newShardNodes));
+
+      // Add new/current entries
+      updatedShardDocument = withoutEntries.withNodes(
+          shardIri, IdxShard.containsEntry, newShardNodes);
       final clock =
           _hlcService.getCurrentClock(merged.mergedDocument, shardDocumentIri);
 
@@ -748,6 +781,31 @@ class RemoteSyncOrchestrator {
         etag: merged.etag,
       );
     });
+  }
+
+  Set<IriTerm>? _computeEntriesToKeep(ShardSyncSpec shard, RdfGraph document,
+      IriTerm shardIri, Set<IriTerm> documentQueue) {
+    if (shard is PartialShardSync) {
+      final Set<IriTerm> entriesToKeep = {};
+      // Partial sync: Keep remote entries for resources not in our sync set
+      // Only update/remove entries for resources we explicitly synced
+
+      // Extract existing entries from merged document, keeping only those
+      // not in our synced set
+      final existingEntries = document.getMultiValueObjects<IriTerm>(
+          shardIri, IdxShard.containsEntry);
+
+      for (final entryIri in existingEntries) {
+        final resourceIri = document.expectSingleObject<IriTerm>(
+            entryIri, IdxShardEntry.resource);
+        if (resourceIri != null && !documentQueue.contains(resourceIri)) {
+          // Keep this remote entry - it's not one we synced
+          entriesToKeep.add(entryIri);
+        }
+      }
+      return entriesToKeep;
+    }
+    return null;
   }
 
   RdfGraph _applyMetadataToDocument(RdfGraph document,

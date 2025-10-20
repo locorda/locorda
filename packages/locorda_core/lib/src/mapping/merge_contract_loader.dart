@@ -223,7 +223,7 @@ class StandardMergeContractLoader extends MergeContractLoader {
         continue;
       }
       final predicateRuleRefs =
-          graph.getMultiValueObjects<RdfSubject>(ref, McClassMapping.rule);
+          graph.getMultiValueObjectList<RdfSubject>(ref, McClassMapping.rule);
       final parsedRules = predicateRuleRefs.map((r) => _parseRule(graph, r));
       final predicateMappings = {
         for (var rule in parsedRules.map((r) => r.$1).nonNulls)
@@ -264,7 +264,7 @@ class StandardMergeContractLoader extends MergeContractLoader {
           details: {'ref': ref});
     }
     final predicateRuleRefs =
-        graph.getMultiValueObjects<RdfSubject>(ref, McPredicateMapping.rule);
+        graph.getMultiValueObjectList<RdfSubject>(ref, McPredicateMapping.rule);
     final parsedRules =
         predicateRuleRefs.map((r) => _parseRule(graph, r)).toList();
     final rules = {

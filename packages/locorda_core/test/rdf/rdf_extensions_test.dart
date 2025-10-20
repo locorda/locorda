@@ -186,7 +186,7 @@ void main() {
       test('returns empty list when no triples found', () {
         final graph = RdfGraph.fromTriples([]);
 
-        final result = graph.getMultiValueObjects<IriTerm>(
+        final result = graph.getMultiValueObjectList<IriTerm>(
           IriTerm('https://example.com/subject'),
           IriTerm('https://example.com/predicate'),
         );
@@ -207,7 +207,8 @@ void main() {
           Triple(subject, predicate, value3),
         ]);
 
-        final result = graph.getMultiValueObjects<IriTerm>(subject, predicate);
+        final result =
+            graph.getMultiValueObjectList<IriTerm>(subject, predicate);
         expect(result, containsAll([value1, value2, value3]));
         expect(result, hasLength(3));
       });
@@ -224,11 +225,11 @@ void main() {
         ]);
 
         final iriResult =
-            graph.getMultiValueObjects<IriTerm>(subject, predicate);
+            graph.getMultiValueObjectList<IriTerm>(subject, predicate);
         expect(iriResult, equals([iriValue]));
 
         final literalResult =
-            graph.getMultiValueObjects<LiteralTerm>(subject, predicate);
+            graph.getMultiValueObjectList<LiteralTerm>(subject, predicate);
         expect(literalResult, equals([literalValue]));
       });
     });

@@ -248,7 +248,7 @@ class ShardDeterminer {
     final removed = oldCalculatedShards.difference(newShards);
 
     // Get shards from old framework graph for other installations
-    final oldStoredShards = oldFrameworkGraph?.getMultiValueObjects<IriTerm>(
+    final oldStoredShards = oldFrameworkGraph?.getMultiValueObjectList<IriTerm>(
             documentIri, SyncManagedDocument.idxBelongsToIndexShard) ??
         const <IriTerm>[];
 
@@ -349,7 +349,8 @@ class ShardDeterminer {
     final missingIndexDocuments = <MissingIndexDocument>[];
 
     // Discover indices from storage via index-of-indices
-    final indexConfigs = await _indexDiscovery.discoverIndices(type, mode: mode);
+    final indexConfigs =
+        await _indexDiscovery.discoverIndices(type, mode: mode);
     if (indexConfigs.isEmpty) {
       _log.warning('No index configs found for type $type');
       return ShardDeterminationResult(

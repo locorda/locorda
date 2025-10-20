@@ -374,7 +374,7 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
   final identifyingProps = hasPropertyIdentification
       ? {
           for (final pred in identifyingPreds)
-            pred: graph.getMultiValueObjects(blankNode, pred)
+            pred: graph.getMultiValueObjectList(blankNode, pred)
         }
       : <RdfPredicate, List<RdfObject>>{};
 

@@ -94,7 +94,7 @@ class IndexPropertyResolver {
     final indexGraph = indexDoc.document;
 
     // 4. Check if this is a GroupIndex that needs template resolution
-    final indexTypes = indexGraph.getMultiValueObjects<IriTerm>(
+    final indexTypes = indexGraph.getMultiValueObjectList<IriTerm>(
       indexIri,
       Rdf.type,
     );
@@ -145,7 +145,7 @@ class IndexPropertyResolver {
     final properties = <IriTerm>{};
 
     // Get all idx:indexedProperty blank nodes
-    final indexedPropertyNodes = indexGraph.getMultiValueObjects<RdfSubject>(
+    final indexedPropertyNodes = indexGraph.getMultiValueObjectList<RdfSubject>(
       indexResourceIri,
       IdxFullIndex.indexedProperty,
     );

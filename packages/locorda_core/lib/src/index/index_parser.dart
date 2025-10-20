@@ -89,7 +89,7 @@ class IndexParser {
   ) {
     // Verify it's a FullIndex
     final types =
-        graph.getMultiValueObjects<IriTerm>(indexResourceIri, Rdf.type);
+        graph.getMultiValueObjectList<IriTerm>(indexResourceIri, Rdf.type);
     if (!types.contains(IdxFullIndex.classIri)) {
       return null; // Not a FullIndex
     }
@@ -126,7 +126,7 @@ class IndexParser {
   ) {
     // Verify it's a GroupIndexTemplate
     final types =
-        graph.getMultiValueObjects<IriTerm>(templateResourceIri, Rdf.type);
+        graph.getMultiValueObjectList<IriTerm>(templateResourceIri, Rdf.type);
     if (!types.contains(IdxGroupIndexTemplate.classIri)) {
       return null; // Not a GroupIndexTemplate
     }
@@ -197,7 +197,7 @@ class IndexParser {
   Set<IriTerm> _parseIndexedProperties(
       RdfGraph graph, IriTerm indexResourceIri) {
     // Get all IndexedProperty nodes
-    final indexedPropertyNodes = graph.getMultiValueObjects<RdfSubject>(
+    final indexedPropertyNodes = graph.getMultiValueObjectList<RdfSubject>(
       indexResourceIri,
       IdxFullIndex.indexedProperty, // Same property for both types
     );
@@ -234,7 +234,7 @@ class IndexParser {
     }
 
     // Extract all GroupingRuleProperty nodes
-    final propertyNodes = graph.getMultiValueObjects<RdfSubject>(
+    final propertyNodes = graph.getMultiValueObjectList<RdfSubject>(
         groupingRule, IdxGroupingRule.property);
 
     // Parse each property
