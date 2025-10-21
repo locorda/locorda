@@ -28,6 +28,14 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#Algorithm',
   );
 
+  /// IRI for algo:G_Register
+  ///
+  /// A Grow-Only Register CRDT, for single-value properties. Takes the maximum. When applied to multi-value properties, takes the maximum of all values. For numeric values (xsd:integer, xsd:decimal, xsd:float, xsd:double etc), maximum is determined numerically; for date/time values (xsd:dateTime, xsd:date, xsd:time), maximum is determined chronologically; for string values (xsd:string), maximum is determined lexicographically; for other types, maximum is determined by comparing their lexical forms as strings. Iris are compared lexicographically. Identified blank nodes are compared lexicographically by their canonical IRIs (max wins), Non-Identified blank nodes are not supported.
+  ///
+  static const G_Register = IriTerm(
+    'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#G_Register',
+  );
+
   /// IRI for algo:LWW_Register
   ///
   /// A Last-Writer-Wins Register CRDT, for single-value properties. When applied to multi-value properties, treats the complete value set atomically - the most recent complete value set wins, replacing all previous values entirely.

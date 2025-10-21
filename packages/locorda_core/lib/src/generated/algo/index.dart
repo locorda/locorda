@@ -7,6 +7,7 @@
 
 export 'classes/algorithm.dart';
 export 'classes/fww_register.dart';
+export 'classes/g_register.dart';
 export 'classes/immutable.dart';
 export 'classes/lww_register.dart';
 export 'classes/or_set.dart';

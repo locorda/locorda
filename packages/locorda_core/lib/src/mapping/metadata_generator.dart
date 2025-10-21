@@ -16,7 +16,7 @@ class MetadataGenerator {
           IdTerm<RdfSubject> subject,
           RdfPredicate predicate,
           IdTerm<RdfObject> value,
-          List<Triple> Function(RdfSubject) createMetadataTriples) =>
+          Iterable<Triple> Function(RdfSubject) createMetadataTriples) =>
       _createPropertyValueMetadata(documentIri, subject, createMetadataTriples,
           predicate: predicate, value: value);
 
@@ -24,7 +24,7 @@ class MetadataGenerator {
           IriTerm documentIri,
           IdTerm<RdfSubject> subject,
           RdfPredicate predicate,
-          List<Triple> Function(RdfSubject) createMetadataTriples) =>
+          Iterable<Triple> Function(RdfSubject) createMetadataTriples) =>
       _createPropertyValueMetadata(
         documentIri,
         subject,
@@ -35,13 +35,13 @@ class MetadataGenerator {
   Iterable<Node> createResourceMetadata(
           IriTerm documentIri,
           IdTerm<RdfSubject> subject,
-          List<Triple> Function(RdfSubject) createMetadataTriples) =>
+          Iterable<Triple> Function(RdfSubject) createMetadataTriples) =>
       _createPropertyValueMetadata(documentIri, subject, createMetadataTriples);
 
   Iterable<Node> _createPropertyValueMetadata(
     IriTerm documentIri,
     IdTerm<RdfSubject> subject,
-    List<Triple> Function(RdfSubject) createMetadataTriples, {
+    Iterable<Triple> Function(RdfSubject) createMetadataTriples, {
     RdfPredicate? predicate,
     IdTerm<RdfObject>? value,
   }) {
@@ -59,14 +59,10 @@ class MetadataGenerator {
     all combinations of subject IRIs and object IRIs (if applicable), this
     will cause us to create multiple metadata graphs.
     */
-    final temporaryIdSubject = BlankNodeTerm();
     final graphs = expandedSubject.expand((subj) {
       return (expandedObject?.cast<RdfObject?>() ?? [null]).map((obj) {
-        final idGraph = RdfGraph.fromTriples(_createIdentifyingTriples(
-            temporaryIdSubject, subj, predicate, obj));
-        final stmtIri = _frameworkIriGenerator.generateSimpleCanonicalIri(
-            documentIri, 'stmt', idGraph.triples,
-            labels: {temporaryIdSubject: 'stmt0'});
+        final stmtIri = createStatementIri(documentIri, subj,
+            predicate: predicate, value: obj);
         final metadataTriples = createMetadataTriples(stmtIri);
         if (metadataTriples.any((m) => m.object is BlankNodeTerm)) {
           throw ArgumentError(
@@ -81,6 +77,20 @@ class MetadataGenerator {
     });
 
     return graphs;
+  }
+
+  IriTerm createStatementIri(
+    IriTerm documentIri,
+    IriTerm subject, {
+    RdfPredicate? predicate,
+    RdfObject? value,
+  }) {
+    final temporaryIdSubject = BlankNodeTerm();
+    final idGraph = RdfGraph.fromTriples(_createIdentifyingTriples(
+        temporaryIdSubject, subject, predicate, value));
+    return _frameworkIriGenerator.generateSimpleCanonicalIri(
+        documentIri, 'stmt', idGraph.triples,
+        labels: {temporaryIdSubject: 'stmt0'});
   }
 
   List<Triple> _createIdentifyingTriples(RdfSubject idSubject, IriTerm subj,

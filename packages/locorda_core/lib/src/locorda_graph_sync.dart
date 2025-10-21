@@ -201,7 +201,12 @@ class LocordaGraphSync {
         config: effectiveConfig);
 
     await indexManager.initializeIndices();
-    final remoteDocumentMerger = RemoteDocumentMerger(storage: storage);
+    final remoteDocumentMerger = RemoteDocumentMerger(
+      storage: storage,
+      hlcService: hlcService,
+      crdtTypeRegistry: crdtTypeRegistry,
+      frameworkIriGenerator: frameworkIriGenerator,
+    );
     final shardDocumentGenerator = ShardDocumentGenerator(
       storage: storage,
       documentManager: crdtDocumentManager,

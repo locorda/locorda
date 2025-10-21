@@ -212,6 +212,50 @@ extension RdfGraphIterableExtensions on Iterable<RdfGraph> {
   }
 }
 
+extension RdfTermExtensions on RdfTerm {
+  bool get isIri {
+    return this is IriTerm;
+  }
+
+  bool get isBlankNode {
+    return this is BlankNodeTerm;
+  }
+
+  bool get isNumeric {
+    return this is LiteralTerm && (this as LiteralTerm).isNumeric;
+  }
+
+  num get numericValue {
+    if (!isNumeric) {
+      throw StateError('$this is not numeric');
+    }
+    return (this as LiteralTerm).numericValue;
+  }
+
+  bool get isDateTime {
+    return this is LiteralTerm && (this as LiteralTerm).isDateTime;
+  }
+
+  DateTime get dateTimeValue {
+    if (!isDateTime) {
+      throw StateError('$this is not a dateTime');
+    }
+    return (this as LiteralTerm).dateTimeValue;
+  }
+
+  bool get hasStringValue => switch (this) {
+        LiteralTerm _ => true,
+        IriTerm _ => true,
+        BlankNodeTerm _ => false,
+      };
+
+  String get stringValue => switch (this) {
+        LiteralTerm lt => lt.stringValue,
+        IriTerm it => it.value,
+        BlankNodeTerm _ => throw StateError('Blank nodes have no string value'),
+      };
+}
+
 extension LiteralTermExtensions on LiteralTerm {
   static LiteralTerm dateTime(DateTime dateTime) {
     return LiteralTerm(dateTime.toUtc().toIso8601String(),
@@ -239,7 +283,19 @@ extension LiteralTermExtensions on LiteralTerm {
   }
 
   bool get isInteger {
-    return datatype == Xsd.integer || datatype == Xsd.int;
+    return datatype == Xsd.integer ||
+        datatype == Xsd.int ||
+        datatype == Xsd.long ||
+        datatype == Xsd.short ||
+        datatype == Xsd.byte ||
+        datatype == Xsd.negativeInteger ||
+        datatype == Xsd.nonNegativeInteger ||
+        datatype == Xsd.nonPositiveInteger ||
+        datatype == Xsd.positiveInteger ||
+        datatype == Xsd.unsignedLong ||
+        datatype == Xsd.unsignedInt ||
+        datatype == Xsd.unsignedShort ||
+        datatype == Xsd.unsignedByte;
   }
 
   int get integerValue {
@@ -272,7 +328,23 @@ extension LiteralTermExtensions on LiteralTerm {
   }
 
   bool get isDouble {
-    return datatype == Xsd.double || datatype == Xsd.float;
+    return datatype == Xsd.double ||
+        datatype == Xsd.float ||
+        datatype == Xsd.decimal;
+  }
+
+  bool get isNumeric {
+    return isInteger || isDouble;
+  }
+
+  num get numericValue {
+    if (isInteger) {
+      return integerValue;
+    } else if (isDouble) {
+      return doubleValue;
+    } else {
+      throw StateError('Literal of type $datatype is not numeric');
+    }
   }
 
   bool get isDateTime {

@@ -149,6 +149,14 @@ class IdentifiedBlankNodes<T> {
   /// Get read-only access to the complete mapping
   Map<BlankNodeTerm, List<T>> get identifiedMap =>
       Map.unmodifiable(_identifiedMap);
+
+  Iterable<T> getCanonicalIris(BlankNodeTerm subject) {
+    final result = identifiedMap[subject];
+    if (result == null || result.isEmpty) {
+      throw UnidentifiedBlankNodeException(subject);
+    }
+    return result;
+  }
 }
 
 class UnidentifiedBlankNodeException implements Exception {

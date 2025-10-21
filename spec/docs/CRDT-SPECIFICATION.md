@@ -67,8 +67,6 @@ Hybrid Logical Clocks (HLC) combine the benefits of logical clocks (causality tr
 **On Merge:**
 1. Create result logical clock: `result.logical[i] = max(A.logical[i], B.logical[i])` for each installation i
 2. Create result physical clock: `result.physical[i] = max(A.physical[i], B.physical[i])` for each installation i  
-3. Increment merging installation's logical time: `result.logical[mergingInstallation]++`
-4. Set merging installation's physical time: `result.physical[mergingInstallation] = currentTimeMillis()`
 5. Update hash: `crdt:clockHash = hash(result)`
 
 **Clock Manipulation Resilience:**

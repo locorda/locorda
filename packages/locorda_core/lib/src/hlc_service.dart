@@ -2,6 +2,7 @@
 library;
 
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
@@ -44,7 +45,8 @@ class HlcService {
   /// Builds a clock entry node as an IRI resource (not blank node)
   /// Note: installationIri property is NOT added here - it's added during sync
   Node _buildClockEntryNode(
-      IriTerm documentIri, int physicalTime, int logicalTime) {
+      IriTerm documentIri, int physicalTime, int logicalTime,
+      {List<Triple> extra = const []}) {
     final clockEntryIri = _generateClockEntryIri(documentIri);
     final triples = <Triple>[
       Triple(
@@ -57,6 +59,7 @@ class HlcService {
         CrdtClockEntry.physicalTime,
         LiteralTerm.integer(physicalTime),
       ),
+      ...extra,
     ];
     return (clockEntryIri, RdfGraph.fromTriples(triples));
   }
@@ -87,6 +90,64 @@ class HlcService {
         physicalTime: physicalTime);
   }
 
+/*
+// Important: this throws away additional triples from clock entries - this probably
+// needs to be handled outside of this function
+  CurrentCrdtClock mergeRawClock(
+      IriTerm documentIri, CurrentCrdtClock clock1, CurrentCrdtClock clock2) {
+    final mergedEntries = <Node>{};
+    // Merge entries by taking max logical and physical times
+    final entryMap = <IriTerm, ({int logicalTime, int physicalTime})>{};
+
+    for (final (node, graph) in [...clock1.fullClock, ...clock2.fullClock]) {
+      final logicalTime = graph
+          .findSingleObject<LiteralTerm>(node, CrdtClockEntry.logicalTime)
+          ?.integerValue;
+      final physicalTime = graph
+          .findSingleObject<LiteralTerm>(node, CrdtClockEntry.physicalTime)
+          ?.integerValue;
+
+      if (logicalTime != null && physicalTime != null) {
+        final existing = entryMap[node as IriTerm];
+        if (existing == null) {
+          entryMap[node] =
+              (logicalTime: logicalTime, physicalTime: physicalTime);
+        } else {
+          entryMap[node] = (
+            logicalTime: logicalTime > existing.logicalTime
+                ? logicalTime
+                : existing.logicalTime,
+            physicalTime: physicalTime > existing.physicalTime
+                ? physicalTime
+                : existing.physicalTime,
+          );
+        }
+      }
+    }
+
+    // Build merged clock entries
+    for (final entry in entryMap.entries) {
+      final (logicalTime: logicalTime, physicalTime: physicalTime) =
+          entry.value;
+      mergedEntries
+          .add(_buildClockEntryNode(entry.key, physicalTime, logicalTime));
+    }
+
+    // Compute new hash
+    final mergedClock = mergedEntries.toList();
+    final newHash = _hashClock(mergedClock);
+
+    final (logicalTime: logicalTime, physicalTime: physicalTime) =
+        _getOurTime(documentIri, mergedClock);
+
+    return (
+      logicalTime: logicalTime,
+      physicalTime: physicalTime,
+      fullClock: mergedClock,
+      hash: newHash
+    );
+  }
+*/
   CurrentCrdtClock getCurrentClock(RdfGraph document, IriTerm documentIri) {
     final existingClock = _extractCrdtClock(document, documentIri);
     if (existingClock.isEmpty) {
@@ -94,21 +155,39 @@ class HlcService {
           'No existing CRDT clock found in document ${documentIri.debug}');
     }
 
+    final (logicalTime: logicalTime, physicalTime: physicalTime) =
+        _getOurTime(documentIri, existingClock);
+
+    return (
+      logicalTime: logicalTime,
+      physicalTime: physicalTime,
+      fullClock: existingClock,
+      hash: _hashClock(existingClock)
+    );
+  }
+
+  ({int logicalTime, int physicalTime}) _getOurTime(
+      IriTerm documentIri, CrdtClock clock) {
     final ourClockEntryIri = _generateClockEntryIri(documentIri);
-    final logicalTime = document
-        .findSingleObject<LiteralTerm>(
+    final ourEntry = clock
+        .where((entry) {
+          final (node, _) = entry;
+          return node == ourClockEntryIri;
+        })
+        .map<RdfGraph>((e) => e.$2)
+        .singleOrNull;
+    final logicalTime = ourEntry
+        ?.findSingleObject<LiteralTerm>(
             ourClockEntryIri, CrdtClockEntry.logicalTime)
         ?.integerValue;
-    final physicalTime = document
-        .findSingleObject<LiteralTerm>(
+    final physicalTime = ourEntry
+        ?.findSingleObject<LiteralTerm>(
             ourClockEntryIri, CrdtClockEntry.physicalTime)
         ?.integerValue;
 
     return (
       logicalTime: logicalTime ?? 0,
       physicalTime: physicalTime ?? 0,
-      fullClock: existingClock,
-      hash: _hashClock(existingClock)
     );
   }
 
@@ -148,8 +227,13 @@ class HlcService {
       final ourClockEntry = ours.single;
       final oldLogicalTime = ourClockEntry.$2.findSingleObject<LiteralTerm>(
           ourClockEntry.$1, CrdtClockEntry.logicalTime)!;
+      final extraTriples = ourClockEntry.$2.triples.where((triple) {
+        return triple.predicate != CrdtClockEntry.logicalTime &&
+            triple.predicate != CrdtClockEntry.physicalTime;
+      }).toList();
       logicalTime = oldLogicalTime.integerValue + 1;
-      entry = _buildClockEntryNode(documentIri, physicalTime, logicalTime);
+      entry = _buildClockEntryNode(documentIri, physicalTime, logicalTime,
+          extra: extraTriples);
     } else {
       logicalTime = 1;
       entry = _buildClockEntryNode(documentIri, physicalTime, logicalTime);

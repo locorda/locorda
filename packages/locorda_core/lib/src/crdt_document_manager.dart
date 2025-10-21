@@ -13,6 +13,7 @@ import 'package:locorda_core/src/mapping/identified_blank_node_builder.dart';
 import 'package:locorda_core/src/mapping/merge_contract.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/split_document.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -239,29 +240,6 @@ List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
       : ([...oldIsGovernedByFiles, ourGovernedByFile]);
 }
 
-({RdfGraph appGraph, RdfGraph frameworkGraph}) _splitDocument(
-    RdfGraph document, IriTerm documentIri, MergeContract mergeContract) {
-  // We have to split the document into application data and framework metadata.
-
-  final types = <RdfSubject, IriTerm?>{};
-  final frameworkGraph =
-      document.subgraph(documentIri, filter: (triple, depth) {
-    final type = types.putIfAbsent(triple.subject,
-        () => document.findSingleObject<IriTerm>(triple.subject, Rdf.type));
-
-    final isStopTraversal =
-        mergeContract.isStopTraversalPredicate(type, triple.predicate);
-    return isStopTraversal
-        ? TraversalDecision.includeButDontDescend
-        : TraversalDecision.include;
-  });
-
-  return (
-    appGraph: document.without(frameworkGraph),
-    frameworkGraph: frameworkGraph
-  );
-}
-
 /// Main facade for the locorda system.
 ///
 /// Provides a simple, high-level API for offline-first applications with
@@ -405,7 +383,7 @@ class CrdtDocumentManager {
     final (appGraph: oldAppData, frameworkGraph: oldFrameworkGraph) =
         oldDocument == null
             ? (appGraph: null, frameworkGraph: null)
-            : _splitDocument(oldDocument, documentIri, mergeContract);
+            : splitDocument(oldDocument, documentIri, mergeContract);
     return (
       oldAppData: oldAppData,
       oldFrameworkGraph: oldFrameworkGraph,
