@@ -30,12 +30,12 @@ ns1:lcrd-ibn-md5-74f4d0cc07fa8ce00b8856defa9a0e31 sync:blankNode _:b1 .
 
 ns1:lcrd-ibn-md5-9110880a000d224b944a75c68db15db9 sync:blankNode _:b2 .
 
-_:b2 a schema:Ingredient;
-    schema:amount "1";
-    schema:name "Basil";
-    schema:unit "bunch" .
-
 _:b1 a schema:Ingredient;
     schema:amount "2";
     schema:name "Tomato";
     schema:unit "cups" .
+
+_:b2 a schema:Ingredient;
+    schema:amount "1";
+    schema:name "Basil";
+    schema:unit "bunch" .

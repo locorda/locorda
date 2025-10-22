@@ -25,7 +25,7 @@ dependencies:
   rxdart: ^0.28.0
 
   # RDF
-  rdf_core: ^0.9.23
+  rdf_core: ^0.9.24
   http: ^1.5.0
   collection: ^1.19.1
   

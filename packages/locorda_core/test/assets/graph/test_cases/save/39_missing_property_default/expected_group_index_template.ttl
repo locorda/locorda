@@ -33,10 +33,10 @@ ns1:lcrd-ibn-md5-175429d881b08c8c6795680d1df09de9 sync:blankNode _:b1 .
 
 ns1:lcrd-ibn-md5-96f7a10637cb4d5ff5e6c2b77c9d5f81 sync:blankNode _:b2 .
 
+_:b1 a idx:GroupingRule;
+    idx:property _:b2 .
+
 _:b2 a idx:GroupingRuleProperty;
     idx:hierarchyLevel 1;
     idx:missingValue "Uncategorized";
     idx:sourceProperty schema:recipeCategory .
-
-_:b1 a idx:GroupingRule;
-    idx:property _:b2 .
