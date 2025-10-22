@@ -49,7 +49,9 @@
 <#group-index> a mc:ClassMapping;
    mc:appliesToClass idx:GroupIndex;
    mc:rule
+     [ mc:predicate idx:indexesClass; algo:mergeWith algo:Immutable ],
      [ mc:predicate idx:basedOn; algo:mergeWith algo:Immutable ],
+     [ mc:predicate idx:hasShard; algo:mergeWith algo:OR_Set ],
      [ mc:predicate idx:readBy; algo:mergeWith algo:OR_Set ],
      [ mc:predicate idx:populationState; algo:mergeWith algo:LWW_Register ] .
 

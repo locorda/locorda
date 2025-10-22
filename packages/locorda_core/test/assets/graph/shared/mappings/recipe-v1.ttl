@@ -17,6 +17,12 @@
    mc:appliesToClass schema:Recipe;
    mc:rule
      [ mc:predicate schema:name; algo:mergeWith algo:LWW_Register ],
+     [ mc:predicate schema:dateCreated; algo:mergeWith algo:LWW_Register ],
+     [ mc:predicate schema:description; algo:mergeWith algo:LWW_Register ],
+     [ mc:predicate schema:prepTime; algo:mergeWith algo:LWW_Register ],
+     [ mc:predicate schema:cookTime; algo:mergeWith algo:LWW_Register ],
+     [ mc:predicate schema:recipeYield; algo:mergeWith algo:LWW_Register ],
+     [ mc:predicate schema:recipeCategory; algo:mergeWith algo:OR_Set ],
      [ mc:predicate schema:recipeIngredient; algo:mergeWith algo:OR_Set ],
      [ mc:predicate schema:nutrition; algo:mergeWith algo:LWW_Register; mc:disableBlankNodePathIdentification true ] .
 

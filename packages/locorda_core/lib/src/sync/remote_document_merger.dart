@@ -104,15 +104,28 @@ class RemoteDocumentMerger {
         OrganizedGraph.fromGraph(documentIri, remoteGraph, _hlcService);
     final clockComparison =
         ClockComparison.compareClocks(localOGraph, remoteOGraph);
-
+    final resourceIri = localOGraph.fullGraph.findSingleObject<IriTerm>(
+            documentIri, SyncManagedDocument.foafPrimaryTopic) ??
+        remoteOGraph.fullGraph.findSingleObject<IriTerm>(
+            documentIri, SyncManagedDocument.foafPrimaryTopic)!;
+    final types = {
+      ...localOGraph.fullGraph
+          .getMultiValueObjects<IriTerm>(resourceIri, Rdf.type),
+      ...remoteOGraph.fullGraph
+          .getMultiValueObjects<IriTerm>(resourceIri, Rdf.type),
+    };
+    final resourceTypeIri = types.length == 1
+        ? types.first
+        : ({...types}.toList()..sort((a, b) => a.value.compareTo(b.value)))
+            .first;
     // Step 4-7: Iterate subjects, merge properties per CRDT type
     final mergeResults = _mergeSubjectsAndProperties(
-      documentIri,
-      localOGraph,
-      remoteOGraph,
-      mergeContract,
-      RemoteCrdtMergeContext(clockComparison: clockComparison),
-    );
+        documentIri,
+        localOGraph,
+        remoteOGraph,
+        mergeContract,
+        RemoteCrdtMergeContext(clockComparison: clockComparison),
+        appDataTypeIri: resourceTypeIri);
 
     _log.fine('Merged ${mergeResults.mergedTriples.length} triples ');
 
@@ -138,12 +151,13 @@ class RemoteDocumentMerger {
   ///
   /// Returns merged triples and metadata about the merge.
   MergeResults _mergeSubjectsAndProperties(
-    IriTerm documentIri,
-    OrganizedGraph localGraph,
-    OrganizedGraph remoteGraph,
-    MergeContract mergeContract,
-    RemoteCrdtMergeContext mergeContext,
-  ) {
+      IriTerm documentIri,
+      OrganizedGraph localGraph,
+      OrganizedGraph remoteGraph,
+      MergeContract mergeContract,
+      RemoteCrdtMergeContext mergeContext,
+      {required IriTerm appDataTypeIri}) {
+    final isShard = appDataTypeIri == IdxShard.classIri;
     final mergedSubjects =
         MergeSubject.createMergeSubjects(localGraph, remoteGraph)
             .map((subject) => _mergeSubject(
@@ -153,19 +167,20 @@ class RemoteDocumentMerger {
                   remoteGraph,
                   mergeContract,
                   mergeContext,
+                  isShard: isShard,
                 ));
 
     return MergeResults.join(mergedSubjects);
   }
 
   MergeResults _mergeSubject(
-    IriTerm documentIri,
-    MergeSubject subject,
-    OrganizedGraph localGraph,
-    OrganizedGraph remoteGraph,
-    MergeContract mergeContract,
-    RemoteCrdtMergeContext mergeContext,
-  ) {
+      IriTerm documentIri,
+      MergeSubject subject,
+      OrganizedGraph localGraph,
+      OrganizedGraph remoteGraph,
+      MergeContract mergeContract,
+      RemoteCrdtMergeContext mergeContext,
+      {required bool isShard}) {
     // FIXME: Implement subject deletion handling!
 
     if (subject.type == MergeSubjectType.blankNodeIdentifier ||
@@ -182,7 +197,9 @@ class RemoteDocumentMerger {
       if (subject.remote != null)
         ...remoteGraph.fullGraph.matching(subject: subject.remote).predicates,
     };
-
+    final isShardEntry = isShard &&
+        allPredicates.contains(IdxShardEntry.resource) &&
+        allPredicates.contains(IdxShardEntry.crdtClockHash);
     // In the end: the type itself is merged as a property like any other, so
     // this is only for determining the CRDT algorithm to use per property.
     // We ensure to be deterministic by sorting and picking the first type IRI from the merged set.
@@ -195,8 +212,12 @@ class RemoteDocumentMerger {
     // Merge each property individually
     final predicateMergeResults = <MergeResults>[];
     for (final predicate in allPredicates) {
-      final algorithmIri =
-          mergeContract.getEffectiveMergeWith(typeIri, predicate);
+      final IriTerm? algorithmIri = isShardEntry &&
+              predicate != IdxShardEntry.resource &&
+              predicate != IdxShardEntry.crdtClockHash
+          ? Algo.LWW_Register
+          : mergeContract.getEffectiveMergeWith(typeIri, predicate);
+
       final type = _crdtTypeRegistry.getType(algorithmIri);
       final result = type.remoteMerge(
           subject: subject,
