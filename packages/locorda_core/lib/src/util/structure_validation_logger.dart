@@ -1,3 +1,4 @@
+import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -87,7 +88,11 @@ class RdfExpectations {
     ExpectationSeverity severity = ExpectationSeverity.major,
   }) {
     final details = [
-      if (subject != null) 'Subject: $subject',
+      if (subject != null)
+        'Subject: ${switch (subject) {
+          IriTerm iri => iri.debug,
+          _ => subject.toString(),
+        }}',
       if (predicate != null) 'Predicate: $predicate',
     ].join(', ');
     final prefix = switch (severity) {
