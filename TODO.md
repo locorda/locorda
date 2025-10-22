@@ -106,6 +106,7 @@
 - [x] How do we get foreign shard indices to our DB? Are we missing something here? Actually, I think no: we only want to sync those entries from foreign indices that we already know about, and those will eventually end up in the documentsToSync queue. And when the documents are synced, their shards (old and new) are updated in our DB - so our DB index entries should be correct and up-to-date.
 - [x] Is our physical timestamp handling in _syncDocument in the remote_sync_orchestrator correct? => should be now - index entries get their timestamps from the indexed document, physical clock always is "ours" setting remote-only values to zero
 - [ ] Implement real CRDT Merge (and tests)
+- [ ] Implement ensure
 - [ ] Implement actual syncing to a backend
 - [ ] Implement Solid backend with actual Pod storage operations
   - Most complex but enables the full vision

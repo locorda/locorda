@@ -343,7 +343,7 @@ class RemoteSyncOrchestrator {
           return; // No changes, nothing to do
         }
         final (typeIri, documentToUpload, clock, missingGroupIndices) =
-            await _reconcileDocument(
+            await _reconcileDocumentShards(
           documentIri,
           merged.mergedDocument,
           merged.mergeContract,
@@ -377,7 +377,7 @@ class RemoteSyncOrchestrator {
         RdfGraph document,
         CurrentCrdtClock clock,
         List<MissingGroupIndex> missingGroupIndices
-      )> _reconcileDocument(
+      )> _reconcileDocumentShards(
     IriTerm documentIri,
     RdfGraph mergedDocument,
     MergeContract mergeContract,
@@ -674,6 +674,8 @@ class RemoteSyncOrchestrator {
     // Step 1: Sync Index Documents for this type
     final allIndices =
         await _syncIndexDocuments(resourceType, lastSyncTimestamp, syncTime);
+
+    // Step 2: For each index, sync its shards and documents
     for (final index in allIndices) {
       await _syncIndex(resourceType, index, lastSyncTimestamp, syncTime);
     }
@@ -686,6 +688,7 @@ class RemoteSyncOrchestrator {
     _log.fine('Syncing index: ${index.indexIri.debug}');
 
     final allShards = await _buildShardSyncSpecs(index);
+
     for (final shard in allShards) {
       await _syncShard(resourceType, index, shard, lastSyncTimestamp, syncTime);
     }
@@ -803,9 +806,8 @@ class RemoteSyncOrchestrator {
       final finalShardDocument = _applyMetadataToDocument(
           updatedShardDocument, metadata, shardDocumentIri);
 
-      // TODO: the extra reconcileDocument looks like overkill, can we avoid it? I think it is reasonably cheap currently though, because there are no indices-of-shards.
       final (_, documentToUpload, clock2, missingGroupIndices) =
-          await _reconcileDocument(
+          await _reconcileDocumentShards(
         shardDocumentIri,
         finalShardDocument,
         merged.mergeContract,

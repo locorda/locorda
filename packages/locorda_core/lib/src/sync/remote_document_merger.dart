@@ -80,11 +80,6 @@ class RemoteDocumentMerger {
     required RdfGraph? localGraph,
     required RdfGraph? remoteGraph,
   }) async {
-    final mergeContext = CrdtMergeContext(
-      iriGenerator: _iriGenerator,
-      metadataGenerator: _metadataGenerator,
-    );
-
     _log.fine('Merging document $documentIri');
 
     // Handle null cases
@@ -107,6 +102,8 @@ class RemoteDocumentMerger {
         OrganizedGraph.fromGraph(documentIri, localGraph, _hlcService);
     final remoteOGraph =
         OrganizedGraph.fromGraph(documentIri, remoteGraph, _hlcService);
+    final clockComparison =
+        ClockComparison.compareClocks(localOGraph, remoteOGraph);
 
     // Step 4-7: Iterate subjects, merge properties per CRDT type
     final mergeResults = _mergeSubjectsAndProperties(
@@ -114,7 +111,7 @@ class RemoteDocumentMerger {
       localOGraph,
       remoteOGraph,
       mergeContract,
-      mergeContext,
+      RemoteCrdtMergeContext(clockComparison: clockComparison),
     );
 
     _log.fine('Merged ${mergeResults.mergedTriples.length} triples ');
@@ -145,7 +142,7 @@ class RemoteDocumentMerger {
     OrganizedGraph localGraph,
     OrganizedGraph remoteGraph,
     MergeContract mergeContract,
-    CrdtMergeContext mergeContext,
+    RemoteCrdtMergeContext mergeContext,
   ) {
     final mergedSubjects =
         MergeSubject.createMergeSubjects(localGraph, remoteGraph)
@@ -167,7 +164,7 @@ class RemoteDocumentMerger {
     OrganizedGraph localGraph,
     OrganizedGraph remoteGraph,
     MergeContract mergeContract,
-    CrdtMergeContext mergeContext,
+    RemoteCrdtMergeContext mergeContext,
   ) {
     // FIXME: Implement subject deletion handling!
 
@@ -180,21 +177,17 @@ class RemoteDocumentMerger {
     }
     // Get all properties for this subject from both graphs
     final allPredicates = <RdfPredicate>{
-      if (subject.localSubject != null)
-        ...localGraph.fullGraph
-            .matching(subject: subject.localSubject)
-            .predicates,
-      if (subject.remoteSubject != null)
-        ...remoteGraph.fullGraph
-            .matching(subject: subject.remoteSubject)
-            .predicates,
+      if (subject.local != null)
+        ...localGraph.fullGraph.matching(subject: subject.local).predicates,
+      if (subject.remote != null)
+        ...remoteGraph.fullGraph.matching(subject: subject.remote).predicates,
     };
 
     // In the end: the type itself is merged as a property like any other, so
     // this is only for determining the CRDT algorithm to use per property.
     // We ensure to be deterministic by sorting and picking the first type IRI from the merged set.
-    final localTypeIris = _getTypes(subject.localSubject, localGraph);
-    final remoteTypeIris = _getTypes(subject.remoteSubject, remoteGraph);
+    final localTypeIris = _getTypes(subject.local, localGraph);
+    final remoteTypeIris = _getTypes(subject.remote, remoteGraph);
     final typeIri = ({...localTypeIris, ...remoteTypeIris}.toList()
           ..sort((a, b) => a.value.compareTo(b.value)))
         .firstOrNull;
