@@ -113,6 +113,8 @@ class IndexManager {
         IdxShard.classIri,
         shardGraph,
         context: 'shard for FullIndex $indexResourceIri',
+        // Shard clock is generated from Item clocks, so initialize with 0
+        physicalTime: 0,
       );
     }
 
@@ -231,6 +233,8 @@ class IndexManager {
         IdxShard.classIri,
         shardGraph,
         context: 'shard for GroupIndex $groupIndexIri',
+        // Shard clock is generated from Item clocks, so initialize with 0
+        physicalTime: 0,
       );
     }
 
@@ -250,14 +254,21 @@ class IndexManager {
     IriTerm type,
     RdfGraph appData, {
     required String context,
+    int? physicalTime,
+    int? logicalTime,
   }) async {
-    return retryOnConflict(() => _save(type, appData),
-        debugOperationName: 'save $context', log: _log);
+    return retryOnConflict(
+        () => _save(type, appData,
+            physicalTime: physicalTime, logicalTime: logicalTime),
+        debugOperationName: 'save $context',
+        log: _log);
   }
 
   /// Internal save method that throws [ConcurrentUpdateException] on optimistic lock failure.
-  Future<DocumentSaveResult?> _save(IriTerm type, RdfGraph appData) async {
-    final saved = await _documentManager.save(type, appData);
+  Future<DocumentSaveResult?> _save(IriTerm type, RdfGraph appData,
+      {int? physicalTime, int? logicalTime}) async {
+    final saved = await _documentManager.save(type, appData,
+        physicalTime: physicalTime, logicalTime: logicalTime);
     if (saved != null) {
       await updateIndices(
           document: saved.crdtDocument,
@@ -359,7 +370,7 @@ class IndexManager {
     String clockHash,
     RdfGraph document,
     Iterable<IriTerm> allShards,
-    int physicalClock,
+    int physicalTime,
     int updatedAt,
   ) async {
     // Process each shard the resource belongs to
@@ -400,7 +411,7 @@ class IndexManager {
         clockHash: clockHash,
         headerProperties: headerPropertiesTurtle,
         updatedAt: updatedAt,
-        ourPhysicalClock: physicalClock,
+        ourPhysicalClock: physicalTime,
       );
     }
   }

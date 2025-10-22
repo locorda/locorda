@@ -30,10 +30,11 @@ algo:LWW_Register a rdfs:Class;
     rdfs:comment "A Last-Writer-Wins Register CRDT, for single-value properties. When applied to multi-value properties, treats the complete value set atomically - the most recent complete value set wins, replacing all previous values entirely.";
     rdfs:subClassOf algo:Algorithm .
 
-algo:FWW_Register a rdfs:Class;
-    rdfs:label "FWW-Register";
-    rdfs:comment "A First-Writer-Wins Register CRDT for properties that should not change after creation. When conflicting values are encountered, the first written value (by timestamp) is preserved and subsequent writes are ignored. For multi-value properties, preserves the first complete value set and ignores subsequent attempts to modify the set.";
-    rdfs:subClassOf algo:Algorithm .
+# FWW-Register proves to be problematic in practice because HLC clock is monotonic increasing and we cannot really tell what is the 'first' write since the clock is document-scoped.
+#algo:FWW_Register a rdfs:Class;
+#    rdfs:label "FWW-Register";
+#    rdfs:comment "A First-Writer-Wins Register CRDT for properties that should not change after creation. When conflicting values are encountered, the first written value (by timestamp) is preserved and subsequent writes are ignored. For multi-value properties, preserves the first complete value set and ignores subsequent attempts to modify the set.";
+#    rdfs:subClassOf algo:Algorithm .
 
 algo:OR_Set a rdfs:Class;
     rdfs:label "OR-Set";

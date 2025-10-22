@@ -80,11 +80,13 @@ class HlcService {
     RdfGraph? document,
     IriTerm documentIri, {
     int? physicalTime,
+    int? logicalTime,
   }) {
     final existingClock =
         document == null ? null : _extractCrdtClock(document, documentIri);
     if (existingClock == null || existingClock.isEmpty) {
-      return _newClock(documentIri, physicalTime: physicalTime);
+      return _newClock(documentIri,
+          physicalTime: physicalTime, logicalTime: logicalTime);
     }
     return _incrementClock(documentIri, existingClock,
         physicalTime: physicalTime);
@@ -191,9 +193,10 @@ class HlcService {
     );
   }
 
-  CurrentCrdtClock _newClock(IriTerm documentIri, {int? physicalTime}) {
+  CurrentCrdtClock _newClock(IriTerm documentIri,
+      {int? physicalTime, int? logicalTime}) {
     physicalTime ??= _physicalTimestampFactory().millisecondsSinceEpoch;
-    final logicalTime = 1;
+    logicalTime ??= 1;
 
     var fullClock = [
       _buildClockEntryNode(documentIri, physicalTime, logicalTime)

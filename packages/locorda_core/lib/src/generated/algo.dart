@@ -44,14 +44,6 @@ class Algo {
     'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#LWW_Register',
   );
 
-  /// IRI for algo:FWW_Register
-  ///
-  /// A First-Writer-Wins Register CRDT for properties that should not change after creation. When conflicting values are encountered, the first written value (by timestamp) is preserved and subsequent writes are ignored. For multi-value properties, preserves the first complete value set and ignores subsequent attempts to modify the set.
-  ///
-  static const FWW_Register = IriTerm(
-    'https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#FWW_Register',
-  );
-
   /// IRI for algo:OR_Set
   ///
   /// An Observed-Remove Set CRDT, for multi-value properties that allows items to be re-added after deletion.

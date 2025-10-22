@@ -352,7 +352,9 @@ class ShardDeterminer {
     final indexConfigs =
         await _indexDiscovery.discoverIndices(type, mode: mode);
     if (indexConfigs.isEmpty) {
-      _log.warning('No index configs found for type $type');
+      if (type != IdxShard.classIri) {
+        _log.warning('No index configs found for type $type');
+      }
       return ShardDeterminationResult(
         shards: shards,
         missingGroupIndices: missingGroupIndices,

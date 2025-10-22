@@ -195,7 +195,7 @@ class ShardDocumentGenerator {
       );
 
       // Add entry fragment triples
-      nodes.add((shardResourceIri, entryGraph));
+      nodes.add((entryIri, entryGraph));
     }
 
     return nodes;

@@ -1,13 +1,38 @@
+import 'dart:async';
+
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:rdf_core/rdf_core.dart';
+import 'package:rxdart/rxdart.dart';
 
-final _debug = false;
+final _debug = true;
 final _print = _debug ? print : (Object? _) {};
 
-/// Simple in-memory storage for testing.
+class _WatchController<T> {
+  final BehaviorSubject<T> _controller;
+  final Future<T> Function() _query;
+  final Iterable<IriTerm> triggers;
+
+  _WatchController(this.triggers, this._query)
+      : _controller = BehaviorSubject<T>();
+
+  Stream<T> get stream => _controller.stream;
+
+  bool get isClosed => _controller.isClosed;
+
+  Future<void> trigger() async {
+    final data = await _query();
+    _controller.add(data);
+  }
+
+  Future<void> close() async {
+    await _controller.close();
+  }
+}
+
+/// Simple in-memory storage for testing with reactive streams.
 class InMemoryStorage implements Storage {
   final Map<IriTerm, StoredDocument> _documents = {};
   final Map<IriTerm, IriTerm> _documentTypes = {}; // documentIri -> typeIri
@@ -31,14 +56,25 @@ class InMemoryStorage implements Storage {
       {}; // sorted iris key -> versionId
   int _nextVersionId = 1;
 
+  // Reactive streams for watch operations
+  final Map<IriTerm, Set<_WatchController>> _watchControllersByTrigger = {};
+  final List<_WatchController> _watchControllers = [];
+
   @override
   Future<void> initialize() async {
+    _print(
+        'InMemoryStorage.initialize() called on instance ${identityHashCode(this)}');
     // No-op for in-memory storage
   }
 
   @override
   Future<void> close() async {
-    // No-op for in-memory storage
+    // Close all stream controllers
+    for (final controller in _watchControllers) {
+      await controller.close();
+    }
+    _watchControllersByTrigger.clear();
+    _watchControllers.clear();
   }
 
   @override
@@ -75,6 +111,8 @@ class InMemoryStorage implements Storage {
       DocumentMetadata metadata,
       List<PropertyChange> changes,
       {int? ifMatchUpdatedAt}) async {
+    _print(
+        'InMemoryStorage.saveDocument: document=${documentIri.debug}, type=${typeIri.debug}, updatedAt=${metadata.updatedAt}, ourPhysicalClock=${metadata.ourPhysicalClock}');
     // Check optimistic lock if required
     if (ifMatchUpdatedAt != null) {
       final existingDocument = _documents[documentIri];
@@ -102,10 +140,30 @@ class InMemoryStorage implements Storage {
       ...changes
     ];
 
+    // Emit to document watch streams for this type
+    _triggerWatchers([typeIri, documentIri]);
+
     return SaveDocumentResult(
       previousCursor: previousCursor,
       currentCursor: metadata.updatedAt.toString(),
     );
+  }
+
+  /// Emit current documents to all watch streams for a specific type.
+  void _triggerWatchers(Iterable<IriTerm> typeIris) {
+    _print(
+        'InMemoryStorage: Triggering watchers for types: ${typeIris.map((i) => i.debug)}');
+    final controllers = typeIris
+        .map((typeIri) => _watchControllersByTrigger[typeIri])
+        .nonNulls
+        .expand((c) => c)
+        .toSet();
+
+    if (controllers.isEmpty) return;
+    for (final controller in controllers) {
+      if (controller.isClosed) continue;
+      controller.trigger();
+    }
   }
 
   @override
@@ -147,27 +205,31 @@ class InMemoryStorage implements Storage {
     );
   }
 
-  @override
-  Stream<DocumentsResult> watchDocumentsModifiedSince(
-      IriTerm typeIri, String? minCursor) async* {
-    yield _getDocuments(
-      typeIri: typeIri,
-      minCursor: minCursor,
-      limit: null, // No limit for watch,
-      timestampExtractor: (doc) => doc.metadata.updatedAt,
-    );
+  Stream<T> _startWatching<T>(_WatchController<T> controller) async* {
+    _watchControllers.add(controller);
+    for (final typeIri in controller.triggers) {
+      _watchControllersByTrigger
+          .putIfAbsent(
+            typeIri,
+            () => {},
+          )
+          .add(controller);
+    }
+    await controller.trigger();
+    yield* controller.stream;
   }
 
   @override
+  Stream<DocumentsResult> watchDocumentsModifiedSince(
+          IriTerm typeIri, String? minCursor) =>
+      _startWatching(_WatchController([typeIri],
+          () => getDocumentsModifiedSince(typeIri, minCursor, limit: 1000)));
+
+  @override
   Stream<DocumentsResult> watchDocumentsChangedByUsSince(
-      IriTerm typeIri, String? minCursor) async* {
-    yield _getDocuments(
-      typeIri: typeIri,
-      minCursor: minCursor,
-      limit: null, // No limit for watch,
-      timestampExtractor: (doc) => doc.metadata.ourPhysicalClock,
-    );
-  }
+          IriTerm typeIri, String? minCursor) =>
+      _startWatching(_WatchController([typeIri],
+          () => getDocumentsChangedByUsSince(typeIri, minCursor, limit: 1000)));
 
   /// Shared implementation for GET operations with pagination.
   DocumentsResult _getDocuments({
@@ -226,7 +288,33 @@ class InMemoryStorage implements Storage {
     int? cursorTimestamp,
     int limit = 100,
   }) async {
-    return IndexEntriesPage(entries: [], hasMore: false, lastCursor: null);
+    _print(
+        'getIndexEntries: indexIris=${indexIris.map((i) => i.debug)}, cursorTimestamp=$cursorTimestamp');
+    // Filter stored index entries by requested index IRIs and cursorTimestamp
+    final cursor = cursorTimestamp ?? 0;
+    final filtered = _indexEntries.values
+        .where((e) => indexIris.contains(e.indexIri))
+        .where((e) => e.updatedAt > cursor)
+        .toList()
+      ..sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+
+    final limited = filtered.take(limit).toList();
+
+    final entries = limited
+        .map((e) => IndexEntryWithIri(
+              resourceIri: e.resourceIri,
+              clockHash: e.clockHash,
+              headerProperties: e.headerProperties,
+              updatedAt: e.updatedAt,
+              ourPhysicalClock: e.ourPhysicalClock,
+              isDeleted: e.isDeleted,
+            ))
+        .toList();
+
+    final lastCursor = entries.isNotEmpty ? entries.last.updatedAt : null;
+
+    return IndexEntriesPage(
+        entries: entries, hasMore: false, lastCursor: lastCursor);
   }
 
   @override
@@ -234,7 +322,13 @@ class InMemoryStorage implements Storage {
     required Iterable<IriTerm> indexIris,
     int? cursorTimestamp,
   }) {
-    return Stream.value([]);
+    _print(
+        'watchIndexEntries: indexIris=${indexIris.map((i) => i.debug)}, cursorTimestamp=$cursorTimestamp');
+    return _startWatching(_WatchController(
+        indexIris,
+        () async => (await getIndexEntries(
+                indexIris: indexIris, cursorTimestamp: cursorTimestamp))
+            .entries));
   }
 
   @override
@@ -255,14 +349,13 @@ class InMemoryStorage implements Storage {
   }
 
   @override
-  Stream<Set<IriTerm>> watchSubscribedGroupIndexIris(IriTerm templateIri) {
-    // Return subscribed index IRIs for this template
-    final subscribed = _groupIndexSubscriptions.values
-        .where((sub) => sub.groupIndexTemplateIri == templateIri)
-        .map((sub) => sub.groupIndexIri)
-        .toSet();
-    return Stream.value(subscribed);
-  }
+  Stream<Set<IriTerm>> watchSubscribedGroupIndexIris(IriTerm templateIri) =>
+      _startWatching(_WatchController(
+          [templateIri],
+          () async => _groupIndexSubscriptions.values
+              .where((sub) => sub.groupIndexTemplateIri == templateIri)
+              .map((sub) => sub.groupIndexIri)
+              .toSet()));
 
   @override
   Future<List<(IriTerm, IriTerm, ItemFetchPolicy)>> getSubscribedGroupIndices(
@@ -314,7 +407,7 @@ class InMemoryStorage implements Storage {
   }) async {
     final key = '${shardIri.value}|${resourceIri.value}';
     _print(
-        'TestStorage.saveIndexEntry: shard=$shardIri, resource=$resourceIri, clock=$ourPhysicalClock');
+        'InMemoryStorage.saveIndexEntry: shard=${shardIri.debug}, resource=${resourceIri.debug}, clock=$ourPhysicalClock');
     _indexEntries[key] = _IndexEntry(
       shardIri: shardIri,
       indexIri: indexIri,
@@ -325,17 +418,20 @@ class InMemoryStorage implements Storage {
       updatedAt: updatedAt,
       ourPhysicalClock: ourPhysicalClock,
     );
+
+    // Emit to all watch streams that include this index
+    _triggerWatchers([indexIri, shardIri, resourceIri]);
   }
 
   @override
   Future<List<IndexEntryWithIri>> getActiveIndexEntriesForShard(
       IriTerm shardIri) async {
     _print(
-        'TestStorage.getActiveIndexEntriesForShard: looking for shard=$shardIri');
-    _print('TestStorage: Total entries in storage: ${_indexEntries.length}');
+        'InMemoryStorage.getActiveIndexEntriesForShard: looking for shard=${shardIri.debug}');
+    _print('InMemoryStorage: Total entries in storage: ${_indexEntries.length}');
     for (final entry in _indexEntries.values) {
       _print(
-          '  - shard=${entry.shardIri}, resource=${entry.resourceIri}, deleted=${entry.isDeleted}');
+          '  - shard=${entry.shardIri.debug}, resource=${entry.resourceIri.debug}, deleted=${entry.isDeleted}');
     }
     final result = _indexEntries.values
         .where(
@@ -349,7 +445,7 @@ class InMemoryStorage implements Storage {
               isDeleted: entry.isDeleted,
             ))
         .toList();
-    _print('TestStorage: Found ${result.length} active entries for this shard');
+    _print('InMemoryStorage: Found ${result.length} active entries for this shard');
     return result;
   }
 

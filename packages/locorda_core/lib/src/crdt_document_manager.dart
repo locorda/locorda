@@ -251,6 +251,7 @@ class CrdtDocumentManager {
   final MergeContractLoader _mergeContractLoader;
   final ShardDeterminer _shardDeterminer;
   final LocalDocumentMerger _localDocumentMerger;
+  final PhysicalTimestampFactory _physicalTimestampFactory;
 
   // Factory functions for configurable time and clock generation
   final HlcService _hlcService;
@@ -262,11 +263,13 @@ class CrdtDocumentManager {
     required HlcService hlcService,
     required ShardDeterminer shardDeterminer,
     required LocalDocumentMerger localDocumentMerger,
+    required PhysicalTimestampFactory physicalTimestampFactory,
   })  : _storage = storage,
         _config = config,
         _mergeContractLoader = mergeContractLoader,
         _hlcService = hlcService,
         _localDocumentMerger = localDocumentMerger,
+        _physicalTimestampFactory = physicalTimestampFactory,
         _shardDeterminer = shardDeterminer;
 
   /// Save an object with CRDT processing.
@@ -282,7 +285,8 @@ class CrdtDocumentManager {
   /// 4. Schedule async Pod sync
   ///
   /// Throws [ConcurrentUpdateException] on optimistic lock failure.
-  Future<DocumentSaveResult?> save(IriTerm type, RdfGraph appData) async {
+  Future<DocumentSaveResult?> save(IriTerm type, RdfGraph appData,
+      {int? physicalTime, int? logicalTime}) async {
     // Validate input parameters
     if (appData.isEmpty) {
       throw ArgumentError('Cannot save empty graph');
@@ -313,7 +317,9 @@ class CrdtDocumentManager {
     ) = await _prepare(type, documentIri);
     return await _save(type, resourceIri, documentIri, appData, oldAppData,
         oldFrameworkGraph, mergeContract, governedByFiles,
-        oldUpdatedAt: oldUpdatedAt);
+        oldUpdatedAt: oldUpdatedAt,
+        physicalTime: physicalTime,
+        logicalTime: logicalTime);
   }
 
   /// Throws [ConcurrentUpdateException] on optimistic lock failure.
@@ -404,6 +410,7 @@ class CrdtDocumentManager {
     MergeContract mergeContract,
     List<IriTerm> governedByFiles, {
     int? physicalTime,
+    int? logicalTime,
     int?
         oldUpdatedAt, // For optimistic locking - use updatedAt (changes on every save)
   }) async {
@@ -427,9 +434,14 @@ class CrdtDocumentManager {
         oldFrameworkGraph,
         documentIri,
         physicalTime: physicalTime,
+        logicalTime: logicalTime,
       );
       final physicalTimestamp = clock.physicalTime;
 
+      // We use PhysicalTimestampFactory to get "now" for updatedAt (and createdAt if needed) because
+      // this is about the time the document was created/updated in storage, where
+      // the physical clock of the CRDT is about the time of the change itself.
+      final updatedAtTimestamp = _physicalTimestampFactory();
       // 4. Detect property changes between old and new app graphs and generate CRDT metadata
       final (
         metadata: crdtMetadata,
@@ -451,9 +463,7 @@ class CrdtDocumentManager {
       }
       final createdAt = oldFrameworkGraph?.findSingleObject<LiteralTerm>(
               documentIri, SyncManagedDocument.crdtCreatedAt) ??
-          LiteralTermExtensions.dateTime(DateTime.fromMillisecondsSinceEpoch(
-              physicalTimestamp,
-              isUtc: true));
+          LiteralTermExtensions.dateTime(updatedAtTimestamp);
 
       // Calculate new shards based on current appData
       // Use lenient mode for user-initiated saves - we proceed even if indices
@@ -515,14 +525,11 @@ class CrdtDocumentManager {
 
       crdtDocument = RdfGraph.fromTriples(documentTriples);
 
-      // TODO: maybe not set updatedAt to physical time of the crdt changes,
-      // but use PhysicalTimestampFactory to get "now"?
-      final updatedAtTimestamp = physicalTimestamp;
-
       // 6. Create document metadata for storage
       final documentMetadata = DocumentMetadata(
         ourPhysicalClock: physicalTimestamp,
-        updatedAt: updatedAtTimestamp, // Storage will update this
+        updatedAt: updatedAtTimestamp
+            .millisecondsSinceEpoch, // Storage will update this
       );
 
       // 7. Save to storage atomically (document + metadata + property changes)
@@ -557,7 +564,7 @@ class CrdtDocumentManager {
         currentCursor: saveResult.currentCursor,
         missingGroupIndices: missingGroupIndices,
         physicalTime: clock.physicalTime,
-        updatedAt: updatedAtTimestamp
+        updatedAt: updatedAtTimestamp.millisecondsSinceEpoch,
       );
     } on UnidentifiedBlankNodeException catch (e, stackTrace) {
       _log.severe(

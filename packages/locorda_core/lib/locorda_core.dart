@@ -36,8 +36,8 @@ export 'src/config/validation.dart'
         ValidationWarning,
         SyncConfigValidationException;
 // CRDT implementations
-export 'src/crdt/crdt_types.dart'
-    show CrdtType, LwwRegister, FwwRegister, OrSet;
+// TODO: why do we export these?
+export 'src/crdt/crdt_types.dart' show CrdtType, LwwRegister, OrSet;
 // Vocabularies
 export 'src/generated/_index.dart' show IdxShardEntry
     // TODO: what do we need to export here?

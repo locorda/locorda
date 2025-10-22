@@ -486,107 +486,6 @@ class Immutable implements CrdtType {
   }
 }
 
-/// First-Writer-Wins Register for immutable properties.
-class FwwRegister implements CrdtType {
-  const FwwRegister();
-
-  @override
-  IriTerm get iri => AlgoFWW_Register.classIri;
-
-  bool get isSingleValueSupported => true;
-
-  @override
-  Metadata localValueChange({
-    required PropertyValueContext? oldPropertyValue,
-    required PropertyValueContext newPropertyValue,
-    required RdfGraph? oldFrameworkGraph,
-    required CrdtMergeContext mergeContext,
-    required int physicalClock,
-  }) {
-    // TODO: what about the case when newValues is empty and oldValues is not? Do we need metadata for that?
-    // No metadata needed for changing a FWW Register value - one will win based on the clock during merge, that is all
-    return noMetadata;
-  }
-
-  @override
-  MergeResults? remoteMerge({
-    required MergeSubject subject,
-    required RdfPredicate predicate,
-    required OrganizedGraph local,
-    required OrganizedGraph remote,
-    required RemoteCrdtMergeContext mergeContext,
-  }) {
-    // FWW-Register: First writer wins
-    // Compare clocks - the one with earlier (smaller) logical time wins
-    // For concurrent operations, earlier physical time wins
-
-    final comparison = mergeContext.clockComparison;
-
-    final Iterable<Triple>? winningTriples = switch (comparison) {
-      ClockComparison.localDominates =>
-        subject.remote != null // Remote was first (has smaller clock)
-            ? remote.fullGraph
-                .findTriples(subject: subject.remote!, predicate: predicate)
-            : null,
-      ClockComparison.remoteDominates =>
-        subject.local != null // Local was first
-            ? local.fullGraph
-                .findTriples(subject: subject.local!, predicate: predicate)
-            : null,
-      ClockComparison.concurrent => _firstPhysicalTimeTieBreakTriples(
-          subject.local != null
-              ? local.fullGraph
-                  .findTriples(subject: subject.local!, predicate: predicate)
-              : null,
-          subject.remote != null
-              ? remote.fullGraph
-                  .findTriples(subject: subject.remote!, predicate: predicate)
-              : null,
-
-          // We use maxPhysicalTime here to determine as fallback to minPhysicalTime
-          // because in practice we expect both sides to have the same minPhysicalTime due to eventual consistency.
-          // But the smaller max physical time means that the changes happened earlier - this is not really safe though.
-          //
-          // FIXME: Do we actually need FWW_Register? The implementation seems harder than LWW_Register actually.
-          local.minPhysicalTime == remote.minPhysicalTime
-              ? local.maxPhysicalTime
-              : local.minPhysicalTime,
-          local.minPhysicalTime == remote.minPhysicalTime
-              ? remote.maxPhysicalTime
-              : remote.minPhysicalTime,
-        ),
-      ClockComparison.identical => _handleIdenticalClocksTriples(
-          subject.local,
-          subject.remote,
-          predicate,
-          local.fullGraph,
-          remote.fullGraph,
-        ),
-      ClockComparison.bothEmpty => _handleBothEmptyClocksTriples(
-          subject.local,
-          subject.remote,
-          predicate,
-          local.fullGraph,
-          remote.fullGraph,
-        ),
-    };
-
-    if (winningTriples == null || winningTriples.isEmpty) {
-      return null;
-    }
-
-    // Map to use the merged subject
-    final mergedTriples = winningTriples
-        .map((t) => Triple(subject.subject, predicate, t.object))
-        .toSet();
-
-    return MergeResults(
-      mergedTriples: mergedTriples,
-      mergedStatements: {},
-    );
-  }
-}
-
 /// Observed-Remove Set for multi-value properties.
 class OrSet implements CrdtType {
   @override
@@ -805,9 +704,10 @@ class CrdtTypeRegistry {
   CrdtTypeRegistry.forStandardTypes()
       : this._([
           LwwRegister(),
-          FwwRegister(),
+          //FwwRegister(),
           Immutable(),
           OrSet(),
+          GRegister(),
         ]);
 
   /// Get the CRDT type instance for the given IRI - fallbacks to LWW Register.
@@ -956,25 +856,6 @@ Iterable<Triple>? _physicalTimeTieBreakTriples(
     return localTriples;
   } else if (remotePhysicalTime > localPhysicalTime) {
     return remoteTriples;
-  } else {
-    // Equal physical times - use local as deterministic tie-breaker
-    return localTriples;
-  }
-}
-
-/// Performs physical time tie-breaking for FWW (First-Writer-Wins).
-///
-/// For FWW, earlier physical time wins (opposite of LWW).
-Iterable<Triple>? _firstPhysicalTimeTieBreakTriples(
-  Iterable<Triple>? localTriples,
-  Iterable<Triple>? remoteTriples,
-  int localPhysicalTime,
-  int remotePhysicalTime,
-) {
-  if (localPhysicalTime < remotePhysicalTime) {
-    return localTriples; // Local was first
-  } else if (remotePhysicalTime < localPhysicalTime) {
-    return remoteTriples; // Remote was first
   } else {
     // Equal physical times - use local as deterministic tie-breaker
     return localTriples;

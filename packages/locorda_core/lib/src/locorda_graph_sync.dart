@@ -190,6 +190,7 @@ class LocordaGraphSync {
       mergeContractLoader: mergeContractLoader,
       localDocumentMerger: localDocumentMerger,
       hlcService: hlcService,
+      physicalTimestampFactory: physicalTimestampFactory,
     );
 
     // Initialize indices after installation document is created

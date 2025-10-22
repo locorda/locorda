@@ -12,8 +12,8 @@
 
 <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0dyb3VwSW5kZXhUZW1wbGF0ZQ==:aW5kZXgtZ3JvdXBlZC1kNDRmNDY4ZS9pbmRleA==> a sync:ManagedDocument;
     foaf:primaryTopic ns1:groupIndexTemplate;
-    cm:clockHash "8909aea3552406a16c47193cdc4214c4";
-    cm:createdAt "2024-01-01T00:00:00.004Z"^^xsd:dateTime;
+    cm:clockHash "ea20906589ed4ee40191b8c7b3e16a4f";
+    cm:createdAt "2024-01-01T00:00:00.007Z"^^xsd:dateTime;
     cm:hasClockEntry ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54;
     idx:belongsToIndexShard ns2:shard;
     sync:hasBlankNodeMapping ns1:lcrd-ibn-md5-175429d881b08c8c6795680d1df09de9, ns1:lcrd-ibn-md5-96f7a10637cb4d5ff5e6c2b77c9d5f81;
@@ -27,7 +27,7 @@ ns1:groupIndexTemplate a idx:GroupIndexTemplate;
     idx:shardingAlgorithm [ a idx:ModuloHashSharding ; idx:hashAlgorithm "md5" ; idx:numberOfShards 1 ; idx:configVersion "1_0_0" ; idx:autoScaleThreshold 1000 ] .
 
 ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54 cm:logicalTime 1;
-    cm:physicalTime 1704067200004 .
+    cm:physicalTime 1704067200006 .
 
 ns1:lcrd-ibn-md5-175429d881b08c8c6795680d1df09de9 sync:blankNode _:b1 .
 

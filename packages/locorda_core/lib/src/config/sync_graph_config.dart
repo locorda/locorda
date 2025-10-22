@@ -222,13 +222,17 @@ class SyncGraphConfig extends SyncConfigBase {
       resources.toList()
         ..sort((a, b) {
           // Index-of-indices (root indices) first
-          final aIsRootIndex =
-              a == IdxFullIndex.classIri || a == IdxGroupIndexTemplate.classIri;
-          final bIsRootIndex =
-              b == IdxFullIndex.classIri || b == IdxGroupIndexTemplate.classIri;
+          // Note: It is important that FullIndex comes before GroupIndex here
+          // because GroupIndex must be indexed by FullIndex itself.
+          final aIsRootFullIndex = a.typeIri == IdxFullIndex.classIri;
+          final bIsRootFullIndex = b.typeIri == IdxFullIndex.classIri;
+          if (aIsRootFullIndex && !bIsRootFullIndex) return -1;
+          if (!aIsRootFullIndex && bIsRootFullIndex) return 1;
 
-          if (aIsRootIndex && !bIsRootIndex) return -1;
-          if (!aIsRootIndex && bIsRootIndex) return 1;
+          final aIsRootGroupIndex = a.typeIri == IdxGroupIndexTemplate.classIri;
+          final bIsRootGroupIndex = b.typeIri == IdxGroupIndexTemplate.classIri;
+          if (aIsRootGroupIndex && !bIsRootGroupIndex) return -1;
+          if (!aIsRootGroupIndex && bIsRootGroupIndex) return 1;
 
           // Within each group, sort by IRI value for determinism
           return a.typeIri.value.compareTo(b.typeIri.value);

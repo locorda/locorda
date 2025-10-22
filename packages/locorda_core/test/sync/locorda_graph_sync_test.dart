@@ -15,13 +15,13 @@ import 'package:test/test.dart';
 import '../util/rdf_test_utils.dart';
 import '../util/setup_logging.dart';
 import 'in_memory_backend.dart';
+import 'in_memory_storage.dart';
 import 'test_fetcher.dart';
 import 'test_physical_timestamp_factory.dart';
-import 'in_memory_storage.dart';
 
 /// Record mode: When true, tests will write actual results as expected files
 /// instead of comparing them. Use this to create/update test expectations.
-/// 
+///
 /// Set via environment variable: RECORD_MODE=true dart test
 final _recordMode = Platform.environment['RECORD_MODE'] == 'true';
 
@@ -109,7 +109,10 @@ Future<void> _writeGraphToFile(
     Directory testAssetsDir, String path, RdfGraph graph) async {
   final file = File('${testAssetsDir.path}/$path');
   await file.parent.create(recursive: true);
-  final turtleContent = turtle.encode(graph);
+  var turtleContent = turtle.encode(graph);
+  if (!turtleContent.endsWith('\n')) {
+    turtleContent += "\n";
+  }
   await file.writeAsString(turtleContent);
 }
 
@@ -357,7 +360,7 @@ Future<void> _verifyExpectations({
     if (storedDataDocument == null) {
       fail(await _failMissing(storage, typeIri, documentIri));
     }
-    
+
     if (_recordMode) {
       // Record mode: Write actual result as expected file
       await _writeGraphToFile(
@@ -379,14 +382,15 @@ Future<void> _verifyExpectations({
       fail('documentIri must be provided to verify property_changes');
     }
     final actualPropertyChanges = await storage.getPropertyChanges(documentIri);
-    
+
     if (_recordMode) {
       // Record mode: Property changes are not recorded to files
       // (they're verified programmatically, not from static files)
       print('📝 Property changes recorded in memory (not written to file)');
     } else {
       // Normal mode: Compare with expected
-      _expectEqualPropertyChanges(actualPropertyChanges, expectedPropertyChanges);
+      _expectEqualPropertyChanges(
+          actualPropertyChanges, expectedPropertyChanges);
     }
   }
 
@@ -405,7 +409,7 @@ Future<void> _verifyExpectations({
       fail(await _failMissing(
           storage, CrdtClientInstallation.classIri, installationIri));
     }
-    
+
     if (_recordMode) {
       // Record mode: Write actual result as expected file
       await _writeGraphToFile(
@@ -589,7 +593,8 @@ Future<void> _verifyIndexDocuments(
       print('📝 Recorded: $expectedGraphPath');
     } else {
       // Normal mode: Compare with expected
-      final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+      final expectedGraph =
+          _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
       _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
           storedIndex.document, expectedGraph);
     }
@@ -643,7 +648,8 @@ Future<void> _verifyGroupIndexDocuments(
       print('📝 Recorded: $expectedGraphPath');
     } else {
       // Normal mode: Compare with expected
-      final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+      final expectedGraph =
+          _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
       _expectEqualGraphs(
           "${testId} - expected group index graph $expectedGraphPath",
           storedGroupIndex.document,
@@ -752,7 +758,8 @@ Future<void> _verifyShardDocuments(
       print('📝 Recorded: $expectedGraphPath');
     } else {
       // Normal mode: Compare with expected
-      final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+      final expectedGraph =
+          _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
       _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
           storedShard.document, expectedGraph);
     }

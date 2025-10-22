@@ -370,6 +370,12 @@ class IndexDiscovery {
       }
     }
 
+    if (configs.isEmpty && indexedClass == IdxFullIndex.classIri) {
+      final fullIndexResource =
+          _config.getResourceConfig(IdxFullIndex.classIri);
+      final config = fullIndexResource.getIndexByName(IndexNames.fullIndices);
+      return [config];
+    }
     return configs;
   }
 

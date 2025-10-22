@@ -13,8 +13,8 @@
 
 <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1lNjc5ZDcyZi9pbmRleA==> a sync:ManagedDocument;
     foaf:primaryTopic ns1:index;
-    cm:clockHash "5d8c9ae6f45e8157dab6c8389dee6b69";
-    cm:createdAt "2024-01-01T00:00:00.005Z"^^xsd:dateTime;
+    cm:clockHash "802db5f70156772914ee09316eb5c5e8";
+    cm:createdAt "2024-01-01T00:00:00.008Z"^^xsd:dateTime;
     cm:hasClockEntry ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54;
     idx:belongsToIndexShard ns2:shard;
     sync:isGovernedBy (mappings:index-v1);
@@ -28,4 +28,4 @@ ns1:index a idx:FullIndex;
     idx:shardingAlgorithm [ a idx:ModuloHashSharding ; idx:hashAlgorithm "md5" ; idx:numberOfShards 1 ; idx:configVersion "1_0_0" ; idx:autoScaleThreshold 1000 ] .
 
 ns1:lcrd-clk-md5-edbd4f839a89c5a2a26e191248168e54 cm:logicalTime 1;
-    cm:physicalTime 1704067200005 .
+    cm:physicalTime 1704067200007 .

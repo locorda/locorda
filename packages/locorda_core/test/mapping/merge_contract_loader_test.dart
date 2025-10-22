@@ -410,7 +410,7 @@ void main() {
           Triple(predicateMappingNode, Rdf.type, McPredicateMapping.classIri),
           Triple(predicateMappingNode, McPredicateMapping.rule, ruleNode),
           Triple(ruleNode, McRule.predicate, propertyUri),
-          Triple(ruleNode, McRule.algoMergeWith, Algo.FWW_Register),
+          Triple(ruleNode, McRule.algoMergeWith, Algo.G_Register),
           Triple(ruleNode, McRule.stopTraversal,
               LiteralTerm('true', datatype: Xsd.boolean)),
           Triple(ruleNode, McRule.isIdentifying,
@@ -426,7 +426,7 @@ void main() {
         final rule = result.getPredicateMapping(propertyUri);
         expect(rule, isNotNull);
         expect(rule!.predicateIri, equals(propertyUri));
-        expect(rule.mergeWith, equals(Algo.FWW_Register));
+        expect(rule.mergeWith, equals(Algo.G_Register));
         expect(rule.stopTraversal, isTrue);
         expect(rule.isIdentifying, isTrue);
       });
