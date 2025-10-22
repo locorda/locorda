@@ -25,6 +25,23 @@ import 'test_physical_timestamp_factory.dart';
 /// Set via environment variable: RECORD_MODE=true dart test
 final _recordMode = Platform.environment['RECORD_MODE'] == 'true';
 
+/// Context for a single installation (device) in multi-device tests.
+/// Each installation has its own storage, clock, and sync instance.
+class _InstallationContext {
+  final String installationId;
+  final InMemoryStorage storage;
+  final IriTranslator iriTranslator;
+  final TestPhysicalTimestampFactory timestampFactory;
+  LocordaGraphSync? sync;
+
+  _InstallationContext({
+    required this.installationId,
+    required this.storage,
+    required this.iriTranslator,
+    required this.timestampFactory,
+  });
+}
+
 void main() {
   if (_recordMode) {
     print('⚠️  Running in RECORD MODE - will overwrite expected files!');
@@ -118,6 +135,7 @@ Future<void> _writeGraphToFile(
 
 /// Executes a save test with support for multiple sequential steps.
 /// Each step can have its own input, action timestamps, and expectations.
+/// Supports multiple installations for multi-device sync testing.
 Future<void> _executeSaveTestWithSteps(
     Map<String, dynamic> testJson,
     Directory testAssetsDir,
@@ -126,20 +144,45 @@ Future<void> _executeSaveTestWithSteps(
     String? baseInstallationId) async {
   final testId = testJson['id'] as String;
 
-  // Test-specific installation ID overrides base installation ID
-  final testInstallationId =
-      testJson['installation_id'] as String? ?? baseInstallationId;
-
   final config = _loadConfig(testAssetsDir, testJson['config'] as String);
-  final storage = InMemoryStorage();
-  final iriTranslator = IriTranslator(
-      resourceLocator: LocalResourceLocator(iriTermFactory: IriTerm.validated),
-      resourceConfigs: config.resources);
-
+  
+  // Shared backend for all installations (simulates the remote storage)
+  final sharedBackend = InMemoryBackend();
+  
+  // Map of installation_id -> LocordaGraphSync instance
+  // Each installation has its own storage, clock, etc.
+  final installations = <String, _InstallationContext>{};
+  
   final steps = testJson['steps'] as List<dynamic>;
 
   for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     final stepJson = steps[stepIndex] as Map<String, dynamic>;
+    
+    // Get installation ID for this step (can be different per step)
+    final stepInstallationId = stepJson['installation_id'] as String? ?? 
+        testJson['installation_id'] as String? ?? 
+        baseInstallationId ?? 
+        'default-installation';
+    
+    // Get or create installation context
+    final installationContext = installations.putIfAbsent(
+      stepInstallationId,
+      () {
+        final storage = InMemoryStorage();
+        final iriTranslator = IriTranslator(
+          resourceLocator: LocalResourceLocator(iriTermFactory: IriTerm.validated),
+          resourceConfigs: config.resources,
+        );
+        final timestampFactory = TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
+        
+        return _InstallationContext(
+          installationId: stepInstallationId,
+          storage: storage,
+          iriTranslator: iriTranslator,
+          timestampFactory: timestampFactory,
+        );
+      },
+    );
 
     await _executeStep(
       testId: testId,
@@ -148,10 +191,10 @@ Future<void> _executeSaveTestWithSteps(
       testAssetsDir: testAssetsDir,
       urlToPathMap: urlToPathMap,
       baseTimestamp: baseTimestamp,
-      baseInstallationId: testInstallationId,
+      baseInstallationId: stepInstallationId,
       config: config,
-      storage: storage,
-      iriTranslator: iriTranslator,
+      sharedBackend: sharedBackend,
+      installationContext: installationContext,
     );
   }
 }
@@ -166,18 +209,20 @@ Future<void> _executeStep({
   required DateTime baseTimestamp,
   required String? baseInstallationId,
   required SyncGraphConfig config,
-  required InMemoryStorage storage,
-  required IriTranslator iriTranslator,
+  required InMemoryBackend sharedBackend,
+  required _InstallationContext installationContext,
 }) async {
-  // make sure to reset property changes for next step
-  storage.resetPropertyChanges();
+  // Make sure to reset property changes for next step
+  installationContext.storage.resetPropertyChanges();
+  
+  final storage = installationContext.storage;
+  final iriTranslator = installationContext.iriTranslator;
+  final timestampFactory = installationContext.timestampFactory;
 
   final action = stepJson['action'] as String;
 
   // Load action timestamps if provided
   final actionTs = stepJson['action_ts'] as Map<String, dynamic>?;
-  final timestampFactory =
-      TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
 
   if (action == 'prepare') {
     // Prepare action: Load multiple documents into storage
@@ -229,13 +274,19 @@ Future<void> _executeStep({
     final installationIdFactory =
         baseInstallationId != null ? () => baseInstallationId : null;
 
-    final sync = await LocordaGraphSync.setup(
-        backends: [InMemoryBackend()],
+    // Get or create sync instance for this installation
+    if (installationContext.sync == null) {
+      installationContext.sync = await LocordaGraphSync.setup(
+        backends: [sharedBackend],
         storage: storage,
         config: config,
         fetcher: fetcher,
         physicalTimestampFactory: timestampFactory,
-        installationIdFactory: installationIdFactory);
+        installationIdFactory: installationIdFactory,
+      );
+    }
+    
+    final sync = installationContext.sync!;
 
     // Trigger sync - finds all shards with changes and syncs them
     await sync.syncManager.sync();
@@ -304,13 +355,19 @@ Future<void> _executeStep({
   final installationIdFactory =
       baseInstallationId != null ? () => baseInstallationId : null;
 
-  final sync = await LocordaGraphSync.setup(
-      backends: [InMemoryBackend()],
+  // Get or create sync instance for this installation
+  if (installationContext.sync == null) {
+    installationContext.sync = await LocordaGraphSync.setup(
+      backends: [sharedBackend],
       storage: storage,
       config: config,
       fetcher: fetcher,
       physicalTimestampFactory: timestampFactory,
-      installationIdFactory: installationIdFactory);
+      installationIdFactory: installationIdFactory,
+    );
+  }
+  
+  final sync = installationContext.sync!;
 
   // Set timestamp for save action if specified
   setTime(actionTs?['save'], timestampFactory);

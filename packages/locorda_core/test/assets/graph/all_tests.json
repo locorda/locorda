@@ -1328,79 +1328,31 @@
           ]
         },
         {
-          "id": "save_36_generator",
-          "title": "GENERATOR: Create foreign app documents for save_36",
-          "description": "Temporary test to generate realistic CRDT documents from simulated foreign application. Creates recipe with index infrastructure using foreign_app_config.json, exports all documents to prepare_*.ttl files for use in save_36 test.",
-          "skip": true,
-          "installation_id": "foreign-device-installation",
-          "config": "shared/configs/foreign_app_config.json",
-          "steps": [
-            {
-              "action": "save",
-              "typeIri": "https://schema.org/Recipe",
-              "input_resource": "test_cases/save/36_foreign_shard_discovery/generator_input_recipe.ttl",
-              "expected": {
-                "export_documents": "test_cases/save/36_foreign_shard_discovery/exports"
-              },
-              "action_ts": {
-                "save": "2024-01-01T02:00:00Z"
-              }
-            }
-          ]
-        },
-        {
           "id": "save_36",
           "title": "Update resource with pre-existing index infrastructure from external sync",
           "description": "Tests scenario where index infrastructure (FullIndex, GroupIndexTemplate, GroupIndex, and shards) was created by external synchronization. The resource document contains idx:belongsToIndexShard references pointing to both a FullIndex shard and a GroupIndex shard. When updating the resource, the system must correctly identify and update entries in the existing shards without recreating index infrastructure. This simulates multi-device sync where indices are created on one device and referenced by resources synced from another device.",
           "config": "shared/configs/group_index_config.json",
           "steps": [
             {
-              "action": "prepare",
-              "description": "Load pre-existing index infrastructure that would have been created by external sync",
-              "documents": [
-                {
-                  "typeIri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_installation.ttl"
-                },
-                {
-                  "typeIri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_client_installation_full_index.ttl"
-                },
-                {
-                  "typeIri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_client_installation_full_index_shard.ttl"
-                },
-                {
-                  "typeIri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_full_index.ttl"
-                },
-                {
-                  "typeIri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_full_index_shard.ttl"
-                },
-                {
-                  "typeIri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_group_index_template.ttl"
-                },
-                {
-                  "typeIri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_group_index_2024_01.ttl"
-                },
-                {
-                  "typeIri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_group_index_shard_2024_01.ttl"
-                },
-                {
-                  "typeIri": "https://schema.org/Recipe",
-                  "graph": "test_cases/save/36_foreign_shard_discovery/prepare_recipe.ttl"
-                }
-              ],
+              "action": "save",
+              "installation_id": "foreign-device-installation",
+              "typeIri": "https://schema.org/Recipe",
+              "input_resource": "test_cases/save/36_foreign_shard_discovery/generator_input_recipe.ttl",
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
               }
             },
             {
+              "action": "sync",
+              "installation_id": "foreign-device-installation"
+            },
+            {
+              "action": "sync",
+              "installation_id": "default-installation"
+            },
+            {
               "action": "save",
+              "installation_id": "default-installation",
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/36_foreign_shard_discovery/input_resource.ttl",
               "expected": {
@@ -1420,6 +1372,7 @@
             },
             {
               "action": "sync",
+              "installation_id": "default-installation",
               "action_ts": {
                 "sync": "2024-01-01T06:00:00.001Z"
               },
