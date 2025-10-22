@@ -19,7 +19,16 @@ import 'test_fetcher.dart';
 import 'test_physical_timestamp_factory.dart';
 import 'in_memory_storage.dart';
 
+/// Record mode: When true, tests will write actual results as expected files
+/// instead of comparing them. Use this to create/update test expectations.
+/// 
+/// Set via environment variable: RECORD_MODE=true dart test
+final _recordMode = Platform.environment['RECORD_MODE'] == 'true';
+
 void main() {
+  if (_recordMode) {
+    print('⚠️  Running in RECORD MODE - will overwrite expected files!');
+  }
   // Load and parse all_tests.json
   final testAssetsDir = Directory('test/assets/graph');
   final allTestsFile = File('${testAssetsDir.path}/all_tests.json');
@@ -92,6 +101,16 @@ void main() {
 RdfGraph? _readGraphFromPath(Directory testAssetsDir, String? path) {
   if (path == null) return null;
   return readGraphFromFile(testAssetsDir, path);
+}
+
+/// Writes an RDF graph to a file in Turtle format.
+/// Creates parent directories if they don't exist.
+Future<void> _writeGraphToFile(
+    Directory testAssetsDir, String path, RdfGraph graph) async {
+  final file = File('${testAssetsDir.path}/$path');
+  await file.parent.create(recursive: true);
+  final turtleContent = turtle.encode(graph);
+  await file.writeAsString(turtleContent);
 }
 
 /// Executes a save test with support for multiple sequential steps.
@@ -334,14 +353,23 @@ Future<void> _verifyExpectations({
     if (documentIri == null || typeIri == null) {
       fail('documentIri and typeIri must be provided to verify stored_graph');
     }
-    final expectedStoredGraph =
-        _readGraphFromPath(testAssetsDir, expectedStoredGraphPath)!;
     final storedDataDocument = await storage.getDocument(documentIri);
     if (storedDataDocument == null) {
       fail(await _failMissing(storage, typeIri, documentIri));
     }
-    _expectEqualGraphs("$testId [step $stepIndex] - expected_stored_graph",
-        storedDataDocument.document, expectedStoredGraph);
+    
+    if (_recordMode) {
+      // Record mode: Write actual result as expected file
+      await _writeGraphToFile(
+          testAssetsDir, expectedStoredGraphPath, storedDataDocument.document);
+      print('📝 Recorded: $expectedStoredGraphPath');
+    } else {
+      // Normal mode: Compare with expected
+      final expectedStoredGraph =
+          _readGraphFromPath(testAssetsDir, expectedStoredGraphPath)!;
+      _expectEqualGraphs("$testId [step $stepIndex] - expected_stored_graph",
+          storedDataDocument.document, expectedStoredGraph);
+    }
   }
 
   // Verify property changes if expected
@@ -351,14 +379,20 @@ Future<void> _verifyExpectations({
       fail('documentIri must be provided to verify property_changes');
     }
     final actualPropertyChanges = await storage.getPropertyChanges(documentIri);
-    _expectEqualPropertyChanges(actualPropertyChanges, expectedPropertyChanges);
+    
+    if (_recordMode) {
+      // Record mode: Property changes are not recorded to files
+      // (they're verified programmatically, not from static files)
+      print('📝 Property changes recorded in memory (not written to file)');
+    } else {
+      // Normal mode: Compare with expected
+      _expectEqualPropertyChanges(actualPropertyChanges, expectedPropertyChanges);
+    }
   }
 
   // Verify installation document if expected
   final expectedInstallationPath = expectedJson['installation'] as String?;
   if (expectedInstallationPath != null) {
-    final expectedInstallation =
-        _readGraphFromPath(testAssetsDir, expectedInstallationPath)!;
     final settings = await storage.getSettings(['installation_iri']);
     final installationIriStr = settings['installation_iri'];
     if (installationIriStr == null) {
@@ -371,8 +405,19 @@ Future<void> _verifyExpectations({
       fail(await _failMissing(
           storage, CrdtClientInstallation.classIri, installationIri));
     }
-    _expectEqualGraphs("$testId [step $stepIndex] - expected_installation",
-        storedInstallation.document, expectedInstallation);
+    
+    if (_recordMode) {
+      // Record mode: Write actual result as expected file
+      await _writeGraphToFile(
+          testAssetsDir, expectedInstallationPath, storedInstallation.document);
+      print('📝 Recorded: $expectedInstallationPath');
+    } else {
+      // Normal mode: Compare with expected
+      final expectedInstallation =
+          _readGraphFromPath(testAssetsDir, expectedInstallationPath)!;
+      _expectEqualGraphs("$testId [step $stepIndex] - expected_installation",
+          storedInstallation.document, expectedInstallation);
+    }
   }
 
   // Verify index documents if expected
@@ -537,11 +582,17 @@ Future<void> _verifyIndexDocuments(
           indexDocumentIri));
     }
 
-    // Load expected graph
-    final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
-
-    _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
-        storedIndex.document, expectedGraph);
+    if (_recordMode) {
+      // Record mode: Write actual result as expected file
+      await _writeGraphToFile(
+          testAssetsDir, expectedGraphPath, storedIndex.document);
+      print('📝 Recorded: $expectedGraphPath');
+    } else {
+      // Normal mode: Compare with expected
+      final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+      _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
+          storedIndex.document, expectedGraph);
+    }
   }
 }
 
@@ -585,13 +636,19 @@ Future<void> _verifyGroupIndexDocuments(
           storage, IdxGroupIndex.classIri, groupIndexDocumentIri));
     }
 
-    // Load expected graph
-    final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
-
-    _expectEqualGraphs(
-        "${testId} - expected group index graph $expectedGraphPath",
-        storedGroupIndex.document,
-        expectedGraph);
+    if (_recordMode) {
+      // Record mode: Write actual result as expected file
+      await _writeGraphToFile(
+          testAssetsDir, expectedGraphPath, storedGroupIndex.document);
+      print('📝 Recorded: $expectedGraphPath');
+    } else {
+      // Normal mode: Compare with expected
+      final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+      _expectEqualGraphs(
+          "${testId} - expected group index graph $expectedGraphPath",
+          storedGroupIndex.document,
+          expectedGraph);
+    }
   }
 }
 
@@ -688,11 +745,17 @@ Future<void> _verifyShardDocuments(
       fail(await _failMissing(storage, IdxShard.classIri, shardDocumentIri));
     }
 
-    // Load expected graph
-    final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
-
-    _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
-        storedShard.document, expectedGraph);
+    if (_recordMode) {
+      // Record mode: Write actual result as expected file
+      await _writeGraphToFile(
+          testAssetsDir, expectedGraphPath, storedShard.document);
+      print('📝 Recorded: $expectedGraphPath');
+    } else {
+      // Normal mode: Compare with expected
+      final expectedGraph = _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
+      _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
+          storedShard.document, expectedGraph);
+    }
   }
 }
 

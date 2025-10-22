@@ -82,6 +82,15 @@ The core philosophy is that this service acts as an "add-on" for synchronization
 - `dart tool/run_tests.dart` - Run tests with coverage (generates coverage/lcov.info and HTML report)
 - Individual package testing: `cd packages/PACKAGE_NAME && dart test --coverage=coverage`
 
+#### Test Record Mode
+Some tests support **record mode** for creating/updating expected test results:
+- `RECORD_MODE=true dart test` - Run tests in record mode (overwrites expected files)
+- Use this to regenerate expected RDF graphs after intentional changes to test logic or CRDT behavior
+- Always review changes via `git diff` before committing - record mode overwrites files!
+- Currently supported: `locorda_graph_sync_test.dart` (graph sync expectations)
+
+**Workflow**: Make code changes → run with `RECORD_MODE=true dart test` → review git diff → commit if correct
+
 ### Code Quality  
 - `dart pub run melos analyze` - Run static analysis for all packages
 - `dart pub run melos format` - Format code for all packages (follow this before commits)
