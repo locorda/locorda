@@ -35,13 +35,13 @@ ns1:lcrd-ibn-md5-4d42ff7f469e4fb941701bd0c989421e sync:blankNode _:b3 .
 
 ns1:lcrd-ibn-md5-5310d3714aca64baaff9578cd7b07721 sync:blankNode _:b1 .
 
+_:b1 a idx:GroupingRule;
+    idx:property _:b2, _:b3 .
+
 _:b2 a idx:GroupingRuleProperty;
     idx:hierarchyLevel 1;
     idx:sourceProperty schema:dateCreated;
     idx:transform ([ a idx:RegexTransform ; idx:pattern "^([0-9]{4})-[0-9]{2}-[0-9]{2}.*" ; idx:replacement "${1}" ]) .
-
-_:b1 a idx:GroupingRule;
-    idx:property _:b2, _:b3 .
 
 _:b3 a idx:GroupingRuleProperty;
     idx:hierarchyLevel 2;

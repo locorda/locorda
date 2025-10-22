@@ -40,17 +40,17 @@ ns1:lcrd-stmt-md5-cd1d2310a69f01b476c46e29bbe76ee3 rdf:object ns1:lcrd-ibn-md5-6
     rdf:subject ns1:lcrd-ibn-md5-9110880a000d224b944a75c68db15db9;
     cm:deletedAt "2024-01-01T00:00:00.002Z"^^xsd:dateTime .
 
-_:b1 a schema:Ingredient;
-    schema:amount "2";
-    schema:name "Tomato";
-    schema:provider _:b3;
-    schema:unit "cups" .
+_:b3 a schema:Organization;
+    schema:name "Local Farmers Market";
+    schema:telephone "555-1234" .
 
 _:b2 a schema:Ingredient;
     schema:amount "1";
     schema:name "Basil";
     schema:unit "bunch" .
 
-_:b3 a schema:Organization;
-    schema:name "Local Farmers Market";
-    schema:telephone "555-1234" .
+_:b1 a schema:Ingredient;
+    schema:amount "2";
+    schema:name "Tomato";
+    schema:provider _:b3;
+    schema:unit "cups" .
