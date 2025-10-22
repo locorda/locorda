@@ -114,11 +114,10 @@ class LocordaGraphSync {
     physicalTimestampFactory ??= defaultPhysicalTimestampFactory;
 
     // Automatically add configuration for Framework-Owned resources
-    SyncGraphConfig effectiveConfig = buildEffectiveConfig(config);
+    config = buildEffectiveConfig(config);
 
     // Validate configuration before proceeding
-    final configValidationResult =
-        SyncGraphConfigValidator().validate(effectiveConfig);
+    final configValidationResult = SyncGraphConfigValidator().validate(config);
 
     // Throw if any validation failed
     configValidationResult.throwIfInvalid();
@@ -158,14 +157,14 @@ class LocordaGraphSync {
     final indexRdfGenerator = IndexRdfGenerator(
         resourceLocator: localResourceLocator, shardManager: shardManager);
 
-    final indexParser = IndexParser(
-        knownConfig: effectiveConfig, rdfGenerator: indexRdfGenerator);
+    final indexParser =
+        IndexParser(knownConfig: config, rdfGenerator: indexRdfGenerator);
 
     final indexDiscovery = IndexDiscovery(
       storage: storage,
       parser: indexParser,
       rdfGenerator: indexRdfGenerator,
-      config: effectiveConfig,
+      config: config,
     );
 
     final shardDeterminer = ShardDeterminer(
@@ -185,7 +184,7 @@ class LocordaGraphSync {
 
     final crdtDocumentManager = CrdtDocumentManager(
       storage: storage,
-      config: effectiveConfig,
+      config: config,
       shardDeterminer: shardDeterminer,
       mergeContractLoader: mergeContractLoader,
       localDocumentMerger: localDocumentMerger,
@@ -199,7 +198,7 @@ class LocordaGraphSync {
         rdfGenerator: indexRdfGenerator,
         storage: storage,
         installationIri: installationService.installationIri,
-        config: effectiveConfig);
+        config: config);
 
     await indexManager.initializeIndices();
     final remoteDocumentMerger = RemoteDocumentMerger(
@@ -241,7 +240,7 @@ class LocordaGraphSync {
     final sync = LocordaGraphSync._(
         storage: storage,
         indexManager: indexManager,
-        config: effectiveConfig,
+        config: config,
         resourceLocator: localResourceLocator,
         crdtDocumentManager: crdtDocumentManager,
         indexRdfGenerator: indexRdfGenerator,

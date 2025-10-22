@@ -4,11 +4,20 @@ import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rxdart/rxdart.dart';
 
-final _debug = true;
-final _print = _debug ? print : (Object? _) {};
+final _logger = Logger('InMemoryStorage');
+final _debug = false;
+
+void _print(Object? message) {
+  if (_debug) {
+    print(message);
+  } else {
+    _logger.fine(message);
+  }
+}
 
 class _WatchController<T> {
   final BehaviorSubject<T> _controller;
@@ -428,7 +437,8 @@ class InMemoryStorage implements Storage {
       IriTerm shardIri) async {
     _print(
         'InMemoryStorage.getActiveIndexEntriesForShard: looking for shard=${shardIri.debug}');
-    _print('InMemoryStorage: Total entries in storage: ${_indexEntries.length}');
+    _print(
+        'InMemoryStorage: Total entries in storage: ${_indexEntries.length}');
     for (final entry in _indexEntries.values) {
       _print(
           '  - shard=${entry.shardIri.debug}, resource=${entry.resourceIri.debug}, deleted=${entry.isDeleted}');
@@ -445,7 +455,8 @@ class InMemoryStorage implements Storage {
               isDeleted: entry.isDeleted,
             ))
         .toList();
-    _print('InMemoryStorage: Found ${result.length} active entries for this shard');
+    _print(
+        'InMemoryStorage: Found ${result.length} active entries for this shard');
     return result;
   }
 
@@ -514,6 +525,8 @@ class InMemoryStorage implements Storage {
 
   @override
   Future<String?> getRemoteETag(RemoteId remoteId, IriTerm documentIri) async {
+    _print(
+        'InMemoryStorage.getRemoteETag: remote=${remoteId}, document=${documentIri.debug}');
     return _settings[
         'remote.etag.${remoteId.backend}.${remoteId.id}.${documentIri.value}'];
   }
@@ -521,6 +534,8 @@ class InMemoryStorage implements Storage {
   @override
   Future<void> setRemoteETag(
       RemoteId remoteId, IriTerm documentIri, String etag) async {
+    _print(
+        'InMemoryStorage.setRemoteETag: remote=${remoteId}, document=${documentIri.debug}, etag=$etag');
     _settings[
             'remote.etag.${remoteId.backend}.${remoteId.id}.${documentIri.value}'] =
         etag;

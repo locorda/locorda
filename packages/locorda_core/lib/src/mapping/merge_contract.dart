@@ -240,8 +240,14 @@ class MergeContract {
       _log.warning(
           'Cannot infer unique type for property $propertyIri, found multiple candidate types: $inferredTypes. ${globalRule == null ? 'No merge rule available. ' : 'Using global merge rule of this predicate.'}');
     } else {
-      _log.fine(
-          'No class-specific merge rule found for property $propertyIri. ${globalRule == null ? 'No merge rule available. ' : 'Using global merge rule of this predicate.'}.');
+      if (typeIri != null) {
+        _log.warning(
+            'No class-specific merge rule found for property $propertyIri on $typeIri. ${globalRule == null ? 'No merge rule available. ' : 'Using global merge rule of this predicate.'}.');
+      }
+      if (globalRule == null) {
+        _log.warning(
+            'No merge rule found for property $propertyIri on unknown type, using ${CrdtTypeRegistry.fallback.iri.value}.');
+      }
     }
     return globalRule;
   }

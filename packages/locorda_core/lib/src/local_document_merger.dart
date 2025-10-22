@@ -48,6 +48,7 @@ class LocalDocumentMerger {
     RdfGraph? oldFrameworkGraph,
     MergeContract mergeContract,
     CurrentCrdtClock clock, {
+    required IriTerm appDataTypeIri,
     bool isFrameworkData = false,
     bool computeCanonicalBlankNodes = true,
   }) {
@@ -69,6 +70,7 @@ class LocalDocumentMerger {
         oldAppBlankNodes,
         mergeContract,
         clock,
+        appDataTypeIri: appDataTypeIri,
         isFrameworkData: isFrameworkData);
     return (
       oldBlankNodes: oldAppBlankNodes,
@@ -195,7 +197,9 @@ class LocalDocumentMerger {
       IdentifiedBlankNodes<IriTerm> oldAppBlankNodes,
       MergeContract mergeContract,
       CurrentCrdtClock clock,
-      {bool isFrameworkData = false}) {
+      {bool isFrameworkData = false,
+      required IriTerm appDataTypeIri}) {
+    final isShard = appDataTypeIri == IdxShard.classIri;
     final statements = <Node>[];
     final triplesToRemove = <Triple>{};
     final propertyChanges = <PropertyChange>[];
@@ -239,6 +243,9 @@ class LocalDocumentMerger {
       final subjectTerm = addedSubject.subject;
       var subjectTriples = appData.matching(subject: subjectTerm);
       final predicates = subjectTriples.predicates;
+      final isShardEntry = isShard &&
+          predicates.contains(IdxShardEntry.resource) &&
+          predicates.contains(IdxShardEntry.crdtClockHash);
       final resourceType =
           appData.findSingleObject<IriTerm>(subjectTerm, Rdf.type);
 
@@ -246,9 +253,14 @@ class LocalDocumentMerger {
         final values =
             subjectTriples.getMultiValueObjectList(subjectTerm, predicate);
 
-        // Get CRDT algorithm for this property
-        final crdtType =
-            _getCrdtAlgorithm(mergeContract, resourceType, predicate);
+        // Get CRDT algorithm for this property - but note
+        // that in index entries we always use LWW-Register for the user-defined
+        // "header" properties.
+        final crdtType = isShardEntry &&
+                predicate != IdxShardEntry.resource &&
+                predicate != IdxShardEntry.crdtClockHash
+            ? _crdtTypeRegistry.getType(Algo.LWW_Register)
+            : _getCrdtAlgorithm(mergeContract, resourceType, predicate);
 
         // Generate initial value metadata
         final metadataGraph = crdtType.localValueChange(

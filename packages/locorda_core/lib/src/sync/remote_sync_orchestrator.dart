@@ -152,7 +152,7 @@ class RemoteSyncOrchestrator {
       // Sync each resource type completely before moving to next
       for (final resourceType
           in _config.resourcesInSyncOrder.map((r) => r.typeIri)) {
-        _syncResourceType(resourceType, lastSyncTimestamp, syncTime);
+        await _syncResourceType(resourceType, lastSyncTimestamp, syncTime);
       }
 
       _log.info('Remote synchronization cycle completed successfully');
@@ -359,6 +359,7 @@ class RemoteSyncOrchestrator {
           syncTime: syncTime,
           typeIri: typeIri,
           etag: merged.etag,
+          debugName: debugName,
         );
       } on ConcurrentUpdateException {
         // Conflict detected during upload or local save - retry entire download+merge+upload
@@ -368,7 +369,7 @@ class RemoteSyncOrchestrator {
         _log.warning('Error syncing $debugName', e, st);
         rethrow;
       }
-    });
+    }, debugOperationName: 'syncing $debugName');
   }
 
   Future<
@@ -385,7 +386,7 @@ class RemoteSyncOrchestrator {
     final resourceIri = mergedDocument.expectSingleObject<IriTerm>(
         documentIri, SyncManagedDocument.foafPrimaryTopic)!;
     final typeIri =
-        mergedDocument.expectSingleObject<IriTerm>(documentIri, Rdf.type)!;
+        mergedDocument.expectSingleObject<IriTerm>(resourceIri, Rdf.type)!;
     final shards = await _shardDeterminer.determineShards(
       typeIri,
       resourceIri,
@@ -792,6 +793,7 @@ class RemoteSyncOrchestrator {
               merged.mergedDocument, shardDocumentIri)
           : ourCurrentShardClock;
 
+// FIXME: is this correct?
       final (oldBlankNodes: _, newBlankNodes: _, metadata: metadata) =
           _localDocumentMerger.generateMetadata(
         shardDocumentIri,
@@ -800,6 +802,7 @@ class RemoteSyncOrchestrator {
         merged.mergedDocument,
         merged.mergeContract,
         clock,
+        appDataTypeIri: IdxShard.classIri,
         // optimization: shard documents should not have blank nodes
         computeCanonicalBlankNodes: false,
       );
@@ -823,8 +826,9 @@ class RemoteSyncOrchestrator {
         syncTime: syncTime,
         typeIri: resourceType,
         etag: merged.etag,
+        debugName: debugName,
       );
-    });
+    }, debugOperationName: 'syncing ${debugName}');
   }
 
   Set<IriTerm>? _computeEntriesToKeep(ShardSyncSpec shard, RdfGraph document,

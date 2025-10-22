@@ -50,8 +50,7 @@ class SyncFunction {
     await _prepareSync(syncTime);
 
     // Phase A+B: Remote Synchronization (metadata + documents + shards)
-    // FIXME: restore remote sync!!!
-    //await _syncRemote(syncTime);
+    await _syncRemote(syncTime);
   }
 
   /// Phase 0: Sync Preparation

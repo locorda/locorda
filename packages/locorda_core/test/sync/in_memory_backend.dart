@@ -1,6 +1,19 @@
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/remote_storage.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
+
+final _logger = Logger('InMemoryBackend');
+final _debug = false;
+
+void _print(Object? message) {
+  if (_debug) {
+    print(message);
+  } else {
+    _logger.fine(message);
+  }
+}
 
 class InMemoryBackend implements Backend {
   String get name => 'test';
@@ -34,11 +47,14 @@ class InMemoryRemoteStorage implements RemoteStorage {
   @override
   Future<RemoteDownloadResult> download(IriTerm documentIri,
       {String? ifNoneMatch}) async {
+    _print(
+        'Downloading document: ${documentIri.debug}, ifNoneMatch:$ifNoneMatch');
     final iri = documentIri.value;
     final stored = _documents[iri];
 
     // Document doesn't exist
     if (stored == null) {
+      _print('Document not found: ${documentIri.debug}');
       return RemoteDownloadResult(
         graph: null,
         etag: null,
@@ -48,10 +64,13 @@ class InMemoryRemoteStorage implements RemoteStorage {
 
     // If-None-Match: check if document changed
     if (ifNoneMatch != null && ifNoneMatch == stored.etag) {
+      _print('Document not modified: ${documentIri.debug}');
       // 304 Not Modified
       return RemoteDownloadResult.notModified(etag: stored.etag);
     }
 
+    _print(
+        'Document downloaded: ${documentIri.debug}, etag:${stored.etag}, ifNoneMatch:$ifNoneMatch');
     // 200 OK - return document
     return RemoteDownloadResult(
       graph: stored.graph,
@@ -63,12 +82,16 @@ class InMemoryRemoteStorage implements RemoteStorage {
   @override
   Future<RemoteUploadResult> upload(IriTerm documentIri, RdfGraph graph,
       {String? ifMatch}) async {
+    _print(
+        'Uploading document: ${documentIri.debug}, ifMatch:$ifMatch, graph size: ${graph.triples.length}');
     final iri = documentIri.value;
     final stored = _documents[iri];
 
     // ifMatch: null → If-None-Match: * (create only)
     if (ifMatch == null) {
       if (stored != null) {
+        _print(
+            'Document already exists: ${documentIri.debug}, cannot create (ifMatch: $ifMatch)');
         // 409 Conflict - document already exists
         return RemoteUploadResult.conflict();
       }
@@ -76,17 +99,21 @@ class InMemoryRemoteStorage implements RemoteStorage {
       // Create new document with new ETag
       final newEtag = _generateETag();
       _documents[iri] = _StoredDocument(graph: graph, etag: newEtag);
-
+      _print('Document created: ${documentIri.debug}, etag:$newEtag');
       return RemoteUploadResult.success(newEtag);
     }
 
     // ifMatch: <etag> → If-Match: <etag> (update only if unchanged)
     if (stored == null) {
+      _print(
+          'Document not found: ${documentIri.debug}, cannot update (ifMatch: $ifMatch)');
       // 412 Precondition Failed - document doesn't exist
       return RemoteUploadResult.conflict();
     }
 
     if (stored.etag != ifMatch) {
+      _print(
+          'ETag mismatch for document: ${documentIri.debug}, cannot update (ifMatch: $ifMatch, currentEtag: ${stored.etag})');
       // 412 Precondition Failed - ETag mismatch
       return RemoteUploadResult.conflict();
     }
@@ -94,7 +121,7 @@ class InMemoryRemoteStorage implements RemoteStorage {
     // Update document with new ETag
     final newEtag = _generateETag();
     _documents[iri] = _StoredDocument(graph: graph, etag: newEtag);
-
+    _print('Document updated: ${documentIri.debug}, new etag:$newEtag');
     return RemoteUploadResult.success(newEtag);
   }
 

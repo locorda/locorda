@@ -454,6 +454,7 @@ class CrdtDocumentManager {
         oldFrameworkGraph,
         mergeContract,
         clock,
+        appDataTypeIri: type,
       );
       final propertyChanges = crdtMetadata.propertyChanges;
       if (propertyChanges.isEmpty) {
@@ -507,6 +508,7 @@ class CrdtDocumentManager {
         oldFrameworkGraph,
         mergeContract,
         clock,
+        appDataTypeIri: type,
         isFrameworkData: true, // Mark as framework data
       );
       // add framework property changes
