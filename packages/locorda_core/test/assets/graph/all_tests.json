@@ -1331,13 +1331,22 @@
           "id": "save_36",
           "title": "Update resource with pre-existing index infrastructure from external sync",
           "description": "Tests scenario where index infrastructure (FullIndex, GroupIndexTemplate, GroupIndex, and shards) was created by external synchronization. The resource document contains idx:belongsToIndexShard references pointing to both a FullIndex shard and a GroupIndex shard. When updating the resource, the system must correctly identify and update entries in the existing shards without recreating index infrastructure. This simulates multi-device sync where indices are created on one device and referenced by resources synced from another device.",
-          "config": "shared/configs/group_index_config.json",
+          "installations": [
+            {
+              "id": "foreign-device-installation",
+              "config": "shared/configs/foreign_app_config.json"
+            },
+            {
+              "id": "default-installation",
+              "config": "shared/configs/group_index_config.json"
+            }
+          ],
           "steps": [
             {
               "action": "save",
               "installation_id": "foreign-device-installation",
               "typeIri": "https://schema.org/Recipe",
-              "input_resource": "test_cases/save/36_foreign_shard_discovery/generator_input_recipe.ttl",
+              "input_resource": "test_cases/save/36_foreign_shard_discovery/foreign_input_recipe.ttl",
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
               }

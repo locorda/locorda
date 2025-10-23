@@ -143,6 +143,46 @@ extension RdfGraphExtensions on RdfGraph {
   }
 }
 
+extension RdfSubjectExtensions on RdfSubject? {
+  String get debug {
+    if (this == null) {
+      return 'null';
+    } else if (this is IriTerm) {
+      return (this as IriTerm).debug;
+    } else {
+      return this.toString();
+    }
+  }
+
+  bool get isIri {
+    return this is IriTerm;
+  }
+
+  bool get isBlankNode {
+    return this is BlankNodeTerm;
+  }
+}
+
+extension RdfObjectExtensions on RdfObject? {
+  String get debug {
+    if (this == null) {
+      return 'null';
+    } else if (this is IriTerm) {
+      return (this as IriTerm).debug;
+    } else {
+      return this.toString();
+    }
+  }
+
+  bool get isIri {
+    return this is IriTerm;
+  }
+
+  bool get isBlankNode {
+    return this is BlankNodeTerm;
+  }
+}
+
 extension IriTermExtensions on IriTerm {
   static final LRUCache<IriTerm, String> _debugStringCache =
       LRUCache<IriTerm, String>(maxCacheSize: 100);
@@ -161,7 +201,7 @@ extension IriTermExtensions on IriTerm {
                   .substring('https://w3id.org/solid-crdt-sync/vocab/'.length)
                   .replaceAll('#', ':')
               : r.typeIri.value;
-      return '<${type} | ${r.id}${r.fragment != null ? ' | ${r.fragment!}' : ''}>';
+      return '<${type} | ${r.id}${r.fragment != null ? ' # ${r.fragment!}' : ''}>';
     } catch (_) {
       return iri.value;
     }

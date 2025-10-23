@@ -33,16 +33,12 @@ class RemoteDocumentMerger {
   final Storage _storage;
   final HlcService _hlcService;
 
-  // Will be needed once proper CRDT property merge is implemented
-
   final CrdtTypeRegistry _crdtTypeRegistry;
   final FrameworkIriGenerator _iriGenerator;
 
   late final IdentifiedBlankNodeBuilder _identifiedBlankNodeBuilder =
       IdentifiedBlankNodeBuilder(iriGenerator: _iriGenerator);
 
-  // Will be needed once proper CRDT property merge is implemented
-  // ignore: unused_field
   late final MetadataGenerator _metadataGenerator =
       MetadataGenerator(frameworkIriGenerator: _iriGenerator);
 
@@ -181,8 +177,11 @@ class RemoteDocumentMerger {
       MergeContract mergeContract,
       RemoteCrdtMergeContext mergeContext,
       {required bool isShard}) {
-    // FIXME: Implement subject deletion handling!
-
+    /*
+        ok, another conceptual hurdle: unidentified blank nodes should "survive" 
+        only if the reference to them survives - else we will end up with dangling blank nodes.
+        So how should we handle them here?
+        */
     if (subject.type == MergeSubjectType.blankNodeIdentifier ||
         subject.type == MergeSubjectType.statement) {
       // Skip blank node identifier and statement subjects - they need to be handled
@@ -190,6 +189,58 @@ class RemoteDocumentMerger {
       // Note though, that the clock entries will be merged here like all other subjects
       return MergeResults.empty();
     }
+    if (subject.localKey is UnIdentifiedBlankNodeKey ||
+        subject.remoteKey is UnIdentifiedBlankNodeKey) {
+      final inconsistentLocal = subject.localKey is! UnIdentifiedBlankNodeKey &&
+          subject.localKey != null;
+      final inconsistentRemote =
+          subject.remoteKey is! UnIdentifiedBlankNodeKey &&
+              subject.remoteKey != null;
+      if (inconsistentLocal || inconsistentRemote) {
+        throw StateError(
+            'Cannot merge unidentified blank node subject with identified reference on one side. Subject: $subject');
+      }
+
+      // Cannot merge unidentified blank nodes at subject level - they must be handled as part of property merges.
+      return MergeResults.empty();
+    }
+    final localStatement = localGraph.getStatementForKey(subject.localKey);
+    final remoteStatement = remoteGraph.getStatementForKey(subject.remoteKey);
+    final mergeInstructions = computeMergeInstructions(
+      mergeContext.clockComparison,
+      localStatement,
+      subject.local != null,
+      localGraph,
+      remoteStatement,
+      subject.remote != null,
+      remoteGraph,
+    );
+
+    //print(
+    //   '📄 ${documentIri.debug}\n\t${subject.localKey?.value.debug} & ${subject.remoteKey?.value.debug}\n\t=> $mergeInstructions');
+
+    switch (mergeInstructions) {
+      case MergeInstruction.keepLocal:
+        return MergeResults.subjectFromGraph(localGraph, subject.localKey!);
+      case MergeInstruction.keepRemote:
+        return MergeResults.subjectFromGraph(remoteGraph, subject.remoteKey!);
+      case MergeInstruction.mergeRequired:
+        return _mergeSubjectProperties(
+            subject, localGraph, remoteGraph, mergeContract, mergeContext,
+            isShard: isShard);
+      case MergeInstruction.none:
+        // Does not exist on either side - nothing to merge (should not happen)
+        return MergeResults.empty();
+    }
+  }
+
+  MergeResults _mergeSubjectProperties(
+      MergeSubject subject,
+      OrganizedGraph localGraph,
+      OrganizedGraph remoteGraph,
+      MergeContract mergeContract,
+      RemoteCrdtMergeContext mergeContext,
+      {required bool isShard}) {
     // Get all properties for this subject from both graphs
     final allPredicates = <RdfPredicate>{
       if (subject.local != null)

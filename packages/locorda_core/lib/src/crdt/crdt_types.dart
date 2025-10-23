@@ -71,12 +71,22 @@ abstract interface class CrdtType {
   });
 }
 
+extension MetadataStatementConvencienceExtension on MetadataStatement? {
+  bool isTombstoned() {
+    return this?.isTombstoned() ?? false;
+  }
+}
+
 class MetadataStatement {
   final MetadataStatementKey key;
   final Set<MetadataStatementKey> allKeys;
   final Map<RdfPredicate, Iterable<RdfObject>> predicateObjectMap;
 
   const MetadataStatement(this.key, this.predicateObjectMap, this.allKeys);
+
+  bool isTombstoned() {
+    return predicateObjectMap.containsKey(RdfStatement.crdtDeletedAt);
+  }
 
   MetadataStatement merge(MetadataStatement other) {
     assert(key == other.key);
@@ -110,8 +120,8 @@ sealed class MetadataStatementKey {
     return TripleMetadataStatement(subject, predicate, object);
   }
 
-  factory MetadataStatementKey.from(
-      RdfSubject subject, RdfPredicate? predicate, RdfObject? object) {
+  factory MetadataStatementKey.from(RdfSubject subject,
+      [RdfPredicate? predicate, RdfObject? object]) {
     if (predicate != null && object != null) {
       return TripleMetadataStatement(subject, predicate, object);
     } else if (predicate != null) {
@@ -216,7 +226,36 @@ class MergeResults {
         }
         return acc;
       });
+
+  static MergeResults subjectFromGraph(OrganizedGraph graph, RdfObjectKey key) {
+    final subject = key.value as RdfSubject;
+    final triples = subjectAndInlineTriples(graph, subject);
+    final statements = graph.getAllStatementsForSubject(key);
+
+    return MergeResults(
+        mergedTriples: triples.toSet(),
+        mergedStatements: {for (final s in statements) s.key: s});
+  }
 }
+
+Iterable<Triple> subjectAndInlineTriples(
+        OrganizedGraph graph, RdfSubject subject) =>
+    graph.fullGraph
+        .subgraph(
+          subject,
+          filter: (triple, depth) => switch (triple.object) {
+            IriTerm() ||
+            LiteralTerm() =>
+              TraversalDecision.includeButDontDescend,
+            BlankNodeTerm()
+                when graph.blankNodeMappings
+                    .isIdentified(triple.object as BlankNodeTerm) =>
+              TraversalDecision.includeButDontDescend,
+            // Descend into unidentified blank nodes
+            BlankNodeTerm() => TraversalDecision.include,
+          },
+        )
+        .triples;
 
 enum _RdfObjectComparison {
   num,
@@ -413,10 +452,38 @@ class LwwRegister implements CrdtType {
         .toSet();
 
     return MergeResults(
-      mergedTriples: mergedTriples,
+      mergedTriples: addInlineTriples(mergedTriples, local, remote),
       mergedStatements: {},
     );
   }
+}
+
+Set<Triple> addInlineTriples(
+    Set<Triple> triples, OrganizedGraph local, OrganizedGraph remote) {
+  final localUnidentifiedBlankNodes = <BlankNodeTerm>{};
+  final remoteUnidentifiedBlankNodes = <BlankNodeTerm>{};
+  for (final triple in triples) {
+    if (triple.object is BlankNodeTerm) {
+      final bnode = triple.object as BlankNodeTerm;
+      if (!local.blankNodeMappings.isIdentified(bnode)) {
+        localUnidentifiedBlankNodes.add(bnode);
+      }
+      if (!remote.blankNodeMappings.isIdentified(bnode)) {
+        remoteUnidentifiedBlankNodes.add(bnode);
+      }
+    }
+  }
+  if (localUnidentifiedBlankNodes.isEmpty &&
+      remoteUnidentifiedBlankNodes.isEmpty) {
+    return triples;
+  }
+  return {
+    ...triples,
+    ...localUnidentifiedBlankNodes
+        .expand((bnode) => subjectAndInlineTriples(local, bnode)),
+    ...remoteUnidentifiedBlankNodes
+        .expand((bnode) => subjectAndInlineTriples(remote, bnode)),
+  };
 }
 
 class Immutable implements CrdtType {
@@ -480,7 +547,7 @@ class Immutable implements CrdtType {
         .toSet();
 
     return MergeResults(
-      mergedTriples: mergedTriples,
+      mergedTriples: addInlineTriples(mergedTriples, local, remote),
       mergedStatements: {},
     );
   }
@@ -520,66 +587,55 @@ class OrSet implements CrdtType {
     for (final mergeObject in mergeObjects) {
       final existsRemote = mergeObject.remote != null;
       final existsLocal = mergeObject.local != null;
-      final remoteStatement = remote.statements.getStatement(
+      final remoteStatement = remote.getStatementForKey(
           // we fallback to localKey to catch statements that exist remote
           // for the canonical blank node iris of local, but since blank node
           // does not exist remote any more, there is no remote key
           subject.remoteKey ?? subject.localKey!,
           predicate,
           mergeObject.remoteKey ?? mergeObject.localKey!);
-      final localStatement = local.statements.getStatement(
+
+      final localStatement = local.getStatementForKey(
           // we fallback to remoteKey to catch statements that exist local
           // for the canonical blank node iris of remote, but since blank node
           // does not exist local any more, there is no local key
           subject.localKey ?? subject.remoteKey!,
           predicate,
           mergeObject.localKey ?? mergeObject.remoteKey!);
-      final remoteDeleted =
-          remoteStatement?.predicateObjectMap[RdfStatement.crdtDeletedAt] !=
-              null;
-      final localDeleted =
-          localStatement?.predicateObjectMap[RdfStatement.crdtDeletedAt] !=
-              null;
-      if (!remoteDeleted && !localDeleted && (existsRemote || existsLocal)) {
-        mergedValues.add(mergeObject.object);
-      } else if (remoteDeleted && !localDeleted && existsLocal) {
-        // Tombstoned remote, exists local - check if tombstone wins
-        final tombstoneWins = switch (comparison) {
-          ClockComparison.localDominates => false, // Local add
-          ClockComparison.remoteDominates => true, // Remote delete dominates
-          ClockComparison.concurrent => remote.clock.physicalTime >
-              local.clock.physicalTime, // Physical time tie-break
-          ClockComparison.identical => false, // Add-Wins on identical
-          ClockComparison.bothEmpty => false, // Add-Wins on both empty
-        };
-        if (tombstoneWins) {
-          // Keep tombstone in merged result
-          mergedStatements[remoteStatement!.key] = remoteStatement;
-        } else {
-          // Keep this element
-          mergedValues.add(mergeObject.object);
-        }
-      } else if (!remoteDeleted && localDeleted && existsRemote) {
-        final tombstoneWins = switch (comparison) {
-          ClockComparison.localDominates => true, // Local Delete dominates add
-          ClockComparison.remoteDominates => false, // Add dominates delete
-          ClockComparison.concurrent => local.clock.physicalTime >
-              remote.clock.physicalTime, // Physical time tie-break
-          ClockComparison.identical => false, // Add-Wins on identical
-          ClockComparison.bothEmpty => false, // Add-Wins on both empty
-        };
-        // Tombstoned local, exists remote - check if tombstone wins
-        if (tombstoneWins) {
-          // Keep tombstone in merged result
-          mergedStatements[localStatement!.key] = localStatement;
-        } else {
-          // Keep this element
-          mergedValues.add(mergeObject.object);
-        }
-      } else if (remoteDeleted && localDeleted) {
-        // Tombstoned both sides - merge statements
-        mergedStatements[remoteStatement!.key] =
-            remoteStatement.merge(localStatement!);
+      final mergeInstructions = computeMergeInstructions(
+          comparison,
+          localStatement,
+          existsLocal,
+          local,
+          remoteStatement,
+          existsRemote,
+          remote);
+      switch (mergeInstructions) {
+        case MergeInstruction.keepLocal:
+          if (existsLocal) {
+            mergedValues.add(mergeObject.object);
+          }
+          if (localStatement != null) {
+            mergedStatements[localStatement.key] = localStatement;
+          }
+        case MergeInstruction.keepRemote:
+          if (existsRemote) {
+            mergedValues.add(mergeObject.object);
+          }
+          if (remoteStatement != null) {
+            mergedStatements[remoteStatement.key] = remoteStatement;
+          }
+        case MergeInstruction.mergeRequired:
+          // TODO: should we ever have non-tombstone statements, we might need to merge them here
+          if (existsLocal) {
+            mergedValues.add(mergeObject.object);
+          }
+          if (existsRemote) {
+            mergedValues.add(mergeObject.object);
+          }
+        case MergeInstruction.none:
+          // should never happen, but does not matter. Just ignore.
+          break;
       }
     }
 
@@ -592,7 +648,7 @@ class OrSet implements CrdtType {
         mergedValues.map((v) => Triple(subject.subject, predicate, v)).toSet();
 
     return MergeResults(
-      mergedTriples: mergedTriples,
+      mergedTriples: addInlineTriples(mergedTriples, local, remote),
       mergedStatements: mergedStatements,
     );
   }
@@ -890,11 +946,45 @@ Iterable<Triple>? _handleIdenticalClocksTriples(
 
   // Check if values actually differ
   if (!_iterableEquality.equals(localValues, remoteValues)) {
-    throw StateError(
-      'Clock conflict detected: Identical clocks with different values. '
-      'Local: $localValues, Remote: $remoteValues. '
-      'This indicates a system bug or clock synchronization issue.',
-    );
+    final localValuesAllBlankNodes =
+        !localValues.any((v) => v is! BlankNodeTerm);
+    final remoteValuesAllBlankNodes =
+        !remoteValues.any((v) => v is! BlankNodeTerm);
+    if (!(localValuesAllBlankNodes && remoteValuesAllBlankNodes)) {
+      final localSubgraphs = localValues
+          .whereType<RdfSubject>()
+          .map((v) => localGraph.subgraph(v))
+          .toSet();
+      final remoteSubgraphs = remoteValues
+          .whereType<RdfSubject>()
+          .map((v) => remoteGraph.subgraph(v))
+          .toSet();
+      final localSubgraphsInfo = localSubgraphs.isEmpty
+          ? ''
+          : '''
+${'-' * 10} Local Subgraph ${'-' * 10}  
+${turtle.encode(RdfGraph.fromTriples(localSubgraphs.expand((g) => g.triples).toSet()))}
+''';
+      final remoteSubgraphsInfo = remoteSubgraphs.isEmpty
+          ? ''
+          : '''
+${'-' * 10} Remote Subgraph ${'-' * 10}  
+${turtle.encode(RdfGraph.fromTriples(remoteSubgraphs.expand((g) => g.triples).toSet()))}
+''';
+      final subgraphsInfo =
+          localSubgraphsInfo.isNotEmpty || remoteSubgraphsInfo.isNotEmpty
+              ? localSubgraphsInfo + remoteSubgraphsInfo + ('-' * 10) + '\n'
+              : '';
+      throw StateError(
+        '''
+Clock conflict detected: Identical clocks with different values. 
+Local values: $localValues
+Remote values: $remoteValues
+$subgraphsInfo
+This indicates a system bug or clock synchronization issue.
+''',
+      );
+    }
   }
 
   // Values are identical, return either (they're the same)
@@ -967,4 +1057,115 @@ Iterable<RdfObject> objectsIfSubjectNonNull(
       .findTriples(subject: subject, predicate: predicate)
       .map((t) => t.object)
       .toSet();
+}
+
+enum MergeInstruction {
+  keepLocal,
+  keepRemote,
+  mergeRequired,
+  none,
+}
+
+enum MergeObjectState {
+  present,
+  tombstoned,
+  unknown;
+
+  static MergeObjectState from(MetadataStatement? statement, bool exists) {
+    if (exists && statement.isTombstoned()) {
+      throw StateError(
+          'Inconsistent state: exists is true but statement is tombstoned');
+    }
+    if (exists) {
+      return MergeObjectState.present;
+    } else if (statement.isTombstoned()) {
+      return MergeObjectState.tombstoned;
+    } else {
+      return MergeObjectState.unknown;
+    }
+  }
+}
+
+MergeInstruction computeMergeInstructions(
+  ClockComparison comparison,
+  MetadataStatement? localValueStatement,
+  bool localValueExists,
+  OrganizedGraph local,
+  MetadataStatement? remoteValueStatement,
+  bool remoteValueExists,
+  OrganizedGraph remote,
+) {
+  final localState =
+      MergeObjectState.from(localValueStatement, localValueExists);
+  final remoteState =
+      MergeObjectState.from(remoteValueStatement, remoteValueExists);
+  return switch ((localState, remoteState)) {
+    // Both present - normal merge required
+    (MergeObjectState.present, MergeObjectState.present) =>
+      MergeInstruction.mergeRequired,
+
+    // Tombstoned remote, exists local - check if tombstone wins
+    (MergeObjectState.present, MergeObjectState.tombstoned) =>
+      remoteTombstoneWins(comparison, remote, local)
+          ? MergeInstruction.keepRemote
+          : MergeInstruction.keepLocal,
+
+    // Only exists local, remote has never seen it - keep local
+    (MergeObjectState.present, MergeObjectState.unknown) =>
+      MergeInstruction.keepLocal,
+
+    // Tombstoned local, exists remote - check if tombstone wins
+    (MergeObjectState.tombstoned, MergeObjectState.present) =>
+      localTombstoneWins(comparison, remote, local)
+          ? MergeInstruction.keepLocal
+          : MergeInstruction.keepRemote,
+
+    // Both tombstoned - decide which tombstone to keep based on clock
+    (MergeObjectState.tombstoned, MergeObjectState.tombstoned) =>
+      remoteTombstoneWins(comparison, remote, local)
+          ? MergeInstruction.keepRemote
+          : MergeInstruction.keepLocal,
+
+    // Only tombstoned local, remote has never seen it - keep local tombstone
+    (MergeObjectState.tombstoned, MergeObjectState.unknown) =>
+      MergeInstruction.keepLocal,
+
+    // Only exists remote, local has never seen it - keep remote
+    (MergeObjectState.unknown, MergeObjectState.present) =>
+      MergeInstruction.keepRemote,
+
+    // Only tombstoned remote, local has never seen it - keep remote tombstone
+    (MergeObjectState.unknown, MergeObjectState.tombstoned) =>
+      MergeInstruction.keepRemote,
+
+    // Neither knows about it - nothing to do - but this should not happen
+    (MergeObjectState.unknown, MergeObjectState.unknown) => () {
+        assert(false, 'Unexpected merge state: both unknown');
+        return MergeInstruction.none;
+      }(),
+  };
+}
+
+bool localTombstoneWins(
+    ClockComparison comparison, OrganizedGraph remote, OrganizedGraph local) {
+  return switch (comparison) {
+    ClockComparison.localDominates => true, // Local Delete dominates add
+    ClockComparison.remoteDominates => false, // Add dominates delete
+    ClockComparison.concurrent => local.clock.physicalTime >
+        remote.clock.physicalTime, // Physical time tie-break
+    ClockComparison.identical => false, // Add-Wins on identical
+    ClockComparison.bothEmpty => false, // Add-Wins on both empty
+  };
+}
+
+bool remoteTombstoneWins(
+    ClockComparison comparison, OrganizedGraph remote, OrganizedGraph local) {
+  return switch (comparison) {
+    ClockComparison.localDominates => false, // Local add
+    ClockComparison.remoteDominates => true, // Remote delete dominates
+    ClockComparison.concurrent => remote.clock.physicalTime >
+        local.clock.physicalTime, // Physical time tie-break
+    ClockComparison.identical => false, // Add-Wins on identical
+    ClockComparison.bothEmpty => false, // Add-Wins on both empty
+  };
 }

@@ -69,6 +69,25 @@ abstract interface class MergeContractLoader {
     return document.getListObjects<IriTerm>(
         documentIri, SyncManagedDocument.isGovernedBy);
   }
+
+  List<IriTerm> getMergedGovernanceIris(
+      List<RdfGraph> documents, IriTerm documentIri) {
+    final iriLists = documents
+        .map(
+          (doc) => extractGovernanceIris(doc, documentIri),
+        )
+        .toList();
+    return iriLists.fold((<IriTerm>[], <IriTerm>{}), (acc, v) {
+      final (result, seen) = acc;
+      for (final iri in v) {
+        if (!seen.contains(iri)) {
+          result.add(iri);
+          seen.add(iri);
+        }
+      }
+      return (result, seen);
+    }).$1;
+  }
 }
 
 class StandardMergeContractLoader extends MergeContractLoader {

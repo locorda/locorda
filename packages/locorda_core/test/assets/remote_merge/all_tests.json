@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "description": "Test cases for RemoteDocumentMerger CRDT merge logic",
+  "base": {
+    "timestamp": "2024-01-01T00:00:00Z",
+    "installation_id": "test-installation"
+  },
+  "urlToPathMap": {
+    "https://example.org/test/mappings/recipe-v1": "shared/mappings/recipe-v1.ttl",
+    "https://w3id.org/solid-crdt-sync/mappings/core-v1": "../../../../../spec/mappings/core-v1.ttl",
+    "https://w3id.org/solid-crdt-sync/mappings/shard-v1": "../../../../../spec/mappings/shard-v1.ttl",
+    "https://w3id.org/solid-crdt-sync/mappings/index-v1": "../../../../../spec/mappings/index-v1.ttl",
+    "https://w3id.org/solid-crdt-sync/mappings/client-installation-v1": "../../../../../spec/mappings/client-installation-v1.ttl"
+  },
+  "test_suites": [
+    {
+      "suite": "idempotence",
+      "description": "Tests that merging identical documents is idempotent",
+      "tests": [
+        {
+          "id": "merge_01",
+          "description": "Merge simple recipe document with itself - should be idempotent",
+          "document_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz",
+          "local_graph": "test_cases/idempotence/01_simple_recipe.ttl",
+          "remote_graph": "test_cases/idempotence/01_simple_recipe.ttl",
+          "expected_merged_graph": "test_cases/idempotence/01_simple_recipe.ttl"
+        },
+        {
+          "id": "merge_02",
+          "description": "Merge with null local graph - should return remote",
+          "document_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz",
+          "local_graph": null,
+          "remote_graph": "test_cases/idempotence/01_simple_recipe.ttl",
+          "expected_merged_graph": "test_cases/idempotence/01_simple_recipe.ttl"
+        },
+        {
+          "id": "merge_03",
+          "description": "Merge with null remote graph - should return local",
+          "document_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz",
+          "local_graph": "test_cases/idempotence/01_simple_recipe.ttl",
+          "remote_graph": null,
+          "expected_merged_graph": "test_cases/idempotence/01_simple_recipe.ttl"
+        }
+      ]
+    },
+    {
+      "suite": "basic_merge",
+      "description": "Basic CRDT merge scenarios",
+      "tests": []
+    },
+    {
+      "suite": "index_merge",
+      "description": "Index document merge scenarios (FullIndex, GroupIndex, Shards)",
+      "tests": []
+    }
+  ]
+}

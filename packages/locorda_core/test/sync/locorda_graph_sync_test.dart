@@ -24,6 +24,7 @@ import 'test_physical_timestamp_factory.dart';
 ///
 /// Set via environment variable: RECORD_MODE=true dart test
 final _recordMode = Platform.environment['RECORD_MODE'] == 'true';
+final debug = (dumpSharedBackend: false, logStep: false);
 
 /// Context for a single installation (device) in multi-device tests.
 /// Each installation has its own storage, clock, and sync instance.
@@ -32,13 +33,14 @@ class _InstallationContext {
   final InMemoryStorage storage;
   final IriTranslator iriTranslator;
   final TestPhysicalTimestampFactory timestampFactory;
-  LocordaGraphSync? sync;
+  final Future<LocordaGraphSync> syncFuture;
 
   _InstallationContext({
     required this.installationId,
     required this.storage,
     required this.iriTranslator,
     required this.timestampFactory,
+    required this.syncFuture,
   });
 }
 
@@ -52,9 +54,10 @@ void main() {
   final allTestsJson =
       jsonDecode(allTestsFile.readAsStringSync()) as Map<String, dynamic>;
 
-  final urlToPathMapJson = allTestsJson['urlToPathMap'] as Map<String, dynamic>;
-  final urlToPathMap = urlToPathMapJson.map((k, v) => MapEntry(k, v as String));
-
+  final fetcher = TestFetcher.fromTestJson(
+    allTestsJson,
+    testAssetsDir,
+  );
   // Parse base configuration
   final baseJson = allTestsJson['base'] as Map<String, dynamic>;
   final baseTimestamp = DateTime.parse(baseJson['timestamp'] as String);
@@ -87,12 +90,12 @@ void main() {
             case 'save':
             case 'group_index':
               setupTestLogging(Level.WARNING);
-              await _executeSaveTestWithSteps(testJson, testAssetsDir,
-                  urlToPathMap, testBaseTimestamp, baseInstallationId);
+              await _executeSaveTestWithSteps(testJson, testAssetsDir, fetcher,
+                  testBaseTimestamp, baseInstallationId);
               break;
             case 'save_error':
               setupTestLogging(Level.OFF);
-              await _executeSaveErrorTest(testJson, testAssetsDir, urlToPathMap,
+              await _executeSaveErrorTest(testJson, testAssetsDir, fetcher,
                   testBaseTimestamp, baseInstallationId);
               break;
             default:
@@ -120,66 +123,91 @@ RdfGraph? _readGraphFromPath(Directory testAssetsDir, String? path) {
   return readGraphFromFile(testAssetsDir, path);
 }
 
-/// Writes an RDF graph to a file in Turtle format.
-/// Creates parent directories if they don't exist.
-Future<void> _writeGraphToFile(
-    Directory testAssetsDir, String path, RdfGraph graph) async {
-  final file = File('${testAssetsDir.path}/$path');
-  await file.parent.create(recursive: true);
-  var turtleContent = turtle.encode(graph);
-  if (!turtleContent.endsWith('\n')) {
-    turtleContent += "\n";
-  }
-  await file.writeAsString(turtleContent);
-}
-
 /// Executes a save test with support for multiple sequential steps.
 /// Each step can have its own input, action timestamps, and expectations.
 /// Supports multiple installations for multi-device sync testing.
 Future<void> _executeSaveTestWithSteps(
     Map<String, dynamic> testJson,
     Directory testAssetsDir,
-    Map<String, String> urlToPathMap,
+    TestFetcher fetcher,
     DateTime baseTimestamp,
     String? baseInstallationId) async {
   final testId = testJson['id'] as String;
 
-  final config = _loadConfig(testAssetsDir, testJson['config'] as String);
-  
+  // Load configurations - either per-installation or single global config
+  final Map<String, SyncGraphConfig> installationConfigs;
+
+  if (testJson.containsKey('installations')) {
+    // New format: per-installation configs
+    final installationsJson = testJson['installations'] as List<dynamic>;
+    installationConfigs = {};
+    for (final installationJson in installationsJson) {
+      final installationMap = installationJson as Map<String, dynamic>;
+      final installationId = installationMap['id'] as String;
+      final configPath = installationMap['config'] as String;
+      installationConfigs[installationId] =
+          _loadConfig(testAssetsDir, configPath);
+    }
+  } else {
+    // Legacy format: single global config
+    final config = _loadConfig(testAssetsDir, testJson['config'] as String);
+    installationConfigs = {'*': config}; // Use '*' as wildcard key
+  }
+
   // Shared backend for all installations (simulates the remote storage)
   final sharedBackend = InMemoryBackend();
-  
+
   // Map of installation_id -> LocordaGraphSync instance
   // Each installation has its own storage, clock, etc.
   final installations = <String, _InstallationContext>{};
-  
+
   final steps = testJson['steps'] as List<dynamic>;
 
   for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     final stepJson = steps[stepIndex] as Map<String, dynamic>;
-    
+
     // Get installation ID for this step (can be different per step)
-    final stepInstallationId = stepJson['installation_id'] as String? ?? 
-        testJson['installation_id'] as String? ?? 
-        baseInstallationId ?? 
+    final stepInstallationId = stepJson['installation_id'] as String? ??
+        testJson['installation_id'] as String? ??
+        baseInstallationId ??
         'default-installation';
-    
+
+    // Get config for this installation
+    final config = installationConfigs[stepInstallationId] ??
+        installationConfigs['*'] ??
+        (throw StateError(
+            'No config found for installation $stepInstallationId'));
+
     // Get or create installation context
     final installationContext = installations.putIfAbsent(
       stepInstallationId,
       () {
         final storage = InMemoryStorage();
         final iriTranslator = IriTranslator(
-          resourceLocator: LocalResourceLocator(iriTermFactory: IriTerm.validated),
+          resourceLocator:
+              LocalResourceLocator(iriTermFactory: IriTerm.validated),
           resourceConfigs: config.resources,
         );
-        final timestampFactory = TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
-        
+        final timestampFactory =
+            TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
+
+        // Get or create sync instance for this installation
+
+        final syncFuture = LocordaGraphSync.setup(
+          backends: [sharedBackend],
+          storage: storage,
+          config: config,
+          fetcher: fetcher,
+          physicalTimestampFactory: timestampFactory,
+          installationIdFactory: () => stepInstallationId,
+        );
+
         return _InstallationContext(
           installationId: stepInstallationId,
           storage: storage,
           iriTranslator: iriTranslator,
           timestampFactory: timestampFactory,
+          syncFuture: syncFuture,
         );
       },
     );
@@ -189,7 +217,6 @@ Future<void> _executeSaveTestWithSteps(
       stepIndex: stepIndex,
       stepJson: stepJson,
       testAssetsDir: testAssetsDir,
-      urlToPathMap: urlToPathMap,
       baseTimestamp: baseTimestamp,
       baseInstallationId: stepInstallationId,
       config: config,
@@ -205,7 +232,6 @@ Future<void> _executeStep({
   required int stepIndex,
   required Map<String, dynamic> stepJson,
   required Directory testAssetsDir,
-  required Map<String, String> urlToPathMap,
   required DateTime baseTimestamp,
   required String? baseInstallationId,
   required SyncGraphConfig config,
@@ -214,12 +240,18 @@ Future<void> _executeStep({
 }) async {
   // Make sure to reset property changes for next step
   installationContext.storage.resetPropertyChanges();
-  
+
   final storage = installationContext.storage;
   final iriTranslator = installationContext.iriTranslator;
   final timestampFactory = installationContext.timestampFactory;
 
   final action = stepJson['action'] as String;
+  if (debug.logStep) {
+    print('➡️ [$testId] Step $stepIndex ($action) [$baseInstallationId] ');
+  }
+  if (debug.dumpSharedBackend) {
+    _dumpSharedBackend(sharedBackend, 'before $action');
+  }
 
   // Load action timestamps if provided
   final actionTs = stepJson['action_ts'] as Map<String, dynamic>?;
@@ -265,28 +297,7 @@ Future<void> _executeStep({
     // Set timestamp for sync action if specified
     setTime(actionTs?['sync'], timestampFactory);
 
-    final fetcher = TestFetcher(
-      testAssetsDir: testAssetsDir,
-      urlToPathMap: urlToPathMap,
-    );
-
-    // Create installation ID factory if base installation ID provided
-    final installationIdFactory =
-        baseInstallationId != null ? () => baseInstallationId : null;
-
-    // Get or create sync instance for this installation
-    if (installationContext.sync == null) {
-      installationContext.sync = await LocordaGraphSync.setup(
-        backends: [sharedBackend],
-        storage: storage,
-        config: config,
-        fetcher: fetcher,
-        physicalTimestampFactory: timestampFactory,
-        installationIdFactory: installationIdFactory,
-      );
-    }
-    
-    final sync = installationContext.sync!;
+    final sync = await installationContext.syncFuture;
 
     // Trigger sync - finds all shards with changes and syncs them
     await sync.syncManager.sync();
@@ -346,28 +357,7 @@ Future<void> _executeStep({
         []);
   }
 
-  final fetcher = TestFetcher(
-    testAssetsDir: testAssetsDir,
-    urlToPathMap: urlToPathMap,
-  );
-
-  // Create installation ID factory if base installation ID provided
-  final installationIdFactory =
-      baseInstallationId != null ? () => baseInstallationId : null;
-
-  // Get or create sync instance for this installation
-  if (installationContext.sync == null) {
-    installationContext.sync = await LocordaGraphSync.setup(
-      backends: [sharedBackend],
-      storage: storage,
-      config: config,
-      fetcher: fetcher,
-      physicalTimestampFactory: timestampFactory,
-      installationIdFactory: installationIdFactory,
-    );
-  }
-  
-  final sync = installationContext.sync!;
+  final sync = await installationContext.syncFuture;
 
   // Set timestamp for save action if specified
   setTime(actionTs?['save'], timestampFactory);
@@ -388,6 +378,20 @@ Future<void> _executeStep({
       externalDocumentIri: externalDocumentIri,
       typeIri: typeIri,
     );
+  }
+}
+
+void _dumpSharedBackend(InMemoryBackend sharedBackend, String when) {
+  for (var remote in sharedBackend.remotes) {
+    print(
+        '🗄️  Shared Backend State ($when) - ${remote.remoteId.backend} - ${remote.remoteId.id}:');
+    for (final entry in remote.documents.entries) {
+      print(('-' * 10) +
+          ' ${IriTerm(entry.key).debug} - ${entry.value.etag} ' +
+          ('-' * 10));
+      print(turtle.encode(entry.value.graph));
+      print('-' * 80 + '\n');
+    }
   }
 }
 
@@ -420,7 +424,7 @@ Future<void> _verifyExpectations({
 
     if (_recordMode) {
       // Record mode: Write actual result as expected file
-      await _writeGraphToFile(
+      await writeGraphToFile(
           testAssetsDir, expectedStoredGraphPath, storedDataDocument.document);
       print('📝 Recorded: $expectedStoredGraphPath');
     } else {
@@ -469,7 +473,7 @@ Future<void> _verifyExpectations({
 
     if (_recordMode) {
       // Record mode: Write actual result as expected file
-      await _writeGraphToFile(
+      await writeGraphToFile(
           testAssetsDir, expectedInstallationPath, storedInstallation.document);
       print('📝 Recorded: $expectedInstallationPath');
     } else {
@@ -645,7 +649,7 @@ Future<void> _verifyIndexDocuments(
 
     if (_recordMode) {
       // Record mode: Write actual result as expected file
-      await _writeGraphToFile(
+      await writeGraphToFile(
           testAssetsDir, expectedGraphPath, storedIndex.document);
       print('📝 Recorded: $expectedGraphPath');
     } else {
@@ -700,7 +704,7 @@ Future<void> _verifyGroupIndexDocuments(
 
     if (_recordMode) {
       // Record mode: Write actual result as expected file
-      await _writeGraphToFile(
+      await writeGraphToFile(
           testAssetsDir, expectedGraphPath, storedGroupIndex.document);
       print('📝 Recorded: $expectedGraphPath');
     } else {
@@ -810,7 +814,7 @@ Future<void> _verifyShardDocuments(
 
     if (_recordMode) {
       // Record mode: Write actual result as expected file
-      await _writeGraphToFile(
+      await writeGraphToFile(
           testAssetsDir, expectedGraphPath, storedShard.document);
       print('📝 Recorded: $expectedGraphPath');
     } else {
@@ -838,7 +842,7 @@ Future<String> _failMissing(
 Future<void> _executeSaveErrorTest(
     Map<String, dynamic> testJson,
     Directory testAssetsDir,
-    Map<String, String> urlToPathMap,
+    TestFetcher fetcher,
     DateTime baseTimestamp,
     String? baseInstallationId) async {
   // Load configuration
@@ -866,11 +870,6 @@ Future<void> _executeSaveErrorTest(
     // Execute save (should throw)
     final timestampFactory =
         TestPhysicalTimestampFactory(baseTimestamp: baseTimestamp);
-
-    final fetcher = TestFetcher(
-      testAssetsDir: testAssetsDir,
-      urlToPathMap: urlToPathMap,
-    );
 
     final installationIdFactory =
         baseInstallationId != null ? () => baseInstallationId : null;

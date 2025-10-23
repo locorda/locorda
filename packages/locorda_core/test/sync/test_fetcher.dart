@@ -14,6 +14,20 @@ class TestFetcher implements Fetcher {
     Map<String, String>? urlToPathMap,
   }) : urlToPathMap = urlToPathMap ?? {};
 
+  static TestFetcher fromTestJson(
+    Map<String, dynamic> testJson,
+    Directory testAssetsDir,
+  ) {
+    final urlToPathMapJson =
+        testJson['urlToPathMap'] as Map<String, dynamic>? ?? {};
+    final urlToPathMap =
+        urlToPathMapJson.map((k, v) => MapEntry(k, v as String));
+    return TestFetcher(
+      testAssetsDir: testAssetsDir,
+      urlToPathMap: urlToPathMap,
+    );
+  }
+
   @override
   Future<String> fetch(String url, {String? contentType}) async {
     // Check if we have an explicit mapping for this URL

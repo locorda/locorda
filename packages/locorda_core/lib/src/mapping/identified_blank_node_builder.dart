@@ -351,7 +351,7 @@ List<IdentifiedBlankNode> _addIdentifiedBlankNodes(
   final parentTriplesForNode = parentTriples[blankNode];
   if (parentTriplesForNode == null || parentTriplesForNode.isEmpty) {
     _log.warning(
-        "Found blank node ${blankNode} that cannot be identified because it has no parent.");
+        "Found blank node ${blankNode} that cannot be identified because it has no parent.\n${'-' * 40}\n${turtle.encode(graph.subgraph(blankNode))}\n${'-' * 40}\n${turtle.encode(graph)}\n");
     return const [];
   }
 

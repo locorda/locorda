@@ -19,6 +19,9 @@ class OrganizedStatements {
   final Map<MetadataStatementKey, MetadataStatement> _statementsByKey;
   final Iterable<RdfSubject> statementIdentifiers;
 
+  MetadataStatement? getStatementForKey(MetadataStatementKey key) =>
+      _statementsByKey[key];
+
   MetadataStatement? getStatementForTriple(Triple triple) =>
       _statementsByKey[MetadataStatementKey.fromTriple(triple)];
 
@@ -122,15 +125,38 @@ class OrganizedStatements {
     return OrganizedStatements._(statements, statementIdentifiers);
   }
 
+  Iterable<MetadataStatement> getAllStatementsForSubject(RdfObjectKey key) {
+    // TODO: Optimize by precomputing a map from subject keys to statements or similar
+    final subjectEquivalents = <RdfSubject>{
+      if (key.value is RdfSubject) key.value as RdfSubject,
+      ...?key.canonicalIris
+    };
+    return _statementsByKey.entries
+        .where((entry) => switch (entry.key) {
+              TripleMetadataStatement(subject: var subj) =>
+                subjectEquivalents.contains(subj),
+              SubjectPredicateMetadataStatement(subject: var subj) =>
+                subjectEquivalents.contains(subj),
+              SubjectMetadataStatement(subject: var subj) =>
+                subjectEquivalents.contains(subj),
+            })
+        .map((entry) => entry.value)
+        .toSet();
+  }
+
   MetadataStatement? getStatement(
-      RdfObjectKey subject, RdfPredicate predicate, RdfObjectKey object) {
+      RdfObjectKey subject, RdfPredicate? predicate, RdfObjectKey? object) {
     final key = MetadataStatementKey.from(
-        subject.value as RdfSubject, predicate, object.value);
+        subject.value as RdfSubject, predicate, object?.value);
     final statement = _statementsByKey[key];
     if (statement != null) {
       return statement;
     }
     return subject.valueOrCanonicalIrisAs<RdfSubject>().expand((subj) {
+      if (object == null) {
+        final altKey = MetadataStatementKey.from(subj, predicate);
+        return [_statementsByKey[altKey]];
+      }
       return object.valueOrCanonicalIrisAs<RdfObject>().map((obj) {
         final altKey = MetadataStatementKey.from(subj, predicate, obj);
         return _statementsByKey[altKey];
@@ -340,6 +366,10 @@ class OrganizedBlankNodeMappings {
   BlankNodeTerm? getBlankNode(RdfSubject rdfSubject) {
     return _canonicalToBlankNodeMap[rdfSubject];
   }
+
+  bool isIdentified(BlankNodeTerm object) {
+    return _identifiedBlankNodes.containsKey(object);
+  }
 }
 
 sealed class RdfObjectKey {
@@ -486,10 +516,33 @@ final class OrganizedGraph {
             // Relying on RdfGraph being immutable, so we do not need to copy the subjects set
             fullGraph.subjects;
 
-  Iterable<RdfObjectKey> get allSubjectKeys {
-    return _allSubjects
-        .map((subject) => RdfObjectKey.fromObject(subject, blankNodeMappings));
-  }
+  MetadataStatement? getStatement(RdfSubject subject,
+          [RdfPredicate? predicate, RdfObject? object]) =>
+      statements.getStatementForKey(
+          MetadataStatementKey.from(subject, predicate, object));
+
+  bool isTombstoned(RdfSubject subject,
+          [RdfPredicate? predicate, RdfObject? object]) =>
+      getStatement(subject, predicate, object)?.isTombstoned() ?? false;
+
+  /// Get statement by RdfObjectKey subject, RdfPredicate and RdfObjectKey object
+  ///
+  /// Returns null if no such statement exists or if subject is null.
+  MetadataStatement? getStatementForKey(RdfObjectKey? subject,
+          [RdfPredicate? predicate, RdfObjectKey? object]) =>
+      subject == null
+          ? null
+          : statements.getStatement(subject, predicate, object);
+
+  Iterable<MetadataStatement> getAllStatementsForSubject(RdfObjectKey key) =>
+      statements.getAllStatementsForSubject(key);
+
+  bool isTombstonedObjectKey(RdfObjectKey subject, RdfPredicate? predicate,
+          RdfObjectKey? object) =>
+      getStatementForKey(subject, predicate, object)?.isTombstoned() ?? false;
+
+  Iterable<RdfObjectKey> get allSubjectKeys => _allSubjects
+      .map((subject) => RdfObjectKey.fromObject(subject, blankNodeMappings));
 
   /// While an RdfSubject might be specific to a given graph (due to blank nodes),
   /// a RdfSubjectKey can be used to identify the same subject across different graphs

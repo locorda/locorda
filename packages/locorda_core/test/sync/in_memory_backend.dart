@@ -17,13 +17,13 @@ void _print(Object? message) {
 
 class InMemoryBackend implements Backend {
   String get name => 'test';
-  final List<RemoteStorage> _remotes;
+  final List<InMemoryRemoteStorage> _remotes;
 
   InMemoryBackend()
       : _remotes = [InMemoryRemoteStorage(RemoteId('test', 'in-memory'))];
 
   @override
-  List<RemoteStorage> get remotes => _remotes;
+  List<InMemoryRemoteStorage> get remotes => _remotes;
 }
 
 /// In-memory implementation of RemoteStorage for testing.
@@ -160,6 +160,8 @@ class InMemoryRemoteStorage implements RemoteStorage {
     _documents.clear();
     _etagCounter = 0;
   }
+
+  Map<String, _StoredDocument> get documents => _documents;
 
   /// Check if document exists (for testing)
   bool hasDocument(IriTerm documentIri) {

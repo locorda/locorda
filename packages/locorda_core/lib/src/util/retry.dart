@@ -10,9 +10,11 @@ Future<T> retryOnConflict<T>(Future<T> Function() operation,
   for (var attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await operation();
-    } on ConcurrentUpdateException catch (e) {
+    } on ConcurrentUpdateException catch (e, stackTrace) {
       log.warning(
-          'Concurrent update detected while $debugOperationName: ${e.message}');
+          'Concurrent update detected while $debugOperationName: ${e.message}',
+          e,
+          stackTrace);
       if (attempt < maxRetries - 1) {
         log.warning(
             'Retrying $debugOperationName (attempt ${attempt + 1}/$maxRetries)...');

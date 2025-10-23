@@ -256,7 +256,7 @@ class IndexManager {
     required String context,
     int? physicalTime,
     int? logicalTime,
-  }) async {
+  }) {
     return retryOnConflict(
         () => _save(type, appData,
             physicalTime: physicalTime, logicalTime: logicalTime),

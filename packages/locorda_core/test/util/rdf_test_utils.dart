@@ -4,6 +4,19 @@ import 'package:rdf_canonicalization/rdf_canonicalization.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
+/// Writes an RDF graph to a file in Turtle format.
+/// Creates parent directories if they don't exist.
+Future<void> writeGraphToFile(
+    Directory testAssetsDir, String path, RdfGraph graph) async {
+  final file = File('${testAssetsDir.path}/$path');
+  await file.parent.create(recursive: true);
+  var turtleContent = turtle.encode(graph);
+  if (!turtleContent.endsWith('\n')) {
+    turtleContent += "\n";
+  }
+  await file.writeAsString(turtleContent);
+}
+
 /// Reads an RDF graph from a Turtle file.
 ///
 /// Throws if the file does not exist.

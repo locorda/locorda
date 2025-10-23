@@ -283,8 +283,10 @@ class RemoteSyncOrchestrator {
       // but just to be safe, always merge if remote changed
       loadedLocalDocument = await _getLocalDocumentWithMetadata(documentIri);
       final localDocument = loadedLocalDocument?.document;
-      final governanceIris =
-          _getMergedGovernanceIris(localDocument, documentIri, downloadResult);
+      final governanceIris = _mergeContractLoader.getMergedGovernanceIris([
+        if (localDocument != null) localDocument,
+        if (downloadResult.graph != null) downloadResult.graph!
+      ], documentIri);
       mergeContract = await _mergeContractLoader.load(governanceIris);
       // CRDT merge local + remote
       final mergeResult = await _merger.merge(
@@ -488,23 +490,6 @@ class RemoteSyncOrchestrator {
     // Success
   }
 
-  List<IriTerm> _getMergedGovernanceIris(RdfGraph? localDocument,
-      IriTerm documentIri, RemoteDownloadResult downloadResult) {
-    final localGovernanceIris = localDocument == null
-        ? const <IriTerm>[]
-        : _mergeContractLoader.extractGovernanceIris(
-            localDocument, documentIri);
-    final remoteGovernanceIris = _mergeContractLoader.extractGovernanceIris(
-        downloadResult.graph!, documentIri);
-    final remoteGovernanceIrisSet = remoteGovernanceIris.toSet();
-    final governanceIris = [
-      ...remoteGovernanceIris,
-      ...localGovernanceIris
-          .where((element) => !remoteGovernanceIrisSet.contains(element))
-    ];
-    return governanceIris;
-  }
-
   Future<List<ShardSyncSpec>> _buildShardSyncSpecs(
     IndexSyncSpec idxSpec,
   ) async {
@@ -702,7 +687,7 @@ class RemoteSyncOrchestrator {
     final shardIri = shard.shardIri;
     final debugName = 'Shard ${shardIri.debug}';
     _log.fine('Syncing: ${debugName}');
-    retryOnConflict(() async {
+    await retryOnConflict(() async {
       // Build Document Sync Queue for this type
       final shardDocumentIri = shardIri.getDocumentIri();
       final merged = await _downloadAndMerge(
