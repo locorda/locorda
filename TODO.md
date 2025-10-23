@@ -105,15 +105,23 @@
 - [x] Should we prepare the remote sync code for the possibility to have different remotes? Maybe by prefixing the etags? => yes, it is remote specific now
 - [x] How do we get foreign shard indices to our DB? Are we missing something here? Actually, I think no: we only want to sync those entries from foreign indices that we already know about, and those will eventually end up in the documentsToSync queue. And when the documents are synced, their shards (old and new) are updated in our DB - so our DB index entries should be correct and up-to-date.
 - [x] Is our physical timestamp handling in _syncDocument in the remote_sync_orchestrator correct? => should be now - index entries get their timestamps from the indexed document, physical clock always is "ours" setting remote-only values to zero
-- [ ] Implement real CRDT Merge (and tests)
-- [ ] Implement ensure
+- [x] Implement real CRDT Merge 
 - [ ] Implement actual syncing to a backend
-- [ ] Implement Solid backend with actual Pod storage operations
+- [ ] Implement ensure
+- [ ] Implement basic Solid backend with actual Pod storage operations (hard-coded storage locations)
   - Most complex but enables the full vision
   - Requires Pod operations, authentication integration
   - Can reuse patterns from in-memory backend
+- [ ] Implement tests for real CRDT Merge 
 - [ ] Thoroughly test, for example
   - Foreign indices/shards that are referenced, but not yet downloaded when an item is saved!
+
+### Priority 4.b: Improve solid support
+- [ ] Solid: use solid type registry
+- [ ] Solid: write solid type registry if user allows - maybe even allow user to edit settings?
+- [ ] Solid: do we need more dialogs to inform expert users?
+- [ ] Solid: find a robust way for mapping interal/external IRIs that cannot be broken by changes to the type registry
+- [ ] Solid: not really pure solid, but maybe allow the user to use app-specific storage location after all? 
 
 ### Priority 5: Implement Delete
 - [ ] Deletion support is part of the concept and the example app has deletion usecases, but it is not fully implemented yet
