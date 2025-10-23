@@ -150,7 +150,7 @@ class InMemoryStorage implements Storage {
     ];
 
     // Emit to document watch streams for this type
-    _triggerWatchers([typeIri, documentIri]);
+    await _triggerWatchers([typeIri, documentIri]);
 
     return SaveDocumentResult(
       previousCursor: previousCursor,
@@ -159,7 +159,7 @@ class InMemoryStorage implements Storage {
   }
 
   /// Emit current documents to all watch streams for a specific type.
-  void _triggerWatchers(Iterable<IriTerm> typeIris) {
+  Future<void> _triggerWatchers(Iterable<IriTerm> typeIris) async {
     _print(
         'InMemoryStorage: Triggering watchers for types: ${typeIris.map((i) => i.debug)}');
     final controllers = typeIris
@@ -171,7 +171,7 @@ class InMemoryStorage implements Storage {
     if (controllers.isEmpty) return;
     for (final controller in controllers) {
       if (controller.isClosed) continue;
-      controller.trigger();
+      await controller.trigger();
     }
   }
 
@@ -429,7 +429,7 @@ class InMemoryStorage implements Storage {
     );
 
     // Emit to all watch streams that include this index
-    _triggerWatchers([indexIri, shardIri, resourceIri]);
+    await _triggerWatchers([indexIri, shardIri, resourceIri]);
   }
 
   @override

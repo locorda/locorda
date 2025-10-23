@@ -2,11 +2,24 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/crdt/crdt_types.dart';
+import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/hlc_service.dart';
+import 'package:locorda_core/src/index/index_discovery.dart';
+import 'package:locorda_core/src/index/index_manager.dart';
+import 'package:locorda_core/src/index/index_parser.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
+import 'package:locorda_core/src/index/shard_determiner.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
+import 'package:locorda_core/src/installation_service.dart';
+import 'package:locorda_core/src/local_document_merger.dart';
+import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
+import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
+import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:locorda_core/src/sync/shard_document_generator.dart';
 import 'package:locorda_core/src/util/build_effective_config.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -24,7 +37,7 @@ import 'test_physical_timestamp_factory.dart';
 ///
 /// Set via environment variable: RECORD_MODE=true dart test
 final _recordMode = Platform.environment['RECORD_MODE'] == 'true';
-final debug = (dumpSharedBackend: false, logStep: false);
+final debug = (dumpSharedBackend: false, logStep: true);
 
 /// Context for a single installation (device) in multi-device tests.
 /// Each installation has its own storage, clock, and sync instance.
@@ -222,6 +235,7 @@ Future<void> _executeSaveTestWithSteps(
       config: config,
       sharedBackend: sharedBackend,
       installationContext: installationContext,
+      testFetcher: fetcher,
     );
   }
 }
@@ -237,6 +251,7 @@ Future<void> _executeStep({
   required SyncGraphConfig config,
   required InMemoryBackend sharedBackend,
   required _InstallationContext installationContext,
+  required TestFetcher testFetcher,
 }) async {
   // Make sure to reset property changes for next step
   installationContext.storage.resetPropertyChanges();
@@ -319,6 +334,86 @@ Future<void> _executeStep({
     return;
   }
 
+  if (action == 'generate_shard_documents') {
+    // make sure the LocordaGraphSync instance is fully initialized
+    await installationContext.syncFuture;
+    setTime(actionTs?['generate'], timestampFactory);
+    final DateTime syncTime = timestampFactory();
+    final lastSyncTimestamp = 0;
+    final effectiveConfig = buildEffectiveConfig(config);
+    final hlcService = HlcService(
+        installationLocalId: baseInstallationId!,
+        physicalTimestampFactory: timestampFactory);
+    final shardManager = ShardManager();
+    final iriTermFactory = IriTerm.validated;
+    final resourceLocator =
+        LocalResourceLocator(iriTermFactory: iriTermFactory);
+    final rdfGenerator = IndexRdfGenerator(
+        resourceLocator: resourceLocator, shardManager: shardManager);
+    final parser =
+        IndexParser(knownConfig: effectiveConfig, rdfGenerator: rdfGenerator);
+    final indexDiscovery = IndexDiscovery(
+      storage: storage,
+      config: effectiveConfig,
+      parser: parser,
+      rdfGenerator: rdfGenerator,
+    );
+    final shardDeterminer = ShardDeterminer(
+      indexDiscovery: indexDiscovery,
+      rdfGenerator: rdfGenerator,
+      shardManager: shardManager,
+      storage: storage,
+    );
+    final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes();
+    final frameworkIriGenerator = FrameworkIriGenerator();
+    final localDocumentMerger = LocalDocumentMerger(
+      crdtTypeRegistry: crdtTypeRegistry,
+      frameworkIriGenerator: frameworkIriGenerator,
+    );
+    final mergeContractLoader = StandardMergeContractLoader(
+        RecursiveRdfLoader(
+          fetcher: StandardRdfGraphFetcher(fetcher: testFetcher, rdfCore: rdf),
+          iriFactory: iriTermFactory,
+        ),
+        crdtTypeRegistry);
+    final crdtDocumentManager = CrdtDocumentManager(
+        storage: storage,
+        config: effectiveConfig,
+        hlcService: hlcService,
+        localDocumentMerger: localDocumentMerger,
+        mergeContractLoader: mergeContractLoader,
+        physicalTimestampFactory: timestampFactory,
+        shardDeterminer: shardDeterminer);
+    final installationIri = InstallationService.createInstallationIri(
+        resourceLocator, baseInstallationId);
+    final indexManager = IndexManager(
+        crdtDocumentManager: crdtDocumentManager,
+        rdfGenerator: rdfGenerator,
+        storage: storage,
+        installationIri: installationIri,
+        config: effectiveConfig);
+    final shardDocumentGenerator = ShardDocumentGenerator(
+        documentManager: crdtDocumentManager,
+        storage: storage,
+        indexManager: indexManager);
+
+    await shardDocumentGenerator(syncTime, lastSyncTimestamp);
+
+    // Verify expectations if provided
+    final expectedJson = stepJson['expected'] as Map<String, dynamic>?;
+    if (expectedJson != null) {
+      await _verifyExpectations(
+        testId: testId,
+        stepIndex: stepIndex,
+        expectedJson: expectedJson,
+        testAssetsDir: testAssetsDir,
+        storage: storage,
+        config: effectiveConfig,
+        iriTranslator: iriTranslator,
+      );
+    }
+    return;
+  }
   if (action != 'save') {
     fail('Unknown action: $action');
   }

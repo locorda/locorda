@@ -256,13 +256,12 @@ class IndexManager {
     required String context,
     int? physicalTime,
     int? logicalTime,
-  }) {
-    return retryOnConflict(
-        () => _save(type, appData,
-            physicalTime: physicalTime, logicalTime: logicalTime),
-        debugOperationName: 'save $context',
-        log: _log);
-  }
+  }) =>
+      retryOnConflict(
+          () => _save(type, appData,
+              physicalTime: physicalTime, logicalTime: logicalTime),
+          debugOperationName: 'save $context',
+          log: _log);
 
   /// Internal save method that throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<DocumentSaveResult?> _save(IriTerm type, RdfGraph appData,

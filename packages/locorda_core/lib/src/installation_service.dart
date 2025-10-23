@@ -82,11 +82,8 @@ class InstallationService {
     } else {
       // Generate new installation ID and IRI with 'installation' fragment
       installationLocalId = installationIdFactory();
-      installationIri = resourceLocator.toIri(ResourceIdentifier(
-        CrdtClientInstallation.classIri,
-        installationLocalId,
-        'installation',
-      ));
+      installationIri =
+          createInstallationIri(resourceLocator, installationLocalId);
 
       // Persist both installation IRI and localId
       await storage.setSetting(
@@ -109,6 +106,15 @@ class InstallationService {
         installationDocumentSaved: installationDocumentSaved,
         iriTermFactory: iriTermFactory,
         physicalTimestampFactory: physicalTimestampFactory);
+  }
+
+  static IriTerm createInstallationIri(
+      LocalResourceLocator resourceLocator, String installationLocalId) {
+    return resourceLocator.toIri(ResourceIdentifier(
+      CrdtClientInstallation.classIri,
+      installationLocalId,
+      'installation',
+    ));
   }
 
   /// Mark installation document as saved.

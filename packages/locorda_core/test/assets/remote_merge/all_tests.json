@@ -23,7 +23,7 @@
           "document_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz",
           "local_graph": "test_cases/idempotence/01_simple_recipe.ttl",
           "remote_graph": "test_cases/idempotence/01_simple_recipe.ttl",
-          "expected_merged_graph": "test_cases/idempotence/01_simple_recipe.ttl"
+          "expected_merged_graph": "test_cases/idempotence/01_expected.ttl"
         },
         {
           "id": "merge_02",
@@ -31,7 +31,7 @@
           "document_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz",
           "local_graph": null,
           "remote_graph": "test_cases/idempotence/01_simple_recipe.ttl",
-          "expected_merged_graph": "test_cases/idempotence/01_simple_recipe.ttl"
+          "expected_merged_graph": "test_cases/idempotence/02_expected.ttl"
         },
         {
           "id": "merge_03",
@@ -39,19 +39,31 @@
           "document_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz",
           "local_graph": "test_cases/idempotence/01_simple_recipe.ttl",
           "remote_graph": null,
-          "expected_merged_graph": "test_cases/idempotence/01_simple_recipe.ttl"
+          "expected_merged_graph": "test_cases/idempotence/03_expected.ttl"
         }
       ]
     },
     {
       "suite": "basic_merge",
       "description": "Basic CRDT merge scenarios",
-      "tests": []
-    },
-    {
-      "suite": "index_merge",
-      "description": "Index document merge scenarios (FullIndex, GroupIndex, Shards)",
-      "tests": []
+      "tests": [
+        {
+          "id": "merge_01",
+          "description": "Merge two shard index of indices (full)",
+          "document_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZnVsbC1iYmNmMDlmNS9zaGFyZC1tb2QtbWQ1LTEtMC12MV8wXzA=",
+          "local_graph": "test_cases/basic_merge/01_shard_of_indices-full/local.ttl",
+          "remote_graph": "test_cases/basic_merge/01_shard_of_indices-full/remote.ttl",
+          "expected_merged_graph": "test_cases/basic_merge/01_shard_of_indices-full/expected.ttl"
+        },
+        {
+          "id": "merge_02",
+          "description": "Merge two shard index of indices (group)",
+          "document_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZnVsbC01ZjY4YjViNy9zaGFyZC1tb2QtbWQ1LTEtMC12MV8wXzA=",
+          "local_graph": "test_cases/basic_merge/02_shard_of_indices-group/local.ttl",
+          "remote_graph": "test_cases/basic_merge/02_shard_of_indices-group/remote.ttl",
+          "expected_merged_graph": "test_cases/basic_merge/02_shard_of_indices-group/expected.ttl"
+        }
+      ]
     }
   ]
 }
