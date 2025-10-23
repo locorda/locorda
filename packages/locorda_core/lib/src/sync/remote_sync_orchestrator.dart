@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/local_document_merger.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
@@ -722,13 +723,16 @@ class RemoteSyncOrchestrator {
       // we explicitly synced (from documentQueue). This ensures we don't remove
       // remote entries we haven't seen - we only update our own items.
       final Set<IriTerm>? limitToResources = switch (shard) {
-        FullShardSync() => null, // All entries
+        FullShardSync(fetchPolicy: Prefetch()) => null, // All entries
+        FullShardSync(fetchPolicy: OnRequest() || PrefetchFiltered()) =>
+          documentQueue, // Only synced resources
         PartialShardSync() => documentQueue, // Only synced resources
       };
 
       final finalEntrySet = await _getFinalEntrySet(shardIri,
           limitToResourceIris: limitToResources);
-
+      print('Final entry set for shard ${shardIri.debug}: '
+          '${finalEntrySet.map((e) => e.resourceIri.debug).toList()}\n limitToResources: ${limitToResources?.map((e) => e.debug).toList()}');
       // 2. Generate shard nodes from final entry set
       //
       // For partial sync, we need to merge these with existing remote entries
@@ -740,7 +744,7 @@ class RemoteSyncOrchestrator {
 
       final RdfGraph updatedShardDocument;
       final entriesToKeep = _computeEntriesToKeep(
-          shard, merged.mergedDocument, shardIri, documentQueue);
+          limitToResources, merged.mergedDocument, shardIri);
 
       // Build document with kept entries but without the other old ones
       final withoutEntries = merged.mergedDocument.subgraph(
@@ -816,9 +820,9 @@ class RemoteSyncOrchestrator {
     }, debugOperationName: 'syncing ${debugName}');
   }
 
-  Set<IriTerm>? _computeEntriesToKeep(ShardSyncSpec shard, RdfGraph document,
-      IriTerm shardIri, Set<IriTerm> documentQueue) {
-    if (shard is PartialShardSync) {
+  Set<IriTerm>? _computeEntriesToKeep(
+      Set<IriTerm>? limitToResources, RdfGraph document, IriTerm shardIri) {
+    if (limitToResources != null) {
       final Set<IriTerm> entriesToKeep = {};
       // Partial sync: Keep remote entries for resources not in our sync set
       // Only update/remove entries for resources we explicitly synced
@@ -831,7 +835,7 @@ class RemoteSyncOrchestrator {
       for (final entryIri in existingEntries) {
         final resourceIri = document.expectSingleObject<IriTerm>(
             entryIri, IdxShardEntry.resource);
-        if (resourceIri != null && !documentQueue.contains(resourceIri)) {
+        if (resourceIri != null && !limitToResources.contains(resourceIri)) {
           // Keep this remote entry - it's not one we synced
           entriesToKeep.add(entryIri);
         }

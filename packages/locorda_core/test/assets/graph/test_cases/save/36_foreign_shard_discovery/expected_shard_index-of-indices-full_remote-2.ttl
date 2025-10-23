@@ -20,10 +20,6 @@
     sync:isGovernedBy (mappings:shard-v1);
     sync:managedResourceType idx:Shard .
 
-ns1:entry-2e883124d69c377d8daff7f19ee0eaa6 cm:clockHash "81ae3d8e12bbca55eb2de0c2dd465c74";
-    idx:indexesClass idx:FullIndex;
-    idx:resource ns2:index .
-
 ns1:entry-713129f56a309cabc970f22c7da295cf cm:clockHash "4aa8005552dcd3ff7fc4ccb1a17be85d";
     idx:indexesClass cm:ClientInstallation;
     idx:resource ns5:index .
@@ -40,5 +36,5 @@ ns1:lcrd-clk-md5-4a481c7617b289f7c4fd07cb3a10fd0f cm:logicalTime 2;
     cm:physicalTime 1704067200012 .
 
 ns1:shard a idx:Shard;
-    idx:containsEntry ns1:entry-ce394f730640668924968eddf09c01bc, ns1:entry-a68c1c4f5dda5dbf177113200fb133a0, ns1:entry-713129f56a309cabc970f22c7da295cf, ns1:entry-2e883124d69c377d8daff7f19ee0eaa6;
+    idx:containsEntry ns1:entry-ce394f730640668924968eddf09c01bc, ns1:entry-a68c1c4f5dda5dbf177113200fb133a0, ns1:entry-713129f56a309cabc970f22c7da295cf;
     idx:isShardOf ns2:index .

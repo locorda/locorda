@@ -6,7 +6,9 @@
 @prefix ns2: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1iYmNmMDlmNS9pbmRleA==#> .
 @prefix ns3: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC01ZjY4YjViNy9pbmRleA==#> .
 @prefix ns4: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC0zODgwMzZmMy9pbmRleA==#> .
+@prefix ns5: <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1lNjc5ZDcyZi9pbmRleA==#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <https://schema.org/> .
 @prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
@@ -15,19 +17,18 @@
     cm:clockHash "1f5aa91395d2c7cbef99fb89d17ab4be";
     cm:createdAt "2024-01-01T00:00:00.000Z"^^xsd:dateTime;
     cm:hasClockEntry ns1:lcrd-clk-md5-7934e73e2e637cc2115bd6d7262d680f, ns1:lcrd-clk-md5-4a481c7617b289f7c4fd07cb3a10fd0f;
-    sync:hasStatement ns1:lcrd-stmt-md5-9d73ef32d17ffaee5e268922347ed52b, ns1:lcrd-stmt-md5-752e8a880f215608503c87285c0b4a62;
     sync:isGovernedBy (mappings:shard-v1);
     sync:managedResourceType idx:Shard .
 
-ns1:entry-2e883124d69c377d8daff7f19ee0eaa6 cm:clockHash "b1f6b26e2e102fb65838999115d65e24";
-    idx:indexesClass idx:FullIndex;
-    idx:resource ns2:index .
-
-ns1:entry-713129f56a309cabc970f22c7da295cf cm:clockHash "56c8adf88359608fbe9b895d4d3f1388";
+ns1:entry-713129f56a309cabc970f22c7da295cf cm:clockHash "4aa8005552dcd3ff7fc4ccb1a17be85d";
     idx:indexesClass cm:ClientInstallation;
     idx:resource ns4:index .
 
-ns1:entry-ce394f730640668924968eddf09c01bc cm:clockHash "280852ee7b13ef4c31145712625d7d21";
+ns1:entry-a68c1c4f5dda5dbf177113200fb133a0 cm:clockHash "acfe426053c8901cd211536eabb32a84";
+    idx:indexesClass schema:Recipe;
+    idx:resource ns5:index .
+
+ns1:entry-ce394f730640668924968eddf09c01bc cm:clockHash "363d87c859a47caf5fedde545e85b125";
     idx:indexesClass idx:GroupIndexTemplate;
     idx:resource ns3:index .
 
@@ -37,14 +38,6 @@ ns1:lcrd-clk-md5-4a481c7617b289f7c4fd07cb3a10fd0f cm:logicalTime 2;
 ns1:lcrd-clk-md5-7934e73e2e637cc2115bd6d7262d680f cm:logicalTime 2;
     cm:physicalTime 1704067200009 .
 
-ns1:lcrd-stmt-md5-752e8a880f215608503c87285c0b4a62 rdf:object ns1:entry-a68c1c4f5dda5dbf177113200fb133a0;
-    rdf:predicate idx:containsEntry;
-    rdf:subject ns1:shard;
-    cm:deletedAt "2024-01-01T00:00:00.009Z"^^xsd:dateTime .
-
-ns1:lcrd-stmt-md5-9d73ef32d17ffaee5e268922347ed52b rdf:subject ns1:entry-a68c1c4f5dda5dbf177113200fb133a0;
-    cm:deletedAt "2024-01-01T00:00:00.009Z"^^xsd:dateTime .
-
 ns1:shard a idx:Shard;
-    idx:containsEntry ns1:entry-ce394f730640668924968eddf09c01bc, ns1:entry-713129f56a309cabc970f22c7da295cf, ns1:entry-2e883124d69c377d8daff7f19ee0eaa6;
+    idx:containsEntry ns1:entry-ce394f730640668924968eddf09c01bc, ns1:entry-713129f56a309cabc970f22c7da295cf, ns1:entry-a68c1c4f5dda5dbf177113200fb133a0;
     idx:isShardOf ns2:index .
