@@ -21,7 +21,7 @@ void main() {
         IriTerm shardDocumentIri) async {
       final (indexOrTemplateIri, properties) =
           await resolver.resolveIndexedProperties(shardDocumentIri);
-      return properties;
+      return properties;      
     }
 
     /// Helper to create a document with minimal metadata

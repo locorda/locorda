@@ -1352,60 +1352,6 @@
               }
             },
             {
-              "action": "generate_shard_documents",
-              "installation_id": "foreign-device-installation",
-              "action_ts": {
-                "generate": "2024-01-01T02:01:00Z"
-              },
-              "expected": {
-                "shard_documents": [
-                  {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1iYmNmMDlmNS9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_remote-1.ttl"
-                  },
-                  {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC01ZjY4YjViNy9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_remote-1.ttl"
-                  }
-                ]
-              }
-            },
-            {
-              "action": "generate_shard_documents",
-              "installation_id": "default-installation",
-              "action_ts": {
-                "generate": "2024-01-01T02:02:00Z"
-              },
-              "expected": {
-                "shard_documents": [
-                  {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1iYmNmMDlmNS9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_local-1.ttl"
-                  },
-                  {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC01ZjY4YjViNy9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_local-1.ttl"
-                  }
-                ]
-              }
-            },
-            {
               "action": "sync",
               "installation_id": "foreign-device-installation",
               "action_ts": {

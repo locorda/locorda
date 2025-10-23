@@ -1183,6 +1183,15 @@ class $IndexEntriesTable extends IndexEntries
       requiredDuringInsert: true,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
+  static const VerificationMeta _resourceTypeIriIdMeta =
+      const VerificationMeta('resourceTypeIriId');
+  @override
+  late final GeneratedColumn<int> resourceTypeIriId = GeneratedColumn<int>(
+      'resource_type_iri_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES sync_iris (id)'));
   static const VerificationMeta _clockHashMeta =
       const VerificationMeta('clockHash');
   @override
@@ -1222,6 +1231,7 @@ class $IndexEntriesTable extends IndexEntries
         shardIri,
         indexIriId,
         resourceIriId,
+        resourceTypeIriId,
         clockHash,
         headerProperties,
         updatedAt,
@@ -1259,6 +1269,14 @@ class $IndexEntriesTable extends IndexEntries
               data['resource_iri_id']!, _resourceIriIdMeta));
     } else if (isInserting) {
       context.missing(_resourceIriIdMeta);
+    }
+    if (data.containsKey('resource_type_iri_id')) {
+      context.handle(
+          _resourceTypeIriIdMeta,
+          resourceTypeIriId.isAcceptableOrUnknown(
+              data['resource_type_iri_id']!, _resourceTypeIriIdMeta));
+    } else if (isInserting) {
+      context.missing(_resourceTypeIriIdMeta);
     }
     if (data.containsKey('clock_hash')) {
       context.handle(_clockHashMeta,
@@ -1305,6 +1323,8 @@ class $IndexEntriesTable extends IndexEntries
           .read(DriftSqlType.int, data['${effectivePrefix}index_iri_id'])!,
       resourceIriId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}resource_iri_id'])!,
+      resourceTypeIriId: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}resource_type_iri_id'])!,
       clockHash: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}clock_hash'])!,
       headerProperties: attachedDatabase.typeMapping.read(
@@ -1334,6 +1354,9 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
   /// The resource IRI this entry points to (e.g., /notes/note-123#note)
   final int resourceIriId;
 
+  /// The type IRI of the resource (e.g., schema:Note)
+  final int resourceTypeIriId;
+
   /// Clock hash from the resource's CRDT metadata
   final String clockHash;
 
@@ -1352,6 +1375,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
       {required this.shardIri,
       required this.indexIriId,
       required this.resourceIriId,
+      required this.resourceTypeIriId,
       required this.clockHash,
       this.headerProperties,
       required this.updatedAt,
@@ -1363,6 +1387,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
     map['shard_iri'] = Variable<int>(shardIri);
     map['index_iri_id'] = Variable<int>(indexIriId);
     map['resource_iri_id'] = Variable<int>(resourceIriId);
+    map['resource_type_iri_id'] = Variable<int>(resourceTypeIriId);
     map['clock_hash'] = Variable<String>(clockHash);
     if (!nullToAbsent || headerProperties != null) {
       map['header_properties'] = Variable<String>(headerProperties);
@@ -1378,6 +1403,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
       shardIri: Value(shardIri),
       indexIriId: Value(indexIriId),
       resourceIriId: Value(resourceIriId),
+      resourceTypeIriId: Value(resourceTypeIriId),
       clockHash: Value(clockHash),
       headerProperties: headerProperties == null && nullToAbsent
           ? const Value.absent()
@@ -1395,6 +1421,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
       shardIri: serializer.fromJson<int>(json['shardIri']),
       indexIriId: serializer.fromJson<int>(json['indexIriId']),
       resourceIriId: serializer.fromJson<int>(json['resourceIriId']),
+      resourceTypeIriId: serializer.fromJson<int>(json['resourceTypeIriId']),
       clockHash: serializer.fromJson<String>(json['clockHash']),
       headerProperties: serializer.fromJson<String?>(json['headerProperties']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -1409,6 +1436,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
       'shardIri': serializer.toJson<int>(shardIri),
       'indexIriId': serializer.toJson<int>(indexIriId),
       'resourceIriId': serializer.toJson<int>(resourceIriId),
+      'resourceTypeIriId': serializer.toJson<int>(resourceTypeIriId),
       'clockHash': serializer.toJson<String>(clockHash),
       'headerProperties': serializer.toJson<String?>(headerProperties),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -1421,6 +1449,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
           {int? shardIri,
           int? indexIriId,
           int? resourceIriId,
+          int? resourceTypeIriId,
           String? clockHash,
           Value<String?> headerProperties = const Value.absent(),
           int? updatedAt,
@@ -1430,6 +1459,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
         shardIri: shardIri ?? this.shardIri,
         indexIriId: indexIriId ?? this.indexIriId,
         resourceIriId: resourceIriId ?? this.resourceIriId,
+        resourceTypeIriId: resourceTypeIriId ?? this.resourceTypeIriId,
         clockHash: clockHash ?? this.clockHash,
         headerProperties: headerProperties.present
             ? headerProperties.value
@@ -1446,6 +1476,9 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
       resourceIriId: data.resourceIriId.present
           ? data.resourceIriId.value
           : this.resourceIriId,
+      resourceTypeIriId: data.resourceTypeIriId.present
+          ? data.resourceTypeIriId.value
+          : this.resourceTypeIriId,
       clockHash: data.clockHash.present ? data.clockHash.value : this.clockHash,
       headerProperties: data.headerProperties.present
           ? data.headerProperties.value
@@ -1464,6 +1497,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
           ..write('shardIri: $shardIri, ')
           ..write('indexIriId: $indexIriId, ')
           ..write('resourceIriId: $resourceIriId, ')
+          ..write('resourceTypeIriId: $resourceTypeIriId, ')
           ..write('clockHash: $clockHash, ')
           ..write('headerProperties: $headerProperties, ')
           ..write('updatedAt: $updatedAt, ')
@@ -1474,8 +1508,16 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
   }
 
   @override
-  int get hashCode => Object.hash(shardIri, indexIriId, resourceIriId,
-      clockHash, headerProperties, updatedAt, ourPhysicalClock, isDeleted);
+  int get hashCode => Object.hash(
+      shardIri,
+      indexIriId,
+      resourceIriId,
+      resourceTypeIriId,
+      clockHash,
+      headerProperties,
+      updatedAt,
+      ourPhysicalClock,
+      isDeleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1483,6 +1525,7 @@ class IndexEntry extends DataClass implements Insertable<IndexEntry> {
           other.shardIri == this.shardIri &&
           other.indexIriId == this.indexIriId &&
           other.resourceIriId == this.resourceIriId &&
+          other.resourceTypeIriId == this.resourceTypeIriId &&
           other.clockHash == this.clockHash &&
           other.headerProperties == this.headerProperties &&
           other.updatedAt == this.updatedAt &&
@@ -1494,6 +1537,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
   final Value<int> shardIri;
   final Value<int> indexIriId;
   final Value<int> resourceIriId;
+  final Value<int> resourceTypeIriId;
   final Value<String> clockHash;
   final Value<String?> headerProperties;
   final Value<int> updatedAt;
@@ -1504,6 +1548,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
     this.shardIri = const Value.absent(),
     this.indexIriId = const Value.absent(),
     this.resourceIriId = const Value.absent(),
+    this.resourceTypeIriId = const Value.absent(),
     this.clockHash = const Value.absent(),
     this.headerProperties = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -1515,6 +1560,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
     required int shardIri,
     required int indexIriId,
     required int resourceIriId,
+    required int resourceTypeIriId,
     required String clockHash,
     this.headerProperties = const Value.absent(),
     required int updatedAt,
@@ -1524,6 +1570,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
   })  : shardIri = Value(shardIri),
         indexIriId = Value(indexIriId),
         resourceIriId = Value(resourceIriId),
+        resourceTypeIriId = Value(resourceTypeIriId),
         clockHash = Value(clockHash),
         updatedAt = Value(updatedAt),
         ourPhysicalClock = Value(ourPhysicalClock);
@@ -1531,6 +1578,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
     Expression<int>? shardIri,
     Expression<int>? indexIriId,
     Expression<int>? resourceIriId,
+    Expression<int>? resourceTypeIriId,
     Expression<String>? clockHash,
     Expression<String>? headerProperties,
     Expression<int>? updatedAt,
@@ -1542,6 +1590,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
       if (shardIri != null) 'shard_iri': shardIri,
       if (indexIriId != null) 'index_iri_id': indexIriId,
       if (resourceIriId != null) 'resource_iri_id': resourceIriId,
+      if (resourceTypeIriId != null) 'resource_type_iri_id': resourceTypeIriId,
       if (clockHash != null) 'clock_hash': clockHash,
       if (headerProperties != null) 'header_properties': headerProperties,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -1555,6 +1604,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
       {Value<int>? shardIri,
       Value<int>? indexIriId,
       Value<int>? resourceIriId,
+      Value<int>? resourceTypeIriId,
       Value<String>? clockHash,
       Value<String?>? headerProperties,
       Value<int>? updatedAt,
@@ -1565,6 +1615,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
       shardIri: shardIri ?? this.shardIri,
       indexIriId: indexIriId ?? this.indexIriId,
       resourceIriId: resourceIriId ?? this.resourceIriId,
+      resourceTypeIriId: resourceTypeIriId ?? this.resourceTypeIriId,
       clockHash: clockHash ?? this.clockHash,
       headerProperties: headerProperties ?? this.headerProperties,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -1585,6 +1636,9 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
     }
     if (resourceIriId.present) {
       map['resource_iri_id'] = Variable<int>(resourceIriId.value);
+    }
+    if (resourceTypeIriId.present) {
+      map['resource_type_iri_id'] = Variable<int>(resourceTypeIriId.value);
     }
     if (clockHash.present) {
       map['clock_hash'] = Variable<String>(clockHash.value);
@@ -1613,6 +1667,7 @@ class IndexEntriesCompanion extends UpdateCompanion<IndexEntry> {
           ..write('shardIri: $shardIri, ')
           ..write('indexIriId: $indexIriId, ')
           ..write('resourceIriId: $resourceIriId, ')
+          ..write('resourceTypeIriId: $resourceTypeIriId, ')
           ..write('clockHash: $clockHash, ')
           ..write('headerProperties: $headerProperties, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2984,6 +3039,22 @@ final class $$SyncIrisTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$IndexEntriesTable, List<IndexEntry>>
+      _resourceTypeIriTable(_$SyncDatabase db) =>
+          MultiTypedResultKey.fromTable(db.indexEntries,
+              aliasName: $_aliasNameGenerator(
+                  db.syncIris.id, db.indexEntries.resourceTypeIriId));
+
+  $$IndexEntriesTableProcessedTableManager get resourceTypeIri {
+    final manager = $$IndexEntriesTableTableManager($_db, $_db.indexEntries)
+        .filter(
+            (f) => f.resourceTypeIriId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_resourceTypeIriTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$GroupIndexSubscriptionsTable,
       List<GroupIndexSubscription>> _groupIndexSubscriptionsRefsTable(
           _$SyncDatabase db) =>
@@ -3208,6 +3279,27 @@ class $$SyncIrisTableFilterComposer
         getCurrentColumn: (t) => t.id,
         referencedTable: $db.indexEntries,
         getReferencedColumn: (t) => t.resourceIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IndexEntriesTableFilterComposer(
+              $db: $db,
+              $table: $db.indexEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> resourceTypeIri(
+      Expression<bool> Function($$IndexEntriesTableFilterComposer f) f) {
+    final $$IndexEntriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.indexEntries,
+        getReferencedColumn: (t) => t.resourceTypeIriId,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -3495,6 +3587,27 @@ class $$SyncIrisTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> resourceTypeIri<T extends Object>(
+      Expression<T> Function($$IndexEntriesTableAnnotationComposer a) f) {
+    final $$IndexEntriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.indexEntries,
+        getReferencedColumn: (t) => t.resourceTypeIriId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IndexEntriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.indexEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> groupIndexSubscriptionsRefs<T extends Object>(
       Expression<T> Function($$GroupIndexSubscriptionsTableAnnotationComposer a)
           f) {
@@ -3605,6 +3718,7 @@ class $$SyncIrisTableTableManager extends RootTableManager<
         bool shardIri,
         bool indexIri,
         bool indexResourceIri,
+        bool resourceTypeIri,
         bool groupIndexSubscriptionsRefs,
         bool groupIndexTemplateIriId,
         bool indexedTypeIriId,
@@ -3647,6 +3761,7 @@ class $$SyncIrisTableTableManager extends RootTableManager<
               shardIri = false,
               indexIri = false,
               indexResourceIri = false,
+              resourceTypeIri = false,
               groupIndexSubscriptionsRefs = false,
               groupIndexTemplateIriId = false,
               indexedTypeIriId = false,
@@ -3661,6 +3776,7 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                 if (shardIri) db.indexEntries,
                 if (indexIri) db.indexEntries,
                 if (indexResourceIri) db.indexEntries,
+                if (resourceTypeIri) db.indexEntries,
                 if (groupIndexSubscriptionsRefs) db.groupIndexSubscriptions,
                 if (groupIndexTemplateIriId) db.groupIndexSubscriptions,
                 if (indexedTypeIriId) db.groupIndexSubscriptions,
@@ -3757,6 +3873,19 @@ class $$SyncIrisTableTableManager extends RootTableManager<
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.resourceIriId == item.id),
                         typedResults: items),
+                  if (resourceTypeIri)
+                    await $_getPrefetchedData<SyncIri, $SyncIrisTable,
+                            IndexEntry>(
+                        currentTable: table,
+                        referencedTable:
+                            $$SyncIrisTableReferences._resourceTypeIriTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncIrisTableReferences(db, table, p0)
+                                .resourceTypeIri,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.resourceTypeIriId == item.id),
+                        typedResults: items),
                   if (groupIndexSubscriptionsRefs)
                     await $_getPrefetchedData<SyncIri, $SyncIrisTable,
                             GroupIndexSubscription>(
@@ -3835,6 +3964,7 @@ typedef $$SyncIrisTableProcessedTableManager = ProcessedTableManager<
         bool shardIri,
         bool indexIri,
         bool indexResourceIri,
+        bool resourceTypeIri,
         bool groupIndexSubscriptionsRefs,
         bool groupIndexTemplateIriId,
         bool indexedTypeIriId,
@@ -4879,6 +5009,7 @@ typedef $$IndexEntriesTableCreateCompanionBuilder = IndexEntriesCompanion
   required int shardIri,
   required int indexIriId,
   required int resourceIriId,
+  required int resourceTypeIriId,
   required String clockHash,
   Value<String?> headerProperties,
   required int updatedAt,
@@ -4891,6 +5022,7 @@ typedef $$IndexEntriesTableUpdateCompanionBuilder = IndexEntriesCompanion
   Value<int> shardIri,
   Value<int> indexIriId,
   Value<int> resourceIriId,
+  Value<int> resourceTypeIriId,
   Value<String> clockHash,
   Value<String?> headerProperties,
   Value<int> updatedAt,
@@ -4943,6 +5075,21 @@ final class $$IndexEntriesTableReferences
     final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
         .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_resourceIriIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SyncIrisTable _resourceTypeIriIdTable(_$SyncDatabase db) =>
+      db.syncIris.createAlias($_aliasNameGenerator(
+          db.indexEntries.resourceTypeIriId, db.syncIris.id));
+
+  $$SyncIrisTableProcessedTableManager get resourceTypeIriId {
+    final $_column = $_itemColumn<int>('resource_type_iri_id')!;
+
+    final manager = $$SyncIrisTableTableManager($_db, $_db.syncIris)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_resourceTypeIriIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -5019,6 +5166,26 @@ class $$IndexEntriesTableFilterComposer
     final $$SyncIrisTableFilterComposer composer = $composerBuilder(
         composer: this,
         getCurrentColumn: (t) => t.resourceIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableFilterComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SyncIrisTableFilterComposer get resourceTypeIriId {
+    final $$SyncIrisTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.resourceTypeIriId,
         referencedTable: $db.syncIris,
         getReferencedColumn: (t) => t.id,
         builder: (joinBuilder,
@@ -5121,6 +5288,26 @@ class $$IndexEntriesTableOrderingComposer
             ));
     return composer;
   }
+
+  $$SyncIrisTableOrderingComposer get resourceTypeIriId {
+    final $$SyncIrisTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.resourceTypeIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$IndexEntriesTableAnnotationComposer
@@ -5206,6 +5393,26 @@ class $$IndexEntriesTableAnnotationComposer
             ));
     return composer;
   }
+
+  $$SyncIrisTableAnnotationComposer get resourceTypeIriId {
+    final $$SyncIrisTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.resourceTypeIriId,
+        referencedTable: $db.syncIris,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncIrisTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncIris,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$IndexEntriesTableTableManager extends RootTableManager<
@@ -5220,7 +5427,10 @@ class $$IndexEntriesTableTableManager extends RootTableManager<
     (IndexEntry, $$IndexEntriesTableReferences),
     IndexEntry,
     PrefetchHooks Function(
-        {bool shardIri, bool indexIriId, bool resourceIriId})> {
+        {bool shardIri,
+        bool indexIriId,
+        bool resourceIriId,
+        bool resourceTypeIriId})> {
   $$IndexEntriesTableTableManager(_$SyncDatabase db, $IndexEntriesTable table)
       : super(TableManagerState(
           db: db,
@@ -5235,6 +5445,7 @@ class $$IndexEntriesTableTableManager extends RootTableManager<
             Value<int> shardIri = const Value.absent(),
             Value<int> indexIriId = const Value.absent(),
             Value<int> resourceIriId = const Value.absent(),
+            Value<int> resourceTypeIriId = const Value.absent(),
             Value<String> clockHash = const Value.absent(),
             Value<String?> headerProperties = const Value.absent(),
             Value<int> updatedAt = const Value.absent(),
@@ -5246,6 +5457,7 @@ class $$IndexEntriesTableTableManager extends RootTableManager<
             shardIri: shardIri,
             indexIriId: indexIriId,
             resourceIriId: resourceIriId,
+            resourceTypeIriId: resourceTypeIriId,
             clockHash: clockHash,
             headerProperties: headerProperties,
             updatedAt: updatedAt,
@@ -5257,6 +5469,7 @@ class $$IndexEntriesTableTableManager extends RootTableManager<
             required int shardIri,
             required int indexIriId,
             required int resourceIriId,
+            required int resourceTypeIriId,
             required String clockHash,
             Value<String?> headerProperties = const Value.absent(),
             required int updatedAt,
@@ -5268,6 +5481,7 @@ class $$IndexEntriesTableTableManager extends RootTableManager<
             shardIri: shardIri,
             indexIriId: indexIriId,
             resourceIriId: resourceIriId,
+            resourceTypeIriId: resourceTypeIriId,
             clockHash: clockHash,
             headerProperties: headerProperties,
             updatedAt: updatedAt,
@@ -5282,7 +5496,10 @@ class $$IndexEntriesTableTableManager extends RootTableManager<
                   ))
               .toList(),
           prefetchHooksCallback: (
-              {shardIri = false, indexIriId = false, resourceIriId = false}) {
+              {shardIri = false,
+              indexIriId = false,
+              resourceIriId = false,
+              resourceTypeIriId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -5330,6 +5547,17 @@ class $$IndexEntriesTableTableManager extends RootTableManager<
                         .id,
                   ) as T;
                 }
+                if (resourceTypeIriId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.resourceTypeIriId,
+                    referencedTable: $$IndexEntriesTableReferences
+                        ._resourceTypeIriIdTable(db),
+                    referencedColumn: $$IndexEntriesTableReferences
+                        ._resourceTypeIriIdTable(db)
+                        .id,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -5353,7 +5581,10 @@ typedef $$IndexEntriesTableProcessedTableManager = ProcessedTableManager<
     (IndexEntry, $$IndexEntriesTableReferences),
     IndexEntry,
     PrefetchHooks Function(
-        {bool shardIri, bool indexIriId, bool resourceIriId})>;
+        {bool shardIri,
+        bool indexIriId,
+        bool resourceIriId,
+        bool resourceTypeIriId})>;
 typedef $$GroupIndexSubscriptionsTableCreateCompanionBuilder
     = GroupIndexSubscriptionsCompanion Function({
   Value<int> groupIndexIriId,

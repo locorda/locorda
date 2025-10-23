@@ -473,6 +473,7 @@ class DriftStorage implements Storage {
     required IriTerm shardIri,
     required IriTerm indexIri,
     required IriTerm resourceIri,
+    required IriTerm resourceType,
     required String clockHash,
     String? headerProperties,
     bool isDeleted = false,
@@ -484,17 +485,20 @@ class DriftStorage implements Storage {
       shardIri.value,
       indexIri.value,
       resourceIri.value,
+      resourceType.value,
     ]);
 
     final shardIriId = iriIds[shardIri.value]!;
     final indexIriId = iriIds[indexIri.value]!;
     final resourceIriId = iriIds[resourceIri.value]!;
+    final resourceTypeIriId = iriIds[resourceType.value]!;
 
     // Save entry to database
     await indexDao.saveIndexEntry(
       shardIriId: shardIriId,
       indexIriId: indexIriId,
       resourceIriId: resourceIriId,
+      resourceTypeIriId: resourceTypeIriId,
       clockHash: clockHash,
       headerProperties: headerProperties,
       isDeleted: isDeleted,
@@ -528,18 +532,27 @@ class DriftStorage implements Storage {
   }
 
   @override
-  Future<List<(IriTerm iri, int maxPhysicalClock)>> getShardsToUpdate(
-      int sinceTimestamp) async {
+  Future<List<(IriTerm iri, IriTerm resourceTypeIri, int maxPhysicalClock)>>
+      getShardsToUpdate(int sinceTimestamp) async {
     final shardIris = await indexDao.getShardsToUpdate(sinceTimestamp);
-    return shardIris.map((iri) => (_iriTermFactory(iri.$1), iri.$2)).toList();
+    return shardIris
+        .map((iri) => (
+              _iriTermFactory(iri.$1),
+              _iriTermFactory(iri.$2),
+              iri.$3,
+            ))
+        .toList();
   }
 
   @override
   Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
+    required IriTerm resourceType,
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,
   }) async {
     // Convert IRIs to IDs for efficient querying
+    final resourceTypeIriId = await _getOrCreateIriId(resourceType.value);
+
     final excludeIndexIriIds = excludeIndexIris.isEmpty
         ? <int>{}
         : (await _getOrCreateIriIdsMap(
@@ -548,6 +561,7 @@ class DriftStorage implements Storage {
             .toSet();
 
     final result = await indexDao.getForeignIndexShardsToSync(
+      resourceTypeIriId: resourceTypeIriId,
       sinceTimestamp: sinceTimestamp,
       excludeIndexIriIds: excludeIndexIriIds,
     );

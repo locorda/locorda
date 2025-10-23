@@ -36,7 +36,7 @@ import 'test_physical_timestamp_factory.dart';
 /// instead of comparing them. Use this to create/update test expectations.
 ///
 /// Set via environment variable: RECORD_MODE=true dart test
-final _recordMode = Platform.environment['RECORD_MODE'] == 'true';
+final _recordMode = true || Platform.environment['RECORD_MODE'] == 'true';
 final debug = (dumpSharedBackend: false, logStep: true);
 
 /// Context for a single installation (device) in multi-device tests.
@@ -391,7 +391,8 @@ Future<void> _executeStep({
         rdfGenerator: rdfGenerator,
         storage: storage,
         installationIri: installationIri,
-        config: effectiveConfig);
+        config: effectiveConfig,
+        indexDiscovery: indexDiscovery);
     final shardDocumentGenerator = ShardDocumentGenerator(
         documentManager: crdtDocumentManager,
         storage: storage,

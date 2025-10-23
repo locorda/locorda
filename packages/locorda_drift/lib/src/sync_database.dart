@@ -72,6 +72,10 @@ class IndexEntries extends Table {
   @ReferenceName('indexResourceIri')
   IntColumn get resourceIriId => integer().references(SyncIris, #id)();
 
+  /// The type IRI of the resource (e.g., schema:Note)
+  @ReferenceName('resourceTypeIri')
+  IntColumn get resourceTypeIriId => integer().references(SyncIris, #id)();
+
   /// Clock hash from the resource's CRDT metadata
   TextColumn get clockHash => text()();
 
@@ -880,6 +884,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
     required int shardIriId,
     required int indexIriId,
     required int resourceIriId,
+    required int resourceTypeIriId,
     required String clockHash,
     String? headerProperties,
     bool isDeleted = false,
@@ -891,6 +896,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
         shardIri: shardIriId,
         indexIriId: indexIriId,
         resourceIriId: resourceIriId,
+        resourceTypeIriId: resourceTypeIriId,
         clockHash: clockHash,
         headerProperties: Value(headerProperties),
         updatedAt: updatedAt,
@@ -927,20 +933,21 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   /// This includes both new/updated entries and deleted entries (tombstones).
   /// Used by SyncFunction to find shards that need to be regenerated.
   ///
-  /// Returns: List of tuples (shardIri, maxPhysicalClock) for shards with modifications.
+  /// Returns: List of tuples (shardIri, resourceTypeIri, maxPhysicalClock) for shards with modifications.
   ///
   /// Uses max(ourPhysicalClock) per shard to find shards with changes since the last sync.
   /// This ensures deletions are properly detected using the item's timestamp,
   /// not the deletion operation's timestamp.
-  Future<List<(String shardIri, int maxPhysicalClock)>> getShardsToUpdate(
-      int sinceTimestamp) async {
+  Future<List<(String shardIri, String resourceTypeIri, int maxPhysicalClock)>>
+      getShardsToUpdate(int sinceTimestamp) async {
     // Use raw SQL with HAVING clause for efficient filtering on DB level
     final results = await customSelect(
       '''
-      SELECT s.iri, MAX(e.our_physical_clock) as max_clock
+      SELECT s.iri as shard_iri, t.iri as resource_type_iri, MAX(e.our_physical_clock) as max_clock
       FROM index_entries e
       JOIN sync_iris s ON s.id = e.shard_iri
-      GROUP BY e.shard_iri
+      JOIN sync_iris t ON t.id = e.resource_type_iri_id
+      GROUP BY e.shard_iri, e.resource_type_iri_id
       HAVING max_clock > ?
       ''',
       variables: [Variable.withInt(sinceTimestamp)],
@@ -949,7 +956,8 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
 
     return results
         .map((row) => (
-              row.read<String>('iri'),
+              row.read<String>('shard_iri'),
+              row.read<String>('resource_type_iri'),
               row.read<int>('max_clock'),
             ))
         .toList();
@@ -963,6 +971,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   /// 2. Are not yet covered by any configured index shard (uncovered resources)
   ///
   /// Parameters:
+  /// - [resourceTypeIriId]: The type IRI ID to filter entries by
   /// - [sinceTimestamp]: Physical clock timestamp - entries modified after this are dirty
   /// - [excludeIndexIriIds]: Configured/subscribed index IRI IDs to exclude from foreign sync
   ///
@@ -980,6 +989,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   ///
   /// Returns: Map of index IRI -> Map of (shard IRI -> Set of resource IRIs)
   Future<Map<String, Map<String, Set<String>>>> getForeignIndexShardsToSync({
+    required int resourceTypeIriId,
     required int sinceTimestamp,
     required Set<int> excludeIndexIriIds,
   }) async {
@@ -987,6 +997,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
 
     // Query 1: Get dirty foreign index entries (fast - simple timestamp filter)
     final dirtyResults = await _queryDirtyForeignEntries(
+      resourceTypeIriId: resourceTypeIriId,
       sinceTimestamp: sinceTimestamp,
       excludeIndexIriIds: excludeIndexIriIds,
     );
@@ -996,6 +1007,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
     // If no configured indices exist (excludeIndexIriIds.isEmpty), this finds ALL
     // foreign index entries since all resources are "uncovered" by definition
     final uncoveredResults = await _queryUncoveredForeignEntries(
+      resourceTypeIriId: resourceTypeIriId,
       excludeIndexIriIds: excludeIndexIriIds,
     );
     _groupResults(uncoveredResults, indexToShards);
@@ -1005,10 +1017,12 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
 
   /// Query dirty foreign index entries - modified since timestamp.
   Future<List<QueryRow>> _queryDirtyForeignEntries({
+    required int resourceTypeIriId,
     required int sinceTimestamp,
     required Set<int> excludeIndexIriIds,
   }) async {
     final whereConditions = <String>[
+      'e.resource_type_iri_id = ?',
       if (excludeIndexIriIds.isNotEmpty)
         'e.index_iri_id NOT IN (${excludeIndexIriIds.join(',')})',
       'e.our_physical_clock > ?',
@@ -1026,7 +1040,10 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
       JOIN sync_iris res ON res.id = e.resource_iri_id
       WHERE ${whereConditions.join(' AND ')}
       ''',
-      variables: [Variable.withInt(sinceTimestamp)],
+      variables: [
+        Variable.withInt(resourceTypeIriId),
+        Variable.withInt(sinceTimestamp)
+      ],
       readsFrom: {db.indexEntries, db.syncIris},
     ).get();
   }
@@ -1035,6 +1052,7 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   /// If excludeIndexIriIds is empty, all entries are uncovered (no configured indices exist).
   /// Uses LEFT JOIN for better performance than NOT IN subquery.
   Future<List<QueryRow>> _queryUncoveredForeignEntries({
+    required int resourceTypeIriId,
     required Set<int> excludeIndexIriIds,
   }) async {
     if (excludeIndexIriIds.isEmpty) {
@@ -1049,8 +1067,9 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
         JOIN sync_iris idx ON idx.id = e.index_iri_id
         JOIN sync_iris shard ON shard.id = e.shard_iri
         JOIN sync_iris res ON res.id = e.resource_iri_id
+        WHERE e.resource_type_iri_id = ?
         ''',
-        variables: [],
+        variables: [Variable.withInt(resourceTypeIriId)],
         readsFrom: {db.indexEntries, db.syncIris},
       ).get();
     }
@@ -1069,10 +1088,11 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
       LEFT JOIN index_entries configured 
         ON e.resource_iri_id = configured.resource_iri_id 
         AND configured.index_iri_id IN (${excludeIndexIriIds.join(',')})
-      WHERE e.index_iri_id NOT IN (${excludeIndexIriIds.join(',')})
+      WHERE e.resource_type_iri_id = ?
+        AND e.index_iri_id NOT IN (${excludeIndexIriIds.join(',')})
         AND configured.resource_iri_id IS NULL
       ''',
-      variables: [],
+      variables: [Variable.withInt(resourceTypeIriId)],
       readsFrom: {db.indexEntries, db.syncIris},
     ).get();
   }
@@ -1277,7 +1297,7 @@ class SyncDatabase extends _$SyncDatabase {
   SyncDatabase.forExecutor(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1325,6 +1345,11 @@ class SyncDatabase extends _$SyncDatabase {
           await m.database.customStatement('''
         CREATE INDEX IF NOT EXISTS idx_index_entries_deleted
         ON index_entries(is_deleted);
+      ''');
+
+          await m.database.customStatement('''
+        CREATE INDEX IF NOT EXISTS idx_index_entries_resource_type
+        ON index_entries(resource_type_iri_id);
       ''');
 
           await m.database.customStatement('''
@@ -1398,6 +1423,19 @@ class SyncDatabase extends _$SyncDatabase {
             await m.database.customStatement('''
               CREATE INDEX IF NOT EXISTS idx_remote_settings_url
               ON remote_settings(remote_url);
+            ''');
+          }
+          if (from < 6) {
+            // Add resource_type_iri_id column to index_entries table
+            await m.database.customStatement('''
+              ALTER TABLE index_entries 
+              ADD COLUMN resource_type_iri_id INTEGER REFERENCES sync_iris(id);
+            ''');
+
+            // Create index for efficient resource type filtering
+            await m.database.customStatement('''
+              CREATE INDEX IF NOT EXISTS idx_index_entries_resource_type
+              ON index_entries(resource_type_iri_id);
             ''');
           }
         },

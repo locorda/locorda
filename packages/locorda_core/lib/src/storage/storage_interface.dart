@@ -235,6 +235,7 @@ abstract interface class Storage {
     required IriTerm shardIri,
     required IriTerm indexIri,
     required IriTerm resourceIri,
+    required IriTerm resourceType,
     required String clockHash,
     String? headerProperties,
     bool isDeleted = false,
@@ -263,8 +264,8 @@ abstract interface class Storage {
   /// - [sinceTimestamp]: Physical clock timestamp (milliseconds since epoch)
   ///
   /// Returns: List of shard IRIs with modifications after the timestamp
-  Future<List<(IriTerm iri, int maxPhysicalClock)>> getShardsToUpdate(
-      int sinceTimestamp);
+  Future<List<(IriTerm iri, IriTerm resourceTypeIri, int maxPhysicalClock)>>
+      getShardsToUpdate(int sinceTimestamp);
 
   /// Get foreign index shards that need partial sync.
   ///
@@ -282,6 +283,7 @@ abstract interface class Storage {
   ///
   /// Returns: Map of index IRI to map of (shard IRI -> set of resource IRIs)
   Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
+    required IriTerm resourceType,
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,
   });

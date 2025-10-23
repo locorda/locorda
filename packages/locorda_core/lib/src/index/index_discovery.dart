@@ -499,4 +499,53 @@ class IndexDiscovery {
         (graph, iri) => _parser.parseGroupIndexTemplate(graph, iri)?.config,
         mode,
       );
+
+  /// Discovers a specific GroupIndexTemplate by its IRI.
+  ///
+  /// This method is used when we need to load the configuration for a specific
+  /// template, for example when creating a missing GroupIndex instance.
+  ///
+  /// Process:
+  /// 1. Look up template in watch-based cache to get current clockHash
+  /// 2. Check parsed config cache with clockHash validation
+  /// 3. Load and parse document only if cache miss or stale clockHash
+  ///
+  /// Returns null if the template is not found in the cache (not indexed) or
+  /// if loading/parsing fails in lenient mode.
+  ///
+  /// Error handling depends on [mode]:
+  /// - Strict: Throws if template not found in cache or parse fails
+  /// - Lenient: Returns null and logs warning
+  Future<GroupIndexGraphConfig?> discoverGroupIndexTemplate(
+    IriTerm templateIri, {
+    ShardDeterminationMode mode = ShardDeterminationMode.lenient,
+  }) async {
+    // Look up template in all cached indexed classes to find its metadata
+    _IndexMetadata? metadata;
+    for (final metadataSet in _indexedClassToTemplateMetadata.values) {
+      final found = metadataSet.where((m) => m.indexIri == templateIri);
+      if (found.isNotEmpty) {
+        metadata = found.first;
+        break;
+      }
+    }
+
+    if (metadata == null) {
+      final message = 'GroupIndexTemplate not found in cache: $templateIri';
+      if (mode == ShardDeterminationMode.strict) {
+        throw StateError('$message (strict mode). '
+            'Ensure the template is indexed via groupIndexTemplates meta-index.');
+      }
+      _log.warning('$message (lenient mode)');
+      return null;
+    }
+
+    // Load config using existing cache infrastructure
+    return await _getOrLoadIndexConfig<GroupIndexGraphConfig>(
+      metadata,
+      'GroupIndexTemplate',
+      _loadAndParseTemplate,
+      mode: mode,
+    );
+  }
 }

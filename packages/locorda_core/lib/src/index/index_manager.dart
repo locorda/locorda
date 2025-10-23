@@ -7,6 +7,7 @@ library;
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
 import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/index/index_discovery.dart';
 import 'package:locorda_core/src/index/index_property_resolver.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart';
@@ -31,6 +32,7 @@ class IndexManager {
   final Storage _storage;
   final SyncGraphConfig _config;
   final IriTerm _installationIri;
+  final IndexDiscovery _indexDiscovery;
 
   IndexManager({
     required CrdtDocumentManager crdtDocumentManager,
@@ -38,12 +40,14 @@ class IndexManager {
     required Storage storage,
     required IriTerm installationIri,
     required SyncGraphConfig config,
+    required IndexDiscovery indexDiscovery,
   })  : _documentManager = crdtDocumentManager,
         _rdfGenerator = rdfGenerator,
         _storage = storage,
         _config = config,
         _propertyResolver = IndexPropertyResolver(storage: storage),
-        _installationIri = installationIri;
+        _installationIri = installationIri,
+        _indexDiscovery = indexDiscovery;
 
   /// Initializes all indices defined in the configuration.
   ///
@@ -162,34 +166,24 @@ class IndexManager {
   /// by LocordaGraphSync to create GroupIndices that were reported as missing
   /// during document save.
   ///
-  /// Retrieves the GroupIndexGraphConfig from the resource configuration
-  /// based on the template IRI and group key.
+  /// Uses IndexDiscovery to load the GroupIndexTemplate configuration dynamically,
+  /// supporting both own and foreign application templates.
   Future<void> _createMissingGroupIndex(MissingGroupIndex missing) async {
-    // Get resource config for this type
-    final resourceConfig = _config.getResourceConfig(missing.typeIri);
+    // Use IndexDiscovery to load the template configuration
+    // This supports both own and foreign templates via the cache infrastructure
+    final templateConfig = await _indexDiscovery.discoverGroupIndexTemplate(
+      missing.templateIri,
+      mode: ShardDeterminationMode.strict, // Must succeed - data consistency critical
+    );
 
-    // Find the matching GroupIndexGraphConfig
-    // We need to identify which GroupIndexGraphConfig this missing GroupIndex belongs to
-    // by matching the template IRI structure
-    GroupIndexGraphConfig? matchingConfig;
-    for (final indexConfig in resourceConfig.indices) {
-      if (indexConfig is GroupIndexGraphConfig) {
-        final templateIri = _rdfGenerator.generateGroupIndexTemplateIri(
-            indexConfig, missing.typeIri);
-        if (templateIri == missing.templateIri) {
-          matchingConfig = indexConfig;
-          break;
-        }
-      }
-    }
-
-    if (matchingConfig == null) {
+    if (templateConfig == null) {
       throw StateError(
-          'Could not find GroupIndexGraphConfig for template ${missing.templateIri}');
+          'Could not load GroupIndexTemplate configuration for ${missing.templateIri.debug}. '
+          'Template may not be properly indexed in groupIndexTemplates meta-index.');
     }
 
     await _createGroupIndex(
-      matchingConfig,
+      templateConfig,
       missing.typeIri,
       missing.templateIri,
       missing.groupKey,
@@ -272,6 +266,7 @@ class IndexManager {
       await updateIndices(
           document: saved.crdtDocument,
           documentIri: saved.documentIri,
+          resourceTypeIri: type,
           physicalTime: saved.physicalTime,
           updatedAt: saved.updatedAt,
           missingGroupIndices: saved.missingGroupIndices);
@@ -282,6 +277,7 @@ class IndexManager {
   Future<void> updateIndices(
       {required RdfGraph document,
       required IriTerm documentIri,
+      required IriTerm resourceTypeIri,
       required int physicalTime,
       required int updatedAt,
       required Iterable<MissingGroupIndex> missingGroupIndices}) async {
@@ -311,8 +307,8 @@ class IndexManager {
 
     // Remove entries from shards where belongsToIndexShard was removed
     // This must happen BEFORE updateShardIndexEntries to ensure tombstones are created first
-    await _removeTombstonedShardEntries(
-        resourceIri, document, documentIri, physicalTime, updatedAt);
+    await _removeTombstonedShardEntries(resourceIri, resourceTypeIri, document,
+        documentIri, physicalTime, updatedAt);
 
     // Update the indices
     await _updateShardIndexEntries(type, resourceIri, clockHash, document,
@@ -384,7 +380,7 @@ class IndexManager {
         // we are offline-first. So maybe make an index entry without header properties,
         // without index IRI and with a marker that this needs to be resolved later?
         _log.warning(
-            'Shard $shardDocumentIri has no associated index or template, skipping.');
+            'Shard ${shardDocumentIri.debug} has no associated index or template, skipping.');
         continue;
       }
       // Extract property values from resource data
@@ -407,6 +403,7 @@ class IndexManager {
         shardIri: shardIri,
         indexIri: indexIri,
         resourceIri: resourceIri,
+        resourceType: type,
         clockHash: clockHash,
         headerProperties: headerPropertiesTurtle,
         updatedAt: updatedAt,
@@ -488,6 +485,7 @@ class IndexManager {
   /// - [documentIri]: The document IRI to search for tombstones
   Future<void> _removeTombstonedShardEntries(
     IriTerm resourceIri,
+    IriTerm resourceType,
     RdfGraph crdtDocument,
     IriTerm documentIri,
     int ourPhysicalClock,
@@ -543,11 +541,12 @@ class IndexManager {
 
       if (shardIri == null) {
         _log.warning(
-            'Tombstone $reifiedStmtIri has no rdf:object, skipping cleanup');
+            'Tombstone ${reifiedStmtIri.debug} has no rdf:object, skipping cleanup');
         continue;
       }
 
-      _log.info('Marking entry for $resourceIri as deleted in shard $shardIri');
+      _log.info(
+          'Marking entry for ${resourceIri.debug} as deleted in shard ${shardIri.debug}');
 
       // Resolve index IRI for this shard
       final shardDocumentIri = shardIri.getDocumentIri();
@@ -556,7 +555,7 @@ class IndexManager {
 
       if (indexIri == null) {
         _log.warning(
-            'Cannot resolve index for shard $shardDocumentIri, skipping tombstone');
+            'Cannot resolve index for shard ${shardDocumentIri.debug}, skipping tombstone');
         continue;
       }
 
@@ -566,6 +565,7 @@ class IndexManager {
         shardIri: shardIri,
         indexIri: indexIri,
         resourceIri: resourceIri,
+        resourceType: resourceType,
         // TODO: is it correct to use empty clockHash here?
         clockHash: '', // Empty hash for deleted entries
         headerProperties: null,

@@ -45,7 +45,7 @@ class ShardDocumentGenerator {
     // 3. Sync each shard
     int syncedCount = 0;
     for (final shardIri in shardsToUpdate) {
-      final result = await syncShard(shardIri.$1, shardIri.$2);
+      final result = await syncShard(shardIri.$1, shardIri.$2, shardIri.$3);
       if (result != null) {
         syncedCount++;
       }
@@ -74,15 +74,16 @@ class ShardDocumentGenerator {
   /// Returns: SaveResult if changes were made, null if shard was up-to-date
   /// Throws: [StateError] if all retries fail due to concurrent updates
   Future<DocumentSaveResult?> syncShard(
-          IriTerm shardIri, int maxPhysicalClock) =>
-      retryOnConflict(() => _syncShardAttempt(shardIri, maxPhysicalClock),
+          IriTerm shardIri, IriTerm resourceTypeIri, int maxPhysicalClock) =>
+      retryOnConflict(
+          () => _syncShardAttempt(shardIri, resourceTypeIri, maxPhysicalClock),
           debugOperationName: 'syncing shard ${shardIri.debug}');
 
   /// Internal method that performs a single shard sync attempt.
   ///
   /// Throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<DocumentSaveResult?> _syncShardAttempt(
-      IriTerm shardIri, int maxPhysicalClock) async {
+      IriTerm shardIri, IriTerm resourceTypeIri, int maxPhysicalClock) async {
     final shardDocumentIri = shardIri.getDocumentIri();
 
     // 1. Load all active entries for this shard from DB
@@ -141,6 +142,7 @@ class ShardDocumentGenerator {
       documentIri: saveResult.documentIri,
       physicalTime: saveResult.physicalTime,
       updatedAt: saveResult.updatedAt,
+      resourceTypeIri: resourceTypeIri,
       missingGroupIndices: saveResult.missingGroupIndices,
     );
 

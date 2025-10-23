@@ -408,6 +408,7 @@ class InMemoryStorage implements Storage {
     required IriTerm shardIri,
     required IriTerm indexIri,
     required IriTerm resourceIri,
+    required IriTerm resourceType,
     required String clockHash,
     String? headerProperties,
     bool isDeleted = false,
@@ -420,6 +421,7 @@ class InMemoryStorage implements Storage {
     _indexEntries[key] = _IndexEntry(
       shardIri: shardIri,
       indexIri: indexIri,
+      resourceType: resourceType,
       resourceIri: resourceIri,
       clockHash: clockHash,
       headerProperties: headerProperties,
@@ -461,23 +463,31 @@ class InMemoryStorage implements Storage {
   }
 
   @override
-  Future<List<(IriTerm iri, int maxPhysicalClock)>> getShardsToUpdate(
-      int sinceTimestamp) async {
+  Future<List<(IriTerm iri, IriTerm resourceTypeIri, int maxPhysicalClock)>>
+      getShardsToUpdate(int sinceTimestamp) async {
     // Find max(ourPhysicalClock) per shard, then filter shards where max > sinceTimestamp
-    final shardMaxClocks = <IriTerm, int>{};
+    final shardMaxClocks =
+        <IriTerm, ({IriTerm resourceTypeIri, int maxPhysicalClock})>{};
 
     // Calculate max physical clock for each shard
     for (final entry in _indexEntries.values) {
-      final currentMax = shardMaxClocks[entry.shardIri] ?? 0;
+      final currentMax = shardMaxClocks[entry.shardIri]?.maxPhysicalClock ?? 0;
       if (entry.ourPhysicalClock > currentMax) {
-        shardMaxClocks[entry.shardIri] = entry.ourPhysicalClock;
+        shardMaxClocks[entry.shardIri] = (
+          resourceTypeIri: entry.resourceType,
+          maxPhysicalClock: entry.ourPhysicalClock,
+        );
       }
     }
 
     // Filter shards where max > sinceTimestamp and return as list of tuples
     return shardMaxClocks.entries
-        .where((entry) => entry.value > sinceTimestamp)
-        .map((entry) => (entry.key, entry.value))
+        .where((entry) => entry.value.maxPhysicalClock > sinceTimestamp)
+        .map((entry) => (
+              entry.key,
+              entry.value.resourceTypeIri,
+              entry.value.maxPhysicalClock
+            ))
         .toList();
   }
 
@@ -485,19 +495,22 @@ class InMemoryStorage implements Storage {
   Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,
+    required IriTerm resourceType,
   }) async {
     final result = <IriTerm, Map<IriTerm, Set<IriTerm>>>{};
 
     // Build set of covered resources from configured indices
     final coveredResources = _indexEntries.values
         .where((entry) => excludeIndexIris.contains(entry.indexIri))
+        .where((entry) => entry.resourceType == resourceType)
         .map((entry) => entry.resourceIri)
         .toSet();
 
     // Find foreign index entries that are either dirty or uncovered
     for (final entry in _indexEntries.values) {
       // Skip excluded (configured) indices
-      if (excludeIndexIris.contains(entry.indexIri)) continue;
+      if (excludeIndexIris.contains(entry.indexIri) ||
+          entry.resourceType != resourceType) continue;
 
       // Check if entry is dirty (modified since timestamp)
       final isDirty = entry.ourPhysicalClock > sinceTimestamp;
@@ -567,6 +580,7 @@ class _IndexEntry {
   final IriTerm shardIri;
   final IriTerm indexIri;
   final IriTerm resourceIri;
+  final IriTerm resourceType;
   final String clockHash;
   final String? headerProperties;
   final bool isDeleted;
@@ -577,6 +591,7 @@ class _IndexEntry {
     required this.shardIri,
     required this.indexIri,
     required this.resourceIri,
+    required this.resourceType,
     required this.clockHash,
     this.headerProperties,
     required this.isDeleted,

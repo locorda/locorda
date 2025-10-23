@@ -485,6 +485,7 @@ class RemoteSyncOrchestrator {
       document: documentToUpload,
       documentIri: documentIri,
       physicalTime: physicalTime,
+      resourceTypeIri: typeIri,
       missingGroupIndices: missingGroupIndices,
       updatedAt: updatedAtTimestamp,
     );
@@ -521,8 +522,13 @@ class RemoteSyncOrchestrator {
     ShardSyncSpec shard,
     RdfGraph? originalRemoteShard,
   ) async {
+    // FIXME: I believe that the save_36 bug is somewhere around here
+    // Apparently, the documents from the original remote shard are not returned
+    // correctly, leading to missing entries in the document queue.
     switch (shard) {
       case PartialShardSync():
+        print(
+            'PartialShardSync for ${shard.shardIri.debug} - syncing ${shard.resourceIris.length} resources ${shard.resourceIris.map((iri) => iri.debug).join(', ')}');
         // For partial shard sync, just enqueue the specified resource IRIs
         return shard.resourceIris
             .map((resourceIri) => resourceIri.getDocumentIri())
@@ -531,20 +537,38 @@ class RemoteSyncOrchestrator {
         // Continue to full sync logic below
         break;
     }
-
+    final filter = shard.fetchPolicy is PrefetchFiltered
+        ? (shard.fetchPolicy as PrefetchFiltered)
+        : null;
     final shardIri = shard.shardIri;
     final documentQueue = <IriTerm>{};
 
     // Parse local entries from index items table
-    final localEntries = <IriTerm, String>{}; // resourceIri -> clockHash
+    final localEntries = <IriTerm,
+        (
+      String clockHash,
+      Set<RdfObject>? filterValues
+    )>{}; // resourceIri -> clockHash
     final localIndexEntries =
         await _storage.getActiveIndexEntriesForShard(shardIri);
     for (final entry in localIndexEntries) {
-      localEntries[entry.resourceIri] = entry.clockHash;
+      final Set<RdfObject>? filterValues;
+      if (filter != null && entry.headerProperties != null) {
+        final graph = turtle.decode(entry.headerProperties!);
+        filterValues = graph.getMultiValueObjects(
+            entry.resourceIri, filter.filterPredicate);
+      } else {
+        filterValues = null;
+      }
+      localEntries[entry.resourceIri] = (entry.clockHash, filterValues);
     }
 
     // Parse remote entries from original remote shard document
-    final remoteEntries = <IriTerm, String>{}; // resourceIri -> clockHash
+    final remoteEntries = <IriTerm,
+        (
+      String hash,
+      Set<RdfObject>? filterValues
+    )>{}; // resourceIri -> clockHash
     if (originalRemoteShard != null) {
       // Find all idx:containsEntry links (shardIri is the resource IRI)
       for (final entryIri in originalRemoteShard
@@ -555,7 +579,11 @@ class RemoteSyncOrchestrator {
         final clockHash = originalRemoteShard.expectSingleObject<LiteralTerm>(
             entryIri, IdxShardEntry.crdtClockHash);
         if (resourceIri != null && clockHash != null) {
-          remoteEntries[resourceIri] = clockHash.value;
+          Set<RdfObject>? filterValues = filter == null
+              ? null
+              : originalRemoteShard.getMultiValueObjects<RdfObject>(
+                  entryIri, filter.filterPredicate);
+          remoteEntries[resourceIri] = (clockHash.value, filterValues);
         }
       }
     }
@@ -564,21 +592,29 @@ class RemoteSyncOrchestrator {
       // Category 1: Local but not in remote (new local documents)
       if (!remoteEntries.containsKey(localIri)) {
         documentQueue.add(localIri.getDocumentIri());
-      } else if (remoteEntries[localIri] != localEntries[localIri]) {
+      } else if (remoteEntries[localIri]?.$1 != localEntries[localIri]?.$1) {
         // Category 2: In both but different clockHash (concurrent changes)
         documentQueue.add(localIri.getDocumentIri());
       }
     }
 
     // Category 3: For eager synced indices: Remote but not local
-    if (shard.fetchPolicy == ItemFetchPolicy.prefetch) {
+    if (shard.fetchPolicy is Prefetch ||
+        shard.fetchPolicy is PrefetchFiltered) {
       for (final remoteIri in remoteEntries.keys) {
         if (!localEntries.containsKey(remoteIri)) {
-          documentQueue.add(remoteIri.getDocumentIri());
+          if (filter == null ||
+              (remoteEntries[remoteIri]?.$2?.any(
+                      (value) => filter.acceptedObjectValues.contains(value)) ==
+                  true)) {
+            documentQueue.add(remoteIri.getDocumentIri());
+          }
         }
       }
     }
 
+    print(
+        'Document queue for shard ${shard.shardIri.debug}: ${documentQueue.map((iri) => iri.debug).join(', ')}');
     return documentQueue;
   }
 
@@ -632,9 +668,13 @@ class RemoteSyncOrchestrator {
     // - Entries in shards not yet synced (uncovered)
     final foreignIndexShards = await _storage.getForeignIndexShardsToSync(
       sinceTimestamp: lastSync,
+      resourceType: resourceType,
       excludeIndexIris: configuredIndexIris,
     );
-
+    print(
+        'Configured indices: ${configuredIndexIris.map((e) => e.debug).join(', ')} for resource type ${resourceType.debug}');
+    print(
+        'Foreign index shards to sync: ${foreignIndexShards.entries.map((e) => e.key.debug).join(', ')}');
     // Convert to PartialIndexSync specs
     final foreignIndices = foreignIndexShards.entries
         .map((entry) => PartialIndexSync(
@@ -710,6 +750,8 @@ class RemoteSyncOrchestrator {
 
       // sync all the documents in the queue right away
       for (final documentIri in documentQueue) {
+        print(
+            'Syncing document: ${documentIri.debug} for shard ${shardIri.debug}');
         await _syncDocument(documentIri, lastSyncTimestamp, syncTime,
             debugName:
                 'Document ${documentIri.debug} (as part of ${debugName})');
@@ -731,8 +773,9 @@ class RemoteSyncOrchestrator {
 
       final finalEntrySet = await _getFinalEntrySet(shardIri,
           limitToResourceIris: limitToResources);
-      print('Final entry set for shard ${shardIri.debug}: '
-          '${finalEntrySet.map((e) => e.resourceIri.debug).toList()}\n limitToResources: ${limitToResources?.map((e) => e.debug).toList()}');
+      //print('Final entry set for shard ${shardIri.debug}: '
+      //    '${finalEntrySet.map((e) => e.resourceIri.debug).toList()}\n limitToResources: ${limitToResources?.map((e) => e.debug).toList()}');
+
       // 2. Generate shard nodes from final entry set
       //
       // For partial sync, we need to merge these with existing remote entries
