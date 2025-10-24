@@ -26,6 +26,8 @@ class SolidStatusWidget extends StatefulWidget {
   /// The provider service for authentication UI.
   final SolidProviderService providerService;
 
+  final List<String> extraOidcScopes;
+
   /// Optional callback for manual sync trigger.
   /// If not provided and syncManager is provided, will use syncManager.sync()
   final VoidCallback? onManualSync;
@@ -52,6 +54,7 @@ class SolidStatusWidget extends StatefulWidget {
     this.isSyncing = false,
     this.hasError = false,
     this.errorMessage,
+    this.extraOidcScopes = const [],
   });
 
   @override
@@ -82,7 +85,8 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
       _log.info('Authentication state changed');
       _checkAuthStatus();
     } catch (e, stackTrace) {
-      _log.severe('Error in authentication state change handler', e, stackTrace);
+      _log.severe(
+          'Error in authentication state change handler', e, stackTrace);
     }
   }
 
@@ -107,6 +111,7 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
         builder: (context) => SolidLoginScreen(
           solidAuth: widget.solidAuth,
           providerService: widget.providerService,
+          extraOidcScopes: widget.extraOidcScopes,
           onLoginSuccess: (userInfo) {
             Navigator.of(context).pop(userInfo);
           },
@@ -133,7 +138,8 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              SolidAuthLocalizations.of(context)!.errorConnectingSolid(e.toString()),
+              SolidAuthLocalizations.of(context)!
+                  .errorConnectingSolid(e.toString()),
             ),
           ),
         );
@@ -156,7 +162,8 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
                 _isAuthenticated ? Icons.cloud_done : Icons.cloud_off,
                 color: _isAuthenticated ? Colors.green : Colors.grey,
               ),
-              title: Text(_isAuthenticated ? l10n.connected : l10n.notConnected),
+              title:
+                  Text(_isAuthenticated ? l10n.connected : l10n.notConnected),
               subtitle: widget.solidAuth.currentWebId != null
                   ? Text(widget.solidAuth.currentWebId!)
                   : null,
@@ -210,9 +217,12 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
     final colorScheme = Theme.of(context).colorScheme;
 
     // Get sync status from either syncManager stream or static props
-    final bool isSyncing = _syncState?.status == SyncStatus.syncing || widget.isSyncing;
-    final bool hasError = _syncState?.status == SyncStatus.error || widget.hasError;
-    final String? errorMessage = _syncState?.errorMessage ?? widget.errorMessage;
+    final bool isSyncing =
+        _syncState?.status == SyncStatus.syncing || widget.isSyncing;
+    final bool hasError =
+        _syncState?.status == SyncStatus.error || widget.hasError;
+    final String? errorMessage =
+        _syncState?.errorMessage ?? widget.errorMessage;
 
     // Determine the current status
     Widget icon;

@@ -13,7 +13,7 @@
     "http://localhost:3815/redirect.html",
     "dev.locorda.personalnotes://logout"
   ],
-  "scope": "openid webid offline_access",
+  "scope": "openid webid offline_access profile",
   "grant_types": [
     "authorization_code",
     "refresh_token"

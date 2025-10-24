@@ -112,6 +112,13 @@ class SolidClient {
       {bool requiresAuth = true, String? ifNoneMatch}) async {
     final dpop =
         requiresAuth ? await _authProvider.getDpopToken(url, 'GET') : null;
+
+    _log.fine('GET $url with auth=${requiresAuth}');
+    if (dpop != null) {
+      _log.finer('Authorization: DPoP ${dpop.accessToken.substring(0, 20)}...');
+      _log.finer('DPoP token length: ${dpop.dPoP.length}');
+    }
+
     final response = await _client.get(
       Uri.parse(url),
       headers: {
@@ -122,6 +129,16 @@ class SolidClient {
       },
     );
 
+    _log.fine('Response status: ${response.statusCode}');
+
+    if (response.statusCode == 401) {
+      _log.warning('401 Unauthorized for $url');
+      _log.warning('Response headers: ${response.headers}');
+      _log.warning('Response body: ${response.body}');
+      throw SolidClientException(
+          'Unauthorized (401) for $url: ${response.body}');
+    }
+
     if (response.statusCode == 404) {
       throw NotFoundException('Resource not found at $url');
     }
@@ -131,6 +148,7 @@ class SolidClient {
     }
     if (response.statusCode != 200) {
       _log.warning('Failed to fetch $url: ${response.statusCode}');
+      _log.warning('Response body: ${response.body}');
       throw SolidClientException(
           'Failed to fetch $url: ${response.statusCode}');
     }
@@ -150,9 +168,17 @@ class SolidClient {
       {bool requiresAuth = true, String? ifMatch}) async {
     final dpop =
         requiresAuth ? await _authProvider.getDpopToken(url, 'PUT') : null;
+
+    _log.fine('PUT $url with auth=${requiresAuth}');
+    if (dpop != null) {
+      _log.finer('Authorization: DPoP ${dpop.accessToken.substring(0, 20)}...');
+      _log.finer('DPoP token length: ${dpop.dPoP.length}');
+    }
+
     final response = await _client.put(
       Uri.parse(url),
       headers: {
+        'Content-Type': 'text/turtle',
         'Accept': 'text/turtle, application/ld+json;q=0.9, */*;q=0.8',
         if (dpop != null) 'Authorization': 'DPoP ${dpop.accessToken}',
         if (dpop != null) 'DPoP': dpop.dPoP,
@@ -162,6 +188,16 @@ class SolidClient {
       body: _rdfCore.encode(graph),
     );
 
+    _log.fine('Response status: ${response.statusCode}');
+
+    if (response.statusCode == 401) {
+      _log.warning('401 Unauthorized for $url');
+      _log.warning('Response headers: ${response.headers}');
+      _log.warning('Response body: ${response.body}');
+      throw SolidClientException(
+          'Unauthorized (401) for $url: ${response.body}');
+    }
+
     if (response.statusCode == 404) {
       throw NotFoundException('Resource not found at $url');
     }
@@ -169,13 +205,18 @@ class SolidClient {
       // Conflict
       return RemoteUploadResult.conflict();
     }
-    if (response.statusCode != 200) {
-      _log.warning('Failed to upload profile: ${response.statusCode}');
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      _log.warning('Failed to upload to $url: ${response.statusCode}');
+      _log.warning('Response body: ${response.body}');
       throw SolidClientException(
-          'Failed to upload profile: ${response.statusCode}');
+          'Failed to upload to $url: ${response.statusCode}');
     }
 
-    return RemoteUploadResult.success(response.headers['etag']!);
+    final etag = response.headers['etag'];
+    if (etag == null) {
+      _log.warning('No ETag in response from $url');
+    }
+    return RemoteUploadResult.success(etag ?? '');
   }
 }
 
