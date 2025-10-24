@@ -78,7 +78,7 @@ class LocordaGraphSync {
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
           config: config,
         ),
-        _iriTranslator = IriTranslator(
+        _iriTranslator = IriTranslator.forConfig(
           resourceLocator: resourceLocator,
           resourceConfigs: config.resources,
         ),

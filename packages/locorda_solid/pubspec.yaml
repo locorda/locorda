@@ -24,6 +24,8 @@ dependencies:
   # Core locorda dependencies
   locorda_core:
     path: ../locorda_core
+  
+  rdf_core: ^0.9.24
 
   # HTTP client for Solid Pod communication
   http: ^1.1.0

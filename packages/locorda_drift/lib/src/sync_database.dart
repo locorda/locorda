@@ -809,24 +809,29 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   /// Used during remote sync to determine which indices need synchronization.
   Future<List<SubscribedGroupIndexData>> getSubscribedGroupIndices(
       String indexedTypeIri) async {
+    // Create aliases to disambiguate the two sync_iris joins
+    final groupIndexIriTable = alias(db.syncIris, 'group_index_iris');
+    final indexedTypeIriTable = alias(db.syncIris, 'indexed_type_iris');
+
     final query = select(db.groupIndexSubscriptions).join([
       innerJoin(
-        db.syncIris,
-        db.syncIris.id.equalsExp(db.groupIndexSubscriptions.groupIndexIriId),
+        groupIndexIriTable,
+        groupIndexIriTable.id
+            .equalsExp(db.groupIndexSubscriptions.groupIndexIriId),
       ),
       innerJoin(
-        db.syncIris,
-        db.syncIris.id.equalsExp(db.groupIndexSubscriptions.indexedTypeIriId),
-        useColumns: false,
+        indexedTypeIriTable,
+        indexedTypeIriTable.id
+            .equalsExp(db.groupIndexSubscriptions.indexedTypeIriId),
       ),
     ])
-      ..where(db.syncIris.iri.equals(indexedTypeIri));
+      ..where(indexedTypeIriTable.iri.equals(indexedTypeIri));
 
     final results = await query.get();
 
     return results.map((row) {
       final subscription = row.readTable(db.groupIndexSubscriptions);
-      final groupIndexIri = row.readTable(db.syncIris);
+      final groupIndexIri = row.readTable(groupIndexIriTable);
       return SubscribedGroupIndexData(
         groupIndexIri: groupIndexIri.iri,
         indexedTypeIri: indexedTypeIri, // We filtered by this

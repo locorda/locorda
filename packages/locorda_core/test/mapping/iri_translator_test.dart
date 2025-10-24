@@ -131,7 +131,7 @@ void main() {
         documentIriTemplate: 'https://example.com/notes/{id}',
       );
 
-      translator = IriTranslator(
+      translator = IriTranslator.forConfig(
         resourceLocator: resourceLocator,
         resourceConfigs: [categoryConfig, noteConfig],
       );
@@ -258,7 +258,7 @@ void main() {
     });
 
     test('no translation when no templates configured', () {
-      final emptyTranslator = IriTranslator(
+      final emptyTranslator = IriTranslator.forConfig(
         resourceLocator: resourceLocator,
         resourceConfigs: [
           ResourceGraphConfig(

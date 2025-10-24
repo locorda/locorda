@@ -97,12 +97,6 @@ abstract interface class RemoteStorage {
   Future<RemoteDownloadResult> download(IriTerm documentIri,
       {String? ifNoneMatch});
 
-  /// Delete a document from remote storage.
-  ///
-  /// Parameters:
-  /// - [documentIri]: Internal Locorda document IRI (tag:locorda.org,2025:l:...)
-  Future<void> delete(IriTerm documentIri);
-
   /// Check if remote storage is available/authenticated.
   ///
   /// Used to determine if remote sync should be attempted.

@@ -1,6 +1,10 @@
 import 'package:locorda_core/src/config/sync_graph_config.dart';
 import 'package:locorda_core/src/mapping/resource_locator.dart';
+import 'package:locorda_core/src/rdf/rdf_extensions.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
+
+final _log = Logger('IriTranslator');
 
 /// Translates between external (user-friendly) and internal (canonical) IRIs
 ///
@@ -9,29 +13,8 @@ import 'package:rdf_core/rdf_core.dart';
 ///
 /// This enables applications to work with friendly URIs while the framework
 /// uses stable, structured identifiers internally.
-class IriTranslator {
-  final ResourceLocator _resourceLocator;
-  final Map<IriTerm, ResourceGraphConfig> _configByType;
-
-  /// Maps external IRI prefixes to their type IRIs for efficient lookup
-  final Map<String, IriTerm> _prefixToType = {};
-
-  IriTranslator(
-      {required ResourceLocator resourceLocator,
-      required List<ResourceGraphConfig> resourceConfigs})
-      : _resourceLocator = resourceLocator,
-        _configByType = {
-          for (final config in resourceConfigs) config.typeIri: config
-        } {
-    // Build prefix-to-type mapping for efficient external IRI detection
-    for (final config in resourceConfigs) {
-      final template = config.documentIriTemplate;
-      if (template != null) {
-        _prefixToType[template.prefix] = config.typeIri;
-      }
-    }
-  }
-  bool get canTranslate => _prefixToType.isNotEmpty;
+abstract interface class IriTranslator {
+  bool get canTranslate;
 
   /// Translates an external IRI to internal IRI
   ///
@@ -41,43 +24,7 @@ class IriTranslator {
   /// Example:
   /// - Input: https://example.com/categories/work#it
   /// - Output: tag:locorda.org,2025:l:aHR0...#it
-  IriTerm externalToInternal(IriTerm externalIri) {
-    if (!canTranslate) {
-      return externalIri;
-    }
-    // Extract IRI value
-    final iriValue = externalIri.value;
-
-    // Extract fragment if present
-    final fragmentIndex = iriValue.indexOf('#');
-    final documentIriValue =
-        fragmentIndex >= 0 ? iriValue.substring(0, fragmentIndex) : iriValue;
-    final fragment =
-        fragmentIndex >= 0 ? iriValue.substring(fragmentIndex + 1) : null;
-
-    // Try to match against templates using prefix lookup
-    for (final entry in _prefixToType.entries) {
-      final prefix = entry.key;
-      if (!documentIriValue.startsWith(prefix)) continue;
-
-      final typeIri = entry.value;
-      final config = _configByType[typeIri]!;
-      final template = config.documentIriTemplate!;
-
-      final id = template.extractId(documentIriValue);
-      if (id != null) {
-        // Found a match - convert to internal IRI
-        final identifier = fragment != null
-            ? ResourceIdentifier(typeIri, id, fragment)
-            : ResourceIdentifier.document(typeIri, id);
-
-        return _resourceLocator.toIri(identifier);
-      }
-    }
-
-    // No template match - IRI is either already internal or unmanaged
-    return externalIri;
-  }
+  IriTerm externalToInternal(IriTerm externalIri);
 
   /// Translates an internal IRI to external IRI
   ///
@@ -87,40 +34,123 @@ class IriTranslator {
   /// Example:
   /// - Input: tag:locorda.org,2025:l:aHR0...#it
   /// - Output: https://example.com/categories/work#it
-  IriTerm internalToExternal(IriTerm internalIri) {
-    if (!canTranslate) {
-      return internalIri;
-    }
-    // Check if this is a local IRI
-    if (!LocalResourceLocator.isLocalIri(internalIri)) {
-      return internalIri;
-    }
+  IriTerm internalToExternal(IriTerm internalIri);
 
-    // Extract type and ID from internal IRI
-    // We need to try all possible type IRIs to find a match
-    for (final config in _configByType.values) {
-      if (config.documentIriTemplate == null) continue;
+  /// Translates all IRIs in a graph from external to internal format
+  ///
+  /// Converts all subject, predicate, and object IRIs that match configured templates
+  RdfGraph translateGraphToInternal(RdfGraph externalGraph);
 
-      try {
-        final identifier = _resourceLocator.fromIri(internalIri,
-            expectedTypeIri: config.typeIri);
+  /// Translates all IRIs in a graph from internal to external format
+  ///
+  /// Converts all subject, predicate, and object IRIs that have templates configured
+  RdfGraph translateGraphToExternal(RdfGraph internalGraph);
 
-        // Successfully extracted - convert to external IRI
-        final template = config.documentIriTemplate!;
-        final externalDocumentIri = template.toIri(identifier.id);
-        final externalIriValue = identifier.fragment != null
-            ? '$externalDocumentIri#${identifier.fragment}'
-            : externalDocumentIri;
-
-        return IriTerm(externalIriValue);
-      } catch (e) {
-        // This type didn't match - try next one
-        continue;
+  static IriTranslator forConfig(
+      {required ResourceLocator resourceLocator,
+      required List<ResourceGraphConfig> resourceConfigs}) {
+    final configByType = {
+      for (final config in resourceConfigs) config.typeIri: config
+    };
+    final Map<String, IriTerm> prefixToType = {};
+    for (final config in resourceConfigs) {
+      final template = config.documentIriTemplate;
+      if (template != null) {
+        prefixToType[template.prefix] = config.typeIri;
       }
     }
+    if (prefixToType.isEmpty) {
+      return const NoOpIriTranslator();
+    }
+    return BaseIriTranslator(
+      internalResourceLocator: resourceLocator,
+      externalResourceLocator: AppResourceLocator._(
+          configByType: configByType, prefixToType: prefixToType),
+    );
+  }
+}
 
-    // No template configured or couldn't extract - return as is
-    return internalIri;
+class NoOpIriTranslator implements IriTranslator {
+  const NoOpIriTranslator();
+  @override
+  bool get canTranslate => false;
+
+  @override
+  IriTerm externalToInternal(IriTerm externalIri) => externalIri;
+
+  @override
+  IriTerm internalToExternal(IriTerm internalIri) => internalIri;
+
+  @override
+  RdfGraph translateGraphToExternal(RdfGraph internalGraph) => internalGraph;
+
+  @override
+  RdfGraph translateGraphToInternal(RdfGraph externalGraph) => externalGraph;
+}
+
+class BaseIriTranslator implements IriTranslator {
+  final ResourceLocator _internalResourceLocator;
+  final ResourceLocator _externalResourceLocator;
+
+  BaseIriTranslator(
+      {required ResourceLocator internalResourceLocator,
+      required ResourceLocator externalResourceLocator})
+      : _internalResourceLocator = internalResourceLocator,
+        _externalResourceLocator = externalResourceLocator;
+
+  bool get canTranslate => _internalResourceLocator != _externalResourceLocator;
+
+  /// Translates an external IRI to internal IRI
+  ///
+  /// If the IRI matches a documentIriTemplate, extracts the ID and converts to internal format.
+  /// If no template matches, returns the IRI unchanged (already internal or unmanaged).
+  ///
+  /// Example:
+  /// - Input: https://example.com/categories/work#it
+  /// - Output: tag:locorda.org,2025:l:aHR0...#it
+  IriTerm externalToInternal(IriTerm externalIri) => _convert(
+      externalIri,
+      _externalResourceLocator,
+      "external",
+      _internalResourceLocator,
+      "internal");
+
+  /// Translates an internal IRI to external IRI
+  ///
+  /// If the IRI is a LocalResourceLocator IRI and has a documentIriTemplate configured,
+  /// converts to the external format. Otherwise returns unchanged.
+  ///
+  /// Example:
+  /// - Input: tag:locorda.org,2025:l:aHR0...#it
+  /// - Output: https://example.com/categories/work#it
+  IriTerm internalToExternal(IriTerm internalIri) => _convert(
+      internalIri,
+      _internalResourceLocator,
+      "internal",
+      _externalResourceLocator,
+      "external");
+
+  IriTerm _convert(IriTerm iri, ResourceLocator fromLocator, String fromName,
+      ResourceLocator toLocator, String toName) {
+    if (!canTranslate) {
+      return iri;
+    }
+
+    final ResourceIdentifier resourceIdentifier;
+    try {
+      resourceIdentifier = fromLocator.fromIri(iri);
+    } on UnsupportedIriException catch (e) {
+      _log.warning(
+          'Failed to extract ResourceIdentifier from $fromName IRI ${iri.debug}: $e');
+      return iri;
+    }
+    try {
+      return toLocator.toIri(resourceIdentifier);
+    } on UnsupportedIriException catch (e) {
+      _log.warning(
+          'Failed to convert ResourceIdentifier to $toName IRI for $fromName IRI ${iri.debug}: $e');
+      return iri;
+    }
   }
 
   /// Translates all IRIs in a graph from external to internal format
@@ -177,5 +207,72 @@ class IriTranslator {
     });
 
     return RdfGraph.fromTriples(triples);
+  }
+}
+
+class AppResourceLocator extends ResourceLocator {
+  final Map<IriTerm, ResourceGraphConfig> _configByType;
+
+  /// Maps external IRI prefixes to their type IRIs for efficient lookup
+  final Map<String, IriTerm> _prefixToType;
+
+  AppResourceLocator._(
+      {required Map<IriTerm, ResourceGraphConfig> configByType,
+      required Map<String, IriTerm> prefixToType})
+      : _configByType = configByType,
+        _prefixToType = prefixToType;
+
+  @override
+  ResourceIdentifier fromIri(IriTerm externalIri, {IriTerm? expectedTypeIri}) {
+    // Extract IRI value
+    final iriValue = externalIri.value;
+
+    // Extract fragment if present
+    final fragmentIndex = iriValue.indexOf('#');
+    final documentIriValue =
+        fragmentIndex >= 0 ? iriValue.substring(0, fragmentIndex) : iriValue;
+    final fragment =
+        fragmentIndex >= 0 ? iriValue.substring(fragmentIndex + 1) : null;
+
+    // Try to match against templates using prefix lookup
+    for (final entry in _prefixToType.entries) {
+      final prefix = entry.key;
+      if (!documentIriValue.startsWith(prefix)) continue;
+
+      final typeIri = entry.value;
+      final config = _configByType[typeIri]!;
+      final template = config.documentIriTemplate!;
+      if (typeIri != expectedTypeIri && expectedTypeIri != null) {
+        throw UnsupportedIriException(externalIri,
+            'with type ${typeIri.value} does not match expected type IRI ${expectedTypeIri.value}.');
+      }
+      final id = template.extractId(documentIriValue);
+      if (id != null) {
+        // Found a match - convert to internal IRI
+        return fragment != null
+            ? ResourceIdentifier(typeIri, id, fragment)
+            : ResourceIdentifier.document(typeIri, id);
+      }
+    }
+    throw UnsupportedIriException(
+        externalIri, 'is not identifiable by any configured template.');
+  }
+
+  @override
+  IriTerm toIri(ResourceIdentifier identifier) {
+    final typeIri = identifier.typeIri;
+    final config = _configByType[typeIri];
+    if (config?.documentIriTemplate != null) {
+      // Successfully extracted - convert to external IRI
+      final template = config!.documentIriTemplate!;
+      final externalDocumentIri = template.toIri(identifier.id);
+      final externalIriValue = identifier.fragment != null
+          ? '$externalDocumentIri#${identifier.fragment}'
+          : externalDocumentIri;
+
+      return IriTerm(externalIriValue);
+    }
+    throw UnsupportedIriException.forResourceIdentifier(identifier,
+        'Cannot convert to external IRI - no template configured for type ${typeIri.value}.');
   }
 }

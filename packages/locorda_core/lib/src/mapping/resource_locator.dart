@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 /// Translates between application identifiers and storage IRIs for different backends.
@@ -7,16 +8,43 @@ import 'package:rdf_core/rdf_core.dart';
 /// For example:
 /// - Solid Pod implementation: Uses type index to find storage location
 /// - Google Drive backend: Simple strategy to convert to/from IRIs
-abstract interface class ResourceLocator {
+abstract class ResourceLocator {
   /// Convert local ID and optional fragment to resource IRI.
   ///
+  /// Returns the full IRI for the given resource identifier.
   IriTerm toIri(ResourceIdentifier identifier);
 
   /// Extract local ID and fragment from resource IRI.
   ///
   /// Returns a record with the localId and optional fragment.
+  ///
+  /// Throws [UnsupportedIriException] if the IRI cannot be mapped to a ResourceIdentifier.
   ResourceIdentifier fromIri(IriTerm resourceIri, {IriTerm? expectedTypeIri});
-  bool isIdentifiableIri(IriTerm subjectIri);
+
+  bool isIdentifiableIri(IriTerm subjectIri) {
+    try {
+      fromIri(subjectIri);
+      return true;
+    } on UnsupportedIriException catch (_) {
+      return false;
+    }
+  }
+}
+
+class UnsupportedIriException implements Exception {
+  final String _type;
+  final String _message;
+  UnsupportedIriException(IriTerm iri, this._message)
+      :
+        // REALLY important: DO NOT use typeIri.debug here, as it may cause infinite recursion
+        // since it calls fromIri again!
+        _type = iri.value;
+  UnsupportedIriException.forResourceIdentifier(
+      ResourceIdentifier iri, this._message)
+      : _type = iri.toString();
+
+  @override
+  String toString() => 'UnsupportedIriException: IRI $_type - $_message';
 }
 
 final class ResourceIdentifier {
@@ -59,8 +87,8 @@ class LocalResourceLocator implements ResourceLocator {
         fragmentIndex >= 0 ? iriValue.substring(fragmentIndex + 1) : null;
 
     if (!documentIriValue.startsWith(prefix)) {
-      throw ArgumentError(
-          'Resource IRI ${resourceIri.value} does not belong to base IRI $prefix');
+      throw UnsupportedIriException(
+          resourceIri, 'Does not belong to base IRI $prefix');
     }
 
     final encoded = documentIriValue.substring(prefix.length);
@@ -68,8 +96,11 @@ class LocalResourceLocator implements ResourceLocator {
     final remoteTypeIri = utf8.decode(base64Url.decode(encodedTypeIri));
     final typeIri = expectedTypeIri ?? _iriTermFactory(remoteTypeIri);
     if (remoteTypeIri != typeIri.value) {
-      throw ArgumentError(
-          'Resource IRI ${resourceIri.value} with type ${remoteTypeIri} does not match type IRI ${typeIri.value}');
+      throw UnsupportedIriException(
+          resourceIri,
+          // REALLY important: DO NOT use typeIri.debug here, as it may cause infinite recursion
+          // since it calls fromIri again!
+          'Type ${remoteTypeIri} does not match expected type IRI ${typeIri.value}');
     }
 
     final localId = utf8.decode(base64Url.decode(encodedLocalId));

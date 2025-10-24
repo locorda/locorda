@@ -195,7 +195,7 @@ Future<void> _executeSaveTestWithSteps(
       stepInstallationId,
       () {
         final storage = InMemoryStorage();
-        final iriTranslator = IriTranslator(
+        final iriTranslator = IriTranslator.forConfig(
           resourceLocator:
               LocalResourceLocator(iriTermFactory: IriTerm.validated),
           resourceConfigs: config.resources,

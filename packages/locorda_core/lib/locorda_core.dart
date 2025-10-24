@@ -39,18 +39,17 @@ export 'src/config/validation.dart'
 // TODO: why do we export these?
 export 'src/crdt/crdt_types.dart' show CrdtType, LwwRegister, OrSet;
 // Vocabularies
-export 'src/generated/_index.dart' show IdxShardEntry
-    // TODO: what do we need to export here?
-    /*
-        ,Algo,
+export 'src/generated/_index.dart'
+    show
+        IdxShardEntry,
+        Algo,
         IdxShard,
         Crdt,
         AlgoAlgorithm,
-        AlgoFWW_Register,
+        AlgoG_Register,
         AlgoImmutable,
         AlgoLWW_Register,
         AlgoOR_Set,
-        Algon2P_Set,
         CrdtClientInstallation,
         CrdtClockEntry,
         Idx,
@@ -74,8 +73,7 @@ export 'src/generated/_index.dart' show IdxShardEntry
         Sync,
         SyncManagedDocument,
         SyncResourceStatement,
-        SyncUniversalProperties*/
-    ;
+        SyncUniversalProperties;
 export 'src/hydration_result.dart' show HydrationSubscription;
 export 'src/locorda_graph_sync.dart' show HydrationBatch, IdentifiedGraph;
 // Index configuration
@@ -92,7 +90,13 @@ export 'src/index/index_config_base.dart'
 export 'src/locorda_graph_sync.dart' show LocordaGraphSync, IdentifiedGraph;
 export 'src/mapping/root_iri_config.dart' show RootIriConfig;
 export 'src/mapping/resource_locator.dart'
-    show ResourceLocator, LocalResourceLocator, ResourceIdentifier;
+    show
+        ResourceLocator,
+        LocalResourceLocator,
+        ResourceIdentifier,
+        UnsupportedIriException;
+export 'src/mapping/iri_translator.dart'
+    show IriTranslator, BaseIriTranslator, NoOpIriTranslator;
 export 'src/storage/remote_id.dart' show RemoteId;
 export 'src/storage/remote_storage.dart' show RemoteStorage;
 export 'src/storage/storage_interface.dart'

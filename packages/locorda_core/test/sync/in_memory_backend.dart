@@ -125,7 +125,6 @@ class InMemoryRemoteStorage implements RemoteStorage {
     return RemoteUploadResult.success(newEtag);
   }
 
-  @override
   Future<void> delete(IriTerm documentIri, {String? ifMatch}) async {
     final iri = documentIri.value;
     final stored = _documents[iri];

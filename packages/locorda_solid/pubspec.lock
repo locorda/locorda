@@ -241,7 +241,7 @@ packages:
     source: hosted
     version: "2.2.0"
   rdf_core:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: rdf_core
       sha256: "6ccede76e77177b0b0867ae3172df303d6f63e8b375d25d6a74b0302356e4bc4"

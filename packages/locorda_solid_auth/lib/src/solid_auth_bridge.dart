@@ -3,8 +3,28 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:locorda_solid/locorda_solid.dart';
 import 'package:solid_auth/solid_auth.dart';
+
+class AuthValueListenableImpl implements AuthValueListenable {
+  final ValueListenable<bool> _notifier;
+
+  AuthValueListenableImpl(this._notifier);
+
+  @override
+  bool get isAuthenticated => _notifier.value;
+
+  @override
+  void addListener(void Function() listener) {
+    _notifier.addListener(listener);
+  }
+
+  @override
+  void removeListener(void Function() listener) {
+    _notifier.removeListener(listener);
+  }
+}
 
 /// Concrete implementation of SolidAuthProvider using solid-auth library.
 ///
@@ -12,13 +32,20 @@ import 'package:solid_auth/solid_auth.dart';
 /// library with the solid-auth implementation.
 class SolidAuthBridge implements SolidAuthProvider {
   final SolidAuth _solidAuth;
+  final AuthValueListenableImpl _isAuthenticatedNotifier;
 
-  SolidAuthBridge(this._solidAuth);
+  SolidAuthBridge(this._solidAuth)
+      : _isAuthenticatedNotifier =
+            AuthValueListenableImpl(_solidAuth.isAuthenticatedNotifier);
 
   @override
-  Future<bool> isAuthenticated() async {
-    return _solidAuth.isAuthenticated;
-  }
+  Future<bool> isAuthenticated() async => _solidAuth.isAuthenticated;
+
+  @override
+  AuthValueListenable get isAuthenticatedNotifier => _isAuthenticatedNotifier;
+
+  @override
+  String? get currentWebId => _solidAuth.currentWebId;
 
   @override
   Future<({String accessToken, String dPoP})> getDpopToken(
