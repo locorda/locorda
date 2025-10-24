@@ -293,7 +293,8 @@ class LocordaSync {
 
     final graph = await _syncSystem.ensure(typeIri, localIri,
         skipInitialFetch: true, loadFromLocal: (IriTerm iri) async {
-      final resId = _localResourceLocator.fromIri(typeIri, iri);
+      final resId =
+          _localResourceLocator.fromIri(iri, expectedTypeIri: typeIri);
       final obj = await loadFromLocal(resId.id);
       return obj == null ? null : _mapper.graph.encodeObject(obj);
     }, timeout: timeout);
@@ -422,7 +423,7 @@ class LocordaSync {
                   .toList(),
               deletions: batch.deletions
                   .map((identifiedGraph) => _localResourceLocator
-                      .fromIri(typeIri, identifiedGraph.$1)
+                      .fromIri(identifiedGraph.$1, expectedTypeIri: typeIri)
                       .id)
                   .toList(),
               cursor: batch.cursor,

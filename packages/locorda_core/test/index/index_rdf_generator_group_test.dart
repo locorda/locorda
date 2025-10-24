@@ -46,11 +46,9 @@ void main() {
         expect(result.value, startsWith('tag:locorda.org,2025:l:'));
 
         // Verify it contains 'index-grouped-' in the path
-        final identifier = resourceLocator.fromIri(
-          IriTerm(
-              'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate'),
-          result,
-        );
+        final identifier = resourceLocator.fromIri(result,
+            expectedTypeIri: IriTerm(
+                'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate'));
         expect(identifier.id,
             matches(RegExp(r'^index-grouped-[a-f0-9]{8}/index$')));
       });
@@ -79,11 +77,9 @@ void main() {
         expect(result.value, startsWith('tag:locorda.org,2025:l:'));
 
         // Extract and verify the ID format
-        final identifier = resourceLocator.fromIri(
-          IriTerm(
-              'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate'),
-          result,
-        );
+        final identifier = resourceLocator.fromIri(result,
+            expectedTypeIri: IriTerm(
+                'https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate'));
         expect(identifier.id,
             matches(RegExp(r'^index-grouped-[a-f0-9]{8}/index$')));
       });
@@ -202,8 +198,9 @@ void main() {
 
         // Extract and verify the ID format
         final identifier = resourceLocator.fromIri(
-          IriTerm('https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex'),
           result,
+          expectedTypeIri:
+              IriTerm('https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex'),
         );
         // Should be: index-grouped-{hash}/groups/2024-08/index
         expect(
@@ -248,8 +245,9 @@ void main() {
 
         // Extract and verify the ID format
         final identifier = resourceLocator.fromIri(
-          IriTerm('https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex'),
           result,
+          expectedTypeIri:
+              IriTerm('https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex'),
         );
         // Should be: index-grouped-{hash}/groups/2024/08/index
         expect(

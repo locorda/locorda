@@ -16,15 +16,14 @@ void main() {
               contains('variable must be named "id"'))));
 
       expect(
-          () => DocumentIriTemplate.fromJson(
-              'https://example.com/{id}/{name}'),
-          throwsA(isA<ArgumentError>().having((e) => e.message, 'message',
-              contains('exactly one variable'))));
+          () => DocumentIriTemplate.fromJson('https://example.com/{id}/{name}'),
+          throwsA(isA<ArgumentError>().having(
+              (e) => e.message, 'message', contains('exactly one variable'))));
 
       expect(
           () => DocumentIriTemplate.fromJson('https://example.com/static'),
-          throwsA(isA<ArgumentError>().having((e) => e.message, 'message',
-              contains('exactly one variable'))));
+          throwsA(isA<ArgumentError>().having(
+              (e) => e.message, 'message', contains('exactly one variable'))));
     });
 
     test('extracts prefix and suffix correctly', () {
@@ -38,8 +37,8 @@ void main() {
       expect(template2.prefix, equals('https://example.com/'));
       expect(template2.suffix, equals('/details'));
 
-      final template3 =
-          DocumentIriTemplate.fromJson('https://example.com/prefix-{id}-suffix');
+      final template3 = DocumentIriTemplate.fromJson(
+          'https://example.com/prefix-{id}-suffix');
       expect(template3.prefix, equals('https://example.com/prefix-'));
       expect(template3.suffix, equals('-suffix'));
     });
@@ -67,16 +66,16 @@ void main() {
       expect(template.extractId('https://example.com/categories/my%20work'),
           equals('my work'));
       expect(
-          template.extractId('https://example.com/categories/unicode-caf%C3%A9'),
+          template
+              .extractId('https://example.com/categories/unicode-caf%C3%A9'),
           equals('unicode-café'));
       expect(
-          template.extractId(
-              'https://example.com/categories/unsafe%3Acategory'),
+          template
+              .extractId('https://example.com/categories/unsafe%3Acategory'),
           equals('unsafe:category'));
 
       // Non-matching IRIs should return null
-      expect(template.extractId('https://other.com/categories/work'),
-          isNull);
+      expect(template.extractId('https://other.com/categories/work'), isNull);
       expect(template.extractId('https://example.com/items/work'), isNull);
     });
 
@@ -84,12 +83,10 @@ void main() {
       final template = DocumentIriTemplate.fromJson(
           'https://example.com/items/{id}/details');
 
-      expect(
-          template.extractId('https://example.com/items/123/details'),
+      expect(template.extractId('https://example.com/items/123/details'),
           equals('123'));
       expect(template.extractId('https://example.com/items/123'), isNull);
-      expect(template.extractId('https://example.com/items/123/other'),
-          isNull);
+      expect(template.extractId('https://example.com/items/123/other'), isNull);
     });
 
     test('round-trip encoding/decoding', () {
@@ -120,7 +117,8 @@ void main() {
       resourceLocator = LocalResourceLocator(iriTermFactory: IriTerm.validated);
 
       final categoryConfig = ResourceGraphConfig(
-        typeIri: IriTerm('https://example.org/vocab/personal-notes#NotesCategory'),
+        typeIri:
+            IriTerm('https://example.org/vocab/personal-notes#NotesCategory'),
         crdtMapping: Uri.parse('https://example.org/test/mappings/category-v1'),
         indices: [],
         documentIriTemplate: 'https://example.com/categories/{id}',
@@ -149,7 +147,8 @@ void main() {
       // Should be able to extract back to 'work' id
       final typeIri =
           IriTerm('https://example.org/vocab/personal-notes#NotesCategory');
-      final identifier = resourceLocator.fromIri(typeIri, internal);
+      final identifier =
+          resourceLocator.fromIri(internal, expectedTypeIri: typeIri);
       expect(identifier.id, equals('work'));
       expect(identifier.fragment, equals('it'));
     });
@@ -175,8 +174,7 @@ void main() {
     });
 
     test('non-matching IRI is returned unchanged', () {
-      final unmanagedIri =
-          IriTerm('https://other.com/unmanaged/resource#it');
+      final unmanagedIri = IriTerm('https://other.com/unmanaged/resource#it');
 
       final result = translator.externalToInternal(unmanagedIri);
       expect(result, equals(unmanagedIri));
@@ -249,7 +247,8 @@ void main() {
       // Extract the ID - should be decoded to 'my work'
       final typeIri =
           IriTerm('https://example.org/vocab/personal-notes#NotesCategory');
-      final identifier = resourceLocator.fromIri(typeIri, internal);
+      final identifier =
+          resourceLocator.fromIri(internal, expectedTypeIri: typeIri);
       expect(identifier.id, equals('my work'));
 
       // Translate back should preserve encoding

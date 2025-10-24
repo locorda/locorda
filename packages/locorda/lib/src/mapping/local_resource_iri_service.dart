@@ -280,7 +280,7 @@ class LocalReferenceConverter implements ReferenceConverter {
 
   String fromIri(Type targetType, IriTerm term) {
     final (typeIri, config) = _resourceConfigCache[targetType]!;
-    final result = _resourceLocator.fromIri(typeIri, term);
+    final result = _resourceLocator.fromIri(term, expectedTypeIri: typeIri);
     if (result.fragment != config.fragment) {
       throw ArgumentError(
           'Resource IRI ${term.value} does not match expected fragment "${config.fragment}" for type $targetType');

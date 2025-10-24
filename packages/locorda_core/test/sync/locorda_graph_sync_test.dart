@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/crdt/crdt_types.dart';
 import 'package:locorda_core/src/crdt_document_manager.dart';
-import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/hlc_service.dart';
 import 'package:locorda_core/src/index/index_discovery.dart';
 import 'package:locorda_core/src/index/index_manager.dart';
@@ -387,12 +386,14 @@ Future<void> _executeStep({
     final installationIri = InstallationService.createInstallationIri(
         resourceLocator, baseInstallationId);
     final indexManager = IndexManager(
-        crdtDocumentManager: crdtDocumentManager,
-        rdfGenerator: rdfGenerator,
-        storage: storage,
-        installationIri: installationIri,
-        config: effectiveConfig,
-        indexDiscovery: indexDiscovery);
+      crdtDocumentManager: crdtDocumentManager,
+      rdfGenerator: rdfGenerator,
+      storage: storage,
+      installationIri: installationIri,
+      config: effectiveConfig,
+      indexDiscovery: indexDiscovery,
+      resourceLocator: resourceLocator,
+    );
     final shardDocumentGenerator = ShardDocumentGenerator(
         documentManager: crdtDocumentManager,
         storage: storage,
@@ -658,12 +659,10 @@ Future<void> _verifyDocuments(
       // Build IRI from components
       final typeIri = IriTerm(docMap['type_iri'] as String);
       final id = docMap['id'] as String;
-      final fragment = docMap['fragment'] as String? ?? 'it';
 
-      final resourceIri = resourceLocator.toIri(
-        ResourceIdentifier(typeIri, id, fragment),
+      documentIri = resourceLocator.toIri(
+        ResourceIdentifier.document(typeIri, id),
       );
-      documentIri = resourceIri.getDocumentIri();
     } else {
       fail(
           'Document spec must provide either "iri" or both "type_iri" and "id"');

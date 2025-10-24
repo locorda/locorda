@@ -338,7 +338,7 @@ class CrdtDocumentManager {
     ) = await _prepare(type, documentIri);
     if (oldAppData == null && !acceptMissing) {
       throw ArgumentError(
-          'Cannot patch non-existing document $documentIri - use save() instead');
+          'Cannot patch non-existing document ${documentIri.debug} - use save() instead');
     }
 
     // let the caller derive the app data from the old state

@@ -938,16 +938,23 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   /// Uses max(ourPhysicalClock) per shard to find shards with changes since the last sync.
   /// This ensures deletions are properly detected using the item's timestamp,
   /// not the deletion operation's timestamp.
-  Future<List<(String shardIri, String resourceTypeIri, int maxPhysicalClock)>>
-      getShardsToUpdate(int sinceTimestamp) async {
+  Future<
+      List<
+          ({
+            String shardIri,
+            String resourceTypeIri,
+            String indexIri,
+            int maxPhysicalClock
+          })>> getShardsToUpdate(int sinceTimestamp) async {
     // Use raw SQL with HAVING clause for efficient filtering on DB level
     final results = await customSelect(
       '''
-      SELECT s.iri as shard_iri, t.iri as resource_type_iri, MAX(e.our_physical_clock) as max_clock
+      SELECT s.iri as shard_iri, t.iri as resource_type_iri, i.iri as index_iri, MAX(e.our_physical_clock) as max_clock
       FROM index_entries e
       JOIN sync_iris s ON s.id = e.shard_iri
       JOIN sync_iris t ON t.id = e.resource_type_iri_id
-      GROUP BY e.shard_iri, e.resource_type_iri_id
+      JOIN sync_iris i ON i.id = e.index_iri_id
+      GROUP BY e.shard_iri, e.resource_type_iri_id, e.index_iri_id
       HAVING max_clock > ?
       ''',
       variables: [Variable.withInt(sinceTimestamp)],
@@ -956,9 +963,10 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
 
     return results
         .map((row) => (
-              row.read<String>('shard_iri'),
-              row.read<String>('resource_type_iri'),
-              row.read<int>('max_clock'),
+              shardIri: row.read<String>('shard_iri'),
+              resourceTypeIri: row.read<String>('resource_type_iri'),
+              indexIri: row.read<String>('index_iri'),
+              maxPhysicalClock: row.read<int>('max_clock'),
             ))
         .toList();
   }

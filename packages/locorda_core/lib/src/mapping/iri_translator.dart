@@ -102,8 +102,8 @@ class IriTranslator {
       if (config.documentIriTemplate == null) continue;
 
       try {
-        final identifier =
-            _resourceLocator.fromIri(config.typeIri, internalIri);
+        final identifier = _resourceLocator.fromIri(internalIri,
+            expectedTypeIri: config.typeIri);
 
         // Successfully extracted - convert to external IRI
         final template = config.documentIriTemplate!;

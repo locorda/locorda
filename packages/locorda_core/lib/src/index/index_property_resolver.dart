@@ -9,13 +9,15 @@
 /// 3. Index/Template → idx:indexedProperty → List of property IRIs
 library;
 
+import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
-import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:locorda_core/src/util/lru_cache.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 typedef IndexProperties = (IriTerm? indexIri, Set<IriTerm> properties);
+final _log = Logger('IndexPropertyResolver');
 
 /// Resolves which properties should be indexed for a given shard.
 ///
@@ -26,11 +28,15 @@ class IndexPropertyResolver {
   /// LRU cache: shard document IRI → set of property IRIs to index
   /// Uses LinkedHashMap to maintain insertion order for LRU eviction
   final LRUCache<String, IndexProperties> _cache;
+  final ResourceLocator _resourceLocator;
 
   IndexPropertyResolver({
     required Storage storage,
+    ResourceLocator? resourceLocator,
     int cacheSize = 100,
   })  : _storage = storage,
+        _resourceLocator = resourceLocator ??
+            LocalResourceLocator(iriTermFactory: IriTerm.validated),
         _cache = LRUCache(maxCacheSize: cacheSize);
 
   /// Resolves which properties should be included in index entries for a shard.
@@ -64,21 +70,9 @@ class IndexPropertyResolver {
 
   /// Resolves indexed properties by loading documents from storage.
   Future<IndexProperties> _resolveFromStorage(IriTerm shardDocumentIri) async {
-    // 1. Load shard document
-    final shardDoc = await _storage.getDocument(shardDocumentIri);
-    if (shardDoc == null) {
-      return (null, const <IriTerm>{});
-    }
+    IriTerm? indexIri = await _getIndexIriForShardDocumentIri(shardDocumentIri);
 
-    final shardGraph = shardDoc.document;
-    final shardResourceIri = shardGraph.expectSingleObject<IriTerm>(
-        shardDocumentIri, SyncManagedDocument.foafPrimaryTopic)!;
-
-    // 2. Get parent index IRI via idx:isShardOf
-    final indexIri = shardGraph.findSingleObject<IriTerm>(
-      shardResourceIri,
-      IdxShard.isShardOf,
-    );
+    // 2. Check if we have an indexIri
 
     if (indexIri == null) {
       return (null, const <IriTerm>{});
@@ -87,36 +81,20 @@ class IndexPropertyResolver {
     // 3. Load parent index document
     final parentIndexDocumentIri = indexIri.getDocumentIri();
     final indexDoc = await _storage.getDocument(parentIndexDocumentIri);
-    if (indexDoc == null) {
-      return (null, const <IriTerm>{});
+    final indexOrTemplateIri =
+        _getIndexOrTemplateIri(indexDoc, parentIndexDocumentIri, indexIri);
+
+    final RdfGraph? indexOrTemplateGraph;
+    if (indexIri == indexOrTemplateIri) {
+      indexOrTemplateGraph = indexDoc?.document;
+    } else {
+      // Load template document
+      final templateDocumentIri = indexOrTemplateIri.getDocumentIri();
+      final templateDoc = await _storage.getDocument(templateDocumentIri);
+      indexOrTemplateGraph = templateDoc?.document;
     }
-
-    final indexGraph = indexDoc.document;
-
-    // 4. Check if this is a GroupIndex that needs template resolution
-    final indexTypes = indexGraph.getMultiValueObjectList<IriTerm>(
-      indexIri,
-      Rdf.type,
-    );
-
-    IriTerm indexOrTemplateIri = indexIri;
-    RdfGraph indexOrTemplateGraph = indexGraph;
-
-    if (indexTypes.contains(IdxGroupIndex.classIri)) {
-      // Follow idx:basedOn to get template
-      final templateIri = indexGraph.findSingleObject<IriTerm>(
-        indexIri,
-        IdxGroupIndex.basedOn,
-      );
-
-      if (templateIri != null) {
-        final templateDocumentIri = templateIri.getDocumentIri();
-        final templateDoc = await _storage.getDocument(templateDocumentIri);
-        if (templateDoc != null) {
-          indexOrTemplateIri = templateIri;
-          indexOrTemplateGraph = templateDoc.document;
-        }
-      }
+    if (indexOrTemplateGraph == null) {
+      return (null, const <IriTerm>{});
     }
 
     // 5. Extract idx:indexedProperty list
@@ -126,6 +104,87 @@ class IndexPropertyResolver {
     );
 
     return (indexIri, properties);
+  }
+
+  IriTerm _getIndexOrTemplateIri(StoredDocument? indexDoc,
+      IriTerm parentIndexDocumentIri, IriTerm indexIri) {
+    if (indexDoc != null) {
+      final indexGraph = indexDoc.document;
+
+      // 4. Check if this is a GroupIndex that needs template resolution
+      final indexTypes = indexGraph.getMultiValueObjectList<IriTerm>(
+        indexIri,
+        Rdf.type,
+      );
+
+      if (indexTypes.contains(IdxGroupIndex.classIri)) {
+        // Follow idx:basedOn to get template
+        return indexGraph.findSingleObject<IriTerm>(
+              indexIri,
+              IdxGroupIndex.basedOn,
+            ) ??
+            indexIri;
+      }
+      return indexIri;
+    }
+    if (!_resourceLocator.isIdentifiableIri(parentIndexDocumentIri)) {
+      return indexIri;
+    }
+    // Index document not found - try to infer template IRI for GroupIndex
+    final ri = _resourceLocator.fromIri(parentIndexDocumentIri);
+    final parentType = ri.typeIri;
+    final parentId = ri.id;
+    if (parentType == IdxGroupIndex.classIri && parentId.contains('/')) {
+      // ok, this is a group index - we try to infer the template IRI.
+      // It probably is something like "index-grouped-e093655c/groups/20_ad221effd73057a647d96bab312c4886/index"
+      // and the templateId then "index-grouped-e093655c/index"
+      final templateId = '${parentId.split('/')[0]}/index';
+      return _resourceLocator.toIri(ResourceIdentifier(
+          IdxGroupIndexTemplate.classIri, templateId, 'groupIndexTemplate'));
+    }
+    return indexIri;
+  }
+
+  Future<IriTerm?> _getIndexIriForShardDocumentIri(
+      IriTerm shardDocumentIri) async {
+    // 1. Load shard document
+    final shardDoc = await _storage.getDocument(shardDocumentIri);
+    if (shardDoc != null) {
+      final shardGraph = shardDoc.document;
+      final shardResourceIri = shardGraph.expectSingleObject<IriTerm>(
+          shardDocumentIri, SyncManagedDocument.foafPrimaryTopic)!;
+
+      // 2. Get parent index IRI via idx:isShardOf
+      return shardGraph.findSingleObject<IriTerm>(
+        shardResourceIri,
+        IdxShard.isShardOf,
+      );
+    }
+    // Shard document not found - maybe it is a shard of a foreign index
+    // which we did not download. In this case, we try to infer the index IRI
+    // from the shard IRI structure
+    // Id will be something like `index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0` for full index
+    // or `index-grouped-e093655c/groups/20_ad221effd73057a647d96bab312c4886/shard-mod-md5-1-0-v1_0_0` for group index
+    if (!_resourceLocator.isIdentifiableIri(shardDocumentIri)) {
+      return null;
+    }
+    final iri = _resourceLocator.fromIri(shardDocumentIri,
+        expectedTypeIri: IdxShard.classIri);
+    final shardId = iri.id;
+    final type = shardId.startsWith('index-full-')
+        ? IdxFullIndex.classIri
+        : shardId.startsWith('index-grouped-')
+            ? IdxGroupIndex.classIri
+            : null;
+
+    if (type != null && shardId.contains('/')) {
+      // ok - this looks good. Continue
+      final indexId =
+          shardId.substring(0, shardId.lastIndexOf('/') + 1) + 'index';
+
+      return _resourceLocator.toIri(ResourceIdentifier(type, indexId, "index"));
+    }
+    return null;
   }
 
   /// Extracts property IRIs from idx:indexedProperty blank nodes.

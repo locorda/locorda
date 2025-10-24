@@ -1564,6 +1564,11 @@
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0",
                     "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_remote-2.ttl"
+                  },
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "chocolate-cake",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph_remote-1.ttl"
                   }
                 ]
               }
@@ -1585,6 +1590,11 @@
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0",
                     "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_local-2.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
+                    "id": "index-full-e679d72f/index",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_index_recipes_full.ttl"
                   }
                 ]
               }
@@ -1598,7 +1608,49 @@
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
+                    "property_iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
                     "property_iri": "https://schema.org/name",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
+                    "property_iri": "https://schema.org/recipeCategory",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
+                    "property_iri": "https://schema.org/dateCreated",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
+                    "property_iri": "https://schema.org/description",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
+                    "property_iri": "https://schema.org/prepTime",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
+                    "property_iri": "https://schema.org/cookTime",
+                    "changed_at": "2024-01-01T06:00:00Z",
+                    "logical_clock": 1
+                  },
+                  {
+                    "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
+                    "property_iri": "https://schema.org/recipeYield",
                     "changed_at": "2024-01-01T06:00:00Z",
                     "logical_clock": 1
                   }
@@ -1607,7 +1659,7 @@
                   {
                     "type_iri": "https://schema.org/Recipe",
                     "id": "chocolate-cake",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph_before_sync.ttl"
                   },
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
@@ -1647,6 +1699,11 @@
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
                     "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_desserts.ttl"
+                  },
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "chocolate-cake",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph.ttl"
                   }
                 ]
               }

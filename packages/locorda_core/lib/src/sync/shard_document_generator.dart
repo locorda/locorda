@@ -45,7 +45,12 @@ class ShardDocumentGenerator {
     // 3. Sync each shard
     int syncedCount = 0;
     for (final shardIri in shardsToUpdate) {
-      final result = await syncShard(shardIri.$1, shardIri.$2, shardIri.$3);
+      final result = await syncShard(
+        shardIri.shardIri,
+        shardIri.indexIri,
+        shardIri.resourceTypeIri,
+        shardIri.maxPhysicalClock,
+      );
       if (result != null) {
         syncedCount++;
       }
@@ -74,16 +79,25 @@ class ShardDocumentGenerator {
   /// Returns: SaveResult if changes were made, null if shard was up-to-date
   /// Throws: [StateError] if all retries fail due to concurrent updates
   Future<DocumentSaveResult?> syncShard(
-          IriTerm shardIri, IriTerm resourceTypeIri, int maxPhysicalClock) =>
+    IriTerm shardIri,
+    IriTerm indexIri,
+    IriTerm resourceTypeIri,
+    int maxPhysicalClock,
+  ) =>
       retryOnConflict(
-          () => _syncShardAttempt(shardIri, resourceTypeIri, maxPhysicalClock),
+          () => _syncShardAttempt(
+              shardIri, indexIri, resourceTypeIri, maxPhysicalClock),
           debugOperationName: 'syncing shard ${shardIri.debug}');
 
   /// Internal method that performs a single shard sync attempt.
   ///
   /// Throws [ConcurrentUpdateException] on optimistic lock failure.
   Future<DocumentSaveResult?> _syncShardAttempt(
-      IriTerm shardIri, IriTerm resourceTypeIri, int maxPhysicalClock) async {
+    IriTerm shardIri,
+    IriTerm indexIri,
+    IriTerm resourceTypeIri,
+    int maxPhysicalClock,
+  ) async {
     final shardDocumentIri = shardIri.getDocumentIri();
 
     // 1. Load all active entries for this shard from DB
@@ -116,19 +130,11 @@ class ShardDocumentGenerator {
     final saveResult = await _documentManager.modify(
       IdxShard.classIri,
       shardIri,
-      (oldAppData) => RdfGraph.fromTriples([
-        ...oldAppData
-            .subgraph(
-              shardIri,
-              filter: (triple, depth) =>
-                  triple.predicate == IdxShard.containsEntry
-                      ? TraversalDecision.skip
-                      : TraversalDecision.include,
-            )
-            .triples,
-        ...newTriples
-      ]),
+      (oldAppData) =>
+          buildShardAppData(oldAppData, shardIri, indexIri, newTriples),
       physicalTime: maxPhysicalClock,
+      // shard documents may be created here if they didn't exist before
+      acceptMissing: true,
     );
 
     if (saveResult == null) {
@@ -257,4 +263,25 @@ class ShardDocumentGenerator {
     final digest = md5.convert(bytes);
     return 'entry-${digest.toString()}'; // Full 32-character hex string
   }
+}
+
+RdfGraph buildShardAppData(RdfGraph oldAppData, IriTerm shardIri,
+    IriTerm indexIri, Iterable<Triple> newTriples) {
+  final hasIsShardOf =
+      oldAppData.hasTriples(subject: shardIri, predicate: IdxShard.isShardOf);
+  final hasType =
+      oldAppData.hasTriples(subject: shardIri, predicate: IdxShard.rdfType);
+  return RdfGraph.fromTriples([
+    ...oldAppData
+        .subgraph(
+          shardIri,
+          filter: (triple, depth) => triple.predicate == IdxShard.containsEntry
+              ? TraversalDecision.skip
+              : TraversalDecision.include,
+        )
+        .triples,
+    if (!hasType) Triple(shardIri, IdxShard.rdfType, IdxShard.classIri),
+    if (!hasIsShardOf) Triple(shardIri, IdxShard.isShardOf, indexIri),
+    ...newTriples
+  ]);
 }

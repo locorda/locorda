@@ -522,13 +522,10 @@ class RemoteSyncOrchestrator {
     ShardSyncSpec shard,
     RdfGraph? originalRemoteShard,
   ) async {
-    // FIXME: I believe that the save_36 bug is somewhere around here
-    // Apparently, the documents from the original remote shard are not returned
-    // correctly, leading to missing entries in the document queue.
     switch (shard) {
       case PartialShardSync():
-        print(
-            'PartialShardSync for ${shard.shardIri.debug} - syncing ${shard.resourceIris.length} resources ${shard.resourceIris.map((iri) => iri.debug).join(', ')}');
+        // print(
+        //    'PartialShardSync for ${shard.shardIri.debug} - syncing ${shard.resourceIris.length} resources ${shard.resourceIris.map((iri) => iri.debug).join(', ')}');
         // For partial shard sync, just enqueue the specified resource IRIs
         return shard.resourceIris
             .map((resourceIri) => resourceIri.getDocumentIri())
@@ -613,8 +610,8 @@ class RemoteSyncOrchestrator {
       }
     }
 
-    print(
-        'Document queue for shard ${shard.shardIri.debug}: ${documentQueue.map((iri) => iri.debug).join(', ')}');
+    //print(
+    //    'Document queue for shard ${shard.shardIri.debug}: ${documentQueue.map((iri) => iri.debug).join(', ')}');
     return documentQueue;
   }
 
@@ -671,10 +668,10 @@ class RemoteSyncOrchestrator {
       resourceType: resourceType,
       excludeIndexIris: configuredIndexIris,
     );
-    print(
-        'Configured indices: ${configuredIndexIris.map((e) => e.debug).join(', ')} for resource type ${resourceType.debug}');
-    print(
-        'Foreign index shards to sync: ${foreignIndexShards.entries.map((e) => e.key.debug).join(', ')}');
+    // print(
+    //    'Configured indices: ${configuredIndexIris.map((e) => e.debug).join(', ')} for resource type ${resourceType.debug}');
+    // print(
+    //   'Foreign index shards to sync: ${foreignIndexShards.entries.map((e) => e.key.debug).join(', ')}');
     // Convert to PartialIndexSync specs
     final foreignIndices = foreignIndexShards.entries
         .map((entry) => PartialIndexSync(
@@ -750,8 +747,8 @@ class RemoteSyncOrchestrator {
 
       // sync all the documents in the queue right away
       for (final documentIri in documentQueue) {
-        print(
-            'Syncing document: ${documentIri.debug} for shard ${shardIri.debug}');
+        // print(
+        //   'Syncing document: ${documentIri.debug} for shard ${shardIri.debug}');
         await _syncDocument(documentIri, lastSyncTimestamp, syncTime,
             debugName:
                 'Document ${documentIri.debug} (as part of ${debugName})');

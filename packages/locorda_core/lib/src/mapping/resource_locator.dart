@@ -15,7 +15,8 @@ abstract interface class ResourceLocator {
   /// Extract local ID and fragment from resource IRI.
   ///
   /// Returns a record with the localId and optional fragment.
-  ResourceIdentifier fromIri(IriTerm typeIri, IriTerm resourceIri);
+  ResourceIdentifier fromIri(IriTerm resourceIri, {IriTerm? expectedTypeIri});
+  bool isIdentifiableIri(IriTerm subjectIri);
 }
 
 final class ResourceIdentifier {
@@ -36,6 +37,8 @@ class LocalResourceLocator implements ResourceLocator {
   LocalResourceLocator({required IriTermFactory iriTermFactory})
       : _iriTermFactory = iriTermFactory;
 
+  bool isIdentifiableIri(IriTerm subjectIri) => isLocalIri(subjectIri);
+
   @override
   IriTerm toIri(ResourceIdentifier identifier) {
     final encodedTypeIri =
@@ -46,7 +49,7 @@ class LocalResourceLocator implements ResourceLocator {
   }
 
   @override
-  ResourceIdentifier fromIri(IriTerm typeIri, IriTerm resourceIri) {
+  ResourceIdentifier fromIri(IriTerm resourceIri, {IriTerm? expectedTypeIri}) {
     // Split off fragment if present
     final iriValue = resourceIri.value;
     final fragmentIndex = iriValue.indexOf('#');
@@ -63,7 +66,7 @@ class LocalResourceLocator implements ResourceLocator {
     final encoded = documentIriValue.substring(prefix.length);
     final [encodedTypeIri, encodedLocalId] = encoded.split(':');
     final remoteTypeIri = utf8.decode(base64Url.decode(encodedTypeIri));
-
+    final typeIri = expectedTypeIri ?? _iriTermFactory(remoteTypeIri);
     if (remoteTypeIri != typeIri.value) {
       throw ArgumentError(
           'Resource IRI ${resourceIri.value} with type ${remoteTypeIri} does not match type IRI ${typeIri.value}');
@@ -77,29 +80,7 @@ class LocalResourceLocator implements ResourceLocator {
   }
 
   ResourceIdentifier fromIriNoType(IriTerm resourceIri) {
-    // Split off fragment if present
-    final iriValue = resourceIri.value;
-    final fragmentIndex = iriValue.indexOf('#');
-    final documentIriValue =
-        fragmentIndex >= 0 ? iriValue.substring(0, fragmentIndex) : iriValue;
-    final fragment =
-        fragmentIndex >= 0 ? iriValue.substring(fragmentIndex + 1) : null;
-
-    if (!documentIriValue.startsWith(prefix)) {
-      throw ArgumentError(
-          'Resource IRI ${resourceIri.value} does not belong to base IRI $prefix');
-    }
-
-    final encoded = documentIriValue.substring(prefix.length);
-    final [encodedTypeIri, encodedLocalId] = encoded.split(':');
-    final remoteTypeIri =
-        IriTerm.validated(utf8.decode(base64Url.decode(encodedTypeIri)));
-
-    final localId = utf8.decode(base64Url.decode(encodedLocalId));
-    if (fragment == null) {
-      return ResourceIdentifier.document(remoteTypeIri, localId);
-    }
-    return ResourceIdentifier(remoteTypeIri, localId, fragment);
+    return fromIri(resourceIri);
   }
 
   static bool isLocalIri(IriTerm subjectIri) {

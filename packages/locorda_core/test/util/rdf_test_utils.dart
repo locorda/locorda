@@ -89,5 +89,5 @@ ResourceIdentifier extractTypeIdFromStoredPath(
   final typeIris = graph.getMultiValueObjects<IriTerm>(primaryTopic, Rdf.type);
   LocalResourceLocator locator =
       LocalResourceLocator(iriTermFactory: IriTerm.validated);
-  return locator.fromIri(typeIris.single, documentIri);
+  return locator.fromIri(documentIri, expectedTypeIri: typeIris.single);
 }

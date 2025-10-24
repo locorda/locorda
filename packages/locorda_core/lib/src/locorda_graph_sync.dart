@@ -194,12 +194,14 @@ class LocordaGraphSync {
 
     // Initialize indices after installation document is created
     final indexManager = IndexManager(
-        crdtDocumentManager: crdtDocumentManager,
-        rdfGenerator: indexRdfGenerator,
-        storage: storage,
-        installationIri: installationService.installationIri,
-        config: config,
-        indexDiscovery: indexDiscovery);
+      crdtDocumentManager: crdtDocumentManager,
+      rdfGenerator: indexRdfGenerator,
+      storage: storage,
+      installationIri: installationService.installationIri,
+      config: config,
+      indexDiscovery: indexDiscovery,
+      resourceLocator: localResourceLocator,
+    );
 
     await indexManager.initializeIndices();
     final remoteDocumentMerger = RemoteDocumentMerger(

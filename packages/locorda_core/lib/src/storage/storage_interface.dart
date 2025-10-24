@@ -264,8 +264,14 @@ abstract interface class Storage {
   /// - [sinceTimestamp]: Physical clock timestamp (milliseconds since epoch)
   ///
   /// Returns: List of shard IRIs with modifications after the timestamp
-  Future<List<(IriTerm iri, IriTerm resourceTypeIri, int maxPhysicalClock)>>
-      getShardsToUpdate(int sinceTimestamp);
+  Future<
+      List<
+          ({
+            IriTerm shardIri,
+            IriTerm indexIri,
+            IriTerm resourceTypeIri,
+            int maxPhysicalClock
+          })>> getShardsToUpdate(int sinceTimestamp);
 
   /// Get foreign index shards that need partial sync.
   ///

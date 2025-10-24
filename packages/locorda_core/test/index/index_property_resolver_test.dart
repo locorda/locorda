@@ -1,3 +1,4 @@
+import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_property_resolver.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
@@ -14,14 +15,18 @@ void main() {
 
     setUp(() {
       storage = InMemoryStorage();
-      resolver = IndexPropertyResolver(storage: storage, cacheSize: 3);
+      resolver = IndexPropertyResolver(
+          storage: storage,
+          cacheSize: 3,
+          resourceLocator:
+              LocalResourceLocator(iriTermFactory: IriTerm.validated));
     });
 
     Future<Set<IriTerm>> resolveIndexedProperties(
         IriTerm shardDocumentIri) async {
       final (indexOrTemplateIri, properties) =
           await resolver.resolveIndexedProperties(shardDocumentIri);
-      return properties;      
+      return properties;
     }
 
     /// Helper to create a document with minimal metadata

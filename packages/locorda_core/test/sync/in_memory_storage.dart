@@ -463,11 +463,17 @@ class InMemoryStorage implements Storage {
   }
 
   @override
-  Future<List<(IriTerm iri, IriTerm resourceTypeIri, int maxPhysicalClock)>>
-      getShardsToUpdate(int sinceTimestamp) async {
+  Future<
+      List<
+          ({
+            IriTerm shardIri,
+            IriTerm resourceTypeIri,
+            IriTerm indexIri,
+            int maxPhysicalClock
+          })>> getShardsToUpdate(int sinceTimestamp) async {
     // Find max(ourPhysicalClock) per shard, then filter shards where max > sinceTimestamp
-    final shardMaxClocks =
-        <IriTerm, ({IriTerm resourceTypeIri, int maxPhysicalClock})>{};
+    final shardMaxClocks = <IriTerm,
+        ({IriTerm resourceTypeIri, IriTerm indexIri, int maxPhysicalClock})>{};
 
     // Calculate max physical clock for each shard
     for (final entry in _indexEntries.values) {
@@ -475,6 +481,7 @@ class InMemoryStorage implements Storage {
       if (entry.ourPhysicalClock > currentMax) {
         shardMaxClocks[entry.shardIri] = (
           resourceTypeIri: entry.resourceType,
+          indexIri: entry.indexIri,
           maxPhysicalClock: entry.ourPhysicalClock,
         );
       }
@@ -484,9 +491,10 @@ class InMemoryStorage implements Storage {
     return shardMaxClocks.entries
         .where((entry) => entry.value.maxPhysicalClock > sinceTimestamp)
         .map((entry) => (
-              entry.key,
-              entry.value.resourceTypeIri,
-              entry.value.maxPhysicalClock
+              shardIri: entry.key,
+              resourceTypeIri: entry.value.resourceTypeIri,
+              indexIri: entry.value.indexIri,
+              maxPhysicalClock: entry.value.maxPhysicalClock
             ))
         .toList();
   }

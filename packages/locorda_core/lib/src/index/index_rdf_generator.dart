@@ -12,6 +12,7 @@ import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/mapping/resource_locator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/rdf/xsd.dart';
+import 'package:locorda_core/src/sync/shard_document_generator.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -299,9 +300,8 @@ class IndexRdfGenerator {
   ) {
     // Extract template's resource identifier
     final templateIdentifier = _resourceLocator.fromIri(
-      IdxGroupIndexTemplate.classIri,
-      templateIri.getDocumentIri(),
-    );
+        templateIri.getDocumentIri(),
+        expectedTypeIri: IdxGroupIndexTemplate.classIri);
 
     // Template local ID format: index-grouped-{hash}/index
     // Extract the directory part (index-grouped-{hash})
@@ -345,13 +345,8 @@ class IndexRdfGenerator {
 
     return (
       resourceIri,
-      RdfGraph.fromTriples([
-        // 1. Type declaration
-        Triple(resourceIri, IdxShard.rdfType, IdxShard.classIri),
-        // 2. Back-link to index
-        Triple(resourceIri, IdxShard.isShardOf, indexResourceIri)
-        // 3. Empty shard - no containsEntry triples yet
-      ])
+      buildShardAppData(RdfGraph() /* no old data */, resourceIri,
+          indexResourceIri, [] /* empty - no containsEntry triples yet */)
     );
   }
 
@@ -359,7 +354,8 @@ class IndexRdfGenerator {
       String configVersion, IriTerm indexResourceIri, IriTerm indexTypeIri) {
     // Extract local ID from index document IRI for shard generation
     final indexIdentifier = _resourceLocator.fromIri(
-        indexTypeIri, indexResourceIri.getDocumentIri());
+        indexResourceIri.getDocumentIri(),
+        expectedTypeIri: indexTypeIri);
 
     final shardName = _shardManager.generateShardName(
         totalShards: totalShards,

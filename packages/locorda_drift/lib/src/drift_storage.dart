@@ -532,14 +532,21 @@ class DriftStorage implements Storage {
   }
 
   @override
-  Future<List<(IriTerm iri, IriTerm resourceTypeIri, int maxPhysicalClock)>>
-      getShardsToUpdate(int sinceTimestamp) async {
+  Future<
+      List<
+          ({
+            IriTerm shardIri,
+            IriTerm resourceTypeIri,
+            IriTerm indexIri,
+            int maxPhysicalClock
+          })>> getShardsToUpdate(int sinceTimestamp) async {
     final shardIris = await indexDao.getShardsToUpdate(sinceTimestamp);
     return shardIris
         .map((iri) => (
-              _iriTermFactory(iri.$1),
-              _iriTermFactory(iri.$2),
-              iri.$3,
+              shardIri: _iriTermFactory(iri.shardIri),
+              resourceTypeIri: _iriTermFactory(iri.resourceTypeIri),
+              indexIri: _iriTermFactory(iri.indexIri),
+              maxPhysicalClock: iri.maxPhysicalClock,
             ))
         .toList();
   }

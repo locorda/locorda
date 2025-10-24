@@ -41,11 +41,13 @@ class IndexManager {
     required IriTerm installationIri,
     required SyncGraphConfig config,
     required IndexDiscovery indexDiscovery,
+    required ResourceLocator resourceLocator,
   })  : _documentManager = crdtDocumentManager,
         _rdfGenerator = rdfGenerator,
         _storage = storage,
         _config = config,
-        _propertyResolver = IndexPropertyResolver(storage: storage),
+        _propertyResolver = IndexPropertyResolver(
+            storage: storage, resourceLocator: resourceLocator),
         _installationIri = installationIri,
         _indexDiscovery = indexDiscovery;
 
@@ -376,10 +378,6 @@ class IndexManager {
       final (indexIri, indexedProperties) =
           await _propertyResolver.resolveIndexedProperties(shardDocumentIri);
       if (indexIri == null) {
-        // FIXME: this can happen for foreign app shards which are referenced - we need to handle this case
-        // somehow. Downloading the shard and index is not an option here, because
-        // we are offline-first. So maybe make an index entry without header properties,
-        // without index IRI and with a marker that this needs to be resolved later?
         _log.warning(
             'Shard ${shardDocumentIri.debug} has no associated index or template, skipping.');
         continue;
