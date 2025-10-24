@@ -98,10 +98,9 @@ class DriftStorage implements Storage {
       final previousCursor = previousTimestamp?.toString();
 
       // Validate that new timestamp is greater than existing max
-      if (previousTimestamp != null &&
-          metadata.updatedAt <= previousTimestamp) {
+      if (previousTimestamp != null && metadata.updatedAt < previousTimestamp) {
         throw ArgumentError(
-            'New document updatedAt (${metadata.updatedAt}) must be greater than '
+            'New document updatedAt (${metadata.updatedAt}) must be greater than (or equal to) '
             'existing max updatedAt ($previousTimestamp) for type ${typeIri.value}');
       }
 

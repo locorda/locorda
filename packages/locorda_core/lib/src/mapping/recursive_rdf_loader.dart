@@ -82,8 +82,8 @@ class StandardRdfGraphFetcher implements RdfGraphFetcher {
   Future<RdfGraph> fetch(IriTerm iri) async {
     // Parse the RDF graph from the response body
     return rdfCore.decode(
-        await fetcher.fetch(iri.value, contentType: "text/turtle"),
-        contentType: "text/turtle",
+        await fetcher.fetch(iri.value, contentType: turtle.primaryMimeType),
+        contentType: turtle.primaryMimeType,
         documentUrl: iri.value);
   }
 }

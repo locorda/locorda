@@ -135,7 +135,10 @@ class BaseIriTranslator implements IriTranslator {
     if (!canTranslate) {
       return iri;
     }
-
+    if (!fromLocator.isIdentifiableIri(iri)) {
+      // IRI not identifiable by fromLocator - return unchanged
+      return iri;
+    }
     final ResourceIdentifier resourceIdentifier;
     try {
       resourceIdentifier = fromLocator.fromIri(iri);

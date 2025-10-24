@@ -497,19 +497,26 @@ class RemoteSyncOrchestrator {
   ) async {
     // Context indices were already filtered by resourceType in _reconcileMetadata
     // Extract shards from all synced indices
-    return switch (idxSpec) {
-      FullIndexSync() =>
-        (await _storage.getDocument(idxSpec.indexIri.getDocumentIri()))!
+    switch (idxSpec) {
+      case FullIndexSync():
+        final result =
+            await _storage.getDocument(idxSpec.indexIri.getDocumentIri());
+        if (result == null) {
+          throw Exception(
+              'Index document ${idxSpec.indexIri.debug} not found locally during shard spec building');
+        }
+        return result
             .document // we synced it at least once already, must be present
             .getMultiValueObjects<IriTerm>(idxSpec.indexIri, IdxIndex.hasShard)
             .map((shardIri) => FullShardSync(
                 shardIri: shardIri, fetchPolicy: idxSpec.fetchPolicy))
-            .toList(),
-      PartialIndexSync() => Future.value(idxSpec.shardItems.entries
-          .map((entry) =>
-              PartialShardSync(shardIri: entry.key, resourceIris: entry.value))
-          .toList()),
-    };
+            .toList();
+      case PartialIndexSync():
+        return Future.value(idxSpec.shardItems.entries
+            .map((entry) => PartialShardSync(
+                shardIri: entry.key, resourceIris: entry.value))
+            .toList());
+    }
   }
 
   /// Populate document queue by comparing local and remote shard entries
@@ -853,7 +860,7 @@ class RemoteSyncOrchestrator {
         localUpdatedAt: merged.localUpdatedAt,
         missingGroupIndices: missingGroupIndices,
         syncTime: syncTime,
-        typeIri: resourceType,
+        typeIri: IdxShard.classIri,
         etag: merged.etag,
         debugName: debugName,
       );

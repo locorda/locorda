@@ -6,8 +6,11 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 part 'sync_database.g.dart';
+
+final _log = Logger('SyncDatabase');
 
 /// IRI lookup table for normalized storage
 class SyncIris extends Table {
@@ -496,6 +499,12 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
               d.updatedAt.isBiggerThanValue(timestamp))
           ..orderBy([(d) => OrderingTerm(expression: d.updatedAt)]))
         .watch()) {
+      _log.info(
+          'Emitting ${documents.length} updated documents for type $typeIri ($typeIriId) since $minCursor');
+      for (final doc in documents) {
+        _log.info(
+            'Document updated: ID=${doc.id}, updatedAt=${doc.updatedAt}, type=${doc.typeIriId} \n${doc.documentContent.substring(0, math.min(12000, doc.documentContent.length))}\n');
+      }
       yield await _convertDocumentsWithIris(documents);
     }
   }

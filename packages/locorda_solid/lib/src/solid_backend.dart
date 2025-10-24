@@ -110,8 +110,9 @@ class SolidClient {
 
   Future<RemoteDownloadResult> download(String url,
       {bool requiresAuth = true, String? ifNoneMatch}) async {
-    final dpop =
-        requiresAuth ? await _authProvider.getDpopToken(url, 'GET') : null;
+    final dpop = requiresAuth
+        ? await _authProvider.getDpopToken(_prepareUrlForDpopToken(url), 'GET')
+        : null;
 
     _log.fine('GET $url with auth=${requiresAuth}');
     if (dpop != null) {
@@ -135,12 +136,15 @@ class SolidClient {
       _log.warning('401 Unauthorized for $url');
       _log.warning('Response headers: ${response.headers}');
       _log.warning('Response body: ${response.body}');
+      _log.warning('Access Token: ${dpop?.accessToken}');
+      _log.warning('DPoP: ${dpop?.dPoP}');
       throw SolidClientException(
           'Unauthorized (401) for $url: ${response.body}');
     }
 
     if (response.statusCode == 404) {
-      throw NotFoundException('Resource not found at $url');
+      //throw NotFoundException('Resource not found at $url');
+      return RemoteDownloadResult(graph: null, etag: null);
     }
     if (response.statusCode == 304) {
       // Not modified
@@ -156,18 +160,28 @@ class SolidClient {
     final contentType = response.headers['content-type'] ?? '';
     final data = response.body;
 
+    // Extract MIME type from content-type header (remove charset and other parameters)
+    final mimeType = contentType.split(';').first.trim();
     final graph =
-        _rdfCore.decode(data, contentType: contentType, documentUrl: url);
+        _rdfCore.decode(data, contentType: mimeType, documentUrl: url);
     return RemoteDownloadResult(
       graph: graph,
       etag: response.headers['etag'],
     );
   }
 
+  // Important: '=' characters in URLs must be percent-encoded here
+  // because they will be automatically percent-encoded when the url is sent
+  // to the server and the challenge verification will fail otherwise.
+  //
+  // Those '=' characters often appear due to base64 encoding of the iri type in the pod URL.
+  String _prepareUrlForDpopToken(String url) => url.replaceAll('=', '%3D');
+
   Future<RemoteUploadResult> upload(String url, RdfGraph graph,
       {bool requiresAuth = true, String? ifMatch}) async {
-    final dpop =
-        requiresAuth ? await _authProvider.getDpopToken(url, 'PUT') : null;
+    final dpop = requiresAuth
+        ? await _authProvider.getDpopToken(_prepareUrlForDpopToken(url), 'PUT')
+        : null;
 
     _log.fine('PUT $url with auth=${requiresAuth}');
     if (dpop != null) {
@@ -205,18 +219,17 @@ class SolidClient {
       // Conflict
       return RemoteUploadResult.conflict();
     }
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      _log.warning('Failed to upload to $url: ${response.statusCode}');
-      _log.warning('Response body: ${response.body}');
-      throw SolidClientException(
-          'Failed to upload to $url: ${response.statusCode}');
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final etag = response.headers['etag'];
+      if (etag == null) {
+        _log.warning('No ETag in response from $url');
+      }
+      return RemoteUploadResult.success(etag ?? '');
     }
-
-    final etag = response.headers['etag'];
-    if (etag == null) {
-      _log.warning('No ETag in response from $url');
-    }
-    return RemoteUploadResult.success(etag ?? '');
+    _log.warning('Failed to upload to $url: ${response.statusCode}');
+    _log.warning('Response body: ${response.body}');
+    throw SolidClientException(
+        'Failed to upload to $url: ${response.statusCode}');
   }
 }
 
