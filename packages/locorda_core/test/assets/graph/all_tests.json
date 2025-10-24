@@ -1525,8 +1525,8 @@
         },
         {
           "id": "save_36",
-          "title": "Update resource with pre-existing index infrastructure from external sync",
-          "description": "Tests scenario where index infrastructure (FullIndex, GroupIndexTemplate, GroupIndex, and shards) was created by external synchronization. The resource document contains idx:belongsToIndexShard references pointing to both a FullIndex shard and a GroupIndex shard. When updating the resource, the system must correctly identify and update entries in the existing shards without recreating index infrastructure. This simulates multi-device sync where indices are created on one device and referenced by resources synced from another device.",
+          "title": "Cross-app sync with heterogeneous index configurations",
+          "description": "Validates that different applications with different indexing strategies can seamlessly sync the same data resources. Foreign device creates resource with FullIndex + GroupIndex for dateCreated, local device has GroupIndex for recipeCategory. The system correctly discovers and updates foreign shard entries while maintaining separate index infrastructures. This proves the fundamental design goal: applications can have different indexing strategies while sharing the same data.",
           "installations": [
             {
               "id": "foreign-device-installation",
