@@ -502,8 +502,10 @@ class RemoteSyncOrchestrator {
         final result =
             await _storage.getDocument(idxSpec.indexIri.getDocumentIri());
         if (result == null) {
-          throw Exception(
-              'Index document ${idxSpec.indexIri.debug} not found locally during shard spec building');
+          // index document does not exist - this can happen for group indices
+          // if the application subscribes to groups, but there are no members yet
+          // and thus no index document is created
+          return [];
         }
         return result
             .document // we synced it at least once already, must be present
