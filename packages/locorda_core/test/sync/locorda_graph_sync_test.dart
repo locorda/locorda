@@ -36,7 +36,7 @@ import 'test_physical_timestamp_factory.dart';
 /// instead of comparing them. Use this to create/update test expectations.
 ///
 /// Set via environment variable: RECORD_MODE=true dart test
-final _recordMode = true || Platform.environment['RECORD_MODE'] == 'true';
+final _recordMode = Platform.environment['RECORD_MODE'] == 'true';
 final debug = (dumpSharedBackend: false, logStep: true);
 
 /// Context for a single installation (device) in multi-device tests.
@@ -503,33 +503,16 @@ Future<void> _verifyExpectations({
   IriTerm? externalDocumentIri,
   IriTerm? typeIri,
 }) async {
+  // Extract document IRI if we have external IRI (needed for property_changes)
   final documentIri = externalDocumentIri == null
       ? null
       : iriTranslator.externalToInternal(externalDocumentIri);
 
-  // Verify stored graph if expected
-  final expectedStoredGraphPath = expectedJson['stored_graph'] as String?;
-  if (expectedStoredGraphPath != null) {
-    if (documentIri == null || typeIri == null) {
-      fail('documentIri and typeIri must be provided to verify stored_graph');
-    }
-    final storedDataDocument = await storage.getDocument(documentIri);
-    if (storedDataDocument == null) {
-      fail(await _failMissing(storage, typeIri, documentIri));
-    }
-
-    if (_recordMode) {
-      // Record mode: Write actual result as expected file
-      await writeGraphToFile(
-          testAssetsDir, expectedStoredGraphPath, storedDataDocument.document);
-      print('📝 Recorded: $expectedStoredGraphPath');
-    } else {
-      // Normal mode: Compare with expected
-      final expectedStoredGraph =
-          _readGraphFromPath(testAssetsDir, expectedStoredGraphPath)!;
-      _expectEqualGraphs("$testId [step $stepIndex] - expected_stored_graph",
-          storedDataDocument.document, expectedStoredGraph);
-    }
+  // Verify documents if expected (new unified format)
+  final expectedDocuments = expectedJson['documents'] as List<dynamic>?;
+  if (expectedDocuments != null) {
+    await _verifyDocuments(
+        testId, stepIndex, expectedDocuments, testAssetsDir, storage);
   }
 
   // Verify property changes if expected
@@ -548,72 +531,6 @@ Future<void> _verifyExpectations({
       // Normal mode: Compare with expected
       _expectEqualPropertyChanges(
           actualPropertyChanges, expectedPropertyChanges);
-    }
-  }
-
-  // Verify installation document if expected
-  final expectedInstallationPath = expectedJson['installation'] as String?;
-  if (expectedInstallationPath != null) {
-    final settings = await storage.getSettings(['installation_iri']);
-    final installationIriStr = settings['installation_iri'];
-    if (installationIriStr == null) {
-      fail('No installation IRI found in settings');
-    }
-    final installationIri = IriTerm(installationIriStr).getDocumentIri();
-    final storedInstallation = await storage.getDocument(installationIri);
-
-    if (storedInstallation == null) {
-      fail(await _failMissing(
-          storage, CrdtClientInstallation.classIri, installationIri));
-    }
-
-    if (_recordMode) {
-      // Record mode: Write actual result as expected file
-      await writeGraphToFile(
-          testAssetsDir, expectedInstallationPath, storedInstallation.document);
-      print('📝 Recorded: $expectedInstallationPath');
-    } else {
-      // Normal mode: Compare with expected
-      final expectedInstallation =
-          _readGraphFromPath(testAssetsDir, expectedInstallationPath)!;
-      _expectEqualGraphs("$testId [step $stepIndex] - expected_installation",
-          storedInstallation.document, expectedInstallation);
-    }
-  }
-
-  // Verify index documents if expected
-  final expectedIndexDocs = expectedJson['index_documents'] as List<dynamic>?;
-  if (expectedIndexDocs != null) {
-    await _verifyIndexDocuments(
-        testId, expectedIndexDocs, testAssetsDir, storage, config);
-  }
-
-  // Verify group index documents if expected
-  final expectedGroupIndexDocs =
-      expectedJson['group_index_documents'] as List<dynamic>?;
-  if (expectedGroupIndexDocs != null) {
-    await _verifyGroupIndexDocuments(
-        testId, expectedGroupIndexDocs, testAssetsDir, storage, config);
-  }
-
-  // Verify shard documents if expected
-  final expectedShardDocs = expectedJson['shard_documents'] as List<dynamic>?;
-  if (expectedShardDocs != null) {
-    await _verifyShardDocuments(
-        testId, expectedShardDocs, testAssetsDir, storage, config);
-  }
-
-  // Export documents if requested (for test data generation)
-  final exportValue = expectedJson['export_documents'];
-  if (exportValue != null) {
-    if (exportValue is String) {
-      // Auto-export all documents to directory
-      await _exportAllDocuments(
-          testId, stepIndex, exportValue, testAssetsDir, storage, config);
-    } else if (exportValue is List) {
-      // Export specific documents with custom paths
-      await _exportDocuments(
-          testId, stepIndex, exportValue, testAssetsDir, storage, config);
     }
   }
 }
@@ -710,228 +627,69 @@ void _expectEqualPropertyChanges(
 String formatChangedProperty(PropertyChange exp) =>
     'resource=${exp.resourceIri.debug}, property=${(exp.propertyIri as IriTerm).value}, clock=${exp.changeLogicalClock}, timestamp=${exp.changedAtMs}';
 
-/// Verify index documents match expected graphs
-Future<void> _verifyIndexDocuments(
+/// Verify documents using unified format.
+///
+/// Each document spec can provide:
+/// - `iri`: Direct tag IRI (complete document IRI without fragment)
+/// - OR `type_iri` + `id`: Components to build IRI via LocalResourceLocator
+/// - `path`: Path to expected graph file
+Future<void> _verifyDocuments(
   String testId,
-  List<dynamic> expectedIndexDocs,
+  int stepIndex,
+  List<dynamic> expectedDocuments,
   Directory testAssetsDir,
   InMemoryStorage storage,
-  SyncGraphConfig config,
 ) async {
-  for (final indexDocJson in expectedIndexDocs) {
-    final indexMap = indexDocJson as Map<String, dynamic>;
-    final localName = indexMap['localName'] as String;
-    final expectedGraphPath = indexMap['expected_graph'] as String;
-
-    // Generate index IRI based on type and localName
-    final indexRdfGenerator = _createIndexRdfGenerator();
-    final (idx, resourceTypeIri) =
-        _findIndexConfigByLocalName(config, localName)!;
-    final indexResourceIri =
-        indexRdfGenerator.generateIndexOrTemplateIri(idx, resourceTypeIri);
-    final indexDocumentIri = indexResourceIri.getDocumentIri();
-
-    // Get actual stored document
-    final storedIndex = await storage.getDocument(indexDocumentIri);
-    if (storedIndex == null) {
-      fail(await _failMissing(
-          storage,
-          switch (idx) {
-            FullIndexGraphConfig _ => IdxFullIndex.classIri,
-            GroupIndexGraphConfig _ => IdxGroupIndex.classIri
-          },
-          indexDocumentIri));
-    }
-
-    if (_recordMode) {
-      // Record mode: Write actual result as expected file
-      await writeGraphToFile(
-          testAssetsDir, expectedGraphPath, storedIndex.document);
-      print('📝 Recorded: $expectedGraphPath');
-    } else {
-      // Normal mode: Compare with expected
-      final expectedGraph =
-          _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
-      _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
-          storedIndex.document, expectedGraph);
-    }
-  }
-}
-
-/// Verify GroupIndex documents match expected graphs
-Future<void> _verifyGroupIndexDocuments(
-  String testId,
-  List<dynamic> expectedGroupIndexDocs,
-  Directory testAssetsDir,
-  InMemoryStorage storage,
-  SyncGraphConfig config,
-) async {
-  for (final groupIndexDocJson in expectedGroupIndexDocs) {
-    final groupIndexMap = groupIndexDocJson as Map<String, dynamic>;
-    final templateLocalName = groupIndexMap['template_localName'] as String;
-    final groupPath = groupIndexMap['group_path'] as String;
-    final expectedGraphPath = groupIndexMap['expected_graph'] as String;
-
-    // Generate GroupIndex IRI from template and group path
-    final indexRdfGenerator = _createIndexRdfGenerator();
-    final (idx, resourceTypeIri) =
-        _findIndexConfigByLocalName(config, templateLocalName)!;
-
-    if (idx is! GroupIndexGraphConfig) {
-      fail(
-          'Expected GroupIndexGraphConfig for template $templateLocalName, got ${idx.runtimeType}');
-    }
-
-    // Generate template IRI first
-    final templateIri =
-        indexRdfGenerator.generateGroupIndexTemplateIri(idx, resourceTypeIri);
-
-    // Then generate GroupIndex IRI for this specific group
-    final groupIndexIri =
-        indexRdfGenerator.generateGroupIndexIri(templateIri, groupPath);
-    final groupIndexDocumentIri = groupIndexIri.getDocumentIri();
-
-    // Get actual stored document
-    final storedGroupIndex = await storage.getDocument(groupIndexDocumentIri);
-    if (storedGroupIndex == null) {
-      fail(await _failMissing(
-          storage, IdxGroupIndex.classIri, groupIndexDocumentIri));
-    }
-
-    if (_recordMode) {
-      // Record mode: Write actual result as expected file
-      await writeGraphToFile(
-          testAssetsDir, expectedGraphPath, storedGroupIndex.document);
-      print('📝 Recorded: $expectedGraphPath');
-    } else {
-      // Normal mode: Compare with expected
-      final expectedGraph =
-          _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
-      _expectEqualGraphs(
-          "${testId} - expected group index graph $expectedGraphPath",
-          storedGroupIndex.document,
-          expectedGraph);
-    }
-  }
-}
-
-(CrdtIndexGraphConfig, IriTerm resourceTypeIri)? _findIndexConfigByLocalName(
-    SyncGraphConfig config, String localName) {
-  for (var resource in config.resources) {
-    for (var index in resource.indices) {
-      if (index.localName == localName) {
-        return (index, resource.typeIri);
-      }
-    }
-  }
-  return null;
-}
-
-IndexRdfGenerator _createIndexRdfGenerator(
-    [ShardManager shardManager = const ShardManager()]) {
   final resourceLocator =
       LocalResourceLocator(iriTermFactory: IriTerm.validated);
-  final indexRdfGenerator = IndexRdfGenerator(
-    resourceLocator: resourceLocator,
-    shardManager: shardManager,
-  );
-  return indexRdfGenerator;
-}
 
-/// Verify shard documents match expected graphs
-Future<void> _verifyShardDocuments(
-  String testId,
-  List<dynamic> expectedShardDocs,
-  Directory testAssetsDir,
-  InMemoryStorage storage,
-  SyncGraphConfig config,
-) async {
-  for (final shardDocJson in expectedShardDocs) {
-    final shardMap = shardDocJson as Map<String, dynamic>;
-    final indexLocalName = shardMap['index_localName'] as String?;
-    final shardTotal = shardMap['shard_total'] as int;
-    final shardNumber = shardMap['shard_number'] as int;
-    final shardVersion = shardMap['shard_version'] as String;
-    final expectedGraphPath = shardMap['expected_graph'] as String;
-    final groupPath =
-        shardMap['group_path'] as String?; // For GroupIndex shards
+  for (final docJson in expectedDocuments) {
+    final docMap = docJson as Map<String, dynamic>;
+    final path = docMap['path'] as String;
 
-    // Allow direct specification of index IRIs (for foreign/external indices)
-    final indexResourceIriString = shardMap['index_resource_iri'] as String?;
-    final indexClassIriString = shardMap['index_class_iri'] as String?;
+    // Determine document IRI - either direct or constructed
+    final IriTerm documentIri;
 
-    final indexRdfGenerator = _createIndexRdfGenerator();
-    final IriTerm indexResourceIri;
-    final IriTerm indexClassIri;
+    if (docMap.containsKey('iri')) {
+      // Direct IRI specification
+      final iriString = docMap['iri'] as String;
+      documentIri = IriTerm(iriString);
+    } else if (docMap.containsKey('type_iri') && docMap.containsKey('id')) {
+      // Build IRI from components
+      final typeIri = IriTerm(docMap['type_iri'] as String);
+      final id = docMap['id'] as String;
+      final fragment = docMap['fragment'] as String? ?? 'it';
 
-    if (indexResourceIriString != null && indexClassIriString != null) {
-      // Direct IRI specification - use these directly
-      indexResourceIri = IriTerm(indexResourceIriString);
-      indexClassIri = IriTerm(indexClassIriString);
-    } else if (indexLocalName != null) {
-      // Generate shard IRI from config
-      final (idx, resourceTypeIri) =
-          _findIndexConfigByLocalName(config, indexLocalName)!;
-
-      if (idx is FullIndexGraphConfig) {
-        indexResourceIri =
-            indexRdfGenerator.generateFullIndexIri(idx, resourceTypeIri);
-        indexClassIri = IdxFullIndex.classIri;
-      } else if (idx is GroupIndexGraphConfig) {
-        if (groupPath == null) {
-          fail('group_path is required for GroupIndex shards');
-        }
-        // First generate template IRI, then group index IRI
-        final templateIri = indexRdfGenerator.generateGroupIndexTemplateIri(
-            idx, resourceTypeIri);
-        indexResourceIri =
-            indexRdfGenerator.generateGroupIndexIri(templateIri, groupPath);
-        indexClassIri = IdxGroupIndex.classIri;
-      } else {
-        fail('Unsupported index config type: ${idx.runtimeType}');
-      }
+      final resourceIri = resourceLocator.toIri(
+        ResourceIdentifier(typeIri, id, fragment),
+      );
+      documentIri = resourceIri.getDocumentIri();
     } else {
       fail(
-          'Either index_localName or both index_resource_iri and index_class_iri must be provided');
+          'Document spec must provide either "iri" or both "type_iri" and "id"');
     }
 
-    final shardResourceIri = indexRdfGenerator.generateShardIri(
-        shardTotal, shardNumber, shardVersion, indexResourceIri, indexClassIri);
-
-    // Calculate index hash
-
-    final shardDocumentIri = shardResourceIri.getDocumentIri();
-
-    // Get actual stored shard document
-    final storedShard = await storage.getDocument(shardDocumentIri);
-    if (storedShard == null) {
-      fail(await _failMissing(storage, IdxShard.classIri, shardDocumentIri));
+    // Load actual document from storage
+    final storedDoc = await storage.getDocument(documentIri);
+    if (storedDoc == null) {
+      fail('No document found in storage for IRI: ${documentIri.value}\n'
+          'Expected: ${documentIri.debug}');
     }
 
     if (_recordMode) {
       // Record mode: Write actual result as expected file
-      await writeGraphToFile(
-          testAssetsDir, expectedGraphPath, storedShard.document);
-      print('📝 Recorded: $expectedGraphPath');
+      await writeGraphToFile(testAssetsDir, path, storedDoc.document);
+      print('📝 Recorded: $path');
     } else {
       // Normal mode: Compare with expected
-      final expectedGraph =
-          _readGraphFromPath(testAssetsDir, expectedGraphPath)!;
-      _expectEqualGraphs("${testId} - expected_graph $expectedGraphPath",
-          storedShard.document, expectedGraph);
+      final expectedGraph = _readGraphFromPath(testAssetsDir, path)!;
+      _expectEqualGraphs(
+        "$testId [step $stepIndex] - document $path",
+        storedDoc.document,
+        expectedGraph,
+      );
     }
   }
-}
-
-Future<String> _failMissing(
-    InMemoryStorage storage, IriTerm typeIri, IriTerm shardDocumentIri) async {
-  final all = await storage.watchDocumentsModifiedSince(typeIri, null).first;
-  final existing = all.documents
-      .map((d) => '${d.documentIri.debug} - ${d.documentIri.value}')
-      .join('\n');
-  final failMsg =
-      'No ${typeIri.localName} document stored for  ${shardDocumentIri.debug} - $shardDocumentIri\nExisting documents:\n$existing';
-  return failMsg;
 }
 
 /// Execute a save error test - expects an exception to be thrown
@@ -998,93 +756,5 @@ Future<void> _executeSaveErrorTest(
           reason:
               'Error message "$errorMessage" does not contain expected pattern "$expectedErrorMessagePattern"');
     }
-  }
-}
-
-/// Export documents from storage to files for test data generation.
-///
-/// Exports all documents from storage to a directory with auto-generated names.
-/// This is used for generating test data from a "foreign application" simulation.
-Future<void> _exportAllDocuments(
-  String testId,
-  int stepIndex,
-  String outputDir,
-  Directory testAssetsDir,
-  InMemoryStorage storage,
-  SyncGraphConfig config,
-) async {
-  // Get all document types from config plus infrastructure types
-  final typeIris = <IriTerm>[
-    IdxFullIndex.classIri,
-    IdxGroupIndexTemplate.classIri,
-    IdxGroupIndex.classIri,
-    IdxShard.classIri,
-    CrdtClientInstallation.classIri,
-    // Add all resource types from config
-    for (final resourceConfig in config.resources) resourceConfig.typeIri,
-  ];
-
-  final exportedFiles = <String>[];
-
-  // Export documents of each type
-  for (final typeIri in typeIris) {
-    final docs = await storage.watchDocumentsModifiedSince(typeIri, null).first;
-
-    for (final doc in docs.documents) {
-      // Generate filename from type and document IRI
-      final typeName = typeIri.localName.toLowerCase();
-      final docHash =
-          doc.documentIri.value.hashCode.toUnsigned(32).toRadixString(16);
-      final filename = 'prepare_${typeName}_$docHash.ttl';
-
-      // Serialize to Turtle
-      final turtleContent = turtle.encode(doc.document);
-
-      // Write to file
-      final outputFile = File('${testAssetsDir.path}/$outputDir/$filename');
-      await outputFile.parent.create(recursive: true);
-      await outputFile.writeAsString(turtleContent);
-
-      exportedFiles.add(filename);
-      print('Exported ${doc.documentIri.debug} to $outputDir/$filename');
-    }
-  }
-
-  print('Exported ${exportedFiles.length} documents to $outputDir/');
-}
-
-/// This is used to capture the state of documents created by one test configuration
-/// (e.g., a "foreign application") so they can be used as prepare data in another test.
-Future<void> _exportDocuments(
-  String testId,
-  int stepIndex,
-  List<dynamic> exportDocs,
-  Directory testAssetsDir,
-  InMemoryStorage storage,
-  SyncGraphConfig config,
-) async {
-  for (final exportJson in exportDocs) {
-    final exportMap = exportJson as Map<String, dynamic>;
-    final documentIriStr = exportMap['documentIri'] as String;
-    final outputPath = exportMap['output_path'] as String;
-
-    final documentIri = IriTerm(documentIriStr);
-    final storedDoc = await storage.getDocument(documentIri);
-
-    if (storedDoc == null) {
-      print(
-          'WARNING: Document $documentIri not found in storage, skipping export');
-      continue;
-    }
-
-    // Serialize to Turtle
-    final turtleContent = turtle.encode(storedDoc.document);
-
-    // Write to file
-    final outputFile = File('${testAssetsDir.path}/$outputPath');
-    await outputFile.parent.create(recursive: true);
-    await outputFile.writeAsString(turtleContent);
-
-    print('Exported $documentIri to $outputPath');
   }
 }

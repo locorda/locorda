@@ -173,7 +173,8 @@ class IndexManager {
     // This supports both own and foreign templates via the cache infrastructure
     final templateConfig = await _indexDiscovery.discoverGroupIndexTemplate(
       missing.templateIri,
-      mode: ShardDeterminationMode.strict, // Must succeed - data consistency critical
+      mode: ShardDeterminationMode
+          .strict, // Must succeed - data consistency critical
     );
 
     if (templateConfig == null) {

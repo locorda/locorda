@@ -32,8 +32,18 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/01_first_save/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/01_first_save/expected_stored_graph.ttl",
-                "installation": "test_cases/save/01_first_save/expected_installation.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/01_first_save/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
+                    "id": "test-installation",
+                    "path": "test_cases/save/01_first_save/expected_installation.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -45,30 +55,26 @@
                 "sync": "2024-01-01T02:00:00.001Z"
               },
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_localName": "recipe-index",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/01_first_save/expected_shard.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
+                    "id": "index-full-e679d72f/index",
+                    "path": "test_cases/save/01_first_save/expected_index.ttl"
                   },
                   {
-                    "index_localName": "lcrd-full-indices",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/01_first_save/expected_lcrd-full-indices_shard.ttl"
-                  }
-                ],
-                "index_documents": [
-                  {
-                    "localName": "recipe-index",
-                    "expected_graph": "test_cases/save/01_first_save/expected_index.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
+                    "id": "index-full-bbcf09f5/index",
+                    "path": "test_cases/save/01_first_save/expected_lcrd-full-indices_index.ttl"
                   },
                   {
-                    "localName": "lcrd-full-indices",
-                    "expected_graph": "test_cases/save/01_first_save/expected_lcrd-full-indices_index.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-e679d72f/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/01_first_save/expected_shard.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-bbcf09f5/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/01_first_save/expected_lcrd-full-indices_shard.ttl"
                   }
                 ]
               }
@@ -87,13 +93,19 @@
               "stored_graph_before": "test_cases/save/02_update_lww/stored_graph_before.ttl",
               "input_resource": "test_cases/save/02_update_lww/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/02_update_lww/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/name",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/02_update_lww/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -118,13 +130,19 @@
               "stored_graph_before": "test_cases/save/03_orset_add/stored_graph_before.ttl",
               "input_resource": "test_cases/save/03_orset_add/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/03_orset_add/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/recipeIngredient",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/03_orset_add/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -149,13 +167,19 @@
               "stored_graph_before": "test_cases/save/04_orset_remove/stored_graph_before.ttl",
               "input_resource": "test_cases/save/04_orset_remove/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/04_orset_remove/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/recipeIngredient",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/04_orset_remove/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -180,7 +204,6 @@
               "stored_graph_before": "test_cases/save/05_multiple_properties/stored_graph_before.ttl",
               "input_resource": "test_cases/save/05_multiple_properties/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/05_multiple_properties/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
@@ -193,6 +216,13 @@
                     "property_iri": "https://schema.org/recipeIngredient",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/05_multiple_properties/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -217,8 +247,14 @@
               "stored_graph_before": "test_cases/save/06_noop/stored_graph_before.ttl",
               "input_resource": "test_cases/save/06_noop/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/06_noop/expected_stored_graph.ttl",
-                "property_changes": []
+                "property_changes": [],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/06_noop/expected_stored_graph.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "prepare": {
@@ -240,7 +276,13 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/07_nested_fragments/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/07_nested_fragments/expected_stored_graph.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/07_nested_fragments/expected_stored_graph.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -260,7 +302,6 @@
               "stored_graph_before": "test_cases/save/08_update_nested/stored_graph_before.ttl",
               "input_resource": "test_cases/save/08_update_nested/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/08_update_nested/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#nutrition",
@@ -273,6 +314,13 @@
                     "property_iri": "https://schema.org/fatContent",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/08_update_nested/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -297,13 +345,19 @@
               "stored_graph_before": "test_cases/save/09_remove_nested/stored_graph_before.ttl",
               "input_resource": "test_cases/save/09_remove_nested/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/09_remove_nested/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/nutrition",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/09_remove_nested/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -328,7 +382,6 @@
               "stored_graph_before": "test_cases/save/10_add_nested/stored_graph_before.ttl",
               "input_resource": "test_cases/save/10_add_nested/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/10_add_nested/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
@@ -354,6 +407,13 @@
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
                   }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/10_add_nested/expected_stored_graph.ttl"
+                  }
                 ]
               },
               "action_ts": {
@@ -377,13 +437,19 @@
               "stored_graph_before": "test_cases/save/11_foreign_clock_preserved/stored_graph_before.ttl",
               "input_resource": "test_cases/save/11_foreign_clock_preserved/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/11_foreign_clock_preserved/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/name",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/11_foreign_clock_preserved/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -407,7 +473,13 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/12_blank_node_first_save/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/12_blank_node_first_save/expected_stored_graph.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/12_blank_node_first_save/expected_stored_graph.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -427,13 +499,19 @@
               "stored_graph_before": "test_cases/save/13_blank_node_preserved/stored_graph_before.ttl",
               "input_resource": "test_cases/save/13_blank_node_preserved/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/13_blank_node_preserved/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/name",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/13_blank_node_preserved/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -458,13 +536,19 @@
               "stored_graph_before": "test_cases/save/14_update_blank_node_property/stored_graph_before.ttl",
               "input_resource": "test_cases/save/14_update_blank_node_property/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/14_update_blank_node_property/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-74f4d0cc07fa8ce00b8856defa9a0e31",
                     "property_iri": "https://schema.org/amount",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/14_update_blank_node_property/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -489,7 +573,6 @@
               "stored_graph_before": "test_cases/save/15_add_blank_node/stored_graph_before.ttl",
               "input_resource": "test_cases/save/15_add_blank_node/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/15_add_blank_node/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
@@ -521,6 +604,13 @@
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
                   }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/15_add_blank_node/expected_stored_graph.ttl"
+                  }
                 ]
               },
               "action_ts": {
@@ -544,13 +634,19 @@
               "stored_graph_before": "test_cases/save/16_remove_blank_node/stored_graph_before.ttl",
               "input_resource": "test_cases/save/16_remove_blank_node/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/16_remove_blank_node/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/recipeIngredient",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/16_remove_blank_node/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -575,7 +671,6 @@
               "stored_graph_before": "test_cases/save/17_update_with_property_tombstones/stored_graph_before.ttl",
               "input_resource": "test_cases/save/17_update_with_property_tombstones/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/17_update_with_property_tombstones/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
@@ -594,6 +689,13 @@
                     "property_iri": "https://schema.org/prepTime",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 3
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/17_update_with_property_tombstones/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -618,7 +720,6 @@
               "stored_graph_before": "test_cases/save/18_delete_with_existing_tombstones/stored_graph_before.ttl",
               "input_resource": "test_cases/save/18_delete_with_existing_tombstones/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/18_delete_with_existing_tombstones/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
@@ -631,6 +732,13 @@
                     "property_iri": "https://schema.org/cookTime",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 3
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/18_delete_with_existing_tombstones/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -655,7 +763,6 @@
               "stored_graph_before": "test_cases/save/19_update_with_resource_tombstone/stored_graph_before.ttl",
               "input_resource": "test_cases/save/19_update_with_resource_tombstone/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/19_update_with_resource_tombstone/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
@@ -681,6 +788,13 @@
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 4
                   }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/19_update_with_resource_tombstone/expected_stored_graph.ttl"
+                  }
                 ]
               },
               "action_ts": {
@@ -703,7 +817,13 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/20_non_identified_blank_node_first_save/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/20_non_identified_blank_node_first_save/expected_stored_graph.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/20_non_identified_blank_node_first_save/expected_stored_graph.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -723,13 +843,19 @@
               "stored_graph_before": "test_cases/save/21_non_identified_blank_node_update/stored_graph_before.ttl",
               "input_resource": "test_cases/save/21_non_identified_blank_node_update/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/21_non_identified_blank_node_update/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/nutrition",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/21_non_identified_blank_node_update/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -761,13 +887,19 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/22_multiple_refs_identified_remove_one/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/22_multiple_refs_identified_remove_one/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
                     "property_iri": "https://schema.org/provider",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/22_multiple_refs_identified_remove_one/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -792,13 +924,19 @@
               "stored_graph_before": "test_cases/save/23_multiple_refs_unidentified_remove_one/stored_graph_before.ttl",
               "input_resource": "test_cases/save/23_multiple_refs_unidentified_remove_one/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/23_multiple_refs_unidentified_remove_one/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#lcrd-ibn-md5-9110880a000d224b944a75c68db15db9",
                     "property_iri": "https://schema.org/provider",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/23_multiple_refs_unidentified_remove_one/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -822,13 +960,19 @@
               "stored_graph_before": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/stored_graph_before.ttl",
               "input_resource": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/recipeIngredient",
                     "changed_at": "2024-01-01T02:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/24_multiple_refs_all_unidentified_remove_one/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -853,8 +997,14 @@
               "stored_graph_before": "test_cases/save/25_no_op_identified_blank_nodes/stored_graph_before.ttl",
               "input_resource": "test_cases/save/25_no_op_identified_blank_nodes/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/25_no_op_identified_blank_nodes/expected_stored_graph.ttl",
-                "property_changes": []
+                "property_changes": [],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/25_no_op_identified_blank_nodes/expected_stored_graph.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -874,8 +1024,14 @@
               "stored_graph_before": "test_cases/save/26_no_op_mixed_identified_unidentified/stored_graph_before.ttl",
               "input_resource": "test_cases/save/26_no_op_mixed_identified_unidentified/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/26_no_op_mixed_identified_unidentified/expected_stored_graph.ttl",
-                "property_changes": []
+                "property_changes": [],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/26_no_op_mixed_identified_unidentified/expected_stored_graph.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -895,8 +1051,14 @@
               "stored_graph_before": "test_cases/save/27_no_op_all_unidentified/stored_graph_before.ttl",
               "input_resource": "test_cases/save/27_no_op_all_unidentified/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/27_no_op_all_unidentified/expected_stored_graph.ttl",
-                "property_changes": []
+                "property_changes": [],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/27_no_op_all_unidentified/expected_stored_graph.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -915,8 +1077,18 @@
               "typeIri": "https://example.org/vocab/personal-notes#NotesCategory",
               "input_resource": "test_cases/save/28_path_identified_first_save/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/28_path_identified_first_save/expected_stored_graph.ttl",
-                "installation": "test_cases/save/28_path_identified_first_save/expected_installation.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://example.org/vocab/personal-notes#NotesCategory",
+                    "id": "work",
+                    "path": "test_cases/save/28_path_identified_first_save/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
+                    "id": "test-installation",
+                    "path": "test_cases/save/28_path_identified_first_save/expected_installation.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-15T10:00:00Z"
@@ -936,7 +1108,6 @@
               "stored_graph_before": "test_cases/save/29_path_identified_update/stored_graph_before.ttl",
               "input_resource": "test_cases/save/29_path_identified_update/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/29_path_identified_update/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#lcrd-ibn-md5-b0f8d3e19516fa4e6e86d0f500bf3066",
@@ -955,6 +1126,13 @@
                     "property_iri": "https://example.org/vocab/personal-notes#showArchived",
                     "changed_at": "2024-01-15T12:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://example.org/vocab/personal-notes#NotesCategory",
+                    "id": "work",
+                    "path": "test_cases/save/29_path_identified_update/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -979,13 +1157,19 @@
               "stored_graph_before": "test_cases/save/30_path_identified_delete/stored_graph_before.ttl",
               "input_resource": "test_cases/save/30_path_identified_delete/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/30_path_identified_delete/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9leGFtcGxlLm9yZy92b2NhYi9wZXJzb25hbC1ub3RlcyNOb3Rlc0NhdGVnb3J5:d29yaw==#it",
                     "property_iri": "https://example.org/vocab/personal-notes#displaySettings",
                     "changed_at": "2024-01-15T14:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://example.org/vocab/personal-notes#NotesCategory",
+                    "id": "work",
+                    "path": "test_cases/save/30_path_identified_delete/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -1051,8 +1235,18 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/31_group_index_first_save/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/31_group_index_first_save/expected_stored_graph.ttl",
-                "installation": "test_cases/save/31_group_index_first_save/expected_installation.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "chocolate-cake",
+                    "path": "test_cases/save/31_group_index_first_save/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
+                    "id": "test-installation",
+                    "path": "test_cases/save/31_group_index_first_save/expected_installation.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -1061,10 +1255,11 @@
             {
               "action": "sync",
               "expected": {
-                "index_documents": [
+                "documents": [
                   {
-                    "localName": "recipes-by-category",
-                    "expected_graph": "test_cases/save/31_group_index_first_save/expected_group_index_template.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate",
+                    "id": "index-grouped-f615be90/index",
+                    "path": "test_cases/save/31_group_index_first_save/expected_group_index_template.ttl"
                   }
                 ]
               },
@@ -1085,8 +1280,18 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/32_multiple_groups/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/32_multiple_groups/expected_stored_graph.ttl",
-                "installation": "test_cases/save/32_multiple_groups/expected_installation.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "quick-tiramisu",
+                    "path": "test_cases/save/32_multiple_groups/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
+                    "id": "test-installation",
+                    "path": "test_cases/save/32_multiple_groups/expected_installation.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -1098,40 +1303,31 @@
                 "sync": "2024-01-01T02:00:01.000Z"
               },
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/32_multiple_groups/expected_shard_desserts.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate",
+                    "id": "index-grouped-f615be90/index",
+                    "path": "test_cases/save/32_multiple_groups/expected_group_index_template.ttl"
                   },
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/32_multiple_groups/expected_shard_quick_meals.ttl"
-                  }
-                ],
-                "index_documents": [
-                  {
-                    "localName": "recipes-by-category",
-                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_template.ttl"
-                  }
-                ],
-                "group_index_documents": [
-                  {
-                    "template_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_desserts.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex",
+                    "id": "index-grouped-f615be90/groups/desserts/index",
+                    "path": "test_cases/save/32_multiple_groups/expected_group_index_desserts.ttl"
                   },
                   {
-                    "template_localName": "recipes-by-category",
-                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
-                    "expected_graph": "test_cases/save/32_multiple_groups/expected_group_index_quick_meals.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex",
+                    "id": "index-grouped-f615be90/groups/11_c7b4778d91809fb3b0fc8f1652b38ab9/index",
+                    "path": "test_cases/save/32_multiple_groups/expected_group_index_quick_meals.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/32_multiple_groups/expected_shard_desserts.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/11_c7b4778d91809fb3b0fc8f1652b38ab9/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/32_multiple_groups/expected_shard_quick_meals.ttl"
                   }
                 ]
               }
@@ -1163,13 +1359,19 @@
                 "save": "2024-01-01T04:00:00Z"
               },
               "expected": {
-                "stored_graph": "test_cases/save/33_update_group_membership/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/recipeCategory",
                     "changed_at": "2024-01-01T04:00:00.000Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/33_update_group_membership/expected_stored_graph.ttl"
                   }
                 ]
               }
@@ -1180,22 +1382,16 @@
                 "sync": "2024-01-01T04:00:01.000Z"
               },
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/33_update_group_membership/expected_shard_dessert_after.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/33_update_group_membership/expected_shard_dessert_after.ttl"
                   },
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "11_07ebfdc1c615e5711a349104712f9126",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/33_update_group_membership/expected_shard_main_course.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/11_07ebfdc1c615e5711a349104712f9126/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/33_update_group_membership/expected_shard_main_course.ttl"
                   }
                 ]
               }
@@ -1221,13 +1417,19 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/34_add_group_membership/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/34_add_group_membership/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/recipeCategory",
                     "changed_at": "2024-01-01T04:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/34_add_group_membership/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -1241,22 +1443,16 @@
                 "sync": "2024-01-01T04:00:00.001Z"
               },
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/34_add_group_membership/expected_shard_dessert.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/34_add_group_membership/expected_shard_dessert.ttl"
                   },
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/34_add_group_membership/expected_shard_quick_meals.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/11_c7b4778d91809fb3b0fc8f1652b38ab9/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/34_add_group_membership/expected_shard_quick_meals.ttl"
                   }
                 ]
               }
@@ -1285,13 +1481,19 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/35_remove_group_membership/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/35_remove_group_membership/expected_stored_graph.ttl",
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:cmVjaXBlMTIz#it",
                     "property_iri": "https://schema.org/recipeCategory",
                     "changed_at": "2024-01-01T04:00:00Z",
                     "logical_clock": 2
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/35_remove_group_membership/expected_stored_graph.ttl"
                   }
                 ]
               },
@@ -1305,22 +1507,16 @@
                 "sync": "2024-01-01T04:00:00.001Z"
               },
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/35_remove_group_membership/expected_shard_dessert.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/35_remove_group_membership/expected_shard_dessert.ttl"
                   },
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "11_c7b4778d91809fb3b0fc8f1652b38ab9",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/35_remove_group_membership/expected_shard_quick_meals_after.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/11_c7b4778d91809fb3b0fc8f1652b38ab9/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/35_remove_group_membership/expected_shard_quick_meals_after.ttl"
                   }
                 ]
               }
@@ -1358,22 +1554,16 @@
                 "sync": "2024-01-01T02:05:00Z"
               },
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1iYmNmMDlmNS9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_remote-2.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-bbcf09f5/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_remote-2.ttl"
                   },
                   {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC01ZjY4YjViNy9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_remote-2.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_remote-2.ttl"
                   }
                 ]
               }
@@ -1385,22 +1575,16 @@
                 "sync": "2024-01-01T02:10:00Z"
               },
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1iYmNmMDlmNS9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_local-2.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-bbcf09f5/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_local-2.ttl"
                   },
                   {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC01ZjY4YjViNy9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_local-2.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_local-2.ttl"
                   }
                 ]
               }
@@ -1411,31 +1595,29 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/36_foreign_shard_discovery/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph.ttl",
-                "shard_documents": [
-                  {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1iYmNmMDlmNS9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_local-3.ttl"
-                  },
-                  {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC01ZjY4YjViNy9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_local-3.ttl"
-                  }
-                ],
                 "property_changes": [
                   {
                     "resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=#it",
                     "property_iri": "https://schema.org/name",
                     "changed_at": "2024-01-01T06:00:00Z",
                     "logical_clock": 1
+                  }
+                ],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "chocolate-cake",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-bbcf09f5/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_local-3.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_local-3.ttl"
                   }
                 ]
               },
@@ -1450,30 +1632,21 @@
                 "sync": "2024-01-01T06:00:00.001Z"
               },
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1lNjc5ZDcyZi9pbmRleA==#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_recipes_full.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-full-e679d72f/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_recipes_full.ttl"
                   },
                   {
-                    "index_resource_iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0dyb3VwSW5kZXg=:aW5kZXgtZ3JvdXBlZC1lMDkzNjU1Yy9ncm91cHMvMjBfYWQyMjFlZmZkNzMwNTdhNjQ3ZDk2YmFiMzEyYzQ4ODYvaW5kZXg=#index",
-                    "index_class_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndex",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_2024_01.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-e093655c/groups/20_ad221effd73057a647d96bab312c4886/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_2024_01.ttl"
                   },
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/36_foreign_shard_discovery/expected_shard_desserts.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_desserts.ttl"
                   }
                 ]
               }
@@ -1491,8 +1664,18 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/37_hierarchical_grouping/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/37_hierarchical_grouping/expected_stored_graph.ttl",
-                "installation": "test_cases/save/37_hierarchical_grouping/expected_installation.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "winter-soup",
+                    "path": "test_cases/save/37_hierarchical_grouping/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
+                    "id": "test-installation",
+                    "path": "test_cases/save/37_hierarchical_grouping/expected_installation.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-15T10:00:00Z"
@@ -1501,10 +1684,11 @@
             {
               "action": "sync",
               "expected": {
-                "index_documents": [
+                "documents": [
                   {
-                    "localName": "recipes-by-date",
-                    "expected_graph": "test_cases/save/37_hierarchical_grouping/expected_group_index_template.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate",
+                    "id": "index-grouped-3226ac60/index",
+                    "path": "test_cases/save/37_hierarchical_grouping/expected_group_index_template.ttl"
                   }
                 ]
               },
@@ -1525,8 +1709,18 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/38_missing_property_skip/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/38_missing_property_skip/expected_stored_graph.ttl",
-                "installation": "test_cases/save/38_missing_property_skip/expected_installation.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "mystery-dish",
+                    "path": "test_cases/save/38_missing_property_skip/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
+                    "id": "test-installation",
+                    "path": "test_cases/save/38_missing_property_skip/expected_installation.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -1535,10 +1729,11 @@
             {
               "action": "sync",
               "expected": {
-                "index_documents": [
+                "documents": [
                   {
-                    "localName": "recipes-by-category",
-                    "expected_graph": "test_cases/save/38_missing_property_skip/expected_group_index_template.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate",
+                    "id": "index-grouped-f615be90/index",
+                    "path": "test_cases/save/38_missing_property_skip/expected_group_index_template.ttl"
                   }
                 ]
               },
@@ -1559,8 +1754,18 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/39_missing_property_default/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/39_missing_property_default/expected_stored_graph.ttl",
-                "installation": "test_cases/save/39_missing_property_default/expected_installation.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "random-recipe",
+                    "path": "test_cases/save/39_missing_property_default/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
+                    "id": "test-installation",
+                    "path": "test_cases/save/39_missing_property_default/expected_installation.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -1569,20 +1774,16 @@
             {
               "action": "sync",
               "expected": {
-                "index_documents": [
+                "documents": [
                   {
-                    "localName": "recipes-by-category",
-                    "expected_graph": "test_cases/save/39_missing_property_default/expected_group_index_template.ttl"
-                  }
-                ],
-                "shard_documents": [
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate",
+                    "id": "index-grouped-d44f468e/index",
+                    "path": "test_cases/save/39_missing_property_default/expected_group_index_template.ttl"
+                  },
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "uncategorized",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/39_missing_property_default/expected_shard_uncategorized.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-d44f468e/groups/uncategorized/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/39_missing_property_default/expected_shard_uncategorized.ttl"
                   }
                 ]
               },
@@ -1603,8 +1804,18 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/40_transform_lowercase/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/40_transform_lowercase/expected_stored_graph.ttl",
-                "installation": "test_cases/save/40_transform_lowercase/expected_installation.ttl"
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "uppercase-cake",
+                    "path": "test_cases/save/40_transform_lowercase/expected_stored_graph.ttl"
+                  },
+                  {
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#ClientInstallation",
+                    "id": "test-installation",
+                    "path": "test_cases/save/40_transform_lowercase/expected_installation.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
@@ -1613,20 +1824,16 @@
             {
               "action": "sync",
               "expected": {
-                "index_documents": [
+                "documents": [
                   {
-                    "localName": "recipes-by-category",
-                    "expected_graph": "test_cases/save/40_transform_lowercase/expected_group_index_template.ttl"
-                  }
-                ],
-                "shard_documents": [
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#GroupIndexTemplate",
+                    "id": "index-grouped-f615be90/index",
+                    "path": "test_cases/save/40_transform_lowercase/expected_group_index_template.ttl"
+                  },
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/40_transform_lowercase/expected_shard_dessert.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/40_transform_lowercase/expected_shard_dessert.ttl"
                   }
                 ]
               },
@@ -1655,8 +1862,14 @@
               "typeIri": "https://schema.org/Recipe",
               "input_resource": "test_cases/save/41_noop_group_index/input_resource.ttl",
               "expected": {
-                "stored_graph": "test_cases/save/41_noop_group_index/expected_stored_graph.ttl",
-                "property_changes": []
+                "property_changes": [],
+                "documents": [
+                  {
+                    "type_iri": "https://schema.org/Recipe",
+                    "id": "recipe123",
+                    "path": "test_cases/save/41_noop_group_index/expected_stored_graph.ttl"
+                  }
+                ]
               },
               "action_ts": {
                 "save": "2024-01-01T04:00:00Z"
@@ -1665,14 +1878,11 @@
             {
               "action": "sync",
               "expected": {
-                "shard_documents": [
+                "documents": [
                   {
-                    "index_localName": "recipes-by-category",
-                    "group_path": "desserts",
-                    "shard_number": 0,
-                    "shard_total": 1,
-                    "shard_version": "1_0_0",
-                    "expected_graph": "test_cases/save/41_noop_group_index/expected_shard_dessert_unchanged.ttl"
+                    "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
+                    "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
+                    "path": "test_cases/save/41_noop_group_index/expected_shard_dessert_unchanged.ttl"
                   }
                 ]
               },

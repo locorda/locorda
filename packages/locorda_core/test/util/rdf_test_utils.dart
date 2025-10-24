@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/generated/_index.dart';
+import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_canonicalization/rdf_canonicalization.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
@@ -65,4 +68,26 @@ void expectEqualGraphs(String name, RdfGraph actual, RdfGraph expected) {
     expect(actualCanonical, equals(expectedCanonical),
         reason: 'RDF graphs differ (canonical comparison)');
   }
+}
+
+ResourceIdentifier extractTypeIdFromStoredPath(
+    Directory testAssetsDir, String path) {
+  final graph = readGraphFromFile(testAssetsDir, path);
+  final documentIris = graph.subjects
+      .whereType<IriTerm>()
+      .map((s) => s.getDocumentIri())
+      .toSet();
+  if (documentIris.length != 1) {
+    throw TestFailure(
+      'Expected exactly one document IRI in the graph at $path, '
+      'but found ${documentIris.length}: \n\t${documentIris.join("\n\t")}.',
+    );
+  }
+  final documentIri = documentIris.single;
+  final primaryTopic = graph.expectSingleObject<IriTerm>(
+      documentIri, SyncManagedDocument.foafPrimaryTopic)!;
+  final typeIris = graph.getMultiValueObjects<IriTerm>(primaryTopic, Rdf.type);
+  LocalResourceLocator locator =
+      LocalResourceLocator(iriTermFactory: IriTerm.validated);
+  return locator.fromIri(typeIris.single, documentIri);
 }
