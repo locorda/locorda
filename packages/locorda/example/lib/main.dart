@@ -8,6 +8,7 @@
 library;
 
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:locorda/locorda.dart';
@@ -186,7 +187,8 @@ class _AppInitializerState extends State<AppInitializer>
       final solidAuthInstance = SolidAuth(
           oidcClientId: '$appBaseUrl/auth/client-config.json',
           appUrlScheme: 'dev.locorda.personalnotes',
-          frontendRedirectUrl: Uri.parse('$appBaseUrl/redirect.html'));
+          frontendRedirectUrl: Uri.parse(
+              '${kDebugMode ? 'http://localhost:3815' : appBaseUrl}/redirect.html'));
       await solidAuthInstance.init();
 
       // Initialize the CRDT sync system
