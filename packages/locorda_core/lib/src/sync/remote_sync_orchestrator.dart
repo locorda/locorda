@@ -41,9 +41,10 @@ final class FullIndexSync extends IndexSyncSpec {
 
 /// Partial index sync: Upload-only for specific shards containing known items
 final class PartialIndexSync extends IndexSyncSpec {
-  /// Map of shard IRIs to the set of resource IRIs we need to sync in that shard
+  /// Map of shard IRIs to the map of resource IRIs with their local clockHashes
   /// Only these specific items will be synced (upload local changes, no remote downloads)
-  final Map<IriTerm /*shardIri*/, Set<IriTerm /*resourceIri*/ >> shardItems;
+  final Map<IriTerm /*shardIri*/,
+      Map<IriTerm /*resourceIri*/, String /*localClockHash*/ >> shardItems;
 
   const PartialIndexSync({
     required super.indexIri,
@@ -65,12 +66,12 @@ final class FullShardSync extends ShardSyncSpec {
 /// Partial shard sync for foreign indices.
 /// Only syncs specific resources from the shard (upload-only, no prefetch).
 final class PartialShardSync extends ShardSyncSpec {
-  /// Specific resource IRIs to sync in this shard
-  final Set<IriTerm> resourceIris;
+  /// Map of resource IRIs to their local clockHashes
+  final Map<IriTerm, String> resourceClockHashes;
 
   const PartialShardSync({
     required super.shardIri,
-    required this.resourceIris,
+    required this.resourceClockHashes,
   });
 }
 
@@ -88,6 +89,41 @@ typedef PreparedShardSync = ({
   _DownloadAndMergeResult merged,
   ShardSyncSpec shardSpec,
 });
+
+/// Entry in the document queue tracking sync metadata for a resource
+final class _DocumentQueueEntry {
+  /// Resource IRI (not document IRI)
+  final IriTerm resourceIri;
+
+  /// Clock hash from local index entry, null if not present locally
+  final String? localClockHash;
+
+  /// Clock hash from remote shard entry, null if not present remotely
+  final String? remoteClockHash;
+
+  /// Filter values from local entry (for PrefetchFiltered policies)
+  final Set<RdfObject>? localFilterValues;
+
+  /// Filter values from remote entry (for PrefetchFiltered policies)
+  final Set<RdfObject>? remoteFilterValues;
+
+  const _DocumentQueueEntry({
+    required this.resourceIri,
+    required this.localClockHash,
+    required this.remoteClockHash,
+    this.localFilterValues,
+    this.remoteFilterValues,
+  });
+
+  /// Whether this resource needs synchronization (different clock hashes)
+  bool get needsSync => localClockHash != remoteClockHash;
+
+  /// Whether this resource exists locally
+  bool get existsLocally => localClockHash != null;
+
+  /// Whether this resource exists remotely
+  bool get existsRemotely => remoteClockHash != null;
+}
 
 /// Orchestrates remote synchronization following the revised algorithm.
 ///
@@ -516,45 +552,52 @@ class RemoteSyncOrchestrator {
       case PartialIndexSync():
         return Future.value(idxSpec.shardItems.entries
             .map((entry) => PartialShardSync(
-                shardIri: entry.key, resourceIris: entry.value))
+                shardIri: entry.key, resourceClockHashes: entry.value))
             .toList());
     }
   }
 
   /// Populate document queue by comparing local and remote shard entries
   ///
-  /// Implements the 3-category system from the specification:
-  /// 1. Local entries not in remote (new local documents)
-  /// 2. Entries in both with different clockHash (concurrent changes)
-  /// 3. Remote entries not in local (eager synced indices only)
-  Future<Set<IriTerm>> _buildDocumentQueue(
+  /// Builds queue entries containing both local and remote clock hashes for each resource.
+  /// This enables:
+  /// 1. Determining which documents need sync (different clock hashes)
+  /// 2. Determining which resources should appear in shard (all from local or remote)
+  /// 3. Detecting deletions (present remotely but not locally, or vice versa)
+  Future<Set<_DocumentQueueEntry>> _buildDocumentQueue(
     ShardSyncSpec shard,
     RdfGraph? originalRemoteShard,
   ) async {
-    switch (shard) {
-      case PartialShardSync():
-        // print(
-        //    'PartialShardSync for ${shard.shardIri.debug} - syncing ${shard.resourceIris.length} resources ${shard.resourceIris.map((iri) => iri.debug).join(', ')}');
-        // For partial shard sync, just enqueue the specified resource IRIs
-        return shard.resourceIris
-            .map((resourceIri) => resourceIri.getDocumentIri())
-            .toSet();
-      case FullShardSync():
-        // Continue to full sync logic below
-        break;
+    // For PartialShardSync, we already have the local clockHashes from the query
+    // Just need to load remote entries
+    if (shard is PartialShardSync) {
+      Map<IriTerm, String> remoteEntries =
+          _extractResourceClockHashes(originalRemoteShard, shard.shardIri)
+              .map((key, value) => MapEntry(key, value.$1));
+
+      // Build queue entries for resources in PartialShardSync
+      return shard.resourceClockHashes.entries.map((entry) {
+        return _DocumentQueueEntry(
+          resourceIri: entry.key,
+          localClockHash: entry.value,
+          remoteClockHash: remoteEntries[entry.key],
+        );
+      }).toSet();
     }
-    final filter = shard.fetchPolicy is PrefetchFiltered
-        ? (shard.fetchPolicy as PrefetchFiltered)
+
+    // FullShardSync: Load both local and remote entries from database/document
+    final fullShard = shard as FullShardSync;
+    final filter = fullShard.fetchPolicy is PrefetchFiltered
+        ? (fullShard.fetchPolicy as PrefetchFiltered)
         : null;
     final shardIri = shard.shardIri;
-    final documentQueue = <IriTerm>{};
 
     // Parse local entries from index items table
     final localEntries = <IriTerm,
         (
       String clockHash,
       Set<RdfObject>? filterValues
-    )>{}; // resourceIri -> clockHash
+    )>{}; // resourceIri -> (clockHash, filterValues)
     final localIndexEntries =
         await _storage.getActiveIndexEntriesForShard(shardIri);
     for (final entry in localIndexEntries) {
@@ -570,58 +613,67 @@ class RemoteSyncOrchestrator {
     }
 
     // Parse remote entries from original remote shard document
-    final remoteEntries = <IriTerm,
-        (
-      String hash,
-      Set<RdfObject>? filterValues
-    )>{}; // resourceIri -> clockHash
+    final remoteEntries = _extractResourceClockHashes(
+        originalRemoteShard, shardIri,
+        filterPredicate: filter?.filterPredicate);
+
+    // Build queue entries for all resources present locally or remotely
+    return <IriTerm>{
+      ...localEntries.keys,
+      ...remoteEntries.keys,
+    }.map((resourceIri) {
+      final localData = localEntries[resourceIri];
+      final remoteData = remoteEntries[resourceIri];
+
+      return _DocumentQueueEntry(
+        resourceIri: resourceIri,
+        localClockHash: localData?.$1,
+        remoteClockHash: remoteData?.$1,
+        localFilterValues: localData?.$2,
+        remoteFilterValues: remoteData?.$2,
+      );
+    }).toSet();
+  }
+
+  Map<IriTerm, (String hash, Set<RdfObject>? filterValues)>
+      _extractResourceClockHashes(
+          RdfGraph? originalRemoteShard, IriTerm shardIri,
+          {IriTerm? filterPredicate}) {
+    final remoteEntries = <IriTerm, (String, Set<RdfObject>?)>{};
+
     if (originalRemoteShard != null) {
-      // Find all idx:containsEntry links (shardIri is the resource IRI)
       for (final entryIri in originalRemoteShard
           .getMultiValueObjectList<IriTerm>(shardIri, IdxShard.containsEntry)) {
-        // Extract idx:resource and cm:clockHash from entry
         final resourceIri = originalRemoteShard.expectSingleObject<IriTerm>(
             entryIri, IdxShardEntry.resource);
         final clockHash = originalRemoteShard.expectSingleObject<LiteralTerm>(
             entryIri, IdxShardEntry.crdtClockHash);
         if (resourceIri != null && clockHash != null) {
-          Set<RdfObject>? filterValues = filter == null
+          Set<RdfObject>? filterValues = filterPredicate == null
               ? null
               : originalRemoteShard.getMultiValueObjects<RdfObject>(
-                  entryIri, filter.filterPredicate);
+                  entryIri, filterPredicate);
           remoteEntries[resourceIri] = (clockHash.value, filterValues);
         }
       }
     }
+    return remoteEntries;
+  }
 
-    for (final localIri in localEntries.keys) {
-      // Category 1: Local but not in remote (new local documents)
-      if (!remoteEntries.containsKey(localIri)) {
-        documentQueue.add(localIri.getDocumentIri());
-      } else if (remoteEntries[localIri]?.$1 != localEntries[localIri]?.$1) {
-        // Category 2: In both but different clockHash (concurrent changes)
-        documentQueue.add(localIri.getDocumentIri());
-      }
+  /// Check if a queue entry matches a PrefetchFiltered policy
+  bool _matchesFilter(_DocumentQueueEntry entry, PrefetchFiltered filter) {
+    // Check remote filter values (for remote-only items)
+    if (entry.remoteFilterValues != null) {
+      return entry.remoteFilterValues!
+          .any((value) => filter.acceptedObjectValues.contains(value));
     }
-
-    // Category 3: For eager synced indices: Remote but not local
-    if (shard.fetchPolicy is Prefetch ||
-        shard.fetchPolicy is PrefetchFiltered) {
-      for (final remoteIri in remoteEntries.keys) {
-        if (!localEntries.containsKey(remoteIri)) {
-          if (filter == null ||
-              (remoteEntries[remoteIri]?.$2?.any(
-                      (value) => filter.acceptedObjectValues.contains(value)) ==
-                  true)) {
-            documentQueue.add(remoteIri.getDocumentIri());
-          }
-        }
-      }
+    // Check local filter values (for items present locally)
+    if (entry.localFilterValues != null) {
+      return entry.localFilterValues!
+          .any((value) => filter.acceptedObjectValues.contains(value));
     }
-
-    //print(
-    //    'Document queue for shard ${shard.shardIri.debug}: ${documentQueue.map((iri) => iri.debug).join(', ')}');
-    return documentQueue;
+    // No filter values available - don't filter
+    return true;
   }
 
   // =========================================================================
@@ -754,27 +806,53 @@ class RemoteSyncOrchestrator {
         originalRemoteShard,
       );
 
-      // sync all the documents in the queue right away
-      for (final documentIri in documentQueue) {
-        // print(
-        //   'Syncing document: ${documentIri.debug} for shard ${shardIri.debug}');
-        await _syncDocument(documentIri, lastSyncTimestamp, syncTime,
-            debugName:
-                'Document ${documentIri.debug} (as part of ${debugName})');
+      // Sync documents based on clock hash differences and fetch policy
+      for (final queueEntry in documentQueue) {
+        // Determine if this document should be synced:
+        // 1. Local exists, remote doesn't (upload new)
+        // 2. Both exist with different clockHashes (merge & sync)
+        // 3. Remote exists, local doesn't + Prefetch policy (download)
+        // 4. Remote exists, local doesn't + PrefetchFiltered with matching filter (download)
+
+        final needsUpload =
+            queueEntry.existsLocally && !queueEntry.existsRemotely;
+        final needsMerge = queueEntry.existsLocally &&
+            queueEntry.existsRemotely &&
+            queueEntry.needsSync;
+
+        final bool needsDownload;
+        if (!queueEntry.existsLocally &&
+            queueEntry.existsRemotely &&
+            shard is FullShardSync) {
+          final policy = shard.fetchPolicy;
+          needsDownload = policy is Prefetch ||
+              (policy is PrefetchFiltered &&
+                  _matchesFilter(queueEntry, policy));
+        } else {
+          needsDownload = false;
+        }
+
+        final shouldSync = needsUpload || needsMerge || needsDownload;
+
+        if (shouldSync) {
+          final documentIri = queueEntry.resourceIri.getDocumentIri();
+          await _syncDocument(documentIri, lastSyncTimestamp, syncTime,
+              debugName:
+                  'Document ${documentIri.debug} (as part of ${debugName})');
+        }
       }
 
       // Phase B: Document & Shard Finalization for this type
       // 1. Determine final_entry_set from index items table
       //
-      // For full shard sync: Use all entries from index items table
-      // For partial shard sync (foreign indices): Only use entries for resources
-      // we explicitly synced (from documentQueue). This ensures we don't remove
-      // remote entries we haven't seen - we only update our own items.
+      // For full shard sync with Prefetch: Use all entries from index items table
+      // For other cases: Only use entries for resources in documentQueue
+      // (resources that exist either locally or remotely)
       final Set<IriTerm>? limitToResources = switch (shard) {
         FullShardSync(fetchPolicy: Prefetch()) => null, // All entries
         FullShardSync(fetchPolicy: OnRequest() || PrefetchFiltered()) =>
-          documentQueue, // Only synced resources
-        PartialShardSync() => documentQueue, // Only synced resources
+          documentQueue.map((e) => e.resourceIri).toSet(),
+        PartialShardSync() => documentQueue.map((e) => e.resourceIri).toSet(),
       };
 
       final finalEntrySet = await _getFinalEntrySet(shardIri,

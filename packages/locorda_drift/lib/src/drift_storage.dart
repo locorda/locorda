@@ -551,7 +551,7 @@ class DriftStorage implements Storage {
   }
 
   @override
-  Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
+  Future<Map<IriTerm, Map<IriTerm, Map<IriTerm, String>>>> getForeignIndexShardsToSync({
     required IriTerm resourceType,
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,
@@ -573,16 +573,18 @@ class DriftStorage implements Storage {
     );
 
     // Convert back to IRI terms
-    final iriMap = <IriTerm, Map<IriTerm, Set<IriTerm>>>{};
+    final iriMap = <IriTerm, Map<IriTerm, Map<IriTerm, String>>>{};
     for (final indexEntry in result.entries) {
       final indexIri = _iriTermFactory(indexEntry.key);
-      final shardMap = <IriTerm, Set<IriTerm>>{};
+      final shardMap = <IriTerm, Map<IriTerm, String>>{};
 
       for (final shardEntry in indexEntry.value.entries) {
         final shardIri = _iriTermFactory(shardEntry.key);
-        final resourceIris =
-            shardEntry.value.map((s) => _iriTermFactory(s)).toSet();
-        shardMap[shardIri] = resourceIris;
+        final resourceMap = <IriTerm, String>{};
+        for (final resourceEntry in shardEntry.value.entries) {
+          resourceMap[_iriTermFactory(resourceEntry.key)] = resourceEntry.value;
+        }
+        shardMap[shardIri] = resourceMap;
       }
 
       iriMap[indexIri] = shardMap;

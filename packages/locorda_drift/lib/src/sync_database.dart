@@ -499,12 +499,14 @@ class SyncDocumentDao extends DatabaseAccessor<SyncDatabase>
               d.updatedAt.isBiggerThanValue(timestamp))
           ..orderBy([(d) => OrderingTerm(expression: d.updatedAt)]))
         .watch()) {
+      /*
       _log.info(
           'Emitting ${documents.length} updated documents for type $typeIri ($typeIriId) since $minCursor');
       for (final doc in documents) {
         _log.info(
             'Document updated: ID=${doc.id}, updatedAt=${doc.updatedAt}, type=${doc.typeIriId} \n${doc.documentContent.substring(0, math.min(12000, doc.documentContent.length))}\n');
       }
+      */
       yield await _convertDocumentsWithIris(documents);
     }
   }
@@ -1009,13 +1011,14 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   /// - Query 1: Dirty foreign index entries (simple timestamp filter)
   /// - Query 2: Uncovered foreign index entries (efficient LEFT JOIN with IS NULL)
   ///
-  /// Returns: Map of index IRI -> Map of (shard IRI -> Set of resource IRIs)
-  Future<Map<String, Map<String, Set<String>>>> getForeignIndexShardsToSync({
+  /// Returns: Map of index IRI -> Map of (shard IRI -> Map of (resource IRI -> clockHash))
+  Future<Map<String, Map<String, Map<String, String>>>>
+      getForeignIndexShardsToSync({
     required int resourceTypeIriId,
     required int sinceTimestamp,
     required Set<int> excludeIndexIriIds,
   }) async {
-    final indexToShards = <String, Map<String, Set<String>>>{};
+    final indexToShards = <String, Map<String, Map<String, String>>>{};
 
     // Query 1: Get dirty foreign index entries (fast - simple timestamp filter)
     final dirtyResults = await _queryDirtyForeignEntries(
@@ -1055,7 +1058,8 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
       SELECT 
         idx.iri as index_iri,
         shard.iri as shard_iri,
-        res.iri as resource_iri
+        res.iri as resource_iri,
+        e.clock_hash as clock_hash
       FROM index_entries e
       JOIN sync_iris idx ON idx.id = e.index_iri_id
       JOIN sync_iris shard ON shard.id = e.shard_iri
@@ -1084,7 +1088,8 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
         SELECT 
           idx.iri as index_iri,
           shard.iri as shard_iri,
-          res.iri as resource_iri
+          res.iri as resource_iri,
+          e.clock_hash as clock_hash
         FROM index_entries e
         JOIN sync_iris idx ON idx.id = e.index_iri_id
         JOIN sync_iris shard ON shard.id = e.shard_iri
@@ -1102,7 +1107,8 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
       SELECT 
         idx.iri as index_iri,
         shard.iri as shard_iri,
-        res.iri as resource_iri
+        res.iri as resource_iri,
+        e.clock_hash as clock_hash
       FROM index_entries e
       JOIN sync_iris idx ON idx.id = e.index_iri_id
       JOIN sync_iris shard ON shard.id = e.shard_iri
@@ -1122,15 +1128,17 @@ class IndexDao extends DatabaseAccessor<SyncDatabase>
   /// Group query results into nested map structure.
   void _groupResults(
     List<QueryRow> results,
-    Map<String, Map<String, Set<String>>> indexToShards,
+    Map<String, Map<String, Map<String, String>>> indexToShards,
   ) {
     for (final row in results) {
       final indexIri = row.read<String>('index_iri');
       final shardIri = row.read<String>('shard_iri');
       final resourceIri = row.read<String>('resource_iri');
+      final clockHash = row.read<String>('clock_hash');
 
       final shardMap = indexToShards.putIfAbsent(indexIri, () => {});
-      shardMap.putIfAbsent(shardIri, () => <String>{}).add(resourceIri);
+      shardMap.putIfAbsent(shardIri, () => <String, String>{})[resourceIri] =
+          clockHash;
     }
   } // Note: Sync timestamps are now stored in SyncSettings table
   // using SyncSettingKeys constants. See DriftStorage helper methods.

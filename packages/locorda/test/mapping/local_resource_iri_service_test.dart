@@ -227,10 +227,10 @@ void main() {
           () => mapper.fromRdfTerm(
               const IriTerm('http://invalid.com/wrong/pattern'),
               MockDeserializationContext()),
-          throwsA(isA<ArgumentError>().having(
-            (e) => e.message,
+          throwsA(isA<UnsupportedIriException>().having(
+            (e) => e.toString(),
             'message',
-            contains('does not belong to base IRI tag:locorda.org,2025:l:'),
+            contains('Does not belong to base IRI tag:locorda.org,2025:l:'),
           )),
         );
       });

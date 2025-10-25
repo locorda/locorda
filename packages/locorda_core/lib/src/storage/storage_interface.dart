@@ -287,8 +287,9 @@ abstract interface class Storage {
   /// - [sinceTimestamp]: Physical clock timestamp - entries modified after this are dirty
   /// - [excludeIndexIris]: Configured/subscribed index IRIs to exclude from foreign sync
   ///
-  /// Returns: Map of index IRI to map of (shard IRI -> set of resource IRIs)
-  Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
+  /// Returns: Map structure: indexIri -> shardIri -> resourceIri -> clockHash
+  Future<Map<IriTerm, Map<IriTerm, Map<IriTerm, String>>>>
+      getForeignIndexShardsToSync({
     required IriTerm resourceType,
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,

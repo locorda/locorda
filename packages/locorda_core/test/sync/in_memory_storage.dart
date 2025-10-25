@@ -500,12 +500,13 @@ class InMemoryStorage implements Storage {
   }
 
   @override
-  Future<Map<IriTerm, Map<IriTerm, Set<IriTerm>>>> getForeignIndexShardsToSync({
+  Future<Map<IriTerm, Map<IriTerm, Map<IriTerm, String>>>>
+      getForeignIndexShardsToSync({
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,
     required IriTerm resourceType,
   }) async {
-    final result = <IriTerm, Map<IriTerm, Set<IriTerm>>>{};
+    final result = <IriTerm, Map<IriTerm, Map<IriTerm, String>>>{};
 
     // Build set of covered resources from configured indices
     final coveredResources = _indexEntries.values
@@ -528,10 +529,8 @@ class InMemoryStorage implements Storage {
 
       // Include tombstones - they need to be synced for proper CRDT merge
       if (isDirty || isUncovered) {
-        result
-            .putIfAbsent(entry.indexIri, () => {})
-            .putIfAbsent(entry.shardIri, () => {})
-            .add(entry.resourceIri);
+        result.putIfAbsent(entry.indexIri, () => {}).putIfAbsent(
+            entry.shardIri, () => {})[entry.resourceIri] = entry.clockHash;
       }
     }
 
