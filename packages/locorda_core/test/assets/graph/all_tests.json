@@ -1542,7 +1542,7 @@
               "action": "save",
               "installation_id": "foreign-device-installation",
               "typeIri": "https://schema.org/Recipe",
-              "input_resource": "test_cases/save/36_foreign_shard_discovery/foreign_input_recipe.ttl",
+              "input_resource": "test_cases/save/36_foreign_shard_discovery/00_foreign-device-installation_save/foreign_input_recipe.ttl",
               "action_ts": {
                 "save": "2024-01-01T02:00:00Z"
               }
@@ -1558,17 +1558,17 @@
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-bbcf09f5/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_remote-2.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/01_foreign-device-installation_sync/expected_shard_index-of-indices-full_remote-2.ttl"
                   },
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_remote-2.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/01_foreign-device-installation_sync/expected_shard_index-of-indices-group_remote-2.ttl"
                   },
                   {
                     "type_iri": "https://schema.org/Recipe",
                     "id": "chocolate-cake",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph_remote-1.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/01_foreign-device-installation_sync/expected_stored_graph_remote-1.ttl"
                   }
                 ]
               }
@@ -1584,17 +1584,17 @@
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-bbcf09f5/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_local-2.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/02_default-installation_sync/expected_shard_index-of-indices-full_local-2.ttl"
                   },
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_local-2.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/02_default-installation_sync/expected_shard_index-of-indices-group_local-2.ttl"
                   },
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
                     "id": "index-full-e679d72f/index",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_index_recipes_full.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/02_default-installation_sync/expected_index_recipes_full.ttl"
                   }
                 ]
               }
@@ -1603,7 +1603,7 @@
               "action": "save",
               "installation_id": "default-installation",
               "typeIri": "https://schema.org/Recipe",
-              "input_resource": "test_cases/save/36_foreign_shard_discovery/input_resource.ttl",
+              "input_resource": "test_cases/save/36_foreign_shard_discovery/03_default-installation_save/input_resource.ttl",
               "expected": {
                 "property_changes": [
                   {
@@ -1659,17 +1659,17 @@
                   {
                     "type_iri": "https://schema.org/Recipe",
                     "id": "chocolate-cake",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph_before_sync.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/03_default-installation_save/expected_stored_graph_before_sync.ttl"
                   },
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-bbcf09f5/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-full_local-3.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/03_default-installation_save/expected_shard_index-of-indices-full_local-3.ttl"
                   },
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-5f68b5b7/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_index-of-indices-group_local-3.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/03_default-installation_save/expected_shard_index-of-indices-group_local-3.ttl"
                   }
                 ]
               },
@@ -1688,22 +1688,22 @@
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-full-e679d72f/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_recipes_full.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/04_default-installation_sync/expected_shard_recipes_full.ttl"
                   },
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-grouped-e093655c/groups/20_ad221effd73057a647d96bab312c4886/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_2024_01.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/04_default-installation_sync/expected_shard_2024_01.ttl"
                   },
                   {
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#Shard",
                     "id": "index-grouped-f615be90/groups/desserts/shard-mod-md5-1-0-v1_0_0",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_shard_desserts.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/04_default-installation_sync/expected_shard_desserts.ttl"
                   },
                   {
                     "type_iri": "https://schema.org/Recipe",
                     "id": "chocolate-cake",
-                    "path": "test_cases/save/36_foreign_shard_discovery/expected_stored_graph.ttl"
+                    "path": "test_cases/save/36_foreign_shard_discovery/04_default-installation_sync/expected_stored_graph.ttl"
                   }
                 ]
               }
