@@ -66,8 +66,9 @@ class OrganizedStatements {
             'Statement subject cannot be a blank node in document $documentIri: $rdfSubject');
       }
       if (rdfSubject == null) {
-        throw StateError(
+        _log.severe(
             'Could not find statement subject in document $documentIri for statement identifier $subject');
+        continue;
       }
       final rdfPredicate =
           graph.findSingleObject<IriTerm>(subject, RdfStatement.predicate);

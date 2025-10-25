@@ -177,6 +177,30 @@ class SolidClient {
   // Those '=' characters often appear due to base64 encoding of the iri type in the pod URL.
   String _prepareUrlForDpopToken(String url) => url.replaceAll('=', '%3D');
 
+  /// Fetch current ETag for a resource using HEAD request
+  Future<String?> _fetchETag(String url, {bool requiresAuth = true}) async {
+    final dpop = requiresAuth
+        ? await _authProvider.getDpopToken(_prepareUrlForDpopToken(url), 'HEAD')
+        : null;
+
+    _log.fine('HEAD $url with auth=${requiresAuth}');
+
+    final response = await _client.head(
+      Uri.parse(url),
+      headers: {
+        if (dpop != null) 'Authorization': 'DPoP ${dpop.accessToken}',
+        if (dpop != null) 'DPoP': dpop.dPoP,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.headers['etag'];
+    }
+
+    _log.warning('HEAD request failed for $url: ${response.statusCode}');
+    return null;
+  }
+
   Future<RemoteUploadResult> upload(String url, RdfGraph graph,
       {bool requiresAuth = true, String? ifMatch}) async {
     final dpop = requiresAuth
@@ -220,10 +244,15 @@ class SolidClient {
       return RemoteUploadResult.conflict();
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final etag = response.headers['etag'];
+      var etag = response.headers['etag'];
       if (etag == null) {
-        _log.warning('No ETag in response from $url');
+        _log.fine('No ETag in PUT response from $url, fetching via HEAD');
+        etag = await _fetchETag(url, requiresAuth: requiresAuth);
+        if (etag == null) {
+          _log.warning('Could not fetch ETag via HEAD for $url');
+        }
       }
+
       return RemoteUploadResult.success(etag ?? '');
     }
     _log.warning('Failed to upload to $url: ${response.statusCode}');
