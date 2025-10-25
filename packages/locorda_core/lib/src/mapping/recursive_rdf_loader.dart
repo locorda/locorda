@@ -101,6 +101,10 @@ class RecursiveRdfLoader {
   final IriTermFactory iriFactory;
   final RdfGraphFetcher fetcher;
 
+  // Contracts usually do not change - so we can cache loaded graphs
+  // across the lifetime of the application instance
+  final Map<IriTerm, RdfGraph> _loadedContracts = {};
+  final Map<IriTerm, Future<RdfGraph>> _inProgress = {};
   RecursiveRdfLoader({required this.fetcher, required this.iriFactory});
 
   Future<void> _loadRecursivelySingle(
@@ -145,7 +149,8 @@ class RecursiveRdfLoader {
   Future<Map<IriTerm, RdfGraph>> loadRdfDocumentsRecursively(
           Iterable<IriTerm> iris,
           {List<DependencyExtractor> extractors = const []}) =>
-      _loadRecursivelyMulti(iris, {}, {}, extractors: extractors);
+      _loadRecursivelyMulti(iris, _loadedContracts, _inProgress,
+          extractors: extractors);
 
   Future<Map<IriTerm, RdfGraph>> _loadRecursivelyMulti(
       Iterable<IriTerm> iris,
