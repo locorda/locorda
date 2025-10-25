@@ -1595,6 +1595,18 @@
                     "type_iri": "https://w3id.org/solid-crdt-sync/vocab/idx#FullIndex",
                     "id": "index-full-e679d72f/index",
                     "path": "test_cases/save/36_foreign_shard_discovery/02_default-installation_sync/expected_index_recipes_full.ttl"
+                  },
+                  {
+                    "iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC1iYmNmMDlmNS9pbmRleA==",
+                    "path": "test_cases/save/36_foreign_shard_discovery/02_default-installation_sync/expected_index-of-indices-full.ttl"
+                  },
+                  {
+                    "iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC0zODgwMzZmMy9pbmRleA==",
+                    "path": "test_cases/save/36_foreign_shard_discovery/02_default-installation_sync/expected_client-installation-index.ttl"
+                  },
+                  {
+                    "iri": "tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I0Z1bGxJbmRleA==:aW5kZXgtZnVsbC01ZjY4YjViNy9pbmRleA==",
+                    "path": "test_cases/save/36_foreign_shard_discovery/02_default-installation_sync/expected_group-template-index.ttl"
                   }
                 ]
               }
