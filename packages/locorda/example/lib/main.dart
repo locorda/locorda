@@ -291,7 +291,7 @@ class _AppInitializerState extends State<AppInitializer>
 }
 
 void _setupConsoleLogging() {
-  Logger.root.level = Level.ALL;
+  Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
     final time = _formatTime(record.time);
     final level = _formatLevel(record.level);
