@@ -14,7 +14,6 @@ import 'package:locorda_core/src/index/shard_manager.dart';
 import 'package:locorda_core/src/installation_service.dart';
 import 'package:locorda_core/src/local_document_merger.dart';
 import 'package:locorda_core/src/mapping/framework_iri_generator.dart';
-import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/mapping/merge_contract_loader.dart';
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';

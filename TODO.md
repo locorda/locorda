@@ -113,6 +113,7 @@
 - [ ] Thoroughly test, for example
   - Foreign indices/shards that are referenced, but not yet downloaded when an item is saved!
 - [ ] Example App Responsiveness: What do we have to do to offload syncing from ui thread?
+- [ ] Move Sync into a Background worker, use DriftIsolate to put DB-Operations into a single isolate. https://gemini.google.com/share/d862857eb169
 - [ ] Example App: I think that the synchronization takes a lot longer than I expected - why? Can I improve?
 - []
 

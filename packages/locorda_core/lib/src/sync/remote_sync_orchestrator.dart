@@ -260,18 +260,19 @@ class RemoteSyncOrchestrator {
     _log.fine(
         'Found ${configuredIndices.length} configured indices and ${foreignIndices.length} foreign indices for ${resourceType.debug}');
 
-    // Make sure each index document is synced - this should not actually do much
-    // in most cases because the index-of-indices sync should already have
-    // ensured that the index documents are up to date, but we do it here for completeness
-    // and to be on the safe side.
-    for (final spec in indices) {
-      final documentIri = spec.indexIri.getDocumentIri();
-      await _syncDocument(
-        documentIri,
-        lastSyncTimestamp,
-        syncTime,
-        debugName: 'Index ${documentIri.debug}',
-      );
+    // We rely on the index of indices sync to have updated the index documents,
+    // so we don't need to re-sync them here again - except for the index-of
+    // indices itself (resourceType == idx:FullIndex).
+    if (resourceType == IdxFullIndex.classIri) {
+      for (final spec in indices) {
+        final documentIri = spec.indexIri.getDocumentIri();
+        await _syncDocument(
+          documentIri,
+          lastSyncTimestamp,
+          syncTime,
+          debugName: 'Index ${documentIri.debug}',
+        );
+      }
     }
 
     return indices;

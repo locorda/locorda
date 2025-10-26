@@ -977,7 +977,7 @@ ${turtle.encode(RdfGraph.fromTriples(remoteSubgraphs.expand((g) => g.triples).to
               : '';
       throw StateError(
         '''
-Clock conflict detected: Identical clocks with different values. 
+Clock conflict detected: Identical clocks with different values for predicate ${predicate} subject local: ${localSubject.debug} remote: ${remoteSubject.debug}. 
 Local values: $localValues
 Remote values: $remoteValues
 $subgraphsInfo
