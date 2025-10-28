@@ -21,10 +21,13 @@ Matcher hasRuleProperties(PredicateRule expected,
       .having((r) => r.mergeWith, 'mergeWith', equals(expected.mergeWith))
       .having((r) => r.stopTraversal, 'stopTraversal',
           equals(expected.stopTraversal))
+      .having((r) => r.isIdentifying, 'isIdentifying',
+          equals(expected.isIdentifying))
       .having(
-          (r) => r.isIdentifying, 'isIdentifying', equals(expected.isIdentifying))
-      .having((r) => r.isPathIdentifying, 'isPathIdentifying',
-          equals(expectedIsPathIdentifying ?? false)); // Default to false (no algorithm specified in test rules)
+          (r) => r.isPathIdentifying,
+          'isPathIdentifying',
+          equals(expectedIsPathIdentifying ??
+              false)); // Default to false (no algorithm specified in test rules)
 }
 
 /// Custom matcher to compare PredicateRule with PredicateRule properties.
@@ -47,6 +50,6 @@ Matcher matchesRule(PredicateRule expected) {
       .having((r) => r.mergeWith, 'mergeWith', equals(expected.mergeWith))
       .having((r) => r.stopTraversal, 'stopTraversal',
           equals(expected.stopTraversal))
-      .having(
-          (r) => r.isIdentifying, 'isIdentifying', equals(expected.isIdentifying));
+      .having((r) => r.isIdentifying, 'isIdentifying',
+          equals(expected.isIdentifying));
 }

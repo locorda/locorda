@@ -551,7 +551,8 @@ class DriftStorage implements Storage {
   }
 
   @override
-  Future<Map<IriTerm, Map<IriTerm, Map<IriTerm, String>>>> getForeignIndexShardsToSync({
+  Future<Map<IriTerm, Map<IriTerm, Map<IriTerm, String>>>>
+      getForeignIndexShardsToSync({
     required IriTerm resourceType,
     required int sinceTimestamp,
     required Set<IriTerm> excludeIndexIris,

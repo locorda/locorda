@@ -7,7 +7,7 @@ import '../../l10n/solid_auth_localizations.dart';
 import '../providers/solid_provider_service.dart';
 
 final _log = Logger('SolidLoginScreen');
-  
+
 /// A ready-to-use Solid login screen widget.
 ///
 /// This widget provides a complete login interface for Solid authentication,

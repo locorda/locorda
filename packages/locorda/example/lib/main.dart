@@ -15,7 +15,6 @@ import 'package:locorda/locorda.dart';
 import 'package:locorda_drift/locorda_drift.dart';
 import 'package:locorda_solid/locorda_solid.dart';
 import 'package:locorda_solid_auth/locorda_solid_auth.dart';
-import 'package:logging/logging.dart';
 import 'package:personal_notes_app/init_rdf_mapper.g.dart';
 import 'package:personal_notes_app/models/category.dart';
 import 'package:personal_notes_app/models/note.dart';
@@ -28,6 +27,7 @@ import 'package:solid_auth/solid_auth.dart';
 import 'screens/notes_list_screen.dart';
 import 'services/categories_service.dart';
 import 'services/notes_service.dart';
+import 'utils/logging_setup.dart';
 import 'storage/database.dart' show AppDatabase;
 import 'storage/repositories.dart' show CategoryRepository, NoteRepository;
 
@@ -36,7 +36,8 @@ const appBaseUrl = 'https://locorda.dev/example/personal_notes_app';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  _setupConsoleLogging();
+  // Set up beautiful console logging for development
+  setupConsoleLogging();
 
   runApp(const PersonalNotesApp());
 }
@@ -288,79 +289,4 @@ class _AppInitializerState extends State<AppInitializer>
       syncSystem: syncSystem!,
     );
   }
-}
-
-void _setupConsoleLogging() {
-  Logger.root.level = Level.INFO;
-  Logger.root.onRecord.listen((record) {
-    final time = _formatTime(record.time);
-    final level = _formatLevel(record.level);
-    final logger = _formatLoggerName(record.loggerName);
-    final message = record.message;
-
-    // Main log line with colors and proper formatting
-    // ignore: avoid_print
-    print('$time $level $logger $message');
-
-    // Additional context if available
-    if (record.error != null) {
-      // ignore: avoid_print
-      print('  ↳ Error: ${record.error}');
-    }
-    if (record.stackTrace != null) {
-      // ignore: avoid_print
-      print('  ↳ Stack trace:\n${_indentStackTrace(record.stackTrace)}');
-    }
-  });
-}
-
-/// Format timestamp in HH:mm:ss.SSS format for better readability.
-String _formatTime(DateTime time) {
-  final h = time.hour.toString().padLeft(2, '0');
-  final m = time.minute.toString().padLeft(2, '0');
-  final s = time.second.toString().padLeft(2, '0');
-  final ms = time.millisecond.toString().padLeft(3, '0');
-  return '\x1B[90m$h:$m:$s.$ms\x1B[0m'; // Dim gray
-}
-
-/// Format log level with color coding and fixed width for alignment.
-String _formatLevel(Level level) {
-  final name = level.name.padRight(7); // Fixed width for alignment
-
-  if (level >= Level.SEVERE) {
-    return '\x1B[91m$name\x1B[0m'; // Bright red
-  } else if (level >= Level.WARNING) {
-    return '\x1B[93m$name\x1B[0m'; // Bright yellow
-  } else if (level >= Level.INFO) {
-    return '\x1B[94m$name\x1B[0m'; // Bright blue
-  } else if (level >= Level.CONFIG) {
-    return '\x1B[96m$name\x1B[0m'; // Bright cyan
-  } else {
-    return '\x1B[90m$name\x1B[0m'; // Dim gray for FINE/FINER/FINEST
-  }
-}
-
-/// Format logger name with color and truncation for long names.
-String _formatLoggerName(String loggerName) {
-  // Truncate very long logger names but keep last parts
-  if (loggerName.length > 30) {
-    final parts = loggerName.split('.');
-    if (parts.length > 2) {
-      loggerName = '…${parts.skip(parts.length - 2).join('.')}';
-    } else {
-      loggerName = '…${loggerName.substring(loggerName.length - 27)}';
-    }
-  }
-
-  return '\x1B[36m[${loggerName.padRight(30)}]\x1B[0m'; // Cyan
-}
-
-/// Indent stack trace lines for better visual hierarchy.
-String _indentStackTrace(StackTrace? stackTrace) {
-  if (stackTrace == null) return '';
-  return stackTrace
-      .toString()
-      .split('\n')
-      .map((line) => '    $line')
-      .join('\n');
 }

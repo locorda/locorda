@@ -53,4 +53,3 @@ class CrdtImmutable {
 class McIdentifying {
   const McIdentifying();
 }
-
