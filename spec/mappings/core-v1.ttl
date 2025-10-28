@@ -24,6 +24,7 @@
      [ mc:predicate sync:isGovernedBy; algo:mergeWith algo:LWW_Register; mc:disableBlankNodePathIdentification true ],  # Merge contract list - rdf:List, currently only LWW_Register possible (append-only)
      [ mc:predicate sync:managedResourceType; algo:mergeWith algo:Immutable ],  # Resource type for discovery
      [ mc:predicate idx:belongsToIndexShard; algo:mergeWith algo:OR_Set ],  # Index shard memberships
+     [ mc:predicate sync:hasStatement; algo:mergeWith algo:OR_Set ],
      [ mc:predicate sync:hasBlankNodeMapping; algo:mergeWith algo:OR_Set ] .  # Blank node canonical mappings
 
 # Merge contract for RDF reified statements used as tombstones in CRDT sets
