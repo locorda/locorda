@@ -9,7 +9,6 @@
 library;
 
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/group_key_generator.dart';
 import 'package:locorda_core/src/index/index_discovery.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';

@@ -3,14 +3,13 @@ library;
 
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:locorda_core/locorda_core.dart';
-import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
-part 'sync_database.g.dart';
 
-final _log = Logger('SyncDatabase');
+part 'sync_database.g.dart';
 
 /// IRI lookup table for normalized storage
 class SyncIris extends Table {

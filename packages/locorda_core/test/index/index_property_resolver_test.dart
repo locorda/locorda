@@ -2,7 +2,6 @@ import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_property_resolver.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
-import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 

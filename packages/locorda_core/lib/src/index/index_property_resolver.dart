@@ -13,11 +13,9 @@ import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/util/lru_cache.dart';
-import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 typedef IndexProperties = (IriTerm? indexIri, Set<IriTerm> properties);
-final _log = Logger('IndexPropertyResolver');
 
 /// Resolves which properties should be indexed for a given shard.
 ///

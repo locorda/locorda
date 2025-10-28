@@ -15,7 +15,6 @@ library;
 import 'dart:async';
 
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_parser.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_determiner.dart'

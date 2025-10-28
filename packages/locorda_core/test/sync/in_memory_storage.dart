@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart';
 import 'package:logging/logging.dart';

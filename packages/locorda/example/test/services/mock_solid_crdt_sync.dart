@@ -4,8 +4,9 @@ library;
 import 'dart:async';
 import 'package:locorda/locorda.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_core/src/sync/standard_sync_manager.dart';
 
-class _MockSyncManager extends SyncManager {
+class _MockSyncManager extends StandardSyncManager {
   _MockSyncManager()
       : super(
           syncFunction: (syncTime) async {},

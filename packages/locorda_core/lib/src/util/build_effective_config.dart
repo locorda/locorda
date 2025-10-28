@@ -1,6 +1,4 @@
 import 'package:locorda_core/locorda_core.dart';
-import 'package:locorda_core/src/generated/crdt/index.dart';
-import 'package:locorda_core/src/generated/idx/index.dart';
 
 class IndexNames {
   static const fullIndices = "lcrd-full-indices";
