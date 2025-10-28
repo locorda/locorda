@@ -289,6 +289,9 @@ class LocalReferenceConverter implements ReferenceConverter {
   }
 
   IriTerm toIri(Type targetType, String value) {
+    assert(_resourceConfigCache.containsKey(targetType),
+        'No resource configuration found for target type $targetType');
+
     final (typeIri, config) = _resourceConfigCache[targetType]!;
     return _resourceLocator
         .toIri(ResourceIdentifier(typeIri, value, config.fragment));
