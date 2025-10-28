@@ -35,7 +35,7 @@ import 'test_physical_timestamp_factory.dart';
 ///
 /// Set via environment variable: RECORD_MODE=true dart test
 final _recordMode = Platform.environment['RECORD_MODE'] == 'true';
-final debug = (dumpSharedBackend: false, logStep: true);
+final debug = (dumpSharedBackend: false, logStep: false);
 
 /// Context for a single installation (device) in multi-device tests.
 /// Each installation has its own storage, clock, and sync instance.
