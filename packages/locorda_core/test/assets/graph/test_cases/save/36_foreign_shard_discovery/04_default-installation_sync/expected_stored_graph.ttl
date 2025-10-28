@@ -13,7 +13,7 @@
 
 <tag:locorda.org,2025:l:aHR0cHM6Ly9zY2hlbWEub3JnL1JlY2lwZQ==:Y2hvY29sYXRlLWNha2U=> a sync:ManagedDocument;
     foaf:primaryTopic ns1:it;
-    cm:clockHash "413f41eca5b4885dda3a3826ddc14d6e";
+    cm:clockHash "b6f3912093c56e5b2adedda259b48cf4";
     cm:createdAt "2024-01-01T06:00:00.001Z"^^xsd:dateTime, "2024-01-01T02:00:00.001Z"^^xsd:dateTime;
     cm:hasClockEntry ns1:lcrd-clk-md5-7934e73e2e637cc2115bd6d7262d680f, ns1:lcrd-clk-md5-4a481c7617b289f7c4fd07cb3a10fd0f;
     idx:belongsToIndexShard ns2:shard, ns3:shard, ns4:shard;

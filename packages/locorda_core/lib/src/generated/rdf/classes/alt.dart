@@ -61,7 +61,7 @@ class RdfAlt {
 
   /// clockHash from crdt vocabulary [Expects: http://www.w3.org/2001/XMLSchema#string]
   ///
-  /// A pre-calculated, lightweight hash of the resource's full Hybrid Logical Clock, used for efficient change detection in indices. Hash includes both logical and physical time components. Domain is kept general (rdfs:Resource) to allow usage in various contexts including idx:ShardEntry instances.
+  /// A pre-calculated, lightweight hash of the resource's full Hybrid Logical Clock, used for efficient change detection in indices. Hash includes only the logical time component (causality state), excluding physical time (which is merely an annotation for tie-breaking). Domain is kept general (rdfs:Resource) to allow usage in various contexts including idx:ShardEntry instances.
   ///
   /// Can be used on: http://www.w3.org/2000/01/rdf-schema#Resource
   ///

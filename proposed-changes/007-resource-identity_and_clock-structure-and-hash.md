@@ -30,7 +30,6 @@
 2. Verify clock entry IRIs are in internal form (tag:locorda.dev,2025:l:...)
 3. For each clock entry, extract ONLY these triples:
    - (clockEntryIRI, crdt:logicalTime, value)
-   - (clockEntryIRI, crdt:physicalTime, value)
 4. Serialize to canonical N-Quads
 5. Compute MD5 hash
 6. Store as crdt:clockHash on sync:ManagedDocument
@@ -38,7 +37,9 @@
 
 **Key properties**:
 - Clock entry IRIs MUST already be in internal form
-- Clock hash includes **only logical and physical time** (NOT installationIri)
+- Clock hash includes **only logical time** (NOT physicalTime or installationIri)
+- Physical time is excluded as it's merely an annotation for tie-breaking
+- Logical time alone defines the causal state - identical logical clocks mean causally identical documents
 - Clock hash is **stable across backends**
 
 ### Save vs Sync Timing

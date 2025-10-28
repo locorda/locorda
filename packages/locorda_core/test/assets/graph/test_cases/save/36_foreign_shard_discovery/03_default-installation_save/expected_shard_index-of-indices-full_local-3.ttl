@@ -14,25 +14,25 @@
 
 <tag:locorda.org,2025:l:aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk:aW5kZXgtZnVsbC1iYmNmMDlmNS9zaGFyZC1tb2QtbWQ1LTEtMC12MV8wXzA=> a sync:ManagedDocument;
     foaf:primaryTopic ns1:shard;
-    cm:clockHash "bbd179b1ff564cd5f3f3f6ca9224edc1";
+    cm:clockHash "29c6c1e77f5e2d14a9db71299058f2e3";
     cm:createdAt "2024-01-01T02:10:00.000Z"^^xsd:dateTime, "2024-01-01T00:00:00.000Z"^^xsd:dateTime;
     cm:hasClockEntry ns1:lcrd-clk-md5-7934e73e2e637cc2115bd6d7262d680f, ns1:lcrd-clk-md5-4a481c7617b289f7c4fd07cb3a10fd0f;
     sync:isGovernedBy (mappings:shard-v1);
     sync:managedResourceType idx:Shard .
 
-ns1:entry-2e883124d69c377d8daff7f19ee0eaa6 cm:clockHash "56988ed65fe62497b713ad77c145256d";
+ns1:entry-2e883124d69c377d8daff7f19ee0eaa6 cm:clockHash "07e38ab5daea747372540ac6259f5733";
     idx:indexesClass idx:FullIndex;
     idx:resource ns2:index .
 
-ns1:entry-713129f56a309cabc970f22c7da295cf cm:clockHash "74cb525a65bdb0b232ca17939bf34fd4";
+ns1:entry-713129f56a309cabc970f22c7da295cf cm:clockHash "2f4c135454e883ad689adfee4583d3d8";
     idx:indexesClass cm:ClientInstallation;
     idx:resource ns4:index .
 
-ns1:entry-a68c1c4f5dda5dbf177113200fb133a0 cm:clockHash "acfe426053c8901cd211536eabb32a84";
+ns1:entry-a68c1c4f5dda5dbf177113200fb133a0 cm:clockHash "ed6460df8424173ce14dde98f510b36d";
     idx:indexesClass schema:Recipe;
     idx:resource ns5:index .
 
-ns1:entry-ce394f730640668924968eddf09c01bc cm:clockHash "419809fba1e65a2afc6fb6a75b231006";
+ns1:entry-ce394f730640668924968eddf09c01bc cm:clockHash "87a91984caab67445d1f953856329532";
     idx:indexesClass idx:GroupIndexTemplate;
     idx:resource ns3:index .
 

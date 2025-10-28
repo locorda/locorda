@@ -252,15 +252,20 @@ class HlcService {
     );
   }
 
-  /// Computes clock hash from logical and physical time only
-  /// Per spec: includes only logicalTime and physicalTime triples, excludes installationIri
+  /// Computes clock hash from logical time only.
+  ///
+  /// Physical time is excluded as it's merely an annotation for tie-breaking
+  /// when logical times are concurrent. The logical time alone defines the
+  /// causal state of the document - two documents with identical logical clocks
+  /// are causally identical regardless of their physical timestamps.
+  ///
+  /// Per spec: includes only logicalTime triples, excludes physicalTime and installationIri.
   String _hashClock(CrdtClock clock) {
     final triples = <Triple>[];
 
-    // Extract only logicalTime and physicalTime triples from all clock entries
+    // Extract ONLY logicalTime triples from all clock entries
     for (final (_, graph) in clock) {
       triples.addAll(graph.findTriples(predicate: CrdtClockEntry.logicalTime));
-      triples.addAll(graph.findTriples(predicate: CrdtClockEntry.physicalTime));
     }
 
     // Serialize to canonical N-Quads
