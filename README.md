@@ -24,7 +24,7 @@ This project addresses the fundamental challenge of creating applications that a
 
 - **🔄 Conflict-Free Synchronization**: State-based CRDT algorithms ensure safe collaboration without coordination
 - **🌐 Semantic Interoperability**: All data stored as clean, standard RDF for maximum compatibility  
-- **⚡ Performance at Scale**: Three sync strategies (Full, Grouped, On-Demand) handle datasets from 100 to 100,000+ resources
+- **⚡ Performance at Scale**: Flexible indexing (Full vs. Grouped) and fetch strategies (Prefetch vs. OnDemand) handle datasets from 100 to 100,000+ resources with smart sharding and header properties
 - **📱 Offline-First**: Full offline functionality with sync when connectivity is available
 - **🔒 Privacy-Preserving**: Maintains user data ownership with pluggable access control systems
 

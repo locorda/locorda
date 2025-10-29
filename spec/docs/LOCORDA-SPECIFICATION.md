@@ -60,7 +60,7 @@ This is a **draft specification** under active development. The architecture and
 - Initial comprehensive draft specification
 - Complete 4-layer architecture: Data Resource, Merge Contract, Indexing, Sync Strategy layers
 - CRDT foundations with Hybrid Logical Clocks and state-based merging
-- Three sync strategies: FullSync, GroupedSync, OnDemandSync with performance analysis
+- Two-dimensional sync control: Index organization (Full vs. Grouped) and fetch strategies (Prefetch vs. OnDemand) with performance analysis
 - Lifecycle management including backend setup, index population, and maintenance phases
 - Management operations with lazy evaluation principles for efficiency
 - Comprehensive error handling and graceful degradation patterns
@@ -76,7 +76,7 @@ This is a **draft specification** under active development. The architecture and
 
 This document outlines an architecture for building **offline-first, collaborative, and truly interoperable applications** using storage backends for synchronization. The core challenge is twofold: first, to enable robust, conflict-free data merging without sacrificing semantic interoperability; and second, to provide a scalable solution for building performant applications, regardless of dataset size.
 
-The proposed solution addresses both challenges through a declarative, developer-centric framework. Unlike operation-based approaches (such as SU-Set) that synchronize individual change events, our architecture uses a **state-based CRDT model**. This means the entire state of a resource is synchronized, a choice that works seamlessly with passive storage backends. To ensure data integrity, developers declaratively **link data properties to CRDT merge strategies**. To manage performance, they define a high-level **Sync Strategy** per type (full, groups, or on-demand). This approach allows the library to act as a flexible "add-on" to an existing application, rather than a monolithic database, while ensuring all data at rest in the storage backend is clean, standard RDF.
+The proposed solution addresses both challenges through a declarative, developer-centric framework. Unlike operation-based approaches (such as SU-Set) that synchronize individual change events, our architecture uses a **state-based CRDT model**. This means the entire state of a resource is synchronized, a choice that works seamlessly with passive storage backends. To ensure data integrity, developers declaratively **link data properties to CRDT merge strategies**. To manage performance, they control **two independent dimensions**: index organization (Full vs. Grouped indices) and fetch strategy (Prefetch vs. OnDemand loading). Header properties in indices enable efficient browsing without full document downloads. This approach allows the library to act as a flexible "add-on" to an existing application, rather than a monolithic database, while ensuring all data at rest in the storage backend is clean, standard RDF.
 
 For comprehensive performance analysis, benchmarks, and mobile considerations, see [PERFORMANCE.md](PERFORMANCE.md).
 
@@ -143,7 +143,7 @@ Developers define merge behavior by linking each property to appropriate CRDT ty
 1. **Data Resource Layer**: Clean RDF using standard vocabularies
 2. **Merge Contract Layer**: Public CRDT rules for conflict resolution
 3. **Indexing Layer**: Performance optimization through sharded indices
-4. **Sync Strategy Layer**: Application-controlled synchronization patterns
+4. **Indexing & Sync Strategy Layer**: Two-dimensional control (Full vs. Grouped organization, Prefetch vs. OnDemand fetch, header properties for browsing)
 
 ### 3.3. Key Architectural Decisions
 

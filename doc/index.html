@@ -3,174 +3,718 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locorda - RDF Vocabularies and Mappings</title>
+    <title>Locorda - Sync Offline-First Apps</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            margin: 2rem auto; 
-            max-width: 800px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6; 
-            color: #333;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        h1, h2 { color: #2c3e50; }
-        h1 { border-bottom: 3px solid #3498db; padding-bottom: 0.5rem; }
-        .intro { 
-            background: #f8f9fa; 
-            padding: 1.5rem; 
-            border-radius: 8px; 
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 4rem 2rem;
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero .tagline {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.95;
+        }
+        
+        .hero .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Main Content */
+        .content {
+            background: white;
+        }
+        
+        section {
+            padding: 5rem 2rem;
+        }
+        
+        section:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .section-intro {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+        
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        /* Code Example */
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 2rem;
+            border-radius: 12px;
+            overflow-x: auto;
             margin: 2rem 0;
-            border-left: 4px solid #3498db;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .section { 
-            margin: 2rem 0; 
+        
+        .code-example pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .code-comment {
+            color: #75715e;
+        }
+        
+        .code-keyword {
+            color: #f92672;
+        }
+        
+        .code-string {
+            color: #e6db74;
+        }
+        
+        .code-class {
+            color: #66d9ef;
+        }
+        
+        .code-annotation {
+            color: #a6e22e;
+        }
+        
+        /* Architecture Diagram */
+        .architecture {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 3rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+        
+        .architecture-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .layer {
             background: white;
             padding: 1.5rem;
-            border: 1px solid #e9ecef;
             border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        ul { list-style-type: none; padding: 0; }
-        li { 
-            margin: 0.75rem 0; 
-            padding: 0.5rem;
-            background: #f8f9fa;
-            border-radius: 4px;
+        
+        .layer h4 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
         }
-        a { color: #3498db; text-decoration: none; font-weight: 500; }
-        a:hover { text-decoration: underline; color: #2980b9; }
-        .file-description { 
-            font-size: 0.9em; 
-            color: #666; 
-            margin-top: 0.25rem;
+        
+        .layer p {
+            color: #666;
+            font-size: 0.95rem;
         }
-        .usage-note {
-            background: #e8f5e8;
-            border: 1px solid #c3e6c3;
-            padding: 1rem;
-            border-radius: 6px;
-            margin: 1rem 0;
+        
+        /* Resources Section */
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
         }
-        .back-link {
-            text-align: center;
-            margin: 2rem 0;
-            padding: 1rem;
-            background: #f1f3f4;
-            border-radius: 6px;
+        
+        .resource-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .spec-link {
-            background: #e3f2fd;
-            border: 2px solid #2196f3;
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            margin: 2rem 0;
+        
+        .resource-card h3 {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
         }
-        .spec-link a {
-            font-size: 1.1em;
+        
+        .resource-list {
+            list-style: none;
+        }
+        
+        .resource-list li {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .resource-list li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #667eea;
             font-weight: bold;
-            color: #1976d2;
+        }
+        
+        .resource-list a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .resource-list a:hover {
+            text-decoration: underline;
+        }
+        
+        .resource-description {
+            display: block;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            padding-left: 0;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero .tagline {
+                font-size: 1.2rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+            }
+            
+            .features-grid,
+            .resources-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            section {
+                padding: 3rem 1rem;
+            }
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Development Banner */
+        .dev-banner {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 100;
+        }
+        
+        .dev-banner-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .dev-banner-text {
+            font-size: 1rem;
+            font-weight: 400;
+            opacity: 0.95;
         }
     </style>
 </head>
 <body>
-    <h1>🔗 Locorda - RDF Resources</h1>
-
-    <div class="intro">
-        <p><strong>Locorda: Sync offline-first apps using your user's remote storage</strong></p>
-        <p><strong>Locorda</strong> — the rope that connects and weaves local data together.</p>
-
-        <p>Locorda is both a specification and Dart library for synchronizing RDF data to Solid Pods and other passive storage backends using Conflict-free Replicated Data Types (CRDTs). This page provides access to the RDF vocabularies and semantic mapping files that define the framework's merge contracts and synchronization behavior.</p>
-
-        <p>These resources are designed for <strong>offline-first, interoperable applications</strong> following semantic web standards.</p>
+    <!-- Development Warning Banner -->
+    <div class="dev-banner">
+        <div class="dev-banner-title">⚠️ Early Development - Not Production Ready</div>
+        <div class="dev-banner-text">
+            Locorda is under active development. APIs may change, features are incomplete, and the specification is evolving.
+        </div>
     </div>
-
-    <div class="spec-link">
-        <a href="https://github.com/locorda/locorda/blob/main/spec/SPECIFICATION.md">📋 Read the Full Specification</a>
-        <p style="margin-top: 0.5rem; font-size: 0.9em; color: #666;">Complete technical specification with implementation details, algorithms, and examples</p>
-    </div>
-
-    <div class="section">
-        <h2>📚 RDF Vocabularies</h2>
-        <p>Custom RDF vocabularies defining CRDT algorithms, framework mechanics, indexing strategies, and synchronization protocols.</p>
-        
-        <ul>
-            <li>
-                <a href="vocab/crdt-algorithms.ttl">crdt-algorithms.ttl</a>
-                <div class="file-description">Defines CRDT merge algorithms (LWW-Register, FWW-Register, OR-Set, Immutable) in the <code>algo:</code> namespace.</div>
-            </li>
-            <li>
-                <a href="vocab/crdt-mechanics.ttl">crdt-mechanics.ttl</a>
-                <div class="file-description">Framework infrastructure vocabulary (<code>crdt:</code> namespace) for clocks, installations, deletions, and versioning metadata.</div>
-            </li>
-            <li>
-                <a href="vocab/idx.ttl">idx.ttl</a>
-                <div class="file-description">Indexing vocabulary (<code>idx:</code> namespace) for performance optimization with sharded indices and root/partitioned index strategies.</div>
-            </li>
-            <li>
-                <a href="vocab/sync.ttl">sync.ttl</a>
-                <div class="file-description">Synchronization vocabulary (<code>sync:</code> namespace) defining sync strategies, data exchange protocols, and merge contracts.</div>
-            </li>
-            <li>
-                <a href="vocab/merge-contract.ttl">merge-contract.ttl</a>
-                <div class="file-description">Merge contract definitions establishing public rules for CRDT behavior and property-level merge strategies.</div>
-            </li>
-            <li>
-                <a href="vocab/solid-extensions.ttl">solid-extensions.ttl</a>
-                <div class="file-description">Extensions to the Solid Protocol vocabulary for Locorda-specific features and backend integration.</div>
-            </li>
-        </ul>
-        
-        <div class="usage-note">
-            <strong>Usage:</strong> Reference these vocabularies by their HTTP URIs in your RDF data. For example, use <code>algo:LWWRegister</code> to specify Last-Writer-Wins merge behavior for a property.
+    
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="container">
+            <h1>🔗 Locorda</h1>
+            <p class="tagline">Sync offline-first apps using your user's remote storage</p>
+            <p class="subtitle">The rope that connects and weaves local data together</p>
+            
+            <div class="cta-buttons">
+                <a href="#get-started" class="btn btn-primary">Get Started</a>
+                <a href="https://github.com/locorda/locorda" class="btn btn-secondary">View on GitHub</a>
+                <a href="example/personal_notes_app/" class="btn btn-secondary">Try Live Demo</a>
+            </div>
         </div>
     </div>
 
-    <div class="section">
-        <h2>🎯 Semantic Mappings</h2>
-        <p>Mapping files defining CRDT merge contracts for specific application domains. These establish the semantic rules for how different types of data should merge during synchronization.</p>
-        
-        <ul>
-            <li>
-                <a href="mappings/core-v1.ttl">core-v1.ttl</a>
-                <div class="file-description">Essential CRDT mappings imported by all other mapping files. Defines fundamental merge behaviors for common RDF properties.</div>
-            </li>
-            <li>
-                <a href="mappings/client-installation-v1.ttl">client-installation-v1.ttl</a>
-                <div class="file-description">Mappings for client installation and device management data structures.</div>
-            </li>
-            <li>
-                <a href="mappings/index-v1.ttl">index-v1.ttl</a>
-                <div class="file-description">Mappings specific to indexing data structures and performance optimization metadata.</div>
-            </li>
-            <li>
-                <a href="mappings/shard-v1.ttl">shard-v1.ttl</a>
-                <div class="file-description">Mappings for data sharding strategies and distributed index management.</div>
-            </li>
-        </ul>
-        
-        <div class="usage-note">
-            <strong>Integration:</strong> Applications import relevant mapping files to establish merge contracts. Start with <code>core-v1.ttl</code> and add domain-specific mappings as needed.
+    <!-- Main Content -->
+    <div class="content">
+        <!-- What is Locorda -->
+        <section id="about">
+            <div class="container">
+                <h2>What is Locorda?</h2>
+                <p class="section-intro">
+                    Locorda is a Dart/Flutter library for building <strong>offline-first applications</strong> 
+                    that sync seamlessly with <strong>passive storage backends</strong> like Solid Pods, Google Drive, 
+                    or any file storage system. It uses <strong>Conflict-free Replicated Data Types (CRDTs)</strong> 
+                    to ensure safe collaboration without coordination, and stores all data as clean, 
+                    <strong>semantic RDF</strong> for maximum interoperability.
+                </p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Offline-First</h3>
+                        <p>Your app works completely offline. Full functionality without any network connection. Sync happens automatically when connectivity is available.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>CRDT Conflict Resolution</h3>
+                        <p>State-based CRDT algorithms ensure safe collaboration without coordination. Concurrent edits merge automatically with predictable outcomes.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🌐</div>
+                        <h3>Semantic Interoperability</h3>
+                        <p>All data stored as clean RDF using standard vocabularies (schema.org). Your data is semantic, portable, and interoperable.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Performance at Scale</h3>
+                        <p>Flexible indexing (Full vs. Grouped) and fetch strategies (Prefetch vs. OnDemand) handle datasets from 100 to 100,000+ resources. Smart sharding and header properties enable efficient partial sync.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>User Data Ownership</h3>
+                        <p>Users bring their own backend (Solid Pod, Google Drive, etc.). Privacy-preserving architecture maintains complete user data control.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Developer Friendly</h3>
+                        <p>Simple annotations define merge strategies. Work with plain Dart objects. Automatic RDF conversion. Clean, intuitive API.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Get Started -->
+        <section id="get-started">
+            <div class="container">
+                <h2>Get Started in Minutes</h2>
+                <p class="section-intro">
+                    Add Locorda to your Flutter project and start building offline-first apps with automatic sync.
+                </p>
+                
+                <div class="code-example">
+                    <pre><code><span class="code-comment">// 1. Add to pubspec.yaml</span>
+<span class="code-keyword">dependencies:</span>
+  <span class="code-string">locorda: ^0.1.0</span>
+  <span class="code-string">locorda_drift: ^0.1.0</span>  <span class="code-comment"># SQLite storage backend</span>
+
+<span class="code-comment">// 2. Define your model with CRDT annotations</span>
+<span class="code-annotation">@RdfGlobalResource</span>(IriTerm(<span class="code-string">'https://example.org/Note'</span>))
+<span class="code-keyword">class</span> <span class="code-class">Note</span> {
+  <span class="code-annotation">@RdfProperty</span>(Schema.identifier)
+  <span class="code-annotation">@RdfIriPart</span>()
+  <span class="code-class">String</span> id;
+
+  <span class="code-annotation">@RdfProperty</span>(Schema.name)
+  <span class="code-annotation">@CrdtLwwRegister</span>()  <span class="code-comment">// Last writer wins for title</span>
+  <span class="code-class">String</span> title;
+
+  <span class="code-annotation">@RdfProperty</span>(Schema.text)
+  <span class="code-annotation">@CrdtLwwRegister</span>()  <span class="code-comment">// Last writer wins for content</span>
+  <span class="code-class">String</span> content;
+
+  <span class="code-annotation">@RdfProperty</span>(Schema.keywords)
+  <span class="code-annotation">@CrdtOrSet</span>()  <span class="code-comment">// Tags can be added/removed independently</span>
+  <span class="code-class">Set&lt;String&gt;</span> tags;
+
+  Note({<span class="code-keyword">required</span> <span class="code-keyword">this</span>.id, <span class="code-keyword">required</span> <span class="code-keyword">this</span>.title, 
+       <span class="code-keyword">required</span> <span class="code-keyword">this</span>.content, <span class="code-class">Set&lt;String&gt;</span>? tags})
+      : tags = tags ?? {};
+}
+
+<span class="code-comment">// 3. Set up the sync system</span>
+<span class="code-keyword">final</span> locorda = <span class="code-keyword">await</span> Locorda.create(
+  storage: DriftStorage(
+    native: DriftNativeOptions(),
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse(<span class="code-string">'sqlite3.wasm'</span>),
+      driftWorker: Uri.parse(<span class="code-string">'drift_worker.js'</span>),
+    ),
+  ),
+  backends: [
+    SolidBackend(auth: solidAuth),  <span class="code-comment">// Optional: for Solid Pod sync</span>
+  ],
+  mapperInitializer: (context) =&gt; initRdfMapper(
+    rdfMapper: context.baseRdfMapper,
+    <span class="code-comment">// ... further mapper setup</span>
+  ),
+  config: LocordaConfig(
+    resources: [
+      ResourceConfig(
+        type: Note,
+        crdtMapping: Uri.parse(<span class="code-string">'$appBaseUrl/mappings/note-v1.ttl'</span>),
+        indices: [FullIndex(itemFetchPolicy: ItemFetchPolicy.prefetch)],
+      ),
+    ],
+  ),
+);
+
+<span class="code-comment">// 4. Set up hydration - Locorda syncs, you store in your database</span>
+<span class="code-keyword">final</span> subscription = <span class="code-keyword">await</span> locorda.hydrateWithCallbacks&lt;Note&gt;(
+  getCurrentCursor: () =&gt; database.getCursor(<span class="code-string">'note'</span>),
+  onUpdate: (note) =&gt; database.saveNote(note),
+  onDelete: (id) =&gt; database.deleteNote(id),
+  onCursorUpdate: (cursor) =&gt; database.saveCursor(<span class="code-string">'note'</span>, cursor),
+);
+
+<span class="code-comment">// 5. Use it! Works offline immediately</span>
+<span class="code-keyword">final</span> note = Note(
+  id: <span class="code-string">'note-1'</span>,
+  title: <span class="code-string">'My First Note'</span>,
+  content: <span class="code-string">'This works offline and syncs to Solid Pods!'</span>,
+  tags: {<span class="code-string">'offline-first'</span>, <span class="code-string">'crdt'</span>},
+);
+
+<span class="code-keyword">await</span> locorda.save(note);  <span class="code-comment">// Locorda handles sync, hydration updates your DB</span>
+
+<span class="code-comment">// 6. Query YOUR database (Locorda is not a database!)</span>
+<span class="code-keyword">final</span> notes = <span class="code-keyword">await</span> database.getAllNotes();</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture -->
+        <section id="architecture">
+            <div class="container">
+                <h2>4-Layer Architecture</h2>
+                <p class="section-intro">
+                    Locorda follows a clean separation of concerns with four distinct layers working together.
+                </p>
+                
+                <div class="architecture">
+                    <div class="architecture-layers">
+                        <div class="layer">
+                            <h4>1. Data Resource Layer</h4>
+                            <p>Clean RDF resources using standard vocabularies (schema.org). Your domain data stays semantic and portable.</p>
+                        </div>
+                        
+                        <div class="layer">
+                            <h4>2. Merge Contract Layer</h4>
+                            <p>Public CRDT rules define conflict resolution. Property-level merge strategies via <code>sync:</code> and <code>algo:</code> vocabularies.</p>
+                        </div>
+                        
+                        <div class="layer">
+                            <h4>3. Indexing Layer</h4>
+                            <p>Efficient change detection and performance optimization. Sharded indices with FullIndex and GroupIndex strategies.</p>
+                        </div>
+                        
+                        <div class="layer">
+                            <h4>4. Indexing & Sync Strategy Layer</h4>
+                            <p>Two-dimensional control: Index organization (Full vs. Grouped) determines data partitioning, fetch strategy (Prefetch vs. OnDemand) controls loading behavior. Header properties enable browsing without full document downloads.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p style="text-align: center; margin-top: 2rem; color: #666;">
+                    Locorda acts as a synchronization "add-on" for passive storage backends while you retain 
+                    full control over local storage and querying.
+                </p>
+            </div>
+        </section>
+
+        <!-- CRDT Strategies -->
+        <section id="crdt">
+            <div class="container">
+                <h2>CRDT Merge Strategies</h2>
+                <p class="section-intro">
+                    Choose the right merge strategy for each property to get predictable conflict resolution.
+                </p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>@CrdtLwwRegister()</h3>
+                        <p><strong>Last Writer Wins</strong> - The most recent write wins in conflicts. Perfect for titles, descriptions, single-value fields.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>@CrdtOrSet()</h3>
+                        <p><strong>Observed-Remove Set</strong> - Add/remove items independently. All additions merge, explicit removes are preserved. Great for tags, categories, lists.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>@CrdtImmutable()</h3>
+                        <p><strong>Immutable</strong> - Never changes after creation. Use for creation timestamps, IDs, or any data that should never be modified.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>@CrdtGRegister()</h3>
+                        <p><strong>Greatest Value Wins</strong> - Maximum value wins in conflicts. Useful for counters, progress tracking, or monotonically increasing values.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RDF Resources -->
+        <section id="resources">
+            <div class="container">
+                <h2>RDF Vocabularies & Mappings</h2>
+                <p class="section-intro">
+                    Semantic resources defining the framework's behavior and interoperability contracts.
+                </p>
+                
+                <div class="resources-grid">
+                    <div class="resource-card">
+                        <h3>📚 Vocabularies</h3>
+                        <ul class="resource-list">
+                            <li>
+                                <a href="vocab/crdt-algorithms.ttl">crdt-algorithms.ttl</a>
+                                <span class="resource-description">CRDT merge algorithms (LWW-Register, OR-Set, etc.)</span>
+                            </li>
+                            <li>
+                                <a href="vocab/crdt-mechanics.ttl">crdt-mechanics.ttl</a>
+                                <span class="resource-description">Framework infrastructure (clocks, installations)</span>
+                            </li>
+                            <li>
+                                <a href="vocab/idx.ttl">idx.ttl</a>
+                                <span class="resource-description">Indexing strategies and optimization</span>
+                            </li>
+                            <li>
+                                <a href="vocab/sync.ttl">sync.ttl</a>
+                                <span class="resource-description">Synchronization protocols and contracts</span>
+                            </li>
+                            <li>
+                                <a href="vocab/merge-contract.ttl">merge-contract.ttl</a>
+                                <span class="resource-description">Public CRDT merge rules</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="resource-card">
+                        <h3>🎯 Semantic Mappings</h3>
+                        <ul class="resource-list">
+                            <li>
+                                <a href="mappings/core-v1.ttl">core-v1.ttl</a>
+                                <span class="resource-description">Essential CRDT mappings (imported by all apps)</span>
+                            </li>
+                            <li>
+                                <a href="mappings/client-installation-v1.ttl">client-installation-v1.ttl</a>
+                                <span class="resource-description">Device management data structures</span>
+                            </li>
+                            <li>
+                                <a href="mappings/index-v1.ttl">index-v1.ttl</a>
+                                <span class="resource-description">Indexing data structures</span>
+                            </li>
+                            <li>
+                                <a href="mappings/shard-v1.ttl">shard-v1.ttl</a>
+                                <span class="resource-description">Data sharding strategies</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Links -->
+        <section id="links" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);">
+            <div class="container">
+                <h2>Learn More</h2>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <h3>Full Specification</h3>
+                        <p>Complete technical specification with implementation details, algorithms, and examples.</p>
+                        <p style="margin-top: 1rem;">
+                            <a href="https://github.com/locorda/locorda/blob/main/spec/SPECIFICATION.md" class="btn btn-primary" style="display: inline-block; padding: 0.75rem 1.5rem; font-size: 1rem;">Read the Spec</a>
+                        </p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🚀</div>
+                        <h3>Personal Notes App</h3>
+                        <p>Live demo showcasing offline-first operation with optional Solid Pod synchronization.</p>
+                        <p style="margin-top: 1rem;">
+                            <a href="example/personal_notes_app/" class="btn btn-primary" style="display: inline-block; padding: 0.75rem 1.5rem; font-size: 1rem;">Try the Demo</a>
+                        </p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">💻</div>
+                        <h3>GitHub Repository</h3>
+                        <p>Browse the source code, report issues, contribute, and star the project.</p>
+                        <p style="margin-top: 1rem;">
+                            <a href="https://github.com/locorda/locorda" class="btn btn-primary" style="display: inline-block; padding: 0.75rem 1.5rem; font-size: 1rem;">View on GitHub</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">
+                <strong>Locorda</strong> — The rope that connects and weaves local data together
+            </p>
+            <p>
+                Build offline-first applications that sync seamlessly to passive storage backends.
+            </p>
+            <p style="margin-top: 2rem;">
+                <a href="https://github.com/locorda/locorda">GitHub</a> • 
+                <a href="https://github.com/locorda/locorda/blob/main/spec/SPECIFICATION.md">Specification</a> • 
+                <a href="https://pub.dev/packages/locorda">pub.dev</a>
+            </p>
+            <p style="margin-top: 2rem; opacity: 0.7; font-size: 0.9rem;">
+                © 2025 Locorda Project • MIT License
+            </p>
         </div>
-    </div>
-
-    <div class="section">
-        <h2>🏗️ Architecture Overview</h2>
-        <p>The framework follows a <strong>4-layer architecture</strong>:</p>
-        <ol>
-            <li><strong>Data Resource Layer:</strong> Clean, standard RDF vocabularies</li>
-            <li><strong>Merge Contract Layer:</strong> Public CRDT rules via vocabularies</li>
-            <li><strong>Indexing Layer:</strong> Performance optimization with sharded indices</li>
-            <li><strong>Sync Strategy Layer:</strong> Client-side synchronization behaviors</li>
-        </ol>
-        <p>Locorda acts as a synchronization "add-on" for passive storage backends while developers retain full control over local storage and querying.</p>
-    </div>
-
-    <div class="spec-link">
-        <a href="example/personal_notes_app/">🚀 Try the Personal Notes App</a>
-        <p style="margin-top: 0.5rem; font-size: 0.9em; color: #666;">Live demo showcasing offline-first operation with optional Solid Pod synchronization</p>
-    </div>
-
-    <div class="back-link">
-        <a href="https://github.com/locorda/locorda">🔙 Back to GitHub Repository</a>
-    </div>
+    </footer>
 </body>
 </html>
