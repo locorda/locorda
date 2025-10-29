@@ -54,7 +54,7 @@ void main() async {
   final storage = DriftStorage(path: 'notes.db');
   
   // Set up sync system
-  final sync = await LocordaSync.setup(storage: storage);
+  final sync = await Locorda.setup(storage: storage);
   
   // Create and save a note (works offline!)
   final note = Note(

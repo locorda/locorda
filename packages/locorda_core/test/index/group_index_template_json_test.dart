@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:locorda_core/src/config/sync_graph_config.dart';
+import 'package:locorda_core/src/config/sync_engine_config.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_parser.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
@@ -34,7 +34,7 @@ void main() {
     );
     // Parser without knownConfig for these tests (testing unknown indices)
     // Empty config means all indices are treated as unknown
-    final emptyConfig = SyncGraphConfig(resources: []);
+    final emptyConfig = SyncEngineConfig(resources: []);
     parser = IndexParser(knownConfig: emptyConfig, rdfGenerator: generator);
   });
 
@@ -256,7 +256,7 @@ Future<void> _executeRoundtripTest(
           as String
       : 'parsed';
 
-  final configForIri = GroupIndexGraphConfig(
+  final configForIri = GroupIndexData(
     localName: localName,
     groupingProperties: parsed.config.groupingProperties,
   );
@@ -379,7 +379,7 @@ Future<void> _executeCanonicalFormatTest(
   }
 }
 
-GroupIndexGraphConfig _configFromJson(Map<String, dynamic> json) {
+GroupIndexData _configFromJson(Map<String, dynamic> json) {
   final localName = json['localName'] as String;
   final groupingPropsJson = json['groupingProperties'] as List<dynamic>;
 
@@ -409,7 +409,7 @@ GroupIndexGraphConfig _configFromJson(Map<String, dynamic> json) {
     );
   }).toList();
 
-  return GroupIndexGraphConfig(
+  return GroupIndexData(
     localName: localName,
     groupingProperties: groupingProperties,
   );

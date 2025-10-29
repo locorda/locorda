@@ -29,14 +29,14 @@ class ResourceConfigBase {
 }
 
 /// Configuration for the entire sync system organized by resources.
-class SyncConfigBase {
+class ConfigBase {
   /// All resource configurations for the application.
   final List<ResourceConfigBase> resources;
 
   /// Configuration for automatic synchronization behavior.
   final AutoSyncConfig autoSyncConfig;
 
-  const SyncConfigBase({
+  const ConfigBase({
     required this.resources,
     this.autoSyncConfig = const AutoSyncConfig.disabled(),
   });

@@ -4,7 +4,7 @@
 
 ### Priority 1: Document Persistence (Core Foundation)
 - [x] Storage Layer: save documents
-- [x] LocordaGraphSync: save base implementation
+- [x] SyncEngine: save base implementation
 - [x] merge-contract: Implement loading and merging the mappings documents and make them usable via dart classes
 - [x] merge-contract: In-memory caching of loaded merge contracts (LRU cache to avoid repeated expensive loading on every save)
 - [x] Use data from mapping documents to build the stop-word list to correctly separate appGraph from framework data in processing of the old stored document
@@ -26,13 +26,13 @@
 - [x] What about tombstones for blank nodes - only possible for identified, exceptions else
 - [x] Tests for error cases
 - [x] test clock merge during save (e.g. when a foreign clock entry existed) => save_11 test
-- [x] Use the testing framework to thoroughly test LocordaGraphSync.save()
+- [x] Use the testing framework to thoroughly test SyncEngine.save()
 - [x] Concept addition: I think we need to revisit the identified blank node concept - Pure, path based should work as well => proposal 008 and impl.
 - [x] Implement resource identity
 - [x] Implement (optional) external IRI for better DX 
 - [x] Change 008 proposal slightly again: we really should use the path identification by default
 - [x] Implement something like `IriStrategy(provideAs: "documentIri")` in rdf_mapper_*, so that we can have sub-annotations here that work together smoothly, just marking as PodResource and PodSubResource. But beware: the IRI of the root resource is not 100% what we want, unless we actually have an extra IriStrategy.relative() with separate templates.
-- [x] LocordaSync: Make sure that all patterns like IRI-Identified Sub-Resources, identified blank nodes and unidentified blank nodes are shown. Ideas: Weblink in Note for (classical) identified blank node, Comment in Note for IRI-Identified sub-content, CategoryDisplaySettings in Category for single-path-identified blank node
+- [x] Locorda: Make sure that all patterns like IRI-Identified Sub-Resources, identified blank nodes and unidentified blank nodes are shown. Ideas: Weblink in Note for (classical) identified blank node, Comment in Note for IRI-Identified sub-content, CategoryDisplaySettings in Category for single-path-identified blank node
 - [x] Storage Layer: save locorda indices
 - [x] Implement locorda index files in db and fill/update them on save
 - [x] Implement saving/loading/merging documents with local storage persistence
@@ -75,7 +75,7 @@
     - ✅ Entry-level batching respecting initialBatchSize
     - ✅ Efficient change detection using timestamps (no diff algorithms needed)
   - **Result:** Only changed entries are re-emitted, not entire shards
-- [x] Adjust example app and LocordaSync to semantic changes wrt index item graphs - they now use the resource iri, not the entry iri!
+- [x] Adjust example app and Locorda to semantic changes wrt index item graphs - they now use the resource iri, not the entry iri!
 
 
 ### Priority 4: Backend Implementations
@@ -163,5 +163,5 @@
 - [x] Migrate to W3ID.org permanent IRIs
 - [x] Clarify: can we include localhost into the client-config.json document to support local debugging? Or should we rather not do that since it would open up our app to attacks? => better not, plus: removed linux/windows support and adviced against those platforms
 - [x] Refactor: Solid should only be one possible backend - rename from solid_crdt_sync to locorda and split the spec as well
-- [x] Refactor: I am thinking about adding something like LocordaGraphSync which would be similar to LocordaSync, but not based on dart objects + mapper, but on pure RdfGraph instances. The Idea is, that LocordaGraphSync should be used by LocordaSync for the actual work, so that LocordaSync itself adds the dart object conversion on top of the more basic sync service. Clarify if I want to do it now or possibly later => done
+- [x] Refactor: I am thinking about adding something like SyncEngine which would be similar to Locorda, but not based on dart objects + mapper, but on pure RdfGraph instances. The Idea is, that SyncEngine should be used by Locorda for the actual work, so that Locorda itself adds the dart object conversion on top of the more basic sync service. Clarify if I want to do it now or possibly later => done
 - [x] Clarify: What is the most-user-friendly way to approach http? should we simply assume that we are provided with http client, or is it best practice for a library like ours to abstract this away? Remember: http would need to be integrated with solid DPoP, is this in our control, or should we offload it to the developer? => http.Client is an interface, let users optionally provide an instance - this is common practice and other networking implementations have adapters for this interface.

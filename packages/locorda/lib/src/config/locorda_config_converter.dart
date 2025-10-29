@@ -1,29 +1,29 @@
-import 'package:locorda/src/config/sync_config.dart';
-import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda/src/config/locorda_config.dart';
+import 'package:locorda/src/config/locorda_config_util.dart';
 import 'package:locorda_core/locorda_core.dart';
 
-IndexItemGraphConfig? _toIndexItemGraphConfig(IndexItem? item) {
+IndexItemData? _toIndexItemGraphConfig(IndexItem? item) {
   if (item == null) return null;
-  return IndexItemGraphConfig(item.properties);
+  return IndexItemData(item.properties);
 }
 
-FullIndexGraphConfig _toFullIndexGraphConfig(
+FullIndexData _toFullIndexGraphConfig(
         ResourceConfig parentConfig, FullIndex index) =>
-    FullIndexGraphConfig(
+    FullIndexData(
       localName: getIndexName(parentConfig, index),
       item: _toIndexItemGraphConfig(index.item),
       itemFetchPolicy: index.itemFetchPolicy,
     );
 
-GroupIndexGraphConfig _toGroupIndexGraphConfig(
+GroupIndexData _toGroupIndexGraphConfig(
         ResourceConfig parentConfig, GroupIndex index) =>
-    GroupIndexGraphConfig(
+    GroupIndexData(
       localName: getIndexName(parentConfig, index),
       item: _toIndexItemGraphConfig(index.item),
       groupingProperties: index.groupingProperties,
     );
 
-CrdtIndexGraphConfig _toCrdtIndexGraphConfig(
+CrdtIndexData _toCrdtIndexGraphConfig(
     ResourceConfig parentConfig, CrdtIndex index) {
   if (index is FullIndex) {
     return _toFullIndexGraphConfig(parentConfig, index);
@@ -34,25 +34,25 @@ CrdtIndexGraphConfig _toCrdtIndexGraphConfig(
   }
 }
 
-ResourceGraphConfig _toResourceGraphConfig(
+ResourceConfigData _toResourceGraphConfig(
     ResourceConfig resource, ResourceTypeCache resourceTypeCache) {
   final typeIri = resourceTypeCache.getIri(resource.type);
   final indices = resource.indices
       .map((index) => _toCrdtIndexGraphConfig(resource, index))
       .toList();
 
-  return ResourceGraphConfig(
+  return ResourceConfigData(
     typeIri: typeIri,
     crdtMapping: resource.crdtMapping,
     indices: indices,
   );
 }
 
-SyncGraphConfig toSyncGraphConfig(
-    SyncConfig config, ResourceTypeCache resourceTypeCache) {
+SyncEngineConfig toSyncEngineConfig(
+    LocordaConfig config, ResourceTypeCache resourceTypeCache) {
   final resources = config.resources
       .map((resource) => _toResourceGraphConfig(resource, resourceTypeCache))
       .toList();
 
-  return SyncGraphConfig(resources: resources);
+  return SyncEngineConfig(resources: resources);
 }

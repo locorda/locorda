@@ -19,7 +19,7 @@ class NotesListScreen extends StatefulWidget {
   final NotesService notesService;
   final CategoriesService categoriesService;
   final SolidAuth solidAuth;
-  final LocordaSync syncSystem;
+  final Locorda syncSystem;
 
   const NotesListScreen({
     super.key,

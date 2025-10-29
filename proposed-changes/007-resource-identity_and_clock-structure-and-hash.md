@@ -140,7 +140,7 @@ App B (namespace: com.app-b:user-alice):
 // Internal: tag:locorda.dev,2025:l:{ns-b64}:{type-b64}:{id-b64}#it
 // App view: https://my.app/alice/recipes/tomato-soup
 
-// LocordaGraphSync handles translation automatically
+// SyncEngine handles translation automatically
 final recipe = await sync.get<Recipe>("tomato-soup");
 // App never sees internal IRIs
 ```
@@ -155,7 +155,7 @@ final recipe = await sync.get<Recipe>("tomato-soup");
    - **Recommendation**: Separate component for clarity
 
 2. **Namespace control**: When/how does app set namespace?
-   - During LocordaGraphSync initialization?
+   - During SyncEngine initialization?
    - Per-resource via API?
    - **Recommendation**: Global default + per-resource override
 

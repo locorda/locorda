@@ -34,7 +34,7 @@ import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rxdart/rxdart.dart';
 
-final _log = Logger('LocordaGraphSync');
+final _log = Logger('StandardSyncEngine');
 
 typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
 typedef HydrationBatch = ({
@@ -48,10 +48,10 @@ typedef HydrationBatch = ({
 /// Provides a simple, high-level API for offline-first applications with
 /// optional Solid Pod synchronization. Handles RDF mapping, storage,
 /// and sync operations transparently.
-class StandardLocordaGraphSync implements LocordaGraphSync {
+class StandardSyncEngine implements SyncEngine {
   final Storage _storage;
   final IndexManager _indexManager;
-  final SyncGraphConfig _config;
+  final SyncEngineConfig _config;
   final CrdtDocumentManager _crdtDocumentManager;
   final IriTranslator _iriTranslator;
   final GroupIndexGraphSubscriptionManager _groupIndexManager;
@@ -62,10 +62,10 @@ class StandardLocordaGraphSync implements LocordaGraphSync {
   /// Access the sync manager for manual sync triggering and status monitoring.
   SyncManager get syncManager => _syncManager;
 
-  StandardLocordaGraphSync._({
+  StandardSyncEngine._({
     required Storage storage,
     required IndexManager indexManager,
-    required SyncGraphConfig config,
+    required SyncEngineConfig config,
     required ResourceLocator resourceLocator,
     required CrdtDocumentManager crdtDocumentManager,
     required IndexRdfGenerator indexRdfGenerator,
@@ -95,10 +95,10 @@ class StandardLocordaGraphSync implements LocordaGraphSync {
   /// with their paths, CRDT mappings, and indices all defined together.
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
-  static Future<LocordaGraphSync> setup({
+  static Future<SyncEngine> create({
     required List<Backend> backends,
     required Storage storage,
-    required SyncGraphConfig config,
+    required SyncEngineConfig config,
     PhysicalTimestampFactory? physicalTimestampFactory,
     InstallationIdFactory? installationIdFactory,
     IriTermFactory? iriFactory,
@@ -116,7 +116,7 @@ class StandardLocordaGraphSync implements LocordaGraphSync {
     config = buildEffectiveConfig(config);
 
     // Validate configuration before proceeding
-    final configValidationResult = SyncGraphConfigValidator().validate(config);
+    final configValidationResult = SyncEngineConfigValidator().validate(config);
 
     // Throw if any validation failed
     configValidationResult.throwIfInvalid();
@@ -239,7 +239,7 @@ class StandardLocordaGraphSync implements LocordaGraphSync {
         autoSyncConfig: config.autoSyncConfig,
         physicalTimestampFactory: physicalTimestampFactory);
 
-    final sync = StandardLocordaGraphSync._(
+    final sync = StandardSyncEngine._(
         storage: storage,
         indexManager: indexManager,
         config: config,
@@ -555,7 +555,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
       final (cursorTimestamp, cursorIndexSetVersionId) = _parseCursor(cursor);
       final startCursor = cursorTimestamp ?? 0;
       switch (indexConfig) {
-        case GroupIndexGraphConfig _:
+        case GroupIndexData _:
           // For GroupIndex: Use reactive subscriptions that automatically rebuild the stream
           // when subscriptions change.
           final templateIri = _indexRdfGenerator.generateGroupIndexTemplateIri(
@@ -571,7 +571,7 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
                     cursorIndexSetVersionId: cursorIndexSetVersionId,
                     initialBatchSize: initialBatchSize,
                   ));
-        case FullIndexGraphConfig _: // FullIndex: there is just a single index
+        case FullIndexData _: // FullIndex: there is just a single index
           final indexIri =
               _indexRdfGenerator.generateFullIndexIri(indexConfig, typeIri);
           yield* _doHydrateIndexEntryStream(

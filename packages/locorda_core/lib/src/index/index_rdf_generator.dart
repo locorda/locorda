@@ -2,10 +2,10 @@
 ///
 /// This class translates Dart index configuration objects (FullIndexConfigBase,
 /// GroupIndexConfigBase) into RDF graphs that can be saved as ManagedDocuments
-/// using LocordaGraphSync.save().
+/// using SyncEngine.save().
 library;
 
-import 'package:locorda_core/src/config/sync_graph_config.dart';
+import 'package:locorda_core/src/config/sync_engine_config.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
@@ -62,7 +62,7 @@ class IndexRdfGenerator {
   /// );
   /// ```
   RdfGraph generateFullIndex(
-      {required FullIndexGraphConfig config,
+      {required FullIndexData config,
       required IriTerm resourceIri,
       required IriTerm resourceType,
       required IriTerm installationIri,
@@ -113,16 +113,15 @@ class IndexRdfGenerator {
     return triples.toRdfGraph();
   }
 
-  IriTerm generateIndexOrTemplateIri(
-          CrdtIndexGraphConfig index, IriTerm typeIri) =>
+  IriTerm generateIndexOrTemplateIri(CrdtIndexData index, IriTerm typeIri) =>
       // FIXME: lru cache these IRIs?
       switch (index) {
-        FullIndexGraphConfig _ => generateFullIndexIri(index, typeIri),
-        GroupIndexGraphConfig() => generateGroupIndexTemplateIri(index, typeIri)
+        FullIndexData _ => generateFullIndexIri(index, typeIri),
+        GroupIndexData() => generateGroupIndexTemplateIri(index, typeIri)
       };
 
   IriTerm generateFullIndexIri(
-    FullIndexGraphConfig config,
+    FullIndexData config,
     IriTerm typeIri,
   ) {
     // FIXME: should we maybe cache these IRIs somewhere to avoid recomputing them?
@@ -141,7 +140,7 @@ class IndexRdfGenerator {
   /// The resource will use fragment identifier #it per the ManagedDocument pattern.
   /// Uses LocalResourceLocator to generate internal IRIs.
   RdfGraph generateGroupIndexTemplate({
-    required GroupIndexGraphConfig config,
+    required GroupIndexData config,
     required IriTerm resourceType,
     required IriTerm resourceIri,
     required IriTerm installationIri,
@@ -232,7 +231,7 @@ class IndexRdfGenerator {
   }
 
   IriTerm generateGroupIndexTemplateIri(
-      GroupIndexGraphConfig config, IriTerm typeIri) {
+      GroupIndexData config, IriTerm typeIri) {
     // FIXME: should we maybe cache these IRIs somewhere to avoid recomputing them?
 
     // Generate hash from grouping rule properties per specification

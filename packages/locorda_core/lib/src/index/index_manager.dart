@@ -30,7 +30,7 @@ class IndexManager {
   final IndexRdfGenerator _rdfGenerator;
   final IndexPropertyResolver _propertyResolver;
   final Storage _storage;
-  final SyncGraphConfig _config;
+  final SyncEngineConfig _config;
   final IriTerm _installationIri;
   final IndexDiscovery _indexDiscovery;
 
@@ -39,7 +39,7 @@ class IndexManager {
     required IndexRdfGenerator rdfGenerator,
     required Storage storage,
     required IriTerm installationIri,
-    required SyncGraphConfig config,
+    required SyncEngineConfig config,
     required IndexDiscovery indexDiscovery,
     required ResourceLocator resourceLocator,
   })  : _documentManager = crdtDocumentManager,
@@ -65,9 +65,9 @@ class IndexManager {
     for (final (indexConfig, resourceTypeIri) in _config.allIndicesInOrder) {
       // Create index based on type
       switch (indexConfig) {
-        case FullIndexGraphConfig _:
+        case FullIndexData _:
           await _createFullIndex(indexConfig, resourceTypeIri);
-        case GroupIndexGraphConfig _:
+        case GroupIndexData _:
           await _createGroupIndexTemplate(indexConfig, resourceTypeIri);
       }
 
@@ -79,7 +79,7 @@ class IndexManager {
 
   /// Creates a FullIndex with its initial shard.
   Future<void> _createFullIndex(
-    FullIndexGraphConfig config,
+    FullIndexData config,
     IriTerm resourceType,
   ) async {
     // Generate local ID from config
@@ -134,7 +134,7 @@ class IndexManager {
 
   /// Creates a GroupIndexTemplate.
   Future<void> _createGroupIndexTemplate(
-    GroupIndexGraphConfig config,
+    GroupIndexData config,
     IriTerm resourceType,
   ) async {
     final templateResourceIri =
@@ -165,7 +165,7 @@ class IndexManager {
   /// Creates a missing GroupIndex that was detected during shard determination.
   ///
   /// This is a public wrapper around _createGroupIndex() that can be called
-  /// by LocordaGraphSync to create GroupIndices that were reported as missing
+  /// by SyncEngine to create GroupIndices that were reported as missing
   /// during document save.
   ///
   /// Uses IndexDiscovery to load the GroupIndexTemplate configuration dynamically,
@@ -199,7 +199,7 @@ class IndexManager {
   /// Creates the GroupIndex document and its initial shard(s) based on the
   /// template's sharding configuration.
   Future<void> _createGroupIndex(
-    GroupIndexGraphConfig config,
+    GroupIndexData config,
     IriTerm typeIri,
     IriTerm templateIri,
     String groupKey,
@@ -322,7 +322,7 @@ class IndexManager {
   ///
   /// Similar to FullIndex but links back to GroupIndexTemplate via idx:basedOn
   RdfGraph _generateGroupIndex({
-    required GroupIndexGraphConfig config,
+    required GroupIndexData config,
     required IriTerm resourceType,
     required IriTerm resourceIri,
     required IriTerm templateIri,
@@ -462,7 +462,7 @@ class IndexManager {
     return headerProperties.isEmpty ? null : headerProperties;
   }
 
-  IriTerm getIndexOrTemplateIri(CrdtIndexGraphConfig index, IriTerm typeIri) =>
+  IriTerm getIndexOrTemplateIri(CrdtIndexData index, IriTerm typeIri) =>
       _rdfGenerator.generateIndexOrTemplateIri(index, typeIri);
 
   /// Removes entries from shards based on tombstones in idx:belongsToIndexShard.

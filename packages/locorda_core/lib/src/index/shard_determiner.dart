@@ -364,7 +364,7 @@ class ShardDeterminer {
     // Process each discovered index configuration
     for (final indexConfig in indexConfigs) {
       switch (indexConfig) {
-        case FullIndexGraphConfig _:
+        case FullIndexData _:
           final result = await _determineShardsForFullIndex(
             indexConfig,
             resourceIri,
@@ -374,7 +374,7 @@ class ShardDeterminer {
           shards.addAll(result.shards);
           missingIndexDocuments.addAll(result.missingIndexDocuments);
 
-        case GroupIndexGraphConfig _:
+        case GroupIndexData _:
           final result = await _determineShardsForGroupIndex(
             indexConfig,
             resourceIri,
@@ -410,7 +410,7 @@ class ShardDeterminer {
   ///
   /// Returns: ShardDeterminationResult with shards and missing documents
   Future<ShardDeterminationResult> _determineShardsForFullIndex(
-    FullIndexGraphConfig config,
+    FullIndexData config,
     IriTerm resourceIri,
     IriTerm typeIri, {
     required ShardDeterminationMode mode,
@@ -511,7 +511,7 @@ class ShardDeterminer {
   ///
   /// Returns: ShardDeterminationResult with shards and missing components
   Future<ShardDeterminationResult> _determineShardsForGroupIndex(
-    GroupIndexGraphConfig config,
+    GroupIndexData config,
     IriTerm resourceIri,
     IriTerm typeIri,
     RdfGraph internalAppData, {

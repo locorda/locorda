@@ -124,7 +124,7 @@ Key validation rules implemented:
 4. **Index Configuration**: Local names must be unique per index item type across all resources, GroupIndex must have grouping properties
 5. **RDF Type Collision Detection**: Validates that each Dart type maps to a unique RDF type IRI using the RDF mapper
 
-The validation is automatically called in `LocordaSync.setup()` and will throw a detailed exception if any issues are found, allowing developers to fix all configuration problems in a single iteration.
+The validation is automatically called in `Locorda.setup()` and will throw a detailed exception if any issues are found, allowing developers to fix all configuration problems in a single iteration.
 
 See `packages/locorda_core/lib/src/config/validation.dart` for implementation details.
 

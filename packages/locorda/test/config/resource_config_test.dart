@@ -71,7 +71,7 @@ void main() {
         ),
       ];
 
-      final config = SyncConfig(resources: resources);
+      final config = LocordaConfig(resources: resources);
 
       expect(config.resources, hasLength(2));
       expect(config.resources, equals(resources));
@@ -81,7 +81,7 @@ void main() {
       final docIndex = FullIndex(localName: 'documents');
       final categoryIndex = FullIndex(localName: 'categories');
 
-      final config = SyncConfig(
+      final config = LocordaConfig(
         resources: [
           ResourceConfig(
             type: TestDocument,
@@ -103,7 +103,7 @@ void main() {
     });
 
     test('should get empty list when no indices exist', () {
-      final config = SyncConfig(
+      final config = LocordaConfig(
         resources: [
           ResourceConfig(
             type: TestDocument,
@@ -126,7 +126,7 @@ void main() {
         crdtMapping: Uri.parse('https://example.com/category.ttl'),
       );
 
-      final config = SyncConfig(resources: [docConfig, categoryConfig]);
+      final config = LocordaConfig(resources: [docConfig, categoryConfig]);
 
       expect(config.getResourceConfig(TestDocument), equals(docConfig));
       expect(config.getResourceConfig(TestCategory), equals(categoryConfig));
@@ -134,7 +134,7 @@ void main() {
     });
 
     test('should return null for non-existent resource type', () {
-      final config = SyncConfig(
+      final config = LocordaConfig(
         resources: [
           ResourceConfig(
             type: TestDocument,

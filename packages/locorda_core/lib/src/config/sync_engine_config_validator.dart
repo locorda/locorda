@@ -9,14 +9,14 @@ import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 /// Configuration for the entire sync system organized by resources.
-class SyncGraphConfigValidator {
-  final SyncConfigBaseValidator _baseValidator =
-      SyncConfigBaseValidator((c) => (c as ResourceGraphConfig).typeIri.value);
+class SyncEngineConfigValidator {
+  final ConfigBaseValidator _baseValidator =
+      ConfigBaseValidator((c) => (c as ResourceConfigData).typeIri.value);
 
-  SyncGraphConfigValidator();
+  SyncEngineConfigValidator();
 
   /// Validate this configuration for consistency and correctness.
-  ValidationResult validate(SyncGraphConfig config) {
+  ValidationResult validate(SyncEngineConfig config) {
     final result = _baseValidator.validate(config);
     _validateResourceUniqueness(config, result);
 
@@ -24,7 +24,7 @@ class SyncGraphConfigValidator {
   }
 
   void _validateResourceUniqueness(
-      SyncGraphConfig config, ValidationResult result) {
+      SyncEngineConfig config, ValidationResult result) {
     // Check for duplicate Dart types
     final typeIris = <IriTerm>{};
 

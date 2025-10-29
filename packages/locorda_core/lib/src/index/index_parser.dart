@@ -5,7 +5,7 @@
 /// This supports dynamic index discovery for both own and foreign application indices.
 library;
 
-import 'package:locorda_core/src/config/sync_graph_config.dart';
+import 'package:locorda_core/src/config/sync_engine_config.dart';
 import 'package:locorda_core/src/generated/_index.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
@@ -17,7 +17,7 @@ import 'package:rdf_core/rdf_core.dart';
 ///
 /// Contains the configuration and the indexed class IRI.
 class ParsedFullIndex {
-  final FullIndexGraphConfig config;
+  final FullIndexData config;
   final IriTerm indexedClass;
 
   const ParsedFullIndex({
@@ -30,7 +30,7 @@ class ParsedFullIndex {
 ///
 /// Contains the configuration and the indexed class IRI.
 class ParsedGroupIndexTemplate {
-  final GroupIndexGraphConfig config;
+  final GroupIndexData config;
   final IriTerm indexedClass;
 
   const ParsedGroupIndexTemplate({
@@ -55,7 +55,7 @@ class IndexParser {
   /// known local names for recognized indices by pre-computing their IRIs.
   /// For unknown indices, a name will be derived from the IRI.
   IndexParser({
-    required SyncGraphConfig knownConfig,
+    required SyncEngineConfig knownConfig,
     required IndexRdfGenerator rdfGenerator,
   }) : _iriToLocalName = _buildIriToLocalNameMap(knownConfig, rdfGenerator);
 
@@ -63,7 +63,7 @@ class IndexParser {
   ///
   /// Uses IndexRdfGenerator to compute the canonical IRI for each configured index.
   static Map<String, String> _buildIriToLocalNameMap(
-    SyncGraphConfig knownConfig,
+    SyncEngineConfig knownConfig,
     IndexRdfGenerator rdfGenerator,
   ) {
     final map = <String, String>{};
@@ -106,10 +106,10 @@ class IndexParser {
     final localName = _extractLocalName(indexResourceIri);
 
     // Create config with indexed properties if present
-    final config = FullIndexGraphConfig(
+    final config = FullIndexData(
       localName: localName,
       item: indexedProperties.isNotEmpty
-          ? IndexItemGraphConfig(indexedProperties)
+          ? IndexItemData(indexedProperties)
           : null,
     );
 
@@ -151,11 +151,11 @@ class IndexParser {
     final localName = _extractLocalName(templateResourceIri);
 
     // Create config with indexed properties and grouping
-    final config = GroupIndexGraphConfig(
+    final config = GroupIndexData(
       localName: localName,
       groupingProperties: groupingProperties,
       item: indexedProperties.isNotEmpty
-          ? IndexItemGraphConfig(indexedProperties)
+          ? IndexItemData(indexedProperties)
           : null,
     );
 

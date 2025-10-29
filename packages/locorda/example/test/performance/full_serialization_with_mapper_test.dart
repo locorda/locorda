@@ -3,7 +3,7 @@
 /// Tests the full round-trip cost for worker isolate communication:
 /// Dart Object → RdfGraph → Turtle → RdfGraph → Dart Object
 ///
-/// This measures the ACTUAL cost of using LocordaGraphSync in a worker,
+/// This measures the ACTUAL cost of using SyncEngine in a worker,
 /// including both RDF serialization AND object mapping overhead.
 ///
 /// Run:
@@ -19,7 +19,7 @@ library;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda/src/config/locorda_config_util.dart';
 import 'package:locorda/src/mapping/local_resource_iri_service.dart';
 import 'package:locorda/src/mapping/solid_mapping_context.dart';
 import 'package:locorda_core/locorda_core.dart';
@@ -41,7 +41,7 @@ void main() {
   late TurtleCodec turtleCodec;
 
   setUpAll(() {
-    // Initialize mapper exactly as in LocordaSync.setup()
+    // Initialize mapper exactly as in Locorda.setup()
     final iriTermFactory = IriTerm.validated;
     final rdfCore = RdfCore.withStandardCodecs();
 

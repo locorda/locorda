@@ -1,6 +1,6 @@
 import 'package:locorda/locorda.dart';
-import 'package:locorda/src/config/sync_config_util.dart';
-import 'package:locorda/src/config/sync_config_validator.dart';
+import 'package:locorda/src/config/locorda_config_util.dart';
+import 'package:locorda/src/config/locorda_config_validator.dart';
 import 'package:locorda_core/src/config/validation.dart';
 import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -18,7 +18,7 @@ void main() {
 
     group('Resource Uniqueness Validation', () {
       test('should pass with unique Dart types', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -37,7 +37,7 @@ void main() {
       });
 
       test('should fail with duplicate Dart types', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -59,7 +59,7 @@ void main() {
       });
 
       test('should fail with RDF type IRI collisions', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: ConflictingTypeA,
@@ -81,7 +81,7 @@ void main() {
       });
 
       test('should fail when type has no RDF IRI mapping', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: UnmappedType,
@@ -105,7 +105,7 @@ void main() {
 
     group('CRDT Mapping Validation', () {
       test('should fail with relative URI', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -121,7 +121,7 @@ void main() {
       });
 
       test('should warn about HTTP (non-HTTPS) URI', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -142,7 +142,7 @@ void main() {
 
     group('Index Configuration Validation', () {
       test('should fail with empty index local name', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -166,7 +166,7 @@ void main() {
           () {
         final testIndexItem = IndexItem(TestDocument, {});
 
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -213,7 +213,7 @@ void main() {
 
     group('GroupIndex Configuration Validation', () {
       test('should pass with valid single-property GroupIndex', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -238,7 +238,7 @@ void main() {
       test(
           'should fail with invalid regex pattern and call RegexTransform validation',
           () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -278,7 +278,7 @@ void main() {
       test(
           'should fail with invalid replacement syntax through RegexTransform validation',
           () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -314,7 +314,7 @@ void main() {
 
       test('should fail with duplicate groupKeyType and localName combinations',
           () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -358,7 +358,7 @@ void main() {
       });
 
       test('should allow same groupKeyType with different localNames', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -395,7 +395,7 @@ void main() {
       });
 
       test('should allow same localName with different groupKeyTypes', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -434,7 +434,7 @@ void main() {
       });
 
       test('should fail when dartType has no mapper in registry', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: UnmappedType, // This type has no mapper!
@@ -464,7 +464,7 @@ void main() {
 
       test('should fail when groupKeyType has no mapper in registry', () {
         // Create a type that doesn't have a mapper registered
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -493,7 +493,7 @@ void main() {
       });
 
       test('should fail when itemType has no mapper in registry', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -525,7 +525,7 @@ void main() {
 
       test('should validate all types have proper mappers when all are valid',
           () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument, // Has mapper
@@ -551,7 +551,7 @@ void main() {
       });
 
       test('should validate hierarchy levels are properly ordered', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -581,7 +581,7 @@ void main() {
       });
 
       test('should warn about hierarchy level gaps', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -614,7 +614,7 @@ void main() {
       test(
           'should allow duplicate hierarchy levels (valid Cartesian product scenario)',
           () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -646,7 +646,7 @@ void main() {
       });
 
       test('should fail with zero or negative hierarchy levels', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -674,7 +674,7 @@ void main() {
       });
 
       test('should fail with empty missing value', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -704,7 +704,7 @@ void main() {
       });
 
       test('should validate complex multi-transform scenario', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -743,7 +743,7 @@ void main() {
 
     group('Regex Transform Validation Integration', () {
       test('should call RegexTransform validation for all transforms', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -813,7 +813,7 @@ void main() {
         ];
 
         for (final pattern in validPatterns) {
-          final config = SyncConfig(
+          final config = LocordaConfig(
             resources: [
               ResourceConfig(
                 type: TestDocument,
@@ -852,7 +852,7 @@ void main() {
         ];
 
         for (final pattern in forbiddenPatterns) {
-          final config = SyncConfig(
+          final config = LocordaConfig(
             resources: [
               ResourceConfig(
                 type: TestDocument,
@@ -899,7 +899,7 @@ void main() {
         ];
 
         for (final (replacement, pattern) in testCases) {
-          final config = SyncConfig(
+          final config = LocordaConfig(
             resources: [
               ResourceConfig(
                 type: TestDocument,
@@ -933,7 +933,7 @@ void main() {
     group('Mapper Registry Validation', () {
       test('should comprehensively validate all type mappers exist', () {
         // Test with a fully valid configuration
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument, // Has global mapper
@@ -978,7 +978,7 @@ void main() {
       });
 
       test('should fail when multiple types lack mappers', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: UnmappedType, // No mapper
@@ -1009,7 +1009,7 @@ void main() {
 
       test('should validate when all required mappers are present', () {
         // Test comprehensive mapper validation - resource types, group key types, item types
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument, // Has mapper
@@ -1056,7 +1056,7 @@ void main() {
         );
 
         // The validation should catch empty predicate IRIs
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -1081,7 +1081,7 @@ void main() {
       });
 
       test('should fail with malformed regex escape sequences', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -1116,7 +1116,7 @@ void main() {
       });
 
       test('should fail with invalid capture group references', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -1149,7 +1149,7 @@ void main() {
       });
 
       test('should handle extremely large hierarchy levels', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -1180,7 +1180,7 @@ void main() {
       });
 
       test('should validate multiple transforms with different formats', () {
-        final config = SyncConfig(
+        final config = LocordaConfig(
           resources: [
             ResourceConfig(
               type: TestDocument,
@@ -1219,7 +1219,7 @@ void main() {
   });
 }
 
-ValidationResult validate(SyncConfig config, RdfMapper mockMapper) =>
-    SyncConfigValidator().validate(
+ValidationResult validate(LocordaConfig config, RdfMapper mockMapper) =>
+    LocordaConfigValidator().validate(
         config, buildResourceTypeCache(mockMapper, config),
         mapper: mockMapper);

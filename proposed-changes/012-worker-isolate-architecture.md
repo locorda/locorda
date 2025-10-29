@@ -25,9 +25,9 @@ Benchmarks prove Turtle serialization is fast enough for worker architecture:
 ### Current Architecture (Single Thread)
 ```
 Main Thread
-├── LocordaSync (Dart objects with RdfMapper)
-│   └── LocordaGraphSync (RDF operations)
-│       └── StandardLocordaGraphSync
+├── Locorda (Dart objects with RdfMapper)
+│   └── SyncEngine (RDF operations)
+│       └── StandardsyncEngine
 │           ├── CrdtDocumentManager (CRDT merge)
 │           ├── Storage (Drift/SQLite)
 │           ├── Backend (HTTP to Solid Pod)
@@ -37,9 +37,9 @@ Main Thread
 ### Target Architecture (Worker-Based)
 ```
 Main Thread                                    Worker Isolate
-├── LocordaSync (Dart objects)                
+├── Locorda (Dart objects)                
 │   ├── RdfMapper (Dart ↔ RDF)
-│   └── ProxyLocordaGraphSync ----[Turtle]----> StandardLocordaGraphSync
+│   └── ProxysyncEngine ----[Turtle]----> StandardsyncEngine
 │       └── Message Protocol                     ├── CrdtDocumentManager
 │                                                ├── Storage (DriftIsolate)
 │                                                ├── Backend (HTTP)
@@ -53,8 +53,8 @@ Main Thread                                    Worker Isolate
    - **Worker Thread**: Handles RDF operations, CRDT merge, storage, HTTP
 
 2. **Config Transmission Strategy**:
-   - Main: `SyncConfig` (Dart Types) → `toSyncGraphConfig()` → `SyncGraphConfig` (IRIs only)
-   - Worker: Receives serialized `SyncGraphConfig` via JSON
+   - Main: `SyncConfig` (Dart Types) → `toSyncEngineConfig()` → `SyncEngineConfig` (IRIs only)
+   - Worker: Receives serialized `SyncEngineConfig` via JSON
    - **No duplication**: Config created once in Main, automatically transmitted
 
 3. **Dependency Injection Solution**:
@@ -86,12 +86,12 @@ Initial approaches had issues:
 Future<void> main() async {
   // 1. Create worker handle (framework abstracts platform)
   final workerHandle = await LocordaWorkerHandle.create(
-    dartScript: 'lib/worker.dart',  // Native platforms
-    jsScript: 'worker.dart.js',      // Web platform
+    workerEntryPoint: workerMain,  // Function reference for native
+    jsScript: 'worker.dart.js',     // Compiled JS for web
   );
   
   // 2. Setup with worker - config automatically transmitted
-  final sync = await LocordaSync.setupWithWorker(
+  final sync = await Locorda.setupWithWorker(
     worker: workerHandle,
     config: _buildConfig(),            // SyncConfig with Dart Types
     mapperInitializer: _initMapper,    // Only needed on Main thread
@@ -135,10 +135,10 @@ void runLocordaWorker() {
     ];
     
     // Framework handles rest
-    return LocordaGraphSync.setup(
+    return SyncEngine.create(
       storage: storage,
       backends: backends,
-      config: config,  // Already converted to SyncGraphConfig
+      config: config,  // Already converted to SyncEngineConfig
     );
   });
 }
@@ -146,15 +146,15 @@ void runLocordaWorker() {
 
 **What Happens Behind the Scenes**:
 1. Main validates `SyncConfig`, builds `ResourceTypeCache`
-2. Main converts: `SyncConfig` → `toSyncGraphConfig()` → `SyncGraphConfig` (IRIs only)
-3. Main serializes `SyncGraphConfig` to JSON
+2. Main converts: `SyncConfig` → `toSyncEngineConfig()` → `SyncEngineConfig` (IRIs only)
+3. Main serializes `SyncEngineConfig` to JSON
 4. Main sends JSON to Worker via `WorkerHandle`
-5. Worker deserializes to `SyncGraphConfig`
+5. Worker deserializes to `SyncEngineConfig`
 6. Worker runs user's setup function, passing config
-7. Worker creates `StandardLocordaGraphSync` with config
+7. Worker creates `StandardsyncEngine` with config
 8. Worker wraps it in message handler
-9. Main wraps worker in `ProxyLocordaGraphSync`
-10. Main creates `LocordaSync` with proxy + mapper
+9. Main wraps worker in `ProxysyncEngine`
+10. Main creates `Locorda` with proxy + mapper
 
 ### Challenge 2: Authentication Flow (Local DPoP Generation)
 
@@ -319,14 +319,14 @@ Main Thread                              Worker Thread
 abstract class LocordaWorkerHandle {
   /// Auto-detects platform and uses appropriate script.
   static Future<LocordaWorkerHandle> create({
-    required String dartScript,  // For native platforms
-    required String jsScript,     // For web platform
+    required void Function(SendPort) workerEntryPoint,  // For native
+    required String jsScript,                            // For web
     String? debugName,
   }) async {
     if (kIsWeb) {
       return _WebWorkerHandle(jsScript, debugName);
     } else {
-      return _NativeWorkerHandle(dartScript, debugName);
+      return _NativeWorkerHandle(workerEntryPoint, debugName);
     }
   }
   
@@ -334,7 +334,9 @@ abstract class LocordaWorkerHandle {
   static LocordaWorkerHandleBuilder builder() => LocordaWorkerHandleBuilder._();
   
   /// Explicit single-platform factories (throw if wrong platform).
-  static Future<LocordaWorkerHandle> forDart(String dartScript) { ... }
+  static Future<LocordaWorkerHandle> forDart(
+    void Function(SendPort) workerEntryPoint,
+  ) { ... }
   static Future<LocordaWorkerHandle> forWeb(String jsScript) { ... }
   
   // Internal message protocol
@@ -350,12 +352,17 @@ class _NativeWorkerHandle implements LocordaWorkerHandle {
   final SendPort _sendPort;
   final ReceivePort _receivePort;
   
-  static Future<_NativeWorkerHandle> create(String dartScript) async {
+  static Future<_NativeWorkerHandle> create(
+    void Function(SendPort) workerEntryPoint,
+    String? debugName,
+  ) async {
     final receivePort = ReceivePort();
     
-    // Dynamically resolve entry point from dartScript
-    final entryPoint = _resolveEntryPoint(dartScript);
-    await Isolate.spawn(entryPoint, receivePort.sendPort);
+    final isolate = await Isolate.spawn(
+      workerEntryPoint,
+      receivePort.sendPort,
+      debugName: debugName,
+    );
     
     final sendPort = await receivePort.first as SendPort;
     return _NativeWorkerHandle(sendPort, receivePort);
@@ -426,11 +433,11 @@ class _WebWorkerHandle implements LocordaWorkerHandle {
 
 ### Phase 2: Config Serialization ⏳
 
-**Goal**: Enable `SyncGraphConfig` transmission across isolate boundary.
+**Goal**: Enable `SyncEngineConfig` transmission across isolate boundary.
 
 **Deliverables**:
 1. Add `toJson()` methods to all config types (✅ `fromJson()` already exists)
-2. JSON serialization for: `SyncGraphConfig`, `ResourceGraphConfig`, `IndexGraphConfig`, etc.
+2. JSON serialization for: `SyncEngineConfig`, `ResourceGraphConfig`, `IndexGraphConfig`, etc.
 3. Validation that serialization preserves semantics
 
 **Files**:
@@ -444,20 +451,20 @@ class _WebWorkerHandle implements LocordaWorkerHandle {
 **Note**: 
 - ✅ `fromJson()` factory constructors already implemented for all config types
 - ⏳ `toJson()` methods still need to be added
-- ✅ Existing `toSyncGraphConfig()` converter in `packages/locorda/lib/src/config/sync_config_converter.dart` handles SyncConfig → SyncGraphConfig conversion
+- ✅ Existing `toSyncEngineConfig()` converter in `packages/locorda/lib/src/config/sync_config_converter.dart` handles SyncConfig → SyncEngineConfig conversion
 
 ### Phase 3: Proxy Implementation ⏳
 
 **Goal**: Main thread proxy that forwards operations to worker.
 
 **Deliverables**:
-1. `ProxyLocordaGraphSync` implementing `LocordaGraphSync` interface
+1. `ProxysyncEngine` implementing `SyncEngine` interface
 2. RDF ↔ Turtle serialization for all operations
 3. Request/response message protocol with IDs
 4. Stream forwarding for hydration/sync status
 
 **Files**:
-- `packages/locorda/lib/src/worker/proxy_locorda_graph_sync.dart`
+- `packages/locorda/lib/src/worker/proxy_sync_engine.dart`
 - `packages/locorda/lib/src/worker/worker_message_protocol.dart`
 
 **Operations to Proxy**:
@@ -482,7 +489,7 @@ class _WebWorkerHandle implements LocordaWorkerHandle {
 1. `workerMain()` helper function
 2. `WorkerAuthBridge` for auth token requests
 3. Worker message handler loop
-4. `LocordaSync.setupWithWorker()` factory method
+4. `Locorda.setupWithWorker()` factory method
 
 **Files**:
 - `packages/locorda/lib/src/worker/worker_main.dart` - Entry point helper
@@ -492,16 +499,16 @@ class _WebWorkerHandle implements LocordaWorkerHandle {
 **Worker Main Pattern**:
 ```dart
 void workerMain(
-  Future<LocordaGraphSync> Function(
-    SyncGraphConfig config,
+  Future<SyncEngine> Function(
+    SyncEngineConfig config,
     WorkerContext context,
   ) setupFn
 ) async {
   // 1. Establish communication with main thread
-  // 2. Receive SyncGraphConfig
+  // 2. Receive SyncEngineConfig
   // 3. Create WorkerContext with communication channel
   // 4. Call user's setupFn with config + context
-  // 5. Start message loop forwarding to LocordaGraphSync
+  // 5. Start message loop forwarding to SyncEngine
 }
 
 /// Context provided to worker setup function
@@ -601,11 +608,11 @@ class WorkerContext {
 ```dart
 // Just use setupWithWorker() from the start
 final worker = await LocordaWorkerHandle.create(
-  dartScript: 'lib/worker.dart',
+  workerEntryPoint: workerMain,
   jsScript: 'worker.dart.js',
 );
 
-final sync = await LocordaSync.setupWithWorker(
+final sync = await Locorda.setupWithWorker(
   worker: worker,
   config: config,
   mapperInitializer: initMapper,
@@ -615,7 +622,7 @@ final sync = await LocordaSync.setupWithWorker(
 ### For Existing Projects
 
 **Option 1: Keep Current (No Changes)**
-- Continue using `LocordaSync.setup()` directly
+- Continue using `Locorda.setup()` directly
 - Performance fine for native apps with moderate data
 
 **Option 2: Migrate to Worker**
@@ -635,20 +642,27 @@ final sync = await LocordaSync.setupWithWorker(
 **Open Questions:**
 - None remaining - design finalized through iterative discussion
 
+**Future Improvements** (separate topics):
+- 🔮 **Auto-compile JS worker**: Eliminate need for manual `dart compile js` and explicit `jsScript` parameter
+  - Could use runtime compilation in dev mode
+  - Or build-time integration (flutter_tools plugin)
+  - Or code generation
+  - Would simplify API to just `workerEntryPoint` parameter
+
 **Ready to Implement**: Phase 1 can begin immediately.
 
 ---
 
 ### Phase 3: Proxy Implementation
 
-**Goal**: Create `ProxyLocordaGraphSync` that forwards to worker
+**Goal**: Create `ProxysyncEngine` that forwards to worker
 
 **Files to create**:
-- [ ] `locorda_core/lib/src/proxy_locorda_graph_sync.dart`
+- [ ] `locorda_core/lib/src/proxy_sync_engine.dart`
 - [ ] `locorda_core/lib/src/proxy_sync_manager.dart`
 
 **Files to modify**:
-- [ ] `locorda_core/lib/src/locorda_graph_sync.dart` - Update `.setup()` to use proxy
+- [ ] `locorda_core/lib/src/sync_engine.dart` - Update `.setup()` to use proxy
 
 **Message Protocol**:
 ```dart
@@ -694,10 +708,10 @@ class AuthCredentialsUpdate extends WorkerMessage {
 ```
 
 **Tests**:
-- [ ] `locorda_core/test/proxy_locorda_graph_sync_test.dart`
+- [ ] `locorda_core/test/proxy_sync_engine_test.dart`
 
 **Success Criteria**:
-- ✅ `ProxyLocordaGraphSync` implements all `LocordaGraphSync` methods
+- ✅ `ProxysyncEngine` implements all `SyncEngine` methods
 - ✅ All operations correctly forwarded to worker
 - ✅ Errors properly propagated back to main thread
 
@@ -733,7 +747,7 @@ class AuthCredentialsUpdate extends WorkerMessage {
 
 **Approach**:
 ```dart
-class ProxyLocordaGraphSync {
+class ProxysyncEngine {
   Stream<HydrationBatch> hydrateStream(...) {
     final controller = StreamController<HydrationBatch>();
     
@@ -754,7 +768,7 @@ class ProxyLocordaGraphSync {
 ```
 
 **Files to modify**:
-- [ ] `locorda_core/lib/src/proxy_locorda_graph_sync.dart` - Stream adapters
+- [ ] `locorda_core/lib/src/proxy_sync_engine.dart` - Stream adapters
 
 **Tests**:
 - [ ] `locorda_core/test/proxy_hydration_stream_test.dart`
@@ -835,7 +849,7 @@ class ProxyLocordaGraphSync {
 - Documentation
 
 **Modified Files** (~8-10 files):
-- `LocordaGraphSync.setup()` to use proxy
+- `SyncEngine.create()` to use proxy
 - Storage/Backend factories for config-based creation
 - Auth bridge to forward tokens
 - Example app initialization

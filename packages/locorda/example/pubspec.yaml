@@ -22,7 +22,7 @@ dependencies:
   solid_auth:
     git:
       url: https://github.com/kkalass/solid_auth.git
-      ref: feat/migrate-to-bdaya-oidc-security-fix
+      ref: feat/dpop-worker-thread-support
       
   # Solid CRDT Sync packages
   locorda:
@@ -39,7 +39,11 @@ dependencies:
     path: ../../locorda_solid_ui
   locorda_drift:
     path: ../../locorda_drift
-    
+  locorda_worker:
+    path: ../../locorda_worker
+  locorda_solid_auth_worker:
+    path: ../../locorda_solid_auth_worker
+
   # RDF mapping
   rdf_core: ^0.9.24
   rdf_mapper: ^0.10.4

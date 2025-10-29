@@ -128,7 +128,7 @@ class InstallationService {
     );
   }
 
-  Future<void> ensureDocumentSaved(LocordaGraphSync sync) async {
+  Future<void> ensureDocumentSaved(SyncEngine sync) async {
     // Initialize installation document if needed
     if (!installationDocumentSaved) {
       final iri = installationIri;

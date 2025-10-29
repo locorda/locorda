@@ -17,12 +17,12 @@ enum SyncStatus {
 ///
 /// Shows sync progress, last sync time, and allows manual sync triggers.
 class SyncStatusWidget extends StatefulWidget {
-  final SyncEngine syncEngine;
+  final SyncManager syncManager;
   final VoidCallback? onManualSync;
 
   const SyncStatusWidget({
     super.key,
-    required this.syncEngine,
+    required this.syncManager,
     this.onManualSync,
   });
 
@@ -126,7 +126,7 @@ class _SyncStatusWidgetState extends State<SyncStatusWidget> {
     });
 
     try {
-      await widget.syncEngine.syncAll();
+      await widget.syncManager.sync();
       setState(() {
         _status = SyncStatus.success;
         _lastSyncTime = DateTime.now().toString();

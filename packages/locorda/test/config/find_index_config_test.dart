@@ -1,5 +1,5 @@
 import 'package:locorda/locorda.dart';
-import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda/src/config/locorda_config_util.dart';
 import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -28,7 +28,7 @@ class TestContactIndex {
 
 void main() {
   group('SyncConfig.findIndexConfigForType', () {
-    late SyncConfig config;
+    late LocordaConfig config;
     late ResourceConfig noteResourceConfig;
     late ResourceConfig contactResourceConfig;
     late FullIndex noteIndex;
@@ -62,7 +62,7 @@ void main() {
         indices: [contactIndex],
       );
 
-      config = SyncConfig(
+      config = LocordaConfig(
         resources: [noteResourceConfig, contactResourceConfig],
       );
     });
@@ -125,7 +125,7 @@ void main() {
         indices: [noteIndex, noteTagsIndex],
       );
 
-      final multiIndexConfig = SyncConfig(
+      final multiIndexConfig = LocordaConfig(
         resources: [multiIndexResourceConfig, contactResourceConfig],
       );
 
@@ -148,7 +148,7 @@ void main() {
         indices: [], // No indices
       );
 
-      final noIndexConfig = SyncConfig(
+      final noIndexConfig = LocordaConfig(
         resources: [noIndexResourceConfig, noteResourceConfig],
       );
 
@@ -175,7 +175,7 @@ void main() {
         indices: [nullItemIndex],
       );
 
-      final nullItemConfig = SyncConfig(
+      final nullItemConfig = LocordaConfig(
         resources: [nullItemResourceConfig],
       );
 
@@ -186,7 +186,7 @@ void main() {
     });
 
     test('should handle empty configuration', () {
-      final emptyConfig = SyncConfig(resources: []);
+      final emptyConfig = LocordaConfig(resources: []);
 
       final result =
           findIndexConfigForType<TestNoteIndex>(emptyConfig, 'any-index');
@@ -216,7 +216,7 @@ void main() {
         indices: [noteIndex1, noteIndex2],
       );
 
-      final multiSameTypeConfig = SyncConfig(
+      final multiSameTypeConfig = LocordaConfig(
         resources: [multiSameTypeResourceConfig],
       );
 

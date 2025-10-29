@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('GroupIndexGraphSubscriptionManager', () {
-    late SyncGraphConfig config;
+    late SyncEngineConfig config;
     late GroupIndexGraphSubscriptionManager manager;
 
     // Test vocabulary
@@ -16,13 +16,13 @@ void main() {
 
     setUp(() {
       // Create a test config with a GroupIndex
-      config = SyncGraphConfig(
+      config = SyncEngineConfig(
         resources: [
-          ResourceGraphConfig(
+          ResourceConfigData(
             typeIri: testTypeIri,
             crdtMapping: Uri.parse('http://example.org/crdt/document'),
             indices: [
-              GroupIndexGraphConfig(
+              GroupIndexData(
                 localName: 'document-groups',
                 groupingProperties: [
                   GroupingProperty(categoryPredicate),
@@ -56,13 +56,13 @@ void main() {
 
       test('generates group identifiers with transforms', () async {
         // Create a separate config with date transforms
-        final dateConfig = SyncGraphConfig(
+        final dateConfig = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: testTypeIri,
               crdtMapping: Uri.parse('http://example.org/crdt/document'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -128,13 +128,13 @@ void main() {
 
       test('handles multiple grouping properties', () async {
         // Create config with multiple grouping properties
-        final multiConfig = SyncGraphConfig(
+        final multiConfig = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: testTypeIri,
               crdtMapping: Uri.parse('http://example.org/crdt/document'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'multi-groups',
                   groupingProperties: [
                     GroupingProperty(categoryPredicate),
@@ -171,13 +171,13 @@ void main() {
 
       test('handles hierarchical grouping properties', () async {
         // Create config with hierarchical grouping
-        final hierarchyConfig = SyncGraphConfig(
+        final hierarchyConfig = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: testTypeIri,
               crdtMapping: Uri.parse('http://example.org/crdt/document'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'hierarchy-groups',
                   groupingProperties: [
                     GroupingProperty(

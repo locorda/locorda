@@ -2,7 +2,7 @@
 library;
 
 import 'package:locorda/locorda.dart';
-import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda/src/config/locorda_config_util.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
 
@@ -24,11 +24,11 @@ class GroupKeyConverterException implements Exception {
 /// - Generation of group identifiers using GroupKeyGenerator
 /// - Validation that group key types are properly registered
 class GroupKeyConverter {
-  final SyncConfig _config;
+  final LocordaConfig _config;
   final RdfMapper _mapper;
 
   const GroupKeyConverter({
-    required SyncConfig config,
+    required LocordaConfig config,
     required RdfMapper mapper,
   })  : _config = config,
         _mapper = mapper;

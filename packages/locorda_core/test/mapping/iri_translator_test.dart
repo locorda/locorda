@@ -1,4 +1,4 @@
-import 'package:locorda_core/src/config/sync_graph_config.dart';
+import 'package:locorda_core/src/config/sync_engine_config.dart';
 import 'package:locorda_core/src/mapping/iri_translator.dart';
 import 'package:locorda_core/src/mapping/resource_locator.dart';
 import 'package:rdf_core/rdf_core.dart';
@@ -116,7 +116,7 @@ void main() {
     setUp(() {
       resourceLocator = LocalResourceLocator(iriTermFactory: IriTerm.validated);
 
-      final categoryConfig = ResourceGraphConfig(
+      final categoryConfig = ResourceConfigData(
         typeIri:
             IriTerm('https://example.org/vocab/personal-notes#NotesCategory'),
         crdtMapping: Uri.parse('https://example.org/test/mappings/category-v1'),
@@ -124,7 +124,7 @@ void main() {
         documentIriTemplate: 'https://example.com/categories/{id}',
       );
 
-      final noteConfig = ResourceGraphConfig(
+      final noteConfig = ResourceConfigData(
         typeIri: IriTerm('https://example.org/vocab/personal-notes#Note'),
         crdtMapping: Uri.parse('https://example.org/test/mappings/note-v1'),
         indices: [],
@@ -261,7 +261,7 @@ void main() {
       final emptyTranslator = IriTranslator.forConfig(
         resourceLocator: resourceLocator,
         resourceConfigs: [
-          ResourceGraphConfig(
+          ResourceConfigData(
             typeIri: IriTerm('https://example.org/Type'),
             crdtMapping: Uri.parse('https://example.org/mapping'),
             indices: [],

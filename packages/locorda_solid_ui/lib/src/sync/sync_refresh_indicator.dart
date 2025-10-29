@@ -15,7 +15,7 @@ import 'package:locorda_core/locorda_core.dart';
 /// Usage:
 /// ```dart
 /// SyncRefreshIndicator(
-///   syncManager: locordaSync.syncManager,
+///   syncManager: locorda.syncManager,
 ///   child: ListView(
 ///     children: [...],
 ///   ),

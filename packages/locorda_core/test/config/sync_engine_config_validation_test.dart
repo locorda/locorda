@@ -3,23 +3,23 @@ import 'package:test/test.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 void main() {
-  group('SyncGraphConfigValidator', () {
-    late SyncGraphConfigValidator validator;
+  group('SyncEngineConfigValidator', () {
+    late SyncEngineConfigValidator validator;
 
     setUp(() {
-      validator = SyncGraphConfigValidator();
+      validator = SyncEngineConfigValidator();
     });
 
     group('Resource Uniqueness Validation', () {
       test('should pass with unique type IRIs', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [],
             ),
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Category'),
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [],
@@ -34,14 +34,14 @@ void main() {
 
       test('should fail with duplicate type IRIs', () {
         final duplicateIri = const IriTerm('https://example.org/Document');
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: duplicateIri,
               crdtMapping: Uri.parse('https://example.com/document1.ttl'),
               indices: [],
             ),
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: duplicateIri, // Duplicate!
               crdtMapping: Uri.parse('https://example.com/document2.ttl'),
               indices: [],
@@ -59,9 +59,9 @@ void main() {
 
     group('CRDT Mapping Validation', () {
       test('should pass with absolute HTTPS URIs', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [],
@@ -75,9 +75,9 @@ void main() {
       });
 
       test('should fail with relative URIs', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('document.ttl'), // Relative!
               indices: [],
@@ -92,9 +92,9 @@ void main() {
       });
 
       test('should warn with HTTP URIs', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('http://example.com/document.ttl'), // HTTP
               indices: [],
@@ -113,15 +113,15 @@ void main() {
 
     group('Index Configuration Validation', () {
       test('should fail with empty local name', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                FullIndexGraphConfig(
+                FullIndexData(
                   localName: '', // Empty!
-                  item: IndexItemGraphConfig({
+                  item: IndexItemData({
                     const IriTerm('https://schema.org/name'),
                   }),
                 ),
@@ -143,7 +143,7 @@ void main() {
           () {
         // The GroupIndexGraphConfig constructor itself validates empty grouping properties
         expect(
-          () => GroupIndexGraphConfig(
+          () => GroupIndexData(
             localName: 'empty-groups',
             groupingProperties: [], // Empty!
           ),
@@ -154,13 +154,13 @@ void main() {
 
     group('GroupingProperty Validation', () {
       test('should fail with empty predicate IRI', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -180,13 +180,13 @@ void main() {
       });
 
       test('should fail with zero hierarchy level', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -209,13 +209,13 @@ void main() {
       });
 
       test('should fail with negative hierarchy level', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -238,13 +238,13 @@ void main() {
       });
 
       test('should fail with empty missing value', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -267,13 +267,13 @@ void main() {
       });
 
       test('should pass with null missing value', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -295,13 +295,13 @@ void main() {
 
     group('Regex Transform Validation', () {
       test('should fail with malformed regex patterns', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -326,13 +326,13 @@ void main() {
       });
 
       test('should fail with invalid capture group references', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -358,13 +358,13 @@ void main() {
       });
 
       test('should pass with valid regex transforms', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -391,13 +391,13 @@ void main() {
 
     group('Hierarchy Level Validation', () {
       test('should warn about hierarchy level gaps', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -424,13 +424,13 @@ void main() {
       });
 
       test('should pass with consecutive hierarchy levels', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'test-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -456,20 +456,20 @@ void main() {
 
     group('Complex Configuration Validation', () {
       test('should validate multiple resources with various indices', () {
-        final config = SyncGraphConfig(
+        final config = SyncEngineConfig(
           resources: [
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Document'),
               crdtMapping: Uri.parse('https://example.com/document.ttl'),
               indices: [
-                FullIndexGraphConfig(
+                FullIndexData(
                   localName: 'full-index',
-                  item: IndexItemGraphConfig({
+                  item: IndexItemData({
                     const IriTerm('https://schema.org/name'),
                     const IriTerm('https://schema.org/dateCreated'),
                   }),
                 ),
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'category-groups',
                   groupingProperties: [
                     GroupingProperty(
@@ -479,11 +479,11 @@ void main() {
                 ),
               ],
             ),
-            ResourceGraphConfig(
+            ResourceConfigData(
               typeIri: const IriTerm('https://example.org/Category'),
               crdtMapping: Uri.parse('https://example.com/category.ttl'),
               indices: [
-                GroupIndexGraphConfig(
+                GroupIndexData(
                   localName: 'date-groups',
                   groupingProperties: [
                     GroupingProperty(

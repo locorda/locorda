@@ -115,7 +115,7 @@ syncSystem.deleteDocument<Note>(id); // Framework-level deletion
 ### Testing Patterns
 
 **Record Mode**: Some tests support `RECORD_MODE=true dart test` to regenerate expected results
-- Currently: `locorda_graph_sync_test.dart` (graph sync expectations)
+- Currently: `sync_engine_test.dart` (graph sync expectations)
 - **Always** review `git diff` before committing record mode changes
 - Used when test logic or CRDT behavior intentionally changes
 
@@ -138,7 +138,7 @@ syncSystem.deleteDocument<Note>(id); // Framework-level deletion
 - `spec/mappings/core-v1.ttl` - Essential CRDT mappings (imported by all apps)
 
 ### Core Implementation
-- `packages/locorda_core/lib/src/locorda_graph_sync.dart` - Main API facade (`LocordaGraphSync`)
+- `packages/locorda_core/lib/src/sync_engine.dart` - Main API facade (`SyncEngine`)
 - `packages/locorda_core/lib/src/crdt_document_manager.dart` - CRDT merge logic
 - `packages/locorda/example/` - Personal notes app (reference implementation)
 

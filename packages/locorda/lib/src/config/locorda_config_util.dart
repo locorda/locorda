@@ -21,7 +21,8 @@ class ResourceTypeCache {
   Type? getDartType(IriTerm iri) => _iriToTypeCache[iri];
 }
 
-ResourceTypeCache buildResourceTypeCache(RdfMapper _mapper, SyncConfig config) {
+ResourceTypeCache buildResourceTypeCache(
+    RdfMapper _mapper, LocordaConfig config) {
   final resourceTypeCache = <Type, IriTerm>{};
   for (final resource in config.resources) {
     if (!resourceTypeCache.containsKey(resource.type)) {
@@ -53,7 +54,7 @@ IriTerm? _getTypeIri(RdfMapper mapper, ResourceConfig resource) {
 /// This is used during hydration setup to determine how to convert
 /// resources to index items for a specific stream.
 (ResourceConfig, CrdtIndex)? findIndexConfigForType<T>(
-    SyncConfig config, String localName) {
+    LocordaConfig config, String localName) {
   // Search through all resources and their indices
   for (final resourceConfig in config.resources) {
     for (final index in resourceConfig.indices) {
@@ -71,9 +72,9 @@ IriTerm? _getTypeIri(RdfMapper mapper, ResourceConfig resource) {
 
 /**
  * For the combination of group key type G and localName, find the corresponding
- * index name which is used by the core implementation (SyncGraphConfig).
+ * index name which is used by the core implementation (SyncEngineConfig).
  */
-String? getGroupIndexName<G>(SyncConfig config, String localName) {
+String? getGroupIndexName<G>(LocordaConfig config, String localName) {
   for (final resource in config.resources) {
     for (final index in resource.indices) {
       if (index is GroupIndex &&

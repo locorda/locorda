@@ -44,6 +44,14 @@ class AutoSyncConfig {
       syncOnStartup: autoSyncJson['syncOnStartup'] as bool? ?? true,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'intervalMinutes': interval.inMinutes,
+      'syncOnStartup': syncOnStartup,
+    };
+  }
 }
 
 abstract interface class SyncManager {

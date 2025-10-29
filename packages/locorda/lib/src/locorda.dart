@@ -4,13 +4,14 @@ library;
 import 'dart:async';
 
 import 'package:locorda/locorda.dart';
-import 'package:locorda/src/config/sync_config_converter.dart';
-import 'package:locorda/src/config/sync_config_util.dart';
-import 'package:locorda/src/config/sync_config_validator.dart';
+import 'package:locorda/src/config/locorda_config_converter.dart';
+import 'package:locorda/src/config/locorda_config_util.dart';
+import 'package:locorda/src/config/locorda_config_validator.dart';
 import 'package:locorda/src/index/group_index_subscription_manager.dart';
 import 'package:locorda/src/mapping/local_resource_iri_service.dart';
 import 'package:locorda/src/mapping/solid_mapping_context.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_worker/locorda_worker.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
@@ -37,13 +38,14 @@ typedef TypedHydrationBatch<T> = ({
 /// Provides a simple, high-level API for offline-first applications with
 /// optional Solid Pod synchronization. Handles RDF mapping, storage,
 /// and sync operations transparently.
-class LocordaSync {
-  final LocordaGraphSync _syncSystem;
+class Locorda {
+  final SyncEngine _syncSystem;
   final RdfMapper _mapper;
-  final SyncConfig _config;
+  final LocordaConfig _config;
   final ResourceTypeCache _resourceTypeCache;
   late final GroupKeyConverter _groupKeyConverter;
   final ResourceLocator _localResourceLocator;
+  final List<Future<void> Function()> _closeFunctions;
 
   /// Access the sync manager for manual sync triggering and status monitoring.
   ///
@@ -54,40 +56,107 @@ class LocordaSync {
   /// - Control automatic sync: `syncManager.enableAutoSync()` / `disableAutoSync()`
   SyncManager get syncManager => _syncSystem.syncManager;
 
-  LocordaSync._({
-    required LocordaGraphSync locordaGraphSync,
+  Locorda._({
+    required SyncEngine syncEngine,
     required RdfMapper mapper,
-    required SyncConfig config,
+    required LocordaConfig config,
     required ResourceTypeCache resourceTypeCache,
     required ResourceLocator localResourceLocator,
-  })  : _syncSystem = locordaGraphSync,
+    List<Future<void> Function()> closeFunctions = const [],
+  })  : _syncSystem = syncEngine,
         _mapper = mapper,
         _config = config,
         _resourceTypeCache = resourceTypeCache,
-        _localResourceLocator = localResourceLocator {
+        _localResourceLocator = localResourceLocator,
+        _closeFunctions = closeFunctions {
     _groupKeyConverter = GroupKeyConverter(
       config: _config,
       mapper: _mapper,
     );
   }
 
-  /// Set up the CRDT sync system with resource-focused configuration.
+  /// Create Locorda with SyncEngine running on the main thread.
   ///
-  /// This is the main entry point for applications. Creates a fully
-  /// configured sync system that works locally by default.
+  /// This is the simplest setup - the SyncEngine is created internally and
+  /// runs on the same thread as your UI. All operations (CRDT merge, database
+  /// access, HTTP requests) happen on the main thread.
   ///
-  /// Configuration is organized around resources (Note, Category, etc.)
-  /// with their paths, CRDT mappings, and indices all defined together.
+  /// **When to use:**
+  /// - Simple applications with light sync workload
+  /// - Prototyping and development
+  /// - When worker setup complexity is not justified
+  ///
+  /// **Architecture:**
+  /// ```
+  /// Main Thread:
+  ///   ├─ Locorda (Dart objects, RDF mapping)
+  ///   └─ SyncEngine (CRDT, storage, HTTP) ← runs here
+  /// ```
+  ///
+  /// For production apps with heavy sync workload, consider [createWithWorker]
+  /// to keep the UI thread responsive.
+  ///
+  /// ## Example
+  /// ```dart
+  /// final locorda = await Locorda.create(
+  ///   storage: DriftStorage(...),
+  ///   backends: [SolidBackend(...)],
+  ///   config: locordaConfig,
+  ///   mapperInitializer: createMapper,
+  /// );
+  /// ```
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
-  static Future<LocordaSync> setup({
+  static Future<Locorda> create({
     required List<Backend> backends,
     required Storage storage,
-    required SyncConfig config,
+    required LocordaConfig config,
     required MapperInitializerFunction mapperInitializer,
     IriTermFactory? iriTermFactory,
     RdfCore? rdfCore,
     http.Client? httpClient,
+  }) async {
+    final (
+      :localResourceLocator,
+      :resourceTypeCache,
+      :syncEngineConfig,
+      :mapper
+    ) = await _setup(
+      config: config,
+      mapperInitializer: mapperInitializer,
+      iriTermFactory: iriTermFactory,
+      rdfCore: rdfCore,
+    );
+
+    // Setup the actual sync system
+    final syncEngine = await SyncEngine.create(
+      backends: backends,
+      storage: storage,
+      config: syncEngineConfig,
+      iriFactory: iriTermFactory,
+      rdfCore: rdfCore,
+      httpClient: httpClient,
+    );
+
+    return Locorda._(
+        syncEngine: syncEngine,
+        mapper: mapper,
+        config: config,
+        localResourceLocator: localResourceLocator,
+        resourceTypeCache: resourceTypeCache);
+  }
+
+  static Future<
+      ({
+        LocalResourceLocator localResourceLocator,
+        ResourceTypeCache resourceTypeCache,
+        SyncEngineConfig syncEngineConfig,
+        RdfMapper mapper,
+      })> _setup({
+    required LocordaConfig config,
+    required MapperInitializerFunction mapperInitializer,
+    IriTermFactory? iriTermFactory,
+    RdfCore? rdfCore,
   }) async {
     iriTermFactory ??= IriTerm.validated;
     rdfCore ??= RdfCore.withStandardCodecs();
@@ -109,7 +178,7 @@ class LocordaSync {
     final resourceTypeCache = buildResourceTypeCache(mapper, config);
 
     // Validate configuration before proceeding
-    final configValidationResult = SyncConfigValidator()
+    final configValidationResult = LocordaConfigValidator()
         .validate(config, resourceTypeCache, mapper: mapper);
 
     // Validate IRI service setup and finish setup if valid
@@ -123,23 +192,145 @@ class LocordaSync {
     // Throw if any validation failed
     combinedValidationResult.throwIfInvalid();
 
-    final syncGraphConfig = toSyncGraphConfig(config, resourceTypeCache);
-    // Setup the actual sync system
-    final graphSync = await LocordaGraphSync.setup(
-      backends: backends,
-      storage: storage,
-      config: syncGraphConfig,
-      iriFactory: iriTermFactory,
+    final syncEngineConfig = toSyncEngineConfig(config, resourceTypeCache);
+    return (
+      syncEngineConfig: syncEngineConfig,
+      localResourceLocator: localResourceLocator,
+      resourceTypeCache: resourceTypeCache,
+      mapper: mapper,
+    );
+  }
+
+  /// Create Locorda with SyncEngine running in a separate worker thread.
+  ///
+  /// This keeps the main thread responsive by offloading all heavy operations
+  /// (CRDT merge, database I/O, HTTP requests, DPoP signing) to a worker thread.
+  /// All SyncEngine calls are automatically forwarded to the worker via a proxy.
+  ///
+  /// **When to use:**
+  /// - Production applications with significant sync workload
+  /// - Apps that need responsive UI during sync operations
+  /// - When handling large datasets or frequent updates
+  ///
+  /// **Architecture:**
+  /// ```
+  /// Main Thread:                    Worker Thread:
+  ///   ├─ Locorda                      ├─ SyncEngine
+  ///   │  ├─ Dart objects              │  ├─ CRDT merge
+  ///   │  ├─ RDF mapping               │  ├─ Database I/O
+  ///   │  └─ ProxySyncEngine ─────────>│  ├─ HTTP requests
+  ///   │     (forwards calls)          │  └─ DPoP signing
+  ///   └─ UI (stays responsive!)       └─ (heavy work here)
+  /// ```
+  ///
+  /// ## Required Setup
+  ///
+  /// **1. Create worker.dart** with a factory function that creates SyncEngine:
+  ///
+  /// ```dart
+  /// // lib/worker.dart
+  /// import 'package:locorda_worker/locorda_worker.dart';
+  /// import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
+  /// import 'package:locorda_core/locorda_core.dart';
+  ///
+  /// // MUST be top-level function (for cross-isolate passing)
+  /// Future<SyncEngine> createSyncEngine(
+  ///   SyncEngineConfig config,
+  ///   WorkerContext context,
+  /// ) async {
+  ///   final storage = DriftStorage(...);
+  ///   final backends = [
+  ///     SolidBackend(auth: SolidAuthConnector.provider(context)),
+  ///   ];
+  ///   return await SyncEngine.create(
+  ///     storage: storage,
+  ///     backends: backends,
+  ///     config: config,
+  ///   );
+  /// }
+  /// ```
+  ///
+  /// **2. Use in main thread** by passing the factory function:
+  ///
+  /// ```dart
+  /// import 'package:locorda/locorda.dart';
+  /// import 'worker.dart' show createSyncEngine;
+  ///
+  /// final locorda = await Locorda.createWithWorker(
+  ///   syncEngineFactory: createSyncEngine,  // Your factory function
+  ///   jsScript: 'worker.dart.js',  // For web: dart compile js lib/worker.dart
+  ///   config: locordaConfig,
+  ///   mapperInitializer: createMapper,
+  /// );
+  ///
+  /// // All operations automatically use the worker:
+  /// await locorda.save(note);  // ← Forwarded to worker transparently
+  /// ```
+  ///
+  /// ## How It Works
+  ///
+  /// 1. `createWithWorker()` spawns a worker (isolate/web worker)
+  /// 2. Your `syncEngineFactory` is called in the worker to create SyncEngine
+  /// 3. Main thread gets a `ProxySyncEngine` that forwards all calls
+  /// 4. Communication via JSON messages with Turtle-serialized RDF graphs
+  /// 5. ~1-2ms overhead per operation (negligible vs CRDT/DB/HTTP work)
+  ///
+  /// ## Platform Support
+  ///
+  /// - **Native (iOS/Android/Desktop)**: Uses Dart isolates via `Isolate.spawn()`
+  /// - **Web**: Uses Web Workers (requires compiling: `dart compile js lib/worker.dart`)
+  ///
+  /// Throws [SyncConfigValidationException] if the configuration is invalid.
+  static Future<Locorda> createWithWorker({
+    required SyncEngineFactory syncEngineFactory,
+    required String jsScript,
+    required LocordaConfig config,
+    required MapperInitializerFunction mapperInitializer,
+    List<WorkerPluginFactory> plugins = const [],
+    IriTermFactory? iriTermFactory,
+    RdfCore? rdfCore,
+    String? debugName,
+  }) async {
+    final (
+      :localResourceLocator,
+      :resourceTypeCache,
+      :syncEngineConfig,
+      :mapper
+    ) = await _setup(
+      config: config,
+      mapperInitializer: mapperInitializer,
+      iriTermFactory: iriTermFactory,
       rdfCore: rdfCore,
-      httpClient: httpClient,
     );
 
-    return LocordaSync._(
-        locordaGraphSync: graphSync,
-        mapper: mapper,
-        config: config,
-        localResourceLocator: localResourceLocator,
-        resourceTypeCache: resourceTypeCache);
+    final workerHandle = await LocordaWorkerHandle.create(
+      syncEngineFactory: syncEngineFactory,
+      jsScript: jsScript,
+      debugName: debugName,
+    );
+
+    final closeFunctions = <Future<void> Function()>[];
+    for (final pluginFactory in plugins) {
+      final plugin = pluginFactory(workerHandle);
+      await plugin.initialize();
+      closeFunctions.add(plugin.dispose);
+    }
+
+    // Create proxy that forwards operations to worker
+    // The proxy will send setup message with config to worker
+    final syncEngine = await ProxySyncEngine.create(
+      workerHandle: workerHandle,
+      config: syncEngineConfig,
+    );
+
+    return Locorda._(
+      syncEngine: syncEngine,
+      mapper: mapper,
+      config: config,
+      localResourceLocator: localResourceLocator,
+      resourceTypeCache: resourceTypeCache,
+      closeFunctions: closeFunctions,
+    );
   }
 
   /// Configure subscription to a group index with the given group key.
@@ -347,7 +538,7 @@ class LocordaSync {
   ///
   /// ## Parameters
   /// - [cursor]: Resume position from previous hydration. Format depends on
-  ///   hydration type (see [LocordaGraphSync.hydrateStream] for details).
+  ///   hydration type (see [SyncEngine.hydrateStream] for details).
   ///   If null, starts from the beginning.
   /// - [localName]: Distinguishes between different indices using the same
   ///   Dart class (e.g., different GroupIndex configurations). Only relevant
@@ -471,7 +662,7 @@ class LocordaSync {
     int initialBatchSize = 100,
   }) async {
     final cursor = await getCurrentCursor();
-    final logger = Logger('LocordaSync.hydration<$T>');
+    final logger = Logger('Locorda.hydration<$T>');
 
     return hydrateStream<T>(
       cursor: cursor,
@@ -514,6 +705,9 @@ class LocordaSync {
 
   /// Close the sync system and free resources.
   Future<void> close() async {
+    for (final closeFunction in _closeFunctions) {
+      await closeFunction();
+    }
     await _syncSystem.close();
   }
 }

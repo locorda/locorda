@@ -53,11 +53,11 @@ class ResourceConfig extends ResourceConfigBase {
   }) : super(indices: indices);
 }
 
-class SyncConfig extends SyncConfigBase {
+class LocordaConfig extends ConfigBase {
   @override
   final List<ResourceConfig> resources;
 
-  SyncConfig({
+  LocordaConfig({
     required this.resources,
     super.autoSyncConfig = const AutoSyncConfig.disabled(),
   }) : super(resources: resources);

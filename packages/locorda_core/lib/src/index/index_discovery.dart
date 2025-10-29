@@ -33,7 +33,7 @@ final _log = Logger('IndexDiscovery');
 ///
 /// Contains the parsed config and the clockHash used for validation.
 class _ParsedIndexCacheEntry {
-  final CrdtIndexGraphConfig config;
+  final CrdtIndexData config;
   final String clockHash;
 
   const _ParsedIndexCacheEntry({
@@ -76,7 +76,7 @@ class IndexDiscovery {
   final Storage _storage;
   final IndexParser _parser;
   final IndexRdfGenerator _rdfGenerator;
-  final SyncGraphConfig _config;
+  final SyncEngineConfig _config;
 
   /// Watch-based cache: indexed class → set of FullIndex metadata
   ///
@@ -109,7 +109,7 @@ class IndexDiscovery {
     required Storage storage,
     required IndexParser parser,
     required IndexRdfGenerator rdfGenerator,
-    required SyncGraphConfig config,
+    required SyncEngineConfig config,
   })  : _storage = storage,
         _parser = parser,
         _rdfGenerator = rdfGenerator,
@@ -328,11 +328,11 @@ class IndexDiscovery {
   /// Error handling depends on [mode]:
   /// - Strict: Throws on missing documents or parse errors (sync context)
   /// - Lenient: Logs warnings and skips problematic indices (user-save context)
-  Future<Iterable<CrdtIndexGraphConfig>> discoverIndices(
+  Future<Iterable<CrdtIndexData>> discoverIndices(
     IriTerm indexedClass, {
     ShardDeterminationMode mode = ShardDeterminationMode.lenient,
   }) async {
-    final configs = <CrdtIndexGraphConfig>[];
+    final configs = <CrdtIndexData>[];
 
     // Fast synchronous lookups from watch-based caches
     final fullIndexMetadata =
@@ -345,7 +345,7 @@ class IndexDiscovery {
 
     // Load and parse FullIndex documents (with cache)
     for (final metadata in fullIndexMetadata) {
-      final config = await _getOrLoadIndexConfig<FullIndexGraphConfig>(
+      final config = await _getOrLoadIndexConfig<FullIndexData>(
         metadata,
         'FullIndex',
         _loadAndParseFullIndex,
@@ -358,7 +358,7 @@ class IndexDiscovery {
 
     // Load and parse GroupIndexTemplate documents (with cache)
     for (final metadata in templateMetadata) {
-      final config = await _getOrLoadIndexConfig<GroupIndexGraphConfig>(
+      final config = await _getOrLoadIndexConfig<GroupIndexData>(
         metadata,
         'GroupIndexTemplate',
         _loadAndParseTemplate,
@@ -391,7 +391,7 @@ class IndexDiscovery {
   /// Error handling depends on [mode]:
   /// - Strict: Throws if document missing or parse fails
   /// - Lenient: Returns null and logs warning
-  Future<T?> _getOrLoadIndexConfig<T extends CrdtIndexGraphConfig>(
+  Future<T?> _getOrLoadIndexConfig<T extends CrdtIndexData>(
     _IndexMetadata metadata,
     String indexTypeName,
     Future<T?> Function(IriTerm, ShardDeterminationMode) loader, {
@@ -435,7 +435,7 @@ class IndexDiscovery {
   /// Error handling depends on [mode]:
   /// - Strict: Throws if document missing or parse fails
   /// - Lenient: Returns null and logs warning
-  Future<T?> _loadAndParseIndexDocument<T extends CrdtIndexGraphConfig>(
+  Future<T?> _loadAndParseIndexDocument<T extends CrdtIndexData>(
     IriTerm indexIri,
     String indexTypeName,
     T? Function(RdfGraph, IriTerm) parser,
@@ -476,7 +476,7 @@ class IndexDiscovery {
   }
 
   /// Loads and parses a FullIndex document.
-  Future<FullIndexGraphConfig?> _loadAndParseFullIndex(
+  Future<FullIndexData?> _loadAndParseFullIndex(
     IriTerm indexIri,
     ShardDeterminationMode mode,
   ) =>
@@ -488,7 +488,7 @@ class IndexDiscovery {
       );
 
   /// Loads and parses a GroupIndexTemplate document.
-  Future<GroupIndexGraphConfig?> _loadAndParseTemplate(
+  Future<GroupIndexData?> _loadAndParseTemplate(
     IriTerm templateIri,
     ShardDeterminationMode mode,
   ) =>
@@ -515,7 +515,7 @@ class IndexDiscovery {
   /// Error handling depends on [mode]:
   /// - Strict: Throws if template not found in cache or parse fails
   /// - Lenient: Returns null and logs warning
-  Future<GroupIndexGraphConfig?> discoverGroupIndexTemplate(
+  Future<GroupIndexData?> discoverGroupIndexTemplate(
     IriTerm templateIri, {
     ShardDeterminationMode mode = ShardDeterminationMode.lenient,
   }) async {
@@ -540,7 +540,7 @@ class IndexDiscovery {
     }
 
     // Load config using existing cache infrastructure
-    return await _getOrLoadIndexConfig<GroupIndexGraphConfig>(
+    return await _getOrLoadIndexConfig<GroupIndexData>(
       metadata,
       'GroupIndexTemplate',
       _loadAndParseTemplate,

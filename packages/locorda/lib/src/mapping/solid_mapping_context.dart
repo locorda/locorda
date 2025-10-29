@@ -10,7 +10,7 @@ import 'package:locorda_core/locorda_core.dart';
 
 /// Provides framework services to mapper initializer functions.
 ///
-/// When users provide a `mapperInitializer` function to `LocordaSync.setup()`,
+/// When users provide a `mapperInitializer` function to `Locorda.setup()`,
 /// it receives this context object containing all the framework-managed
 /// services needed to configure RDF mapping for Solid Pods.
 class SolidMappingContext {

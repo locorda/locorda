@@ -44,7 +44,7 @@ class _InstallationContext {
   final InMemoryStorage storage;
   final IriTranslator iriTranslator;
   final TestPhysicalTimestampFactory timestampFactory;
-  final Future<LocordaGraphSync> syncFuture;
+  final Future<SyncEngine> syncFuture;
 
   _InstallationContext({
     required this.installationId,
@@ -146,7 +146,7 @@ Future<void> _executeSaveTestWithSteps(
   final testId = testJson['id'] as String;
 
   // Load configurations - either per-installation or single global config
-  final Map<String, SyncGraphConfig> installationConfigs;
+  final Map<String, SyncEngineConfig> installationConfigs;
 
   if (testJson.containsKey('installations')) {
     // New format: per-installation configs
@@ -168,7 +168,7 @@ Future<void> _executeSaveTestWithSteps(
   // Shared backend for all installations (simulates the remote storage)
   final sharedBackend = InMemoryBackend();
 
-  // Map of installation_id -> LocordaGraphSync instance
+  // Map of installation_id -> SyncEngine instance
   // Each installation has its own storage, clock, etc.
   final installations = <String, _InstallationContext>{};
 
@@ -204,7 +204,7 @@ Future<void> _executeSaveTestWithSteps(
 
         // Get or create sync instance for this installation
 
-        final syncFuture = LocordaGraphSync.setup(
+        final syncFuture = SyncEngine.create(
           backends: [sharedBackend],
           storage: storage,
           config: config,
@@ -246,7 +246,7 @@ Future<void> _executeStep({
   required Directory testAssetsDir,
   required DateTime baseTimestamp,
   required String? baseInstallationId,
-  required SyncGraphConfig config,
+  required SyncEngineConfig config,
   required InMemoryBackend sharedBackend,
   required _InstallationContext installationContext,
   required TestFetcher testFetcher,
@@ -333,7 +333,7 @@ Future<void> _executeStep({
   }
 
   if (action == 'generate_shard_documents') {
-    // make sure the LocordaGraphSync instance is fully initialized
+    // make sure the SyncEngine instance is fully initialized
     await installationContext.syncFuture;
     setTime(actionTs?['generate'], timestampFactory);
     final DateTime syncTime = timestampFactory();
@@ -498,7 +498,7 @@ Future<void> _verifyExpectations({
   required Map<String, dynamic> expectedJson,
   required Directory testAssetsDir,
   required InMemoryStorage storage,
-  required SyncGraphConfig config,
+  required SyncEngineConfig config,
   required IriTranslator iriTranslator,
   IriTerm? externalDocumentIri,
   IriTerm? typeIri,
@@ -546,12 +546,12 @@ void setTime(String? ts, TestPhysicalTimestampFactory timestampFactory) {
   }
 }
 
-SyncGraphConfig _loadConfig(Directory testAssetsDir, String configPath) {
+SyncEngineConfig _loadConfig(Directory testAssetsDir, String configPath) {
   final configFile = File('${testAssetsDir.path}/$configPath');
   final configJson =
       jsonDecode(configFile.readAsStringSync()) as Map<String, dynamic>;
 
-  return SyncGraphConfig.fromJson(configJson);
+  return SyncEngineConfig.fromJson(configJson);
 }
 
 /// Parse expected property changes from test JSON.
@@ -726,7 +726,7 @@ Future<void> _executeSaveErrorTest(
     final installationIdFactory =
         baseInstallationId != null ? () => baseInstallationId : null;
 
-    final sync = await LocordaGraphSync.setup(
+    final sync = await SyncEngine.create(
         backends: [InMemoryBackend()],
         storage: storage,
         config: config,

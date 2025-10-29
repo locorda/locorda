@@ -1,7 +1,7 @@
 import 'package:rdf_core/rdf_core.dart';
 import 'package:locorda_core/src/index/group_key_generator.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
-import 'package:locorda_core/src/config/sync_graph_config.dart';
+import 'package:locorda_core/src/config/sync_engine_config.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -14,7 +14,7 @@ void main() {
 
     group('basic functionality', () {
       test('generates simple group key from single property', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -38,7 +38,7 @@ void main() {
       });
 
       test('generates group key without transforms', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
@@ -55,7 +55,7 @@ void main() {
       });
 
       test('returns null when required property is missing', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(dateCreatedPredicate),
@@ -73,7 +73,7 @@ void main() {
       });
 
       test('uses missing value when property is absent', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -97,7 +97,7 @@ void main() {
 
     group('hierarchical grouping', () {
       test('generates hierarchical group key with multiple levels', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -130,7 +130,7 @@ void main() {
       });
 
       test('handles multiple properties at the same hierarchy level', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -162,7 +162,7 @@ void main() {
       });
 
       test('processes hierarchy levels in correct order', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -202,7 +202,7 @@ void main() {
 
     group('regex transform integration', () {
       test('applies multiple transforms in order - first match wins', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -235,7 +235,7 @@ void main() {
       });
 
       test('handles complex transform patterns from specification', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -269,7 +269,7 @@ void main() {
       });
 
       test('uses original value when no transforms match', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -294,7 +294,7 @@ void main() {
 
     group('RDF term type handling', () {
       test('handles IRI objects', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -317,7 +317,7 @@ void main() {
       });
 
       test('handles literal with datatype', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -341,7 +341,7 @@ void main() {
       });
 
       test('returns null for blank node objects', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
@@ -363,7 +363,7 @@ void main() {
           'generates cartesian product from multiple properties with multiple values',
           () {
         // Test the core Cartesian product functionality as specified in ARCHITECTURE.md 5.3.3
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -404,7 +404,7 @@ void main() {
       test('generates cartesian product across hierarchy levels', () {
         final priorityPredicate = const IriTerm('http://example.org/priority');
 
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             // Level 1: Two properties, each with multiple values
@@ -455,7 +455,7 @@ void main() {
       });
 
       test('handles cartesian product with missing values', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate, missingValue: 'default'),
@@ -490,7 +490,7 @@ void main() {
     group('deduplication and edge cases', () {
       test('deduplicates identical group keys from different transform paths',
           () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -518,7 +518,7 @@ void main() {
       });
 
       test('handles different datatypes with same string representation', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(dateCreatedPredicate),
@@ -543,7 +543,7 @@ void main() {
       });
 
       test('handles literals with language tags', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
@@ -568,7 +568,7 @@ void main() {
       test(
           'generates multiple group keys when multiple property values present',
           () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
@@ -592,7 +592,7 @@ void main() {
       });
 
       test('handles mixed relevant and irrelevant triples', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -622,7 +622,7 @@ void main() {
 
     group('edge cases and error handling', () {
       test('handles empty triples list', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
@@ -636,7 +636,7 @@ void main() {
       });
 
       test('handles empty triples list with missing values', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -656,7 +656,7 @@ void main() {
         // This should not happen in practice due to assertion in GroupIndex constructor
         // The constructor should throw an assertion error for empty grouping properties
         expect(
-            () => GroupIndexGraphConfig(
+            () => GroupIndexData(
                   localName: 'test-index',
                   groupingProperties: [], // This will fail assertion
                 ),
@@ -664,7 +664,7 @@ void main() {
       });
 
       test('handles mixed missing and present properties', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -697,7 +697,7 @@ void main() {
 
     group('performance and efficiency', () {
       test('efficiently organizes extractors by level', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate, hierarchyLevel: 2),
@@ -727,7 +727,7 @@ void main() {
         final aProperty = const IriTerm('http://example.org/a');
         final zProperty = const IriTerm('http://example.org/z');
 
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             // Intentionally declare in reverse alphabetical order
@@ -748,7 +748,7 @@ void main() {
       });
 
       test('reuses compiled regex patterns', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -780,7 +780,7 @@ void main() {
 
     group('filesystem safety integration', () {
       test('preserves safe group keys unchanged', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
@@ -798,7 +798,7 @@ void main() {
       });
 
       test('makes unsafe single-level group keys filesystem-safe', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
@@ -819,7 +819,7 @@ void main() {
       });
 
       test('makes unsafe hierarchical group keys filesystem-safe', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -854,7 +854,7 @@ void main() {
 
       test('handles mixed safe and unsafe components in hierarchical paths',
           () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(
@@ -885,7 +885,7 @@ void main() {
       });
 
       test('handles IRI values with filesystem safety', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),
@@ -906,7 +906,7 @@ void main() {
       });
 
       test('ensures deterministic filesystem-safe results', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-index',
           groupingProperties: [
             GroupingProperty(categoryPredicate),

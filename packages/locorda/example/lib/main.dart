@@ -12,9 +12,9 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:locorda/locorda.dart';
-import 'package:locorda_drift/locorda_drift.dart';
-import 'package:locorda_solid/locorda_solid.dart';
+
 import 'package:locorda_solid_auth/locorda_solid_auth.dart';
+import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
 import 'package:personal_notes_app/init_rdf_mapper.g.dart';
 import 'package:personal_notes_app/models/category.dart';
 import 'package:personal_notes_app/models/note.dart';
@@ -27,9 +27,10 @@ import 'package:solid_auth/solid_auth.dart';
 import 'screens/notes_list_screen.dart';
 import 'services/categories_service.dart';
 import 'services/notes_service.dart';
-import 'utils/logging_setup.dart';
 import 'storage/database.dart' show AppDatabase;
 import 'storage/repositories.dart' show CategoryRepository, NoteRepository;
+import 'utils/logging_setup.dart';
+import 'worker.dart' show createSyncEngine;
 
 const appBaseUrl = 'https://locorda.dev/example/personal_notes_app';
 
@@ -42,21 +43,25 @@ void main() async {
   runApp(const PersonalNotesApp());
 }
 
-/// Initialize the CRDT sync system with resource-focused configuration.
+/// Initialize the CRDT sync system with worker-based architecture.
 ///
 /// This configures:
-/// - Local storage backend (Drift/SQLite)
-/// - RDF mapper with user dependencies
+/// - Worker isolate/thread for heavy operations (CRDT, DB, HTTP, DPoP)
+/// - RDF mapper with user dependencies (runs on main thread)
 /// - All resources (Note, Category) with their paths, indices, and CRDT mappings
+/// - Auth bridge to sync credentials from main thread to worker
 /// - Returns a fully configured sync system
-Future<LocordaSync> initializeLocordaSync(
-    {DriftWebOptions? driftWeb,
-    DriftNativeOptions? driftNative,
-    required SolidAuth solidAuth}) async {
-  return await LocordaSync.setup(
-    /* control behaviour and system integration */
-    storage: DriftStorage(web: driftWeb, native: driftNative),
-    backends: [SolidBackend(auth: SolidAuthBridge(solidAuth))],
+Future<Locorda> initializeLocorda({
+  required SolidAuth solidAuth,
+}) {
+  // Setup sync system with worker
+  return Locorda.createWithWorker(
+    syncEngineFactory: createSyncEngine,
+    jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
+
+    // Create auth bridge to sync SolidAuth state to worker
+    plugins: [SolidAuthConnector.plugin(solidAuth)],
+
     mapperInitializer: (context) => initRdfMapper(
         rdfMapper: context.baseRdfMapper,
         $indexItemIriFactory: context.indexItemIriFactory,
@@ -64,7 +69,7 @@ Future<LocordaSync> initializeLocordaSync(
         $resourceRefFactory: context.resourceRefFactory),
 
     /* resource-focused configuration */
-    config: SyncConfig(
+    config: LocordaConfig(
       resources: [
         // Configure Note resource with grouping index by category
         ResourceConfig(
@@ -131,7 +136,7 @@ class AppInitializer extends StatefulWidget {
 
 class _AppInitializerState extends State<AppInitializer>
     with WidgetsBindingObserver {
-  LocordaSync? syncSystem;
+  Locorda? syncSystem;
   AppDatabase? appDatabase;
   CategoryRepository? categoryRepository;
   NoteRepository? noteRepository;
@@ -192,9 +197,9 @@ class _AppInitializerState extends State<AppInitializer>
               '${kDebugMode ? 'http://localhost:3815' : appBaseUrl}/redirect.html'));
       await solidAuthInstance.init();
 
-      // Initialize the CRDT sync system
-      final syncSys = await initializeLocordaSync(
-          driftWeb: webOptions, solidAuth: solidAuthInstance);
+      // Initialize the CRDT sync system with worker architecture
+      // This runs heavy operations (CRDT, DB, HTTP, DPoP) in separate isolate/worker
+      final syncSys = await initializeLocorda(solidAuth: solidAuthInstance);
 
       // Initialize app database (Drift)
       final appDb = AppDatabase(web: webOptions);

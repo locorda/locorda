@@ -43,7 +43,7 @@ Indices and shards will use the standard ManagedDocument pattern with fragment i
 
 ## Rationale
 
-1. **Code Reuse:** Can use existing `LocordaGraphSync.save()` infrastructure without special-case storage logic
+1. **Code Reuse:** Can use existing `SyncEngine.save()` infrastructure without special-case storage logic
 2. **Consistency:** Same CRDT merge semantics everywhere (idx:hasShard uses OR-Set, idx:populationState uses LWW-Register per spec)
 3. **Simpler Architecture:** No dual storage paths to maintain
 4. **Already Partially There:** GC index template already shows `sync:isGovernedBy` and `crdt:hasClockEntry`, indicating CRDT participation
@@ -52,7 +52,7 @@ Indices and shards will use the standard ManagedDocument pattern with fragment i
 
 - Indices (FullIndex, GroupIndex, GroupIndexTemplate) use fragment identifier `#it`
 - Shards use fragment identifier `#it`
-- All index/shard operations go through `LocordaGraphSync.save()`
+- All index/shard operations go through `SyncEngine.save()`
 - CRDT merge contracts apply (mappings:index-v1, mappings:shard-v1)
 
 ## Spec Updates Needed

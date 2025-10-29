@@ -130,7 +130,7 @@ Three new configuration files created:
 
 The test cases are designed to fail initially, revealing exactly what needs to be implemented. As each feature is implemented in priority order, the corresponding tests should begin passing, providing clear validation of correctness.
 
-Run specific test: `dart test test/sync/locorda_graph_sync_test.dart --name "save_XX"`
+Run specific test: `dart test test/sync/sync_engine_test.dart --name "save_XX"`
 
 ## Specification Questions Resolved
 

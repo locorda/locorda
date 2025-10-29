@@ -10,10 +10,10 @@ import 'package:rdf_core/rdf_core.dart';
 import 'package:locorda_core/src/index/regex_transform_validation.dart';
 
 /// Configuration for the entire sync system organized by resources.
-class SyncConfigBaseValidator {
+class ConfigBaseValidator {
   final String Function(ResourceConfigBase) _getDebugName;
 
-  const SyncConfigBaseValidator(this._getDebugName);
+  const ConfigBaseValidator(this._getDebugName);
 
   /// Validates an IRI string by attempting to construct an IriTerm from it.
   /// Adds an error to the ValidationResult if the IRI is invalid.
@@ -32,7 +32,7 @@ class SyncConfigBaseValidator {
   }
 
   /// Validate this configuration for consistency and correctness.
-  ValidationResult validate(SyncConfigBase config) {
+  ValidationResult validate(ConfigBase config) {
     final result = ValidationResult();
 
     _validateCrdtMappings(config, result);
@@ -41,7 +41,7 @@ class SyncConfigBaseValidator {
     return result;
   }
 
-  void _validateCrdtMappings(SyncConfigBase config, ValidationResult result) {
+  void _validateCrdtMappings(ConfigBase config, ValidationResult result) {
     for (final resource in config.resources) {
       final uri = resource.crdtMapping;
 
@@ -60,7 +60,7 @@ class SyncConfigBaseValidator {
   }
 
   void _validateIndexConfigurations(
-      SyncConfigBase config, ValidationResult result) {
+      ConfigBase config, ValidationResult result) {
     for (final resource in config.resources) {
       for (final index in resource.indices) {
         // Check for empty or invalid local names

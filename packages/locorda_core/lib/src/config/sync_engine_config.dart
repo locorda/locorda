@@ -1,32 +1,38 @@
-import 'package:locorda_core/src/config/sync_config_base.dart';
+import 'package:locorda_core/src/config/config_base.dart';
 import 'package:locorda_core/src/generated/idx/index.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/sync/sync_manager.dart';
 import 'package:rdf_core/rdf_core.dart';
 
-class IndexItemGraphConfig extends IndexItemConfigBase {
-  const IndexItemGraphConfig(super.properties);
-  factory IndexItemGraphConfig.fromJson(Map<String, dynamic> json) {
+class IndexItemData extends IndexItemConfigBase {
+  const IndexItemData(super.properties);
+
+  factory IndexItemData.fromJson(Map<String, dynamic> json) {
     final propertiesJson = json['properties'] as List<dynamic>;
     final properties = propertiesJson.map((p) => IriTerm(p as String)).toSet();
 
-    return IndexItemGraphConfig(properties);
+    return IndexItemData(properties);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'properties': properties.map((p) => p.value).toList(),
+    };
   }
 }
 
-sealed class CrdtIndexGraphConfig extends CrdtIndexConfigBase {
-  IndexItemGraphConfig? get item;
+sealed class CrdtIndexData extends CrdtIndexConfigBase {
+  IndexItemData? get item;
 }
 
-class FullIndexGraphConfig extends FullIndexConfigBase
-    implements CrdtIndexGraphConfig {
-  final IndexItemGraphConfig? item;
+class FullIndexData extends FullIndexConfigBase implements CrdtIndexData {
+  final IndexItemData? item;
 
-  const FullIndexGraphConfig(
+  const FullIndexData(
       {required super.localName, this.item, super.itemFetchPolicy})
       : super(item: item);
 
-  factory FullIndexGraphConfig.fromJson(Map<String, dynamic> json) {
+  factory FullIndexData.fromJson(Map<String, dynamic> json) {
     final localName = json['localName'] as String;
     final itemFetchPolicyStr = json['itemFetchPolicy'] as String?;
     final itemFetchPolicy = switch (itemFetchPolicyStr) {
@@ -36,39 +42,55 @@ class FullIndexGraphConfig extends FullIndexConfigBase
       _ => throw ArgumentError('Unknown itemFetchPolicy: $itemFetchPolicyStr')
     };
     final itemJson = json['item'] as Map<String, dynamic>?;
-    final item =
-        itemJson != null ? IndexItemGraphConfig.fromJson(itemJson) : null;
+    final item = itemJson != null ? IndexItemData.fromJson(itemJson) : null;
 
-    return FullIndexGraphConfig(
+    return FullIndexData(
         localName: localName, itemFetchPolicy: itemFetchPolicy, item: item);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'localName': localName,
+      'itemFetchPolicy': itemFetchPolicy == ItemFetchPolicy.prefetch
+          ? 'prefetch'
+          : 'onRequest',
+      if (item != null) 'item': item!.toJson(),
+    };
   }
 }
 
-class GroupIndexGraphConfig extends GroupIndexConfigBase
-    implements CrdtIndexGraphConfig {
-  final IndexItemGraphConfig? item;
+class GroupIndexData extends GroupIndexConfigBase implements CrdtIndexData {
+  final IndexItemData? item;
 
-  const GroupIndexGraphConfig({
+  const GroupIndexData({
     required super.localName,
     this.item,
     super.groupingProperties = const [],
   }) : super(item: item);
 
-  factory GroupIndexGraphConfig.fromJson(Map<String, dynamic> json) {
+  factory GroupIndexData.fromJson(Map<String, dynamic> json) {
     final localName = json['localName'] as String;
     final itemJson = json['item'] as Map<String, dynamic>?;
-    final item =
-        itemJson != null ? IndexItemGraphConfig.fromJson(itemJson) : null;
+    final item = itemJson != null ? IndexItemData.fromJson(itemJson) : null;
     final groupingPropertiesJson =
         json['groupingProperties'] as List<dynamic>? ?? [];
     final groupingProperties = groupingPropertiesJson
         .map((gp) => GroupingProperty.fromJson(gp as Map<String, dynamic>))
         .toList(growable: false);
 
-    return GroupIndexGraphConfig(
+    return GroupIndexData(
         localName: localName,
         groupingProperties: groupingProperties,
         item: item);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'localName': localName,
+      if (item != null) 'item': item!.toJson(),
+      'groupingProperties':
+          groupingProperties.map((gp) => gp.toJson()).toList(),
+    };
   }
 }
 
@@ -119,6 +141,8 @@ class DocumentIriTemplate {
     return DocumentIriTemplate._(template, variables);
   }
 
+  String toJson() => template;
+
   /// Efficiently checks if a given IRI matches this template pattern
   ///
   /// First does a quick prefix/suffix check, then extracts the ID if it matches
@@ -157,15 +181,15 @@ class DocumentIriTemplate {
   }
 }
 
-class ResourceGraphConfig extends ResourceConfigBase {
-  final List<CrdtIndexGraphConfig> indices;
-  late final List<CrdtIndexGraphConfig> indicesInOrder = indices.toList()
+class ResourceConfigData extends ResourceConfigBase {
+  final List<CrdtIndexData> indices;
+  late final List<CrdtIndexData> indicesInOrder = indices.toList()
     ..sort((a, b) => a.localName.compareTo(b.localName));
 
   final IriTerm typeIri;
   final DocumentIriTemplate? documentIriTemplate;
 
-  ResourceGraphConfig({
+  ResourceConfigData({
     required this.typeIri,
     required super.crdtMapping,
     required this.indices,
@@ -175,50 +199,68 @@ class ResourceGraphConfig extends ResourceConfigBase {
             : null,
         super(indices: indices);
 
-  CrdtIndexGraphConfig getIndexByName(String localName) {
+  CrdtIndexData getIndexByName(String localName) {
     return indices.firstWhere((i) => i.localName == localName,
         orElse: () =>
             throw ArgumentError('No index found with localName: $localName'));
   }
 
-  factory ResourceGraphConfig.fromJson(Map<String, dynamic> json) {
+  factory ResourceConfigData.fromJson(Map<String, dynamic> json) {
     final typeIri = IriTerm(json['typeIri'] as String);
     final crdtMappingStr = json['crdtMapping'] as String;
     final crdtMapping = Uri.parse(crdtMappingStr);
     final documentIriTemplate = json['documentIriTemplate'] as String?;
 
     final indicesJson = json['indices'] as List<dynamic>;
-    final indices = <CrdtIndexGraphConfig>[];
+    final indices = <CrdtIndexData>[];
 
     for (final indexJson in indicesJson) {
       final indexType = indexJson['type'] as String;
 
       switch (indexType) {
         case 'FullIndex':
-          indices.add(
-              FullIndexGraphConfig.fromJson(indexJson as Map<String, dynamic>));
+          indices
+              .add(FullIndexData.fromJson(indexJson as Map<String, dynamic>));
           break;
         case 'GroupIndex':
-          indices.add(GroupIndexGraphConfig.fromJson(
-              indexJson as Map<String, dynamic>));
+          indices
+              .add(GroupIndexData.fromJson(indexJson as Map<String, dynamic>));
           break;
         default:
           throw ArgumentError('Unknown index type: $indexType');
       }
     }
 
-    return ResourceGraphConfig(
+    return ResourceConfigData(
       typeIri: typeIri,
       crdtMapping: crdtMapping,
       indices: indices,
       documentIriTemplate: documentIriTemplate,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'typeIri': typeIri.value,
+      'crdtMapping': crdtMapping.toString(),
+      if (documentIriTemplate != null)
+        'documentIriTemplate': documentIriTemplate!.toJson(),
+      'indices': indices.map((index) {
+        final baseJson = index is FullIndexData
+            ? index.toJson()
+            : (index as GroupIndexData).toJson();
+        return {
+          ...baseJson,
+          'type': index is FullIndexData ? 'FullIndex' : 'GroupIndex',
+        };
+      }).toList(),
+    };
+  }
 }
 
-class SyncGraphConfig extends SyncConfigBase {
-  final List<ResourceGraphConfig> resources;
-  late final Iterable<ResourceGraphConfig> resourcesInSyncOrder =
+class SyncEngineConfig extends ConfigBase {
+  final List<ResourceConfigData> resources;
+  late final Iterable<ResourceConfigData> resourcesInSyncOrder =
       resources.toList()
         ..sort((a, b) {
           // Index-of-indices (root indices) first
@@ -237,21 +279,20 @@ class SyncGraphConfig extends SyncConfigBase {
           // Within each group, sort by IRI value for determinism
           return a.typeIri.value.compareTo(b.typeIri.value);
         });
-  late final Iterable<
-          (CrdtIndexGraphConfig indexConfig, IriTerm indexedTypeIri)>
+  late final Iterable<(CrdtIndexData indexConfig, IriTerm indexedTypeIri)>
       allIndicesInOrder = resourcesInSyncOrder
           .expand((r) => r.indicesInOrder.map((i) => (i, r.typeIri)))
           .toList();
 
-  SyncGraphConfig({
+  SyncEngineConfig({
     required this.resources,
     super.autoSyncConfig = const AutoSyncConfig.disabled(),
   }) : super(resources: resources);
 
-  factory SyncGraphConfig.fromJson(Map<String, dynamic> json) {
+  factory SyncEngineConfig.fromJson(Map<String, dynamic> json) {
     final resourcesJson = json['resources'] as List<dynamic>;
     final resources = resourcesJson
-        .map((r) => ResourceGraphConfig.fromJson(r as Map<String, dynamic>))
+        .map((r) => ResourceConfigData.fromJson(r as Map<String, dynamic>))
         .toList();
 
     // Parse auto sync config if present
@@ -260,32 +301,38 @@ class SyncGraphConfig extends SyncConfigBase {
         ? AutoSyncConfig.fromJson(autoSyncJson)
         : const AutoSyncConfig.disabled();
 
-    return SyncGraphConfig(
+    return SyncEngineConfig(
       resources: resources,
       autoSyncConfig: autoSyncConfig,
     );
   }
 
-  ResourceGraphConfig getResourceConfig(IriTerm type) =>
+  Map<String, dynamic> toJson() {
+    return {
+      'resources': resources.map((r) => r.toJson()).toList(),
+      'autoSync': autoSyncConfig.toJson(),
+    };
+  }
+
+  ResourceConfigData getResourceConfig(IriTerm type) =>
       resources.firstWhere((r) => r.typeIri == type,
           orElse: () =>
               throw ArgumentError('No resource config found for type: $type'));
 
-  SyncGraphConfig withResourcesAdded(List<ResourceGraphConfig> newResources) {
-    final updatedResources = List<ResourceGraphConfig>.from(resources)
+  SyncEngineConfig withResourcesAdded(List<ResourceConfigData> newResources) {
+    final updatedResources = List<ResourceConfigData>.from(resources)
       ..addAll(newResources);
-    return SyncGraphConfig(
+    return SyncEngineConfig(
       resources: updatedResources,
       autoSyncConfig: autoSyncConfig,
     );
   }
 
   /// Find the GroupIndex configuration for the given indexName.
-  (ResourceGraphConfig, GroupIndexGraphConfig)? findGroupIndexConfig(
-      String indexName) {
+  (ResourceConfigData, GroupIndexData)? findGroupIndexConfig(String indexName) {
     for (final resource in resources) {
       for (final index in resource.indices) {
-        if (index is GroupIndexGraphConfig && index.localName == indexName) {
+        if (index is GroupIndexData && index.localName == indexName) {
           return (resource, index);
         }
       }

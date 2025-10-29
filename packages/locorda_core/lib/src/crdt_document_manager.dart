@@ -17,7 +17,7 @@ import 'package:locorda_core/src/split_document.dart';
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
-final _log = Logger('LocordaGraphSync');
+final _log = Logger('CrdtDocumentManager');
 
 typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
 typedef DocumentSaveResult = ({
@@ -229,7 +229,7 @@ Iterable<Triple> toBlankNodeMappingTriples(
 }
 
 List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
-    IriTerm documentIri, SyncGraphConfig config, IriTerm resourceType) {
+    IriTerm documentIri, SyncEngineConfig config, IriTerm resourceType) {
   final oldIsGovernedByFiles = oldFrameworkGraph?.getListObjects<IriTerm>(
           documentIri, SyncManagedDocument.isGovernedBy) ??
       const <IriTerm>[];
@@ -247,7 +247,7 @@ List<IriTerm> _computeIsGovernedBy(RdfGraph? oldFrameworkGraph,
 /// and sync operations transparently.
 class CrdtDocumentManager {
   final Storage _storage;
-  final SyncGraphConfig _config;
+  final SyncEngineConfig _config;
   final MergeContractLoader _mergeContractLoader;
   final ShardDeterminer _shardDeterminer;
   final LocalDocumentMerger _localDocumentMerger;
@@ -258,7 +258,7 @@ class CrdtDocumentManager {
 
   CrdtDocumentManager({
     required Storage storage,
-    required SyncGraphConfig config,
+    required SyncEngineConfig config,
     required MergeContractLoader mergeContractLoader,
     required HlcService hlcService,
     required ShardDeterminer shardDeterminer,

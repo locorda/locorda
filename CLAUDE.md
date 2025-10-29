@@ -87,7 +87,7 @@ Some tests support **record mode** for creating/updating expected test results:
 - `RECORD_MODE=true dart test` - Run tests in record mode (overwrites expected files)
 - Use this to regenerate expected RDF graphs after intentional changes to test logic or CRDT behavior
 - Always review changes via `git diff` before committing - record mode overwrites files!
-- Currently supported: `locorda_graph_sync_test.dart` (graph sync expectations)
+- Currently supported: `sync_engine_test.dart` (graph sync expectations)
 
 **Workflow**: Make code changes → run with `RECORD_MODE=true dart test` → review git diff → commit if correct
 

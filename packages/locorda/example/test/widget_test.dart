@@ -34,7 +34,7 @@ void main() {
     );
 
     // Create mock sync system
-    final mockSyncSystem = MockLocordaSync();
+    final mockLocorda = MockLocorda();
 
     // Build our app with mock services
     await tester.pumpWidget(
@@ -48,7 +48,7 @@ void main() {
           notesService: mockNotesService,
           categoriesService: mockCategoriesService,
           solidAuth: mockSolidAuth,
-          syncSystem: mockSyncSystem,
+          syncSystem: mockLocorda,
         ),
       ),
     );

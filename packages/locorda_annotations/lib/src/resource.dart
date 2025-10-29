@@ -95,7 +95,7 @@ class SubIriStrategy extends IriStrategy {
 /// See also:
 /// - [RdfGlobalResource] - The base annotation this extends
 /// - CRDT annotations: [CrdtLwwRegister], [CrdtFwwRegister], [CrdtOrSet], [CrdtImmutable]
-/// - [LocordaGraphSync] - The main synchronization engine
+/// - [SyncEngine] - The main synchronization engine
 class LcrdRootResource extends RdfGlobalResource {
   /// Creates a Solid Pod resource annotation.
   ///
@@ -104,7 +104,7 @@ class LcrdRootResource extends RdfGlobalResource {
   ///
   /// The [classIri] parameter defines the RDF type for this resource class.
   /// The IRI strategy is configured globally when initializing the
-  /// [LocordaGraphSync] system rather than per-annotation, providing consistent
+  /// [SyncEngine] system rather than per-annotation, providing consistent
   /// IRI generation across all Solid Pod resources.
   ///
   /// Example:

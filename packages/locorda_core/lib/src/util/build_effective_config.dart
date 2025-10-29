@@ -7,28 +7,28 @@ class IndexNames {
 }
 
 /// The index item configuration for the index of indices.
-final indexIndexItemConfig = IndexItemGraphConfig({IdxFullIndex.indexesClass});
+final indexIndexItemConfig = IndexItemData({IdxFullIndex.indexesClass});
 
-SyncGraphConfig buildEffectiveConfig(SyncGraphConfig config) {
+SyncEngineConfig buildEffectiveConfig(SyncEngineConfig config) {
   // Automatically add configuration for Framework-Owned resources
   final intermediateConfig = config.withResourcesAdded([
-    ResourceGraphConfig(
+    ResourceConfigData(
       typeIri: CrdtClientInstallation.classIri,
       crdtMapping: Uri.parse(
           'https://w3id.org/solid-crdt-sync/mappings/client-installation-v1'),
       indices: [
-        FullIndexGraphConfig(
+        FullIndexData(
             localName: IndexNames.installations,
             itemFetchPolicy: ItemFetchPolicy.onRequest)
       ],
     ),
-    ResourceGraphConfig(
+    ResourceConfigData(
         typeIri: IdxShard.classIri,
         crdtMapping:
             Uri.parse('https://w3id.org/solid-crdt-sync/mappings/shard-v1'),
         // No indices for shards
         indices: []),
-    ResourceGraphConfig(
+    ResourceConfigData(
         typeIri: IdxGroupIndex.classIri,
         crdtMapping:
             Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
@@ -42,13 +42,13 @@ SyncGraphConfig buildEffectiveConfig(SyncGraphConfig config) {
     ..addAll({IdxFullIndex.classIri, IdxGroupIndexTemplate.classIri});
 
   final effectiveConfig = intermediateConfig.withResourcesAdded([
-    ResourceGraphConfig(
+    ResourceConfigData(
         typeIri: IdxFullIndex.classIri,
         crdtMapping:
             Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
         // No indices for indices
         indices: [
-          FullIndexGraphConfig(
+          FullIndexData(
               localName: IndexNames.fullIndices,
               item: indexIndexItemConfig,
               // We want to sync all indices of all resource types we handle,
@@ -58,13 +58,13 @@ SyncGraphConfig buildEffectiveConfig(SyncGraphConfig config) {
                 allResourceIris,
               ))
         ]),
-    ResourceGraphConfig(
+    ResourceConfigData(
         typeIri: IdxGroupIndexTemplate.classIri,
         crdtMapping:
             Uri.parse('https://w3id.org/solid-crdt-sync/mappings/index-v1'),
         // No indices for indices
         indices: [
-          FullIndexGraphConfig(
+          FullIndexData(
               localName: IndexNames.groupIndexTemplates,
               item: indexIndexItemConfig,
               // We want to sync all indices of all resource types we handle,

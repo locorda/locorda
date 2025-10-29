@@ -1,4 +1,4 @@
-import 'package:locorda_core/src/config/sync_graph_config.dart';
+import 'package:locorda_core/src/config/sync_engine_config.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/index/index_parser.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
@@ -11,7 +11,7 @@ void main() {
   group('IndexParser local name resolution', () {
     late IndexRdfGenerator generator;
     late LocalResourceLocator resourceLocator;
-    late SyncGraphConfig knownConfig;
+    late SyncEngineConfig knownConfig;
 
     setUp(() {
       resourceLocator = LocalResourceLocator(iriTermFactory: IriTerm.validated);
@@ -21,13 +21,13 @@ void main() {
       );
 
       // Create a known config with a GroupIndex
-      knownConfig = SyncGraphConfig(
+      knownConfig = SyncEngineConfig(
         resources: [
-          ResourceGraphConfig(
+          ResourceConfigData(
             typeIri: IriTerm('https://schema.org/Recipe'),
             crdtMapping: Uri.parse('tag:test'),
             indices: [
-              GroupIndexGraphConfig(
+              GroupIndexData(
                 localName: 'recipes-by-category',
                 groupingProperties: [
                   GroupingProperty(
@@ -36,7 +36,7 @@ void main() {
                   ),
                 ],
               ),
-              FullIndexGraphConfig(
+              FullIndexData(
                 localName: 'all-recipes',
               ),
             ],
@@ -54,7 +54,7 @@ void main() {
 
       final typeIri = IriTerm('https://schema.org/Recipe');
       final groupConfig =
-          knownConfig.resources.first.indices.first as GroupIndexGraphConfig;
+          knownConfig.resources.first.indices.first as GroupIndexData;
 
       // Generate the template
       final templateIri =
@@ -85,7 +85,7 @@ void main() {
 
       final typeIri = IriTerm('https://schema.org/Recipe');
       final fullIndexConfig =
-          knownConfig.resources.first.indices[1] as FullIndexGraphConfig;
+          knownConfig.resources.first.indices[1] as FullIndexData;
 
       // Generate the index
       final indexIri = generator.generateFullIndexIri(fullIndexConfig, typeIri);
@@ -109,12 +109,12 @@ void main() {
 
     test('uses IRI value as localName for unknown indices', () {
       // Create parser with empty config (all indices are unknown)
-      final emptyConfig = SyncGraphConfig(resources: []);
+      final emptyConfig = SyncEngineConfig(resources: []);
       final parser =
           IndexParser(knownConfig: emptyConfig, rdfGenerator: generator);
 
       final typeIri = IriTerm('https://schema.org/Task');
-      final unknownConfig = GroupIndexGraphConfig(
+      final unknownConfig = GroupIndexData(
         localName: 'original-name-should-not-be-used',
         groupingProperties: [
           GroupingProperty(

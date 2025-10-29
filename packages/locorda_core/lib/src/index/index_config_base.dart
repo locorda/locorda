@@ -221,6 +221,13 @@ class RegexTransform {
     return RegexTransform(pattern, replacement);
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'pattern': pattern,
+      'replacement': replacement,
+    };
+  }
+
   @override
   String toString() => 'RegexTransform($pattern -> $replacement)';
 
@@ -285,5 +292,15 @@ class GroupingProperty {
       missingValue: missingValue,
       transforms: transforms,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'predicate': predicate.value,
+      'hierarchyLevel': hierarchyLevel,
+      if (missingValue != null) 'missingValue': missingValue,
+      if (transforms != null)
+        'transforms': transforms!.map((t) => t.toJson()).toList(),
+    };
   }
 }

@@ -22,7 +22,7 @@ final _log = Logger('CategoryRepository');
 /// Repository becomes "sync-aware storage" following add-on architecture.
 class CategoryRepository {
   final CategoryDao _categoryDao;
-  final LocordaSync _syncSystem;
+  final Locorda _syncSystem;
   final StreamSubscription _hydrationSubscription;
 
   static const String _resourceType = 'category';
@@ -43,7 +43,7 @@ class CategoryRepository {
   static Future<CategoryRepository> create(
     CategoryDao categoryDao,
     CursorDao cursorDao,
-    LocordaSync syncSystem,
+    Locorda syncSystem,
   ) async {
     final subscription = await syncSystem.hydrateWithCallbacks<models.Category>(
       getCurrentCursor: () => cursorDao.getCursor(_resourceType),
@@ -161,7 +161,7 @@ class NoteRepository {
   final NoteDao _noteDao;
   final CommentDao _commentDao;
   final NoteIndexEntryDao _noteIndexDao;
-  final LocordaSync _syncSystem;
+  final Locorda _syncSystem;
   final StreamSubscription _dataHydrationSubscription;
   final StreamSubscription _indexHydrationSubscription;
 
@@ -189,7 +189,7 @@ class NoteRepository {
     CommentDao commentDao,
     NoteIndexEntryDao noteIndexDao,
     CursorDao cursorDao,
-    LocordaSync syncSystem,
+    Locorda syncSystem,
   ) async {
     // Setup data hydration for full Note resources
     final dataSubscription = await syncSystem.hydrateWithCallbacks<models.Note>(

@@ -528,10 +528,24 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev"
+  locorda_solid_auth_worker:
+    dependency: "direct main"
+    description:
+      path: "../locorda_solid_auth_worker"
+      relative: true
+    source: path
+    version: "0.1.0-dev"
   locorda_solid_ui:
     dependency: "direct main"
     description:
       path: "../locorda_solid_ui"
+      relative: true
+    source: path
+    version: "0.1.0-dev"
+  locorda_worker:
+    dependency: "direct main"
+    description:
+      path: "../locorda_worker"
       relative: true
     source: path
     version: "0.1.0-dev"
@@ -968,8 +982,8 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: "feat/migrate-to-bdaya-oidc-security-fix"
-      resolved-ref: "14b9eeffae54809b916b707a9b64f256eca814c2"
+      ref: "feat/dpop-worker-thread-support"
+      resolved-ref: b0e291c9e1e54eb15ec21ac572692af5d23c31ba
       url: "https://github.com/kkalass/solid_auth.git"
     source: git
     version: "0.2.0-dev.1"
@@ -1206,7 +1220,7 @@ packages:
     source: hosted
     version: "1.1.3"
   web:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: web
       sha256: "868d88a33d8a87b18ffc05f9f030ba328ffefba92d6c127917a2ba740f9cfe4a"

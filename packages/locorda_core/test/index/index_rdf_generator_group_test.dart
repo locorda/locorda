@@ -1,4 +1,4 @@
-import 'package:locorda_core/src/config/sync_graph_config.dart';
+import 'package:locorda_core/src/config/sync_engine_config.dart';
 import 'package:locorda_core/src/index/index_config_base.dart';
 import 'package:locorda_core/src/index/index_rdf_generator.dart';
 import 'package:locorda_core/src/index/shard_manager.dart';
@@ -22,7 +22,7 @@ void main() {
     group('generateGroupIndexTemplateIri', () {
       test('generates deterministic IRI for simple single-property grouping',
           () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-shopping',
           groupingProperties: [
             GroupingProperty(
@@ -54,7 +54,7 @@ void main() {
       });
 
       test('generates deterministic IRI for multi-property grouping', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-multi',
           groupingProperties: [
             GroupingProperty(
@@ -85,7 +85,7 @@ void main() {
       });
 
       test('generates same IRI for identical configurations', () {
-        final config1 = GroupIndexGraphConfig(
+        final config1 = GroupIndexData(
           localName: 'test-1',
           groupingProperties: [
             GroupingProperty(
@@ -100,7 +100,7 @@ void main() {
           ],
         );
 
-        final config2 = GroupIndexGraphConfig(
+        final config2 = GroupIndexData(
           localName: 'test-2', // Different local name
           groupingProperties: [
             GroupingProperty(
@@ -126,7 +126,7 @@ void main() {
       });
 
       test('generates different IRI for different transform', () {
-        final config1 = GroupIndexGraphConfig(
+        final config1 = GroupIndexData(
           localName: 'test',
           groupingProperties: [
             GroupingProperty(
@@ -141,7 +141,7 @@ void main() {
           ],
         );
 
-        final config2 = GroupIndexGraphConfig(
+        final config2 = GroupIndexData(
           localName: 'test',
           groupingProperties: [
             GroupingProperty(
@@ -169,7 +169,7 @@ void main() {
 
     group('generateGroupIndexIri', () {
       test('generates correct GroupIndex IRI from template and group key', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-shopping',
           groupingProperties: [
             GroupingProperty(
@@ -210,7 +210,7 @@ void main() {
       });
 
       test('generates correct hierarchical GroupIndex IRI', () {
-        final config = GroupIndexGraphConfig(
+        final config = GroupIndexData(
           localName: 'test-hierarchical',
           groupingProperties: [
             GroupingProperty(

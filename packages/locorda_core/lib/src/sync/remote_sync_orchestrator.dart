@@ -137,7 +137,7 @@ class RemoteSyncOrchestrator {
   final RemoteStorage _remoteStorage;
   final Storage _storage;
   final RemoteDocumentMerger _merger;
-  final SyncGraphConfig _config;
+  final SyncEngineConfig _config;
   final IndexRdfGenerator _indexRdfGenerator;
   final IndexManager _indexManager;
   final ShardDeterminer _shardDeterminer;
@@ -150,7 +150,7 @@ class RemoteSyncOrchestrator {
     required RemoteStorage remoteStorage,
     required Storage storage,
     required RemoteDocumentMerger merger,
-    required SyncGraphConfig config,
+    required SyncEngineConfig config,
     required IndexRdfGenerator indexRdfGenerator,
     required IndexManager indexManager,
     required ShardDeterminer shardDeterminer,
@@ -222,7 +222,7 @@ class RemoteSyncOrchestrator {
 
     // Collect FullIndex IRIs for this type
     final fullIndices =
-        resourceConfig.indices.whereType<FullIndexGraphConfig>().map((index) {
+        resourceConfig.indices.whereType<FullIndexData>().map((index) {
       final iri = _indexRdfGenerator.generateFullIndexIri(index, resourceType);
       return FullIndexSync(iri, index.itemFetchPolicy);
     }).toList();

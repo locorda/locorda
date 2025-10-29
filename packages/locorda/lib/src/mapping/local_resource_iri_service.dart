@@ -5,7 +5,7 @@
 /// to provide consistent IRI mapping across the application.
 library;
 
-import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda/src/config/locorda_config_util.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';

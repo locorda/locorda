@@ -21,10 +21,17 @@ dependencies:
     path: ../locorda_solid_auth
   locorda_solid_ui:
     path: ../locorda_solid_ui
+  locorda_worker:
+    path: ../locorda_worker
+  locorda_solid_auth_worker:
+    path: ../locorda_solid_auth_worker
 
   # RDF mapping
   rdf_core: ^0.9.24
   rdf_mapper: ^0.10.4
+
+  # Web Worker support (modern API)
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:

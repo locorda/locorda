@@ -10,7 +10,7 @@ import 'package:locorda_core/src/index/group_index_subscription_manager.dart';
 import 'package:locorda_core/src/installation_service.dart'
     show InstallationIdFactory;
 import 'package:locorda_core/src/mapping/recursive_rdf_loader.dart';
-import 'package:locorda_core/src/standard_locorda_graph_sync.dart';
+import 'package:locorda_core/src/standard_sync_engine.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 typedef IdentifiedGraph = (IriTerm id, RdfGraph graph);
@@ -25,7 +25,7 @@ typedef HydrationBatch = ({
 /// Provides a simple, high-level API for offline-first applications with
 /// optional Solid Pod synchronization. Handles RDF mapping, storage,
 /// and sync operations transparently.
-abstract interface class LocordaGraphSync {
+abstract interface class SyncEngine {
   SyncManager get syncManager;
 
   /// Set up the CRDT sync system with resource-focused configuration.
@@ -37,10 +37,10 @@ abstract interface class LocordaGraphSync {
   /// with their paths, CRDT mappings, and indices all defined together.
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
-  static Future<LocordaGraphSync> setup({
+  static Future<SyncEngine> create({
     required List<Backend> backends,
     required Storage storage,
-    required SyncGraphConfig config,
+    required SyncEngineConfig config,
     PhysicalTimestampFactory? physicalTimestampFactory,
     InstallationIdFactory? installationIdFactory,
     IriTermFactory? iriFactory,
@@ -48,7 +48,7 @@ abstract interface class LocordaGraphSync {
     http.Client? httpClient,
     Fetcher? fetcher,
   }) async {
-    return StandardLocordaGraphSync.setup(
+    return StandardSyncEngine.create(
       backends: backends,
       storage: storage,
       config: config,

@@ -1,17 +1,17 @@
-import 'package:locorda/src/config/sync_config.dart';
-import 'package:locorda/src/config/sync_config_util.dart';
+import 'package:locorda/src/config/locorda_config.dart';
+import 'package:locorda/src/config/locorda_config_util.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
 
-class SyncConfigValidator {
-  final SyncConfigBaseValidator _baseValidator =
-      SyncConfigBaseValidator((c) => (c as ResourceConfig).type.toString());
+class LocordaConfigValidator {
+  final ConfigBaseValidator _baseValidator =
+      ConfigBaseValidator((c) => (c as ResourceConfig).type.toString());
 
-  SyncConfigValidator();
+  LocordaConfigValidator();
 
   Map<Type, IriTerm> buildResourceTypeCache(
-      RdfMapper mapper, SyncConfig config) {
+      RdfMapper mapper, LocordaConfig config) {
     final resourceTypeCache = <Type, IriTerm>{};
     for (final resource in config.resources) {
       if (!resourceTypeCache.containsKey(resource.type)) {
@@ -34,7 +34,7 @@ class SyncConfigValidator {
   }
 
   ValidationResult validate(
-    SyncConfig config,
+    LocordaConfig config,
     ResourceTypeCache resourceTypeCache, {
     required RdfMapper mapper,
   }) {
@@ -47,7 +47,7 @@ class SyncConfigValidator {
   }
 
   void _validateMapperTypes(
-      SyncConfig config, ValidationResult result, RdfMapper mapper) {
+      LocordaConfig config, ValidationResult result, RdfMapper mapper) {
     // Collect all types that need mappers
     final requiredTypes = <Type>{};
     final deserializerOnly = <Type>{};
@@ -110,8 +110,8 @@ class SyncConfigValidator {
     }
   }
 
-  void _validateResourceUniqueness(SyncConfig config, ValidationResult result,
-      ResourceTypeCache resourceTypeCache) {
+  void _validateResourceUniqueness(LocordaConfig config,
+      ValidationResult result, ResourceTypeCache resourceTypeCache) {
     // Check for duplicate Dart types
     final dartTypes = <Type>{};
     final rdfTypeIris = <String, Type>{};
@@ -158,7 +158,7 @@ class SyncConfigValidator {
   }
 
   void _validateIndexConfigurations(
-      SyncConfig config, ValidationResult result) {
+      LocordaConfig config, ValidationResult result) {
     // Track local names per index item type across all resources
     final localNamesByItemType = <Type, Map<String, List<Type>>>{};
     // Track groupKeyType and localName combinations for GroupIndex uniqueness

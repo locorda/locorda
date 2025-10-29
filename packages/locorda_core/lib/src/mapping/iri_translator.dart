@@ -1,4 +1,4 @@
-import 'package:locorda_core/src/config/sync_graph_config.dart';
+import 'package:locorda_core/src/config/sync_engine_config.dart';
 import 'package:locorda_core/src/mapping/resource_locator.dart';
 import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:logging/logging.dart';
@@ -48,7 +48,7 @@ abstract interface class IriTranslator {
 
   static IriTranslator forConfig(
       {required ResourceLocator resourceLocator,
-      required List<ResourceGraphConfig> resourceConfigs}) {
+      required List<ResourceConfigData> resourceConfigs}) {
     final configByType = {
       for (final config in resourceConfigs) config.typeIri: config
     };
@@ -214,13 +214,13 @@ class BaseIriTranslator implements IriTranslator {
 }
 
 class AppResourceLocator extends ResourceLocator {
-  final Map<IriTerm, ResourceGraphConfig> _configByType;
+  final Map<IriTerm, ResourceConfigData> _configByType;
 
   /// Maps external IRI prefixes to their type IRIs for efficient lookup
   final Map<String, IriTerm> _prefixToType;
 
   AppResourceLocator._(
-      {required Map<IriTerm, ResourceGraphConfig> configByType,
+      {required Map<IriTerm, ResourceConfigData> configByType,
       required Map<String, IriTerm> prefixToType})
       : _configByType = configByType,
         _prefixToType = prefixToType;

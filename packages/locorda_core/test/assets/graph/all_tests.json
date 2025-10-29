@@ -19,7 +19,7 @@
   "test_suites": [
     {
       "suite": "save",
-      "description": "Tests for SyncGraphManager.save() operation",
+      "description": "Tests for SyncEngine.save() operation",
       "tests": [
         {
           "id": "save_01",
@@ -1186,7 +1186,7 @@
     },
     {
       "suite": "save_error",
-      "description": "Tests for SyncGraphManager.save() error cases",
+      "description": "Tests for SyncEngine.save() error cases",
       "tests": [
         {
           "id": "save_error_01",

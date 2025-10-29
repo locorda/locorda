@@ -14,20 +14,18 @@ library locorda_core;
 export 'src/auth/auth_interface.dart' show Auth;
 export 'src/backend/backend.dart' show Backend;
 // Resource-focused configuration
-export 'src/config/sync_config_base.dart'
-    show ResourceConfigBase, SyncConfigBase;
-export 'src/config/sync_config_base_validator.dart'
-    show SyncConfigBaseValidator;
-export 'src/config/sync_graph_config.dart'
+export 'src/config/config_base.dart' show ResourceConfigBase, ConfigBase;
+export 'src/config/config_base_validator.dart' show ConfigBaseValidator;
+export 'src/config/sync_engine_config.dart'
     show
-        IndexItemGraphConfig,
-        CrdtIndexGraphConfig,
-        FullIndexGraphConfig,
-        GroupIndexGraphConfig,
-        ResourceGraphConfig,
-        SyncGraphConfig;
-export 'src/config/sync_graph_config_validator.dart'
-    show SyncGraphConfigValidator;
+        IndexItemData,
+        CrdtIndexData,
+        FullIndexData,
+        GroupIndexData,
+        ResourceConfigData,
+        SyncEngineConfig;
+export 'src/config/sync_engine_config_validator.dart'
+    show SyncEngineConfigValidator;
 export 'src/config/validation.dart'
     show
         ValidationResult,
@@ -75,7 +73,7 @@ export 'src/generated/_index.dart'
         SyncResourceStatement,
         SyncUniversalProperties;
 export 'src/hydration_result.dart' show HydrationSubscription;
-export 'src/locorda_graph_sync.dart' show HydrationBatch, IdentifiedGraph;
+export 'src/sync_engine.dart' show HydrationBatch, IdentifiedGraph;
 // Index configuration
 export 'src/index/index_config_base.dart'
     show
@@ -87,7 +85,7 @@ export 'src/index/index_config_base.dart'
         RegexTransform,
         GroupingProperty;
 // Main API facade
-export 'src/locorda_graph_sync.dart' show LocordaGraphSync, IdentifiedGraph;
+export 'src/sync_engine.dart' show SyncEngine, IdentifiedGraph;
 export 'src/mapping/root_iri_config.dart' show RootIriConfig;
 export 'src/mapping/resource_locator.dart'
     show
@@ -114,6 +112,6 @@ export 'src/storage/concurrent_update_exception.dart'
 // Use that package for @CrdtLwwRegister, @CrdtOrSet, etc. annotations
 
 // Sync engine and manager
-export 'src/sync/sync_engine.dart' show SyncEngine;
+export 'src/sync_engine.dart' show SyncEngine;
 export 'src/sync/sync_manager.dart' show SyncManager, AutoSyncConfig;
 export 'src/sync/sync_state.dart' show SyncState, SyncStatus;

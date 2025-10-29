@@ -11,7 +11,7 @@
 ///
 /// // Set up offline-first sync system
 /// final storage = DriftStorage(path: 'app.db');
-/// final sync = await LocordaSync.setup(storage: storage);
+/// final sync = await Locorda.setup(storage: storage);
 ///
 /// // Use your annotated models
 /// final note = Note(
@@ -39,5 +39,5 @@
 library locorda;
 
 // Re-export the main API from core
-export 'src/config/sync_config.dart';
-export 'src/locorda_sync.dart' show LocordaSync, TypedHydrationBatch;
+export 'src/config/locorda_config.dart';
+export 'src/locorda.dart' show Locorda, TypedHydrationBatch;

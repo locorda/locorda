@@ -1,4 +1,4 @@
-/// Mock LocordaSync implementation for testing.
+/// Mock Locorda implementation for testing.
 library;
 
 import 'dart:async';
@@ -16,7 +16,7 @@ class _MockSyncManager extends StandardSyncManager {
 }
 
 /// Simple mock implementation for testing
-class MockLocordaSync implements LocordaSync {
+class MockLocorda implements Locorda {
   final List<dynamic> savedObjects = [];
   final _syncManager = _MockSyncManager();
 
