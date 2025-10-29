@@ -12,9 +12,9 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:locorda/locorda.dart';
-
+import 'package:locorda_drift/locorda_drift.dart';
+import 'package:locorda_solid/locorda_solid.dart';
 import 'package:locorda_solid_auth/locorda_solid_auth.dart';
-import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
 import 'package:personal_notes_app/init_rdf_mapper.g.dart';
 import 'package:personal_notes_app/models/category.dart';
 import 'package:personal_notes_app/models/note.dart';
@@ -30,7 +30,6 @@ import 'services/notes_service.dart';
 import 'storage/database.dart' show AppDatabase;
 import 'storage/repositories.dart' show CategoryRepository, NoteRepository;
 import 'utils/logging_setup.dart';
-import 'worker.dart' show createSyncEngine;
 
 const appBaseUrl = 'https://locorda.dev/example/personal_notes_app';
 
@@ -55,12 +54,26 @@ Future<Locorda> initializeLocorda({
   required SolidAuth solidAuth,
 }) {
   // Setup sync system with worker
-  return Locorda.createWithWorker(
-    syncEngineFactory: createSyncEngine,
-    jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
+  return Locorda.create(
+    //syncEngineFactory: createSyncEngine,
+    //jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
+    //
+    // // Create auth bridge to sync SolidAuth state to worker
+    //plugins: [SolidAuthConnector.plugin(solidAuth)],
 
-    // Create auth bridge to sync SolidAuth state to worker
-    plugins: [SolidAuthConnector.plugin(solidAuth)],
+    storage: DriftStorage(
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
+      ),
+      native: DriftNativeOptions(),
+    ),
+
+    backends: [
+      // Create auth provider that communicates with main thread
+      // This receives credentials from main thread and generates DPoP tokens locally
+      SolidBackend(auth: SolidAuthBridge(solidAuth)),
+    ],
 
     mapperInitializer: (context) => initRdfMapper(
         rdfMapper: context.baseRdfMapper,
