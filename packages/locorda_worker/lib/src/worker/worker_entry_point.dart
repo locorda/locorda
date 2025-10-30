@@ -368,14 +368,15 @@ class WorkerContext {
 /// Framework responsibilities:
 /// - Establish communication with main thread
 /// - Receive and deserialize SyncEngineConfig
-/// - Call app's setup function with config + context
-/// - Wrap returned SyncEngine in message handler
+/// - Call app's params factory with config + context
+/// - Create SyncEngine from returned EngineParams
+/// - Wrap SyncEngine in message handler
 /// - Forward all messages to/from SyncEngine
 ///
-/// App responsibilities (via setupFn):
+/// App responsibilities (via params factory):
 /// - Create Storage (e.g., DriftStorage)
 /// - Create Backends (e.g., SolidBackend with WorkerSolidAuthProvider)
-/// - Call SyncEngine.create() and return instance
+/// - Return EngineParams containing storage and backends
 ///
 /// Example usage in app's worker.dart:
 /// ```dart
@@ -383,17 +384,17 @@ class WorkerContext {
 ///   workerMain((config, context) async {
 ///     final storage = DriftStorage(...);
 ///     final backends = [SolidBackend(auth: WorkerSolidAuthProvider(context.channel))];
-///     return await SyncEngine.create(storage: storage, backends: backends, config: config);
+///     return EngineParams(storage: storage, backends: backends);
 ///   });
 /// }
 /// ```
 ///
 /// Then in main thread setup:
 /// ```dart
-/// import 'worker.dart' show createSyncEngine;
+/// import 'worker.dart' show createEngineParams;
 ///
 /// final handle = await LocordaWorkerHandle.create(
-///   syncEngineFactory: createSyncEngine,
+///   paramsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 /// );
 /// ```
@@ -401,7 +402,7 @@ class WorkerContext {
 // FIXME: if this is needed, why is it unused?
 /// Global setup function storage (needed for web workers where main() is called)
 // ignore: unused_element
-SyncEngineFactory? _currentSetupFunction;
+EngineParamsFactory? _currentSetupFunction;
 
 /// Entry point for web workers - called when worker JS loads.
 ///
@@ -411,10 +412,10 @@ SyncEngineFactory? _currentSetupFunction;
 /// ```dart
 /// // lib/worker.dart
 /// void main() {
-///   workerMain(createSyncEngine);
+///   workerMain(createEngineParams);
 /// }
 /// ```
-void workerMain(SyncEngineFactory setupFn) {
+void workerMain(EngineParamsFactory setupFn) {
   // FIXME: wtf?
   // Store setup function for later (not currently needed but kept for consistency)
   _currentSetupFunction = setupFn;
@@ -430,7 +431,7 @@ void workerMain(SyncEngineFactory setupFn) {
 /// This is called by NativeWorkerHandle after Isolate.spawn().
 /// The factory function is passed directly, no global storage needed.
 void startWorkerIsolate(
-    SendPort mainSendPort, SyncEngineFactory factory) async {
+    SendPort mainSendPort, EngineParamsFactory factory) async {
   // 1. Establish bidirectional communication
   final receivePort = ReceivePort();
   mainSendPort.send(receivePort.sendPort);
@@ -458,7 +459,9 @@ void startWorkerIsolate(
 
   // 5. Call app's setup function
   try {
-    context._syncSystem = await factory(config, context);
+    final engineParams = await factory(config, context);
+    context._syncSystem =
+        await SyncEngine.createForParams(config: config, params: engineParams);
     context._sendMessage(SetupResponse(setupRequest.requestId, success: true));
   } catch (e, st) {
     context._sendMessage(SetupResponse(

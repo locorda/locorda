@@ -4,6 +4,6 @@ library;
 import 'worker_handle.dart';
 
 /// Stub implementation that throws on non-web platforms.
-void startWebWorkerLoop(SyncEngineFactory setupFn) {
+void startWebWorkerLoop(EngineParamsFactory setupFn) {
   throw UnsupportedError('Web workers are only supported on web platform');
 }

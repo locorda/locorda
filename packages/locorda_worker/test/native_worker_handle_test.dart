@@ -6,24 +6,21 @@ import 'package:locorda_worker/src/worker/native_worker_handle.dart';
 import 'package:locorda_worker/src/worker/worker_entry_point.dart';
 import 'package:test/test.dart';
 
-// Mock SyncEngine for testing
-class _MockSyncEngine implements SyncEngine {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
-Future<SyncEngine> _testWorkerFactory(
+Future<EngineParams> _createEngineParams(
   SyncEngineConfig config,
   WorkerContext context,
 ) async {
-  return _MockSyncEngine();
+  return EngineParams(
+    backends: [],
+    storage: InMemoryStorage(),
+  );
 }
 
 void main() {
   group('NativeWorkerHandle', () {
     test('creates worker successfully', () async {
       final worker = await NativeWorkerHandle.create(
-        _testWorkerFactory,
+        _createEngineParams,
         'test-worker',
       );
 
@@ -34,7 +31,7 @@ void main() {
 
     test('exposes messages stream', () async {
       final worker = await NativeWorkerHandle.create(
-        _testWorkerFactory,
+        _createEngineParams,
         'test-worker',
       );
 
@@ -46,7 +43,7 @@ void main() {
 
     test('can send messages', () async {
       final worker = await NativeWorkerHandle.create(
-        _testWorkerFactory,
+        _createEngineParams,
         'test-worker',
       );
 
@@ -63,7 +60,7 @@ void main() {
 
     test('disposes cleanly', () async {
       final worker = await NativeWorkerHandle.create(
-        _testWorkerFactory,
+        _createEngineParams,
         'test-worker',
       );
 
@@ -73,11 +70,11 @@ void main() {
 
     test('can create multiple workers', () async {
       final worker1 = await NativeWorkerHandle.create(
-        _testWorkerFactory,
+        _createEngineParams,
         'worker-1',
       );
       final worker2 = await NativeWorkerHandle.create(
-        _testWorkerFactory,
+        _createEngineParams,
         'worker-2',
       );
 

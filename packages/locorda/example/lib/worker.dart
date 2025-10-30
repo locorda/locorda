@@ -20,7 +20,7 @@ import 'package:locorda_worker/locorda_worker.dart';
 ///
 /// On web, the compiled JS is loaded and main() is called automatically.
 void main() {
-  workerMain(createSyncEngine);
+  workerMain(createEngineParams);
 }
 
 /// Factory function that creates and configures the SyncEngine in the worker.
@@ -37,13 +37,13 @@ void main() {
 /// - Backends (SolidBackend with WorkerSolidAuthProvider)
 ///
 /// Returns configured SyncEngine instance that will handle all sync operations.
-Future<SyncEngine> createSyncEngine(
+Future<EngineParams> createEngineParams(
   SyncEngineConfig config,
   WorkerContext context,
 ) async {
   // Setup SyncEngine in worker
   // Config is already in SyncEngineConfig format (IRIs only, no Dart types)
-  return await SyncEngine.create(
+  return EngineParams(
     storage: DriftStorage(
       web: DriftWebOptions(
         sqlite3Wasm: Uri.parse('sqlite3.wasm'),
@@ -56,6 +56,5 @@ Future<SyncEngine> createSyncEngine(
       // This receives credentials from main thread and generates DPoP tokens locally
       SolidBackend(auth: SolidAuthConnector.provider(context)),
     ],
-    config: config,
   );
 }

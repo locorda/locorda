@@ -6,10 +6,11 @@ import 'worker_entry_point.dart';
 import 'worker_handle_impl_native.dart'
     if (dart.library.html) 'worker_handle_impl_web.dart' as impl;
 
-/// Factory function type for creating SyncEngine in worker.
+/// Factory function type for creating EngineParams in worker.
 ///
 /// Apps implement this to configure storage, backends, and other worker-side resources.
-typedef SyncEngineFactory = Future<SyncEngine> Function(
+/// The framework creates the SyncEngine from the returned EngineParams.
+typedef EngineParamsFactory = Future<EngineParams> Function(
   SyncEngineConfig config,
   WorkerContext context,
 );
@@ -21,7 +22,7 @@ typedef SyncEngineFactory = Future<SyncEngine> Function(
 abstract class LocordaWorkerHandle {
   /// Creates worker handle auto-detecting the current platform.
   ///
-  /// - [syncEngineFactory]: Function that creates SyncEngine in worker thread
+  /// - [paramsFactory]: Function that creates EngineParams in worker thread
   /// - [jsScript]: Path to compiled JS worker for web platform (e.g., 'worker.dart.js')
   /// - [debugName]: Optional name for debugging/logging purposes
   ///
@@ -37,39 +38,39 @@ abstract class LocordaWorkerHandle {
   /// import 'package:locorda_worker/locorda_worker.dart';
   ///
   /// void main() {
-  ///   workerMain(createSyncEngine);
+  ///   workerMain(createEngineParams);
   /// }
   ///
-  /// Future<SyncEngine> createSyncEngine(
+  /// Future<EngineParams> createEngineParams(
   ///   SyncEngineConfig config,
   ///   WorkerContext context,
   /// ) async {
   ///   final storage = DriftStorage(...);
   ///   final backends = [SolidBackend(...)];
-  ///   return SyncEngine.create(
+  ///   // Return parameters - framework creates SyncEngine from these
+  ///   return EngineParams(
   ///     storage: storage,
   ///     backends: backends,
-  ///     config: config,
   ///   );
   /// }
   /// ```
   ///
   /// Then use high-level API in main thread:
   /// ```dart
-  /// import 'worker.dart' show createSyncEngine;
+  /// import 'worker.dart' show createEngineParams;
   ///
   /// final sync = await Locorda.createWithWorker(
-  ///   syncEngineFactory: createSyncEngine,
+  ///   paramsFactory: createEngineParams,
   ///   jsScript: 'worker.dart.js',
   ///   // ... config
   /// );
   /// ```
   static Future<LocordaWorkerHandle> create({
-    required SyncEngineFactory syncEngineFactory,
+    required EngineParamsFactory paramsFactory,
     required String jsScript,
     String? debugName,
   }) async {
-    return impl.createImpl(syncEngineFactory, jsScript, debugName);
+    return impl.createImpl(paramsFactory, jsScript, debugName);
   }
 
   /// Sends message to worker.

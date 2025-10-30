@@ -39,7 +39,7 @@ await solidAuth.init();
 
 // Setup Locorda with worker and SolidAuthConnector plugin
 final sync = await Locorda.createWithWorker(
-  syncEngineFactory: createSyncEngine,
+  paramsFactory: createEngineParams,
   jsScript: 'worker.dart.js',
   plugins: [
     SolidAuthConnector.plugin(solidAuth),
@@ -55,7 +55,7 @@ import 'package:locorda_worker/locorda_worker.dart';
 import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
 import 'package:locorda_solid/locorda_solid.dart';
 
-Future<SyncEngine> createSyncEngine(
+Future<EngineParams> createEngineParams(
   SyncEngineConfig config,
   WorkerContext context,
 ) async {
@@ -67,7 +67,11 @@ Future<SyncEngine> createSyncEngine(
   
   // Backend automatically initializes remotes when authenticated
   
-  // ... create storage and return SyncEngine
+  // ... create storage and return EngineParams
+  return EngineParams(
+    storage: storage,
+    backends: [backend],
+  );
 }
 ```
 

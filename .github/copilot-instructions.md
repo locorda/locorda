@@ -107,7 +107,7 @@ syncSystem.deleteDocument<Note>(id); // Framework-level deletion
 
 ### RDF & Semantic Web Focus
 
-- Fragment identifiers (`#it`) distinguish things from documents
+- Fragment identifiers (`it`) distinguish things from documents
 - RDF reification for deletion tombstones (semantically correct vs RDF-Star)
 - Public merge contracts for cross-app interoperability
 - Standard vocabularies: `schema:`, `crdt:`, `algo:`, `sync:`, `idx:`

@@ -10,7 +10,7 @@
 ///
 /// ```dart
 /// final sync = await Locorda.createWithWorker(
-///   syncEngineFactory: createSyncEngine,
+///   paramsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 ///   plugins: [
 ///     SolidAuthConnector.plugin(solidAuth),
@@ -24,7 +24,7 @@
 /// Create auth provider in SyncEngine factory:
 ///
 /// ```dart
-/// Future<SyncEngine> createSyncEngine(
+/// Future<SyncEngine> createEngineParams(
 ///   SyncEngineConfig config,
 ///   WorkerContext context,
 /// ) async {

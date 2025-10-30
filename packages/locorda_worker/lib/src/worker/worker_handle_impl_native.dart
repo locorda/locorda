@@ -9,10 +9,10 @@ import 'native_worker_handle.dart';
 import 'worker_handle.dart';
 
 Future<LocordaWorkerHandle> createImpl(
-  SyncEngineFactory syncEngineFactory,
+  EngineParamsFactory paramsFactory,
   String jsScript,
   String? debugName,
 ) {
   // jsScript is ignored on native - only needed for web
-  return NativeWorkerHandle.create(syncEngineFactory, debugName);
+  return NativeWorkerHandle.create(paramsFactory, debugName);
 }

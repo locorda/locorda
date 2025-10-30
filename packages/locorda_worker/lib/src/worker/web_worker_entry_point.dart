@@ -37,7 +37,7 @@ external void _postMessage(JSAny? message);
 ///
 /// This sets up the message handler for the web worker's global scope
 /// and initializes the worker when the first setup message arrives.
-void startWebWorkerLoop(SyncEngineFactory setupFn) {
+void startWebWorkerLoop(EngineParamsFactory setupFn) {
   WorkerContext? context;
   bool isInitializing = false;
 
@@ -87,7 +87,7 @@ Future<void> _handleWorkerMessage(
   Map<String, dynamic> data,
   WorkerContext? Function() getContext,
   void Function(WorkerContext) setContext,
-  SyncEngineFactory setupFn,
+  EngineParamsFactory engineParamsFactory,
   bool Function() isInitializing,
   void Function() markInitializing,
 ) async {
@@ -115,7 +115,9 @@ Future<void> _handleWorkerMessage(
       final newContext = WorkerContext(WebWorkerSender(), channel);
 
       // Initialize sync system
-      final syncSystem = await setupFn(config, newContext);
+      final engineParams = await engineParamsFactory(config, newContext);
+      final syncSystem = await SyncEngine.createForParams(
+          params: engineParams, config: config);
       newContext.setSyncSystem(syncSystem);
 
       // Store context before sending success response

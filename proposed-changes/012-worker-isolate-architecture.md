@@ -134,11 +134,11 @@ void runLocordaWorker() {
       ),
     ];
     
-    // Framework handles rest
-    return SyncEngine.create(
+    // Return parameters - framework creates SyncEngine from these
+    return EngineParams(
       storage: storage,
       backends: backends,
-      config: config,  // Already converted to SyncEngineConfig
+      // config is passed separately to SyncEngine.createForParams()
     );
   });
 }

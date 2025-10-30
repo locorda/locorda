@@ -12,15 +12,15 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:locorda/locorda.dart';
-import 'package:locorda_drift/locorda_drift.dart';
-import 'package:locorda_solid/locorda_solid.dart';
 import 'package:locorda_solid_auth/locorda_solid_auth.dart';
+import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
 import 'package:personal_notes_app/init_rdf_mapper.g.dart';
 import 'package:personal_notes_app/models/category.dart';
 import 'package:personal_notes_app/models/note.dart';
 import 'package:personal_notes_app/models/note_group_key.dart';
 import 'package:personal_notes_app/models/note_index_entry.dart';
 import 'package:personal_notes_app/vocabulary/personal_notes_vocab.dart';
+import 'package:personal_notes_app/worker.dart';
 import 'package:rdf_vocabularies_schema/schema.dart';
 import 'package:solid_auth/solid_auth.dart';
 
@@ -54,26 +54,12 @@ Future<Locorda> initializeLocorda({
   required SolidAuth solidAuth,
 }) {
   // Setup sync system with worker
-  return Locorda.create(
-    //syncEngineFactory: createSyncEngine,
-    //jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
-    //
-    // // Create auth bridge to sync SolidAuth state to worker
-    //plugins: [SolidAuthConnector.plugin(solidAuth)],
+  return Locorda.createWithWorker(
+    paramsFactory: createEngineParams,
+    jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
 
-    storage: DriftStorage(
-      web: DriftWebOptions(
-        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-        driftWorker: Uri.parse('drift_worker.js'),
-      ),
-      native: DriftNativeOptions(),
-    ),
-
-    backends: [
-      // Create auth provider that communicates with main thread
-      // This receives credentials from main thread and generates DPoP tokens locally
-      SolidBackend(auth: SolidAuthBridge(solidAuth)),
-    ],
+    // Create auth bridge to sync SolidAuth state to worker
+    plugins: [SolidAuthConnector.plugin(solidAuth)],
 
     mapperInitializer: (context) => initRdfMapper(
         rdfMapper: context.baseRdfMapper,

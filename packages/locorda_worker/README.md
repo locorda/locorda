@@ -35,9 +35,9 @@ This package provides the core worker infrastructure used by Locorda to offload 
 
 ## Usage
 
-### Step 1: Define Your SyncEngine Factory (Required)
+### Step 1: Define Your EngineParams Factory (Required)
 
-Every application needs a **top-level** SyncEngine factory function that creates the complete CRDT sync engine (`SyncEngine`) in the worker thread. This engine handles all RDF-level operations: CRDT merging, conflict resolution, storage persistence, remote synchronization, and data hydration.
+Every application needs a **top-level** factory function that creates the dependencies needed to initialize the CRDT sync engine in the worker thread. The factory returns an `EngineParams` object containing storage, backends, and optional dependencies. The framework then creates the `SyncEngine` from these parameters.
 
 > ⚠️ **Important**: The factory function **must be a top-level function** (not a method, not a closure). This is required for cross-isolate function passing on native platforms.
 
@@ -47,11 +47,11 @@ import 'package:locorda_worker/locorda_worker.dart';
 import 'package:locorda_core/locorda_core.dart';
 
 void main() {
-  workerMain(createSyncEngine);
+  workerMain(createEngineParams);
 }
 
 // This MUST be a top-level function
-Future<SyncEngine> createSyncEngine(
+Future<EngineParams> createEngineParams(
   SyncEngineConfig config,
   WorkerContext context,
 ) async {
@@ -61,10 +61,11 @@ Future<SyncEngine> createSyncEngine(
   // Set up backends (HTTP happens in worker)
   final backends = [SolidBackend(...)];
   
-  return SyncEngine.create(
+  // Return parameters - framework creates SyncEngine from these
+  return EngineParams(
     storage: storage,
     backends: backends,
-    config: config,
+    // Optional: httpClient, iriFactory, rdfCore
   );
 }
 ```
@@ -75,10 +76,10 @@ Most users should use the high-level `Locorda` API from the `locorda` package:
 
 ```dart
 import 'package:locorda/locorda.dart';
-import 'worker.dart' show createSyncEngine;
+import 'worker.dart' show createEngineParams;
 
 final sync = await Locorda.createWithWorker(
-  syncEngineFactory: createSyncEngine,
+  paramsFactory: createEngineParams,
   jsScript: 'worker.dart.js',
   plugins: [...],
   config: LocordaConfig(...),
@@ -93,11 +94,11 @@ Use this approach if you:
 
 ```dart
 import 'package:locorda_worker/locorda_worker.dart';
-import 'worker.dart' show createSyncEngine;
+import 'worker.dart' show createEngineParams;
 
 // Create worker handle
 final workerHandle = await LocordaWorkerHandle.create(
-  syncEngineFactory: createSyncEngine,
+  paramsFactory: createEngineParams,
   jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
   debugName: 'locorda-worker',
 );
@@ -143,7 +144,7 @@ class MyAuthPlugin implements WorkerPlugin {
 
 // Register plugin
 final workerHandle = await LocordaWorkerHandle.create(
-  syncEngineFactory: createSyncEngine,
+  paramsFactory: createEngineParams,
   jsScript: 'worker.dart.js',
 );
 
@@ -171,7 +172,7 @@ channel.messages.listen((msg) {
 
 ### Worker Thread
 ```dart
-Future<SyncEngine> createSyncEngine(
+Future<EngineParams> createEngineParams(
   SyncEngineConfig config,
   WorkerContext context,
 ) async {
@@ -183,7 +184,7 @@ Future<SyncEngine> createSyncEngine(
     }
   });
   
-  // ... setup and return SyncEngine
+  // ... setup and return EngineParams
 }
 ```
 

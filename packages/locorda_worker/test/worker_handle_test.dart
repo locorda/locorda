@@ -5,24 +5,17 @@ import 'package:locorda_worker/src/worker/worker_entry_point.dart';
 import 'package:locorda_worker/src/worker/worker_handle.dart';
 import 'package:test/test.dart';
 
-// Mock SyncEngine for testing
-class _MockSyncEngine implements SyncEngine {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
-Future<SyncEngine> _testWorkerFactory(
+Future<EngineParams> _createEngineParams(
   SyncEngineConfig config,
   WorkerContext context,
-) async {
-  return _MockSyncEngine();
-}
+) async =>
+    EngineParams(storage: InMemoryStorage(), backends: []);
 
 void main() {
   group('LocordaWorkerHandle.create (platform-agnostic)', () {
     test('creates worker on current platform', () async {
       final worker = await LocordaWorkerHandle.create(
-        syncEngineFactory: _testWorkerFactory,
+        paramsFactory: _createEngineParams,
         jsScript: 'worker.dart.js', // Ignored on native
         debugName: 'test-worker',
       );
@@ -34,7 +27,7 @@ void main() {
 
     test('provides message stream', () async {
       final worker = await LocordaWorkerHandle.create(
-        syncEngineFactory: _testWorkerFactory,
+        paramsFactory: _createEngineParams,
         jsScript: 'worker.dart.js',
       );
 
@@ -45,7 +38,7 @@ void main() {
 
     test('allows sending messages', () async {
       final worker = await LocordaWorkerHandle.create(
-        syncEngineFactory: _testWorkerFactory,
+        paramsFactory: _createEngineParams,
         jsScript: 'worker.dart.js',
       );
 
@@ -60,7 +53,7 @@ void main() {
 
     test('disposes cleanly', () async {
       final worker = await LocordaWorkerHandle.create(
-        syncEngineFactory: _testWorkerFactory,
+        paramsFactory: _createEngineParams,
         jsScript: 'worker.dart.js',
       );
 
@@ -69,13 +62,13 @@ void main() {
 
     test('can create multiple workers', () async {
       final worker1 = await LocordaWorkerHandle.create(
-        syncEngineFactory: _testWorkerFactory,
+        paramsFactory: _createEngineParams,
         jsScript: 'worker.dart.js',
         debugName: 'worker-1',
       );
 
       final worker2 = await LocordaWorkerHandle.create(
-        syncEngineFactory: _testWorkerFactory,
+        paramsFactory: _createEngineParams,
         jsScript: 'worker.dart.js',
         debugName: 'worker-2',
       );

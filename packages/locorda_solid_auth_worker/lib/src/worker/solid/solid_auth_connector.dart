@@ -28,7 +28,7 @@ import 'package:solid_auth/solid_auth.dart';
 /// await solidAuth.init();
 ///
 /// final sync = await Locorda.createWithWorker(
-///   syncEngineFactory: createSyncEngine,
+///   paramsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 ///   plugins: [
 ///     SolidAuthConnector.plugin(solidAuth),
@@ -40,7 +40,7 @@ import 'package:solid_auth/solid_auth.dart';
 /// In worker, create the SyncEngine instance:
 ///
 /// ```dart
-/// Future<SyncEngine> createSyncEngine(
+/// Future<SyncEngine> createEngineParams(
 ///   SyncEngineConfig config,
 ///   WorkerContext context,
 /// ) async {

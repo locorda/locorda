@@ -7,7 +7,7 @@ import 'worker_entry_point.dart';
 /// Message sent to isolate entry point with factory function.
 class _IsolateStartMessage {
   final SendPort sendPort;
-  final SyncEngineFactory factory;
+  final EngineParamsFactory factory;
 
   _IsolateStartMessage(this.sendPort, this.factory);
 }
@@ -28,7 +28,7 @@ class NativeWorkerHandle implements LocordaWorkerHandle {
   ///
   /// The factory is passed via message to the generic isolate entry point.
   static Future<NativeWorkerHandle> create(
-    SyncEngineFactory syncEngineFactory,
+    EngineParamsFactory paramsFactory,
     String? debugName,
   ) async {
     final receivePort = ReceivePort();
@@ -36,7 +36,7 @@ class NativeWorkerHandle implements LocordaWorkerHandle {
     // Spawn isolate with generic entry point
     final isolate = await Isolate.spawn(
       _isolateEntryPoint,
-      _IsolateStartMessage(receivePort.sendPort, syncEngineFactory),
+      _IsolateStartMessage(receivePort.sendPort, paramsFactory),
       debugName: debugName,
     );
 

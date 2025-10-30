@@ -9,10 +9,10 @@ import 'web_worker_handle.dart';
 import 'worker_handle.dart';
 
 Future<LocordaWorkerHandle> createImpl(
-  SyncEngineFactory syncEngineFactory,
+  EngineParamsFactory paramsFactory,
   String jsScript,
   String? debugName,
 ) {
-  // syncEngineFactory is ignored on web - worker loads from JS file
+  // paramsFactory is ignored on web - worker loads from JS file
   return WebWorkerHandle.create(jsScript, debugName);
 }

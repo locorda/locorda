@@ -225,7 +225,7 @@ class Locorda {
   ///
   /// ## Required Setup
   ///
-  /// **1. Create worker.dart** with a factory function that creates SyncEngine:
+  /// **1. Create worker.dart** with a factory function that creates EngineParams:
   ///
   /// ```dart
   /// // lib/worker.dart
@@ -234,7 +234,7 @@ class Locorda {
   /// import 'package:locorda_core/locorda_core.dart';
   ///
   /// // MUST be top-level function (for cross-isolate passing)
-  /// Future<SyncEngine> createSyncEngine(
+  /// Future<EngineParams> createEngineParams(
   ///   SyncEngineConfig config,
   ///   WorkerContext context,
   /// ) async {
@@ -242,10 +242,10 @@ class Locorda {
   ///   final backends = [
   ///     SolidBackend(auth: SolidAuthConnector.provider(context)),
   ///   ];
-  ///   return await SyncEngine.create(
+  ///   // Return parameters - framework creates SyncEngine from these
+  ///   return EngineParams(
   ///     storage: storage,
   ///     backends: backends,
-  ///     config: config,
   ///   );
   /// }
   /// ```
@@ -254,10 +254,10 @@ class Locorda {
   ///
   /// ```dart
   /// import 'package:locorda/locorda.dart';
-  /// import 'worker.dart' show createSyncEngine;
+  /// import 'worker.dart' show createEngineParams;
   ///
   /// final locorda = await Locorda.createWithWorker(
-  ///   syncEngineFactory: createSyncEngine,  // Your factory function
+  ///   paramsFactory: createEngineParams,  // Your factory function
   ///   jsScript: 'worker.dart.js',  // For web: dart compile js lib/worker.dart
   ///   config: locordaConfig,
   ///   mapperInitializer: createMapper,
@@ -270,10 +270,11 @@ class Locorda {
   /// ## How It Works
   ///
   /// 1. `createWithWorker()` spawns a worker (isolate/web worker)
-  /// 2. Your `syncEngineFactory` is called in the worker to create SyncEngine
-  /// 3. Main thread gets a `ProxySyncEngine` that forwards all calls
-  /// 4. Communication via JSON messages with Turtle-serialized RDF graphs
-  /// 5. ~1-2ms overhead per operation (negligible vs CRDT/DB/HTTP work)
+  /// 2. Your `paramsFactory` is called in the worker to create EngineParams
+  /// 3. Framework creates SyncEngine from the returned parameters
+  /// 4. Main thread gets a `ProxySyncEngine` that forwards all calls
+  /// 5. Communication via JSON messages with Turtle-serialized RDF graphs
+  /// 6. ~1-2ms overhead per operation (negligible vs CRDT/DB/HTTP work)
   ///
   /// ## Platform Support
   ///
@@ -282,7 +283,7 @@ class Locorda {
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
   static Future<Locorda> createWithWorker({
-    required SyncEngineFactory syncEngineFactory,
+    required EngineParamsFactory paramsFactory,
     required String jsScript,
     required LocordaConfig config,
     required MapperInitializerFunction mapperInitializer,
@@ -304,7 +305,7 @@ class Locorda {
     );
 
     final workerHandle = await LocordaWorkerHandle.create(
-      syncEngineFactory: syncEngineFactory,
+      paramsFactory: paramsFactory,
       jsScript: jsScript,
       debugName: debugName,
     );
