@@ -13,6 +13,8 @@ library locorda_core;
 // Core interfaces
 export 'src/auth/auth_interface.dart' show Auth;
 export 'src/backend/backend.dart' show Backend;
+
+export 'src/backend/in_memory_backend.dart' show InMemoryBackend;
 // Resource-focused configuration
 export 'src/config/config_base.dart' show ResourceConfigBase, ConfigBase;
 export 'src/config/config_base_validator.dart' show ConfigBaseValidator;
@@ -107,11 +109,12 @@ export 'src/storage/storage_interface.dart'
         DocumentsResult;
 export 'src/storage/concurrent_update_exception.dart'
     show ConcurrentUpdateException;
+export 'src/storage/in_memory_storage.dart' show InMemoryStorage;
 
 // NOTE: CRDT annotations have been moved to locorda_annotations package
 // Use that package for @CrdtLwwRegister, @CrdtOrSet, etc. annotations
 
 // Sync engine and manager
-export 'src/sync_engine.dart' show SyncEngine;
+export 'src/sync_engine.dart' show SyncEngine, EngineParams;
 export 'src/sync/sync_manager.dart' show SyncManager, AutoSyncConfig;
 export 'src/sync/sync_state.dart' show SyncState, SyncStatus;

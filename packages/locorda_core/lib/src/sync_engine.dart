@@ -20,6 +20,28 @@ typedef HydrationBatch = ({
   String? cursor
 });
 
+class EngineParams {
+  final Storage storage;
+  final List<Backend> backends;
+  final PhysicalTimestampFactory? physicalTimestampFactory;
+  final InstallationIdFactory? installationIdFactory;
+  final IriTermFactory? iriFactory;
+  final RdfCore? rdfCore;
+  final http.Client? httpClient;
+  final Fetcher? fetcher;
+
+  EngineParams({
+    required this.storage,
+    required this.backends,
+    this.physicalTimestampFactory,
+    this.installationIdFactory,
+    this.iriFactory,
+    this.rdfCore,
+    this.httpClient,
+    this.fetcher,
+  });
+}
+
 /// Main facade for the locorda system.
 ///
 /// Provides a simple, high-level API for offline-first applications with
@@ -58,6 +80,23 @@ abstract interface class SyncEngine {
       rdfCore: rdfCore,
       httpClient: httpClient,
       fetcher: fetcher,
+    );
+  }
+
+  static Future<SyncEngine> createForParams({
+    required SyncEngineConfig config,
+    required EngineParams params,
+  }) async {
+    return StandardSyncEngine.create(
+      backends: params.backends,
+      storage: params.storage,
+      config: config,
+      physicalTimestampFactory: params.physicalTimestampFactory,
+      installationIdFactory: params.installationIdFactory,
+      iriFactory: params.iriFactory,
+      rdfCore: params.rdfCore,
+      httpClient: params.httpClient,
+      fetcher: params.fetcher,
     );
   }
 

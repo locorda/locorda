@@ -5,8 +5,6 @@ import 'package:locorda_core/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:test/test.dart';
 
-import '../sync/in_memory_storage.dart';
-
 void main() {
   group('IndexPropertyResolver', () {
     late InMemoryStorage storage;

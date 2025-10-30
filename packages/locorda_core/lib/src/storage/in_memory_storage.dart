@@ -8,15 +8,6 @@ import 'package:rdf_core/rdf_core.dart';
 import 'package:rxdart/rxdart.dart';
 
 final _logger = Logger('InMemoryStorage');
-final _debug = false;
-
-void _print(Object? message) {
-  if (_debug) {
-    print(message);
-  } else {
-    _logger.fine(message);
-  }
-}
 
 class _WatchController<T> {
   final BehaviorSubject<T> _controller;
@@ -40,7 +31,30 @@ class _WatchController<T> {
   }
 }
 
-/// Simple in-memory storage for testing with reactive streams.
+/// In-memory storage implementation for testing, prototyping, and demos.
+///
+/// Provides a complete [Storage] implementation that keeps all data in memory
+/// with full support for reactive streams, ETags, and index management.
+///
+/// ## Use Cases
+///
+/// ✅ **Testing** - Fast, isolated tests without database setup
+/// ✅ **Prototyping** - Quick experimentation without infrastructure
+/// ✅ **Demos** - Browser demos without backend dependencies
+///
+/// ⚠️ **Not for production use!** All data is lost when the application closes.
+///
+/// ## Example
+///
+/// ```dart
+/// final locorda = await Locorda.create(
+///   storage: InMemoryStorage(),
+///   backends: [InMemoryBackend()],
+///   config: LocordaConfig(resources: [...]),
+/// );
+/// ```
+///
+/// For persistent storage, use [DriftStorage] from the `locorda_drift` package.
 class InMemoryStorage implements Storage {
   final Map<IriTerm, StoredDocument> _documents = {};
   final Map<IriTerm, IriTerm> _documentTypes = {}; // documentIri -> typeIri
@@ -70,7 +84,7 @@ class InMemoryStorage implements Storage {
 
   @override
   Future<void> initialize() async {
-    _print(
+    _logger.fine(
         'InMemoryStorage.initialize() called on instance ${identityHashCode(this)}');
     // No-op for in-memory storage
   }
@@ -119,7 +133,7 @@ class InMemoryStorage implements Storage {
       DocumentMetadata metadata,
       List<PropertyChange> changes,
       {int? ifMatchUpdatedAt}) async {
-    _print(
+    _logger.fine(
         'InMemoryStorage.saveDocument: document=${documentIri.debug}, type=${typeIri.debug}, updatedAt=${metadata.updatedAt}, ourPhysicalClock=${metadata.ourPhysicalClock}');
     // Check optimistic lock if required
     if (ifMatchUpdatedAt != null) {
@@ -159,7 +173,7 @@ class InMemoryStorage implements Storage {
 
   /// Emit current documents to all watch streams for a specific type.
   Future<void> _triggerWatchers(Iterable<IriTerm> typeIris) async {
-    _print(
+    _logger.fine(
         'InMemoryStorage: Triggering watchers for types: ${typeIris.map((i) => i.debug)}');
     final controllers = typeIris
         .map((typeIri) => _watchControllersByTrigger[typeIri])
@@ -296,7 +310,7 @@ class InMemoryStorage implements Storage {
     int? cursorTimestamp,
     int limit = 100,
   }) async {
-    _print(
+    _logger.fine(
         'getIndexEntries: indexIris=${indexIris.map((i) => i.debug)}, cursorTimestamp=$cursorTimestamp');
     // Filter stored index entries by requested index IRIs and cursorTimestamp
     final cursor = cursorTimestamp ?? 0;
@@ -330,7 +344,7 @@ class InMemoryStorage implements Storage {
     required Iterable<IriTerm> indexIris,
     int? cursorTimestamp,
   }) {
-    _print(
+    _logger.fine(
         'watchIndexEntries: indexIris=${indexIris.map((i) => i.debug)}, cursorTimestamp=$cursorTimestamp');
     return _startWatching(_WatchController(
         indexIris,
@@ -415,7 +429,7 @@ class InMemoryStorage implements Storage {
     required int ourPhysicalClock,
   }) async {
     final key = '${shardIri.value}|${resourceIri.value}';
-    _print(
+    _logger.fine(
         'InMemoryStorage.saveIndexEntry: shard=${shardIri.debug}, resource=${resourceIri.debug}, clock=$ourPhysicalClock');
     _indexEntries[key] = _IndexEntry(
       shardIri: shardIri,
@@ -436,12 +450,12 @@ class InMemoryStorage implements Storage {
   @override
   Future<List<IndexEntryWithIri>> getActiveIndexEntriesForShard(
       IriTerm shardIri) async {
-    _print(
+    _logger.finer(
         'InMemoryStorage.getActiveIndexEntriesForShard: looking for shard=${shardIri.debug}');
-    _print(
+    _logger.finest(
         'InMemoryStorage: Total entries in storage: ${_indexEntries.length}');
     for (final entry in _indexEntries.values) {
-      _print(
+      _logger.finest(
           '  - shard=${entry.shardIri.debug}, resource=${entry.resourceIri.debug}, deleted=${entry.isDeleted}');
     }
     final result = _indexEntries.values
@@ -456,7 +470,7 @@ class InMemoryStorage implements Storage {
               isDeleted: entry.isDeleted,
             ))
         .toList();
-    _print(
+    _logger.finer(
         'InMemoryStorage: Found ${result.length} active entries for this shard');
     return result;
   }
@@ -544,7 +558,7 @@ class InMemoryStorage implements Storage {
 
   @override
   Future<String?> getRemoteETag(RemoteId remoteId, IriTerm documentIri) async {
-    _print(
+    _logger.fine(
         'InMemoryStorage.getRemoteETag: remote=${remoteId}, document=${documentIri.debug}');
     return _settings[
         'remote.etag.${remoteId.backend}.${remoteId.id}.${documentIri.value}'];
@@ -553,7 +567,7 @@ class InMemoryStorage implements Storage {
   @override
   Future<void> setRemoteETag(
       RemoteId remoteId, IriTerm documentIri, String etag) async {
-    _print(
+    _logger.fine(
         'InMemoryStorage.setRemoteETag: remote=${remoteId}, document=${documentIri.debug}, etag=$etag');
     _settings[
             'remote.etag.${remoteId.backend}.${remoteId.id}.${documentIri.value}'] =

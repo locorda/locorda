@@ -25,8 +25,6 @@ import 'package:test/test.dart';
 
 import '../util/rdf_test_utils.dart';
 import '../util/setup_logging.dart';
-import 'in_memory_backend.dart';
-import 'in_memory_storage.dart';
 import 'test_fetcher.dart';
 import 'test_physical_timestamp_factory.dart';
 
