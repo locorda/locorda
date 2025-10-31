@@ -8,8 +8,46 @@ import 'package:rdf_core/rdf_core.dart';
 
 import 'auth/solid_auth_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/retry.dart';
 
 final _log = Logger('SolidRemoteStorage');
+
+/// Creates an HTTP client with automatic retry on network errors.
+///
+/// Uses [RetryClient] from package:http to retry failed requests up to 3 times
+/// with exponential backoff (500ms, 1s, 2s).
+///
+/// Retries on:
+/// - Network/connection errors (SocketException, IOException, ClientException)
+/// - HTTP 503 Service Unavailable
+/// - HTTP 408 Request Timeout
+///
+/// Does NOT retry on:
+/// - 4xx client errors (except 408)
+/// - 401 Unauthorized (auth issues)
+/// - 404 Not Found
+/// - 409 Conflict (optimistic locking)
+http.Client _createRetryClient() {
+  return RetryClient(
+    http.Client(),
+    retries: 3,
+    when: (response) {
+      // Retry on 503 Service Unavailable or 408 Request Timeout
+      return response.statusCode == 503 || response.statusCode == 408;
+    },
+    whenError: (error, stackTrace) {
+      // Retry on network/connection errors
+      _log.fine('Network error, will retry: $error');
+      return true;
+    },
+    delay: (retryCount) {
+      // Exponential backoff: 500ms, 1s, 2s
+      final delay = Duration(milliseconds: 500 * (1 << retryCount));
+      _log.fine('Retry attempt $retryCount, waiting ${delay.inMilliseconds}ms');
+      return delay;
+    },
+  );
+}
 
 class SolidBackend implements Backend {
   String get name => 'solid';
@@ -28,7 +66,7 @@ class SolidBackend implements Backend {
   })  : _authProvider = auth,
         _iriTermFactory = iriTermFactory ?? IriTerm.validated,
         _solidClient = SolidClient(
-          client: httpClient ?? http.Client(),
+          client: httpClient ?? _createRetryClient(),
           authProvider: auth,
           rdfCore: rdfCore ??
               RdfCore.withStandardCodecs(

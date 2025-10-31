@@ -32,16 +32,18 @@ import 'package:logging/logging.dart';
 ///   runApp(MyApp());
 /// }
 /// ```
-void setupConsoleLogging({
+void _setupConsoleLogging({
   Level level = Level.INFO,
   TimestampFormat timestampFormat = TimestampFormat.full,
   LogFormat format = LogFormat.colored,
+  String? threadName,
 }) {
   Logger.root.level = level;
   Logger.root.onRecord.listen(
     _createLogHandler(
       timestampFormat: timestampFormat,
       format: format,
+      threadName: threadName,
     ),
   );
 }
@@ -71,11 +73,13 @@ enum LogFormat {
 void Function(LogRecord) _createLogHandler({
   required TimestampFormat timestampFormat,
   required LogFormat format,
+  String? threadName,
 }) {
   return (record) {
     final time = _formatTime(record.time, timestampFormat, format);
     final level = _formatLevel(record.level, format);
-    final logger = _formatLoggerName(record.loggerName, format);
+    final logger = _formatLoggerName(
+        (threadName == null ? '' : '$threadName:') + record.loggerName, format);
     final message = record.message;
 
     // Main log line
@@ -161,4 +165,12 @@ String _indentStackTrace(StackTrace? stackTrace) {
       .split('\n')
       .map((line) => '    $line')
       .join('\n');
+}
+
+void setupMainLogging() {
+  _setupConsoleLogging(level: Level.ALL, threadName: 'MAIN');
+}
+
+void setupWorkerLogging() {
+  _setupConsoleLogging(level: Level.ALL, threadName: 'WORKER');
 }

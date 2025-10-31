@@ -5,13 +5,15 @@ library;
 
 import 'dart:js_interop';
 
+import 'package:logging/logging.dart';
 import 'package:web/web.dart' as web;
 
 import 'worker_channel.dart';
 import 'worker_entry_point.dart';
-import 'worker_handle.dart';
-import 'worker_messages.dart';
+import 'locorda_worker.dart';
 import 'package:locorda_core/locorda_core.dart';
+
+final _log = Logger('WebWorkerEntryPoint');
 
 /// Access to the global scope in a Web Worker.
 ///
@@ -64,7 +66,7 @@ void startWebWorkerLoop(EngineParamsFactory setupFn) {
         () => isInitializing = true,
       ).catchError((e, st) {
         // Log error and attempt to send error message to main thread
-        print('Web worker error: $e\n$st');
+        _log.severe('Web worker error: $e\n$st');
         try {
           _postMessage({
             'type': 'error',
@@ -73,7 +75,7 @@ void startWebWorkerLoop(EngineParamsFactory setupFn) {
           }.jsify());
         } catch (_) {
           // If even error reporting fails, just log
-          print('Failed to send error to main thread');
+          _log.severe('Failed to send error to main thread');
         }
       });
     }).toJS,
@@ -96,15 +98,20 @@ Future<void> _handleWorkerMessage(
   if (context == null) {
     // Prevent concurrent initialization
     if (isInitializing()) {
-      print('Warning: Received setup message while already initializing');
+      _log.warning('Received init message while already initializing');
       return;
     }
     markInitializing();
 
     try {
-      // First message must be SetupRequest
-      final setupRequest = SetupRequest.fromJson(data);
-      final config = SyncEngineConfig.fromJson(setupRequest.config);
+      // First message must be InitConfig
+      if (data['type'] != 'InitConfig') {
+        throw StateError(
+            'Expected InitConfig as first message, got: ${data['type']}');
+      }
+
+      final config =
+          SyncEngineConfig.fromJson(data['config'] as Map<String, dynamic>);
 
       // Create WorkerChannel for app-specific messages
       final channel = WorkerChannel((message) {
@@ -120,28 +127,19 @@ Future<void> _handleWorkerMessage(
           params: engineParams, config: config);
       newContext.setSyncSystem(syncSystem);
 
-      // Store context before sending success response
+      // Store context
       setContext(newContext);
-
-      newContext.sendMessage(
-        SetupResponse(setupRequest.requestId, success: true),
-      );
 
       // Send 'ready' signal to main thread
       _postMessage('ready'.toJS);
     } catch (e, st) {
-      // Create temporary context for error response
-      final channel = WorkerChannel((message) {
-        _postMessage({'__channel': true, 'data': message}.jsify());
-      });
-      final tempContext = WorkerContext(WebWorkerSender(), channel);
-      tempContext.sendMessage(SetupResponse(
-        data['requestId'] as String? ?? 'unknown',
-        success: false,
-        error: 'Setup failed: $e\n$st',
-      ));
-      // Don't set context on failure
-      markInitializing(); // Reset flag
+      // Send error to main thread
+      _postMessage({
+        'type': 'error',
+        'error': 'Initialization failed: $e\n$st',
+      }.jsify());
+      // Reset initialization flag
+      markInitializing();
     }
   } else {
     // Worker is initialized - handle messages
@@ -155,7 +153,7 @@ Future<void> _handleWorkerMessage(
       }
     } catch (e, st) {
       // Log but don't crash worker
-      print('Error handling message: $e\n$st');
+      _log.severe('Error handling message: $e\n$st');
       rethrow; // Propagate to outer catchError
     }
   }

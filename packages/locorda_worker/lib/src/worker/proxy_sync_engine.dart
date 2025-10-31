@@ -7,10 +7,13 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:locorda_worker/src/worker/worker_handle.dart';
+import 'package:locorda_worker/src/worker/locorda_worker.dart';
 import 'package:locorda_worker/src/worker/worker_messages.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
+
+final _log = Logger('ProxySyncEngine');
 
 /// Proxy that forwards all [SyncEngine] operations to a worker isolate/thread.
 ///
@@ -23,7 +26,7 @@ import 'package:rdf_core/rdf_core.dart';
 /// Used internally by worker-based setup. Application code doesn't interact
 /// with this class directly.
 class ProxySyncEngine implements SyncEngine {
-  final LocordaWorkerHandle _workerHandle;
+  final LocordaWorker _workerHandle;
   final RdfGraphCodec _codec;
 
   /// Request counter for generating unique IDs
@@ -50,19 +53,14 @@ class ProxySyncEngine implements SyncEngine {
 
   /// Create a proxy that forwards operations to the worker.
   ///
-  /// Performs initial setup by sending configuration to worker and
-  /// fetches initial sync state.
+  /// Worker is already initialized (waited for 'ready' signal) before this
+  /// is called, so we just need to fetch the initial sync state.
   static Future<ProxySyncEngine> create({
-    required LocordaWorkerHandle workerHandle,
-    required SyncEngineConfig config,
+    required LocordaWorker workerHandle,
   }) async {
     final proxy = ProxySyncEngine._(workerHandle);
 
-    // Send setup request to worker
-    final setupRequest = SetupRequest(proxy._nextRequestId(), config.toJson());
-    await proxy._sendAndAwait<SetupResponse>(setupRequest);
-
-    // Fetch initial sync state
+    // Fetch initial sync state from already-initialized worker
     await proxy._syncManager._fetchInitialState();
 
     return proxy;
@@ -113,10 +111,16 @@ class ProxySyncEngine implements SyncEngine {
       final completer = _pendingRequests[workerMessage.requestId];
       if (completer != null) {
         completer.complete(workerMessage);
+      } else {
+        _log.fine(
+            'Received response for unknown request ID: ${workerMessage.requestId}');
       }
     } else if (workerMessage is SyncStateUpdateMessage) {
       // Forward sync state updates to sync manager
+      _log.fine('Routing sync state update to manager');
       _syncManager._handleSyncStateUpdate(workerMessage);
+    } else {
+      _log.fine('Received unknown message type: ${workerMessage.runtimeType}');
     }
   }
 
@@ -300,19 +304,25 @@ class _ProxySyncManager implements SyncManager {
 
   @override
   Future<void> sync() async {
+    _log.info('Triggering sync...');
     final request = SyncTriggerRequest(_proxy._nextRequestId());
     final response = await _proxy._sendAndAwait<SyncTriggerResponse>(request);
 
     if (!response.success) {
+      _log.severe('Sync trigger failed: ${response.error}');
       throw Exception('Sync trigger failed: ${response.error}');
     }
+    _log.fine('Sync triggered successfully');
   }
 
   /// Fetch initial sync state from worker
   Future<void> _fetchInitialState() async {
+    _log.fine('Fetching initial sync state from worker...');
     final request = GetSyncStateRequest(_proxy._nextRequestId());
     final response = await _proxy._sendAndAwait<GetSyncStateResponse>(request);
 
+    _log.fine(
+        'Received initial sync state: ${response.status}, lastSync: ${response.lastSyncTime}');
     _updateState(response.status, response.lastSyncTime, response.errorMessage);
   }
 
@@ -336,11 +346,14 @@ class _ProxySyncManager implements SyncManager {
       errorMessage: errorMessage,
     );
 
+    _log.info(
+        'Sync state updated: $statusString${errorMessage != null ? ' - $errorMessage' : ''}');
     _statusController.add(_currentState);
   }
 
   @override
   void enableAutoSync({Duration interval = const Duration(minutes: 5)}) {
+    _log.info('Enabling auto-sync with interval: $interval');
     final request =
         EnableAutoSyncRequest(_proxy._nextRequestId(), interval.inMinutes);
     _proxy._sendAndAwait<EnableAutoSyncResponse>(request);
@@ -349,6 +362,7 @@ class _ProxySyncManager implements SyncManager {
 
   @override
   void disableAutoSync() {
+    _log.info('Disabling auto-sync');
     final request = DisableAutoSyncRequest(_proxy._nextRequestId());
     _proxy._sendAndAwait<DisableAutoSyncResponse>(request);
     // Fire and forget - don't await
@@ -365,6 +379,7 @@ class _ProxySyncManager implements SyncManager {
 
   /// Handle sync state update from worker
   void _handleSyncStateUpdate(SyncStateUpdateMessage message) {
+    _log.fine('Received sync state update from worker: ${message.status}');
     _updateState(message.status, message.lastSyncTime, message.errorMessage);
   }
 

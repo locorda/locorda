@@ -6,7 +6,10 @@ library;
 import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
 import 'package:locorda_worker/locorda_worker.dart';
 import 'package:locorda_solid/src/auth/solid_auth_provider.dart';
+import 'package:logging/logging.dart';
 import 'package:solid_auth/solid_auth.dart';
+
+final _log = Logger('SolidAuthConnector');
 
 /// Worker plugin that bridges Solid authentication from main thread to worker.
 ///
@@ -51,20 +54,20 @@ import 'package:solid_auth/solid_auth.dart';
 /// ```
 class SolidAuthConnector implements WorkerPlugin {
   final SolidAuth _solidAuth;
-  final LocordaWorkerHandle _workerHandle;
+  final LocordaWorker _workerHandle;
 
   SolidAuthConnector._({
     required SolidAuth solidAuth,
-    required LocordaWorkerHandle workerHandle,
+    required LocordaWorker workerHandle,
   })  : _solidAuth = solidAuth,
         _workerHandle = workerHandle;
 
   /// Creates a plugin factory for this connector.
   ///
   /// Pass the main thread's [solidAuth] instance. The returned factory will be
-  /// called by the worker framework with the [LocordaWorkerHandle].
+  /// called by the worker framework with the [LocordaWorker].
   static WorkerPluginFactory plugin(SolidAuth solidAuth) {
-    return (LocordaWorkerHandle workerHandle) {
+    return (LocordaWorker workerHandle) {
       return SolidAuthConnector._(
         solidAuth: solidAuth,
         workerHandle: workerHandle,
@@ -72,16 +75,37 @@ class SolidAuthConnector implements WorkerPlugin {
     };
   }
 
-  /// Starts listening to auth state changes and forwards them to worker.
+  /// Listens for auth state requests from worker and responds with current state.
   ///
-  /// Sends current auth state immediately, then subscribes to future changes.
+  /// Also subscribes to future auth state changes and pushes updates to worker.
+  /// Uses Request/Response pattern for initial state to avoid race conditions.
   @override
   Future<void> initialize() async {
-    // Send current state immediately
-    await _sendCurrentState();
+    _log.info('Plugin initialized, listening for requests...');
 
-    // Listen for future changes via isAuthenticatedNotifier
+    // Listen for auth state requests from worker (filter __channel messages)
+    _workerHandle.messages.listen((message) async {
+      if (message is! Map<String, dynamic>) return;
+
+      // Only process __channel messages
+      if (message['__channel'] != true) return;
+
+      final channelData = message['data'];
+      _log.fine(
+          'Received __channel message: ${channelData is Map ? channelData['type'] : channelData.runtimeType}');
+
+      if (channelData is Map<String, dynamic> &&
+          channelData['type'] == 'RequestAuthState') {
+        _log.info('Processing RequestAuthState...');
+        // Worker is requesting current auth state - send it
+        await _sendCurrentState();
+        _log.info('Auth state sent');
+      }
+    });
+
+    // Also listen for future changes and push updates
     _solidAuth.isAuthenticatedNotifier.addListener(_handleAuthStateChange);
+    _log.info('Subscribed to auth state changes');
   }
 
   /// Sends current auth state to worker.
@@ -98,7 +122,8 @@ class SolidAuthConnector implements WorkerPlugin {
     if (!_solidAuth.isAuthenticated || _solidAuth.currentWebId == null) {
       // Send empty credentials to clear worker auth
       _workerHandle.sendMessage({
-        '__channel': UpdateAuthMessage(credentials: null).toJson(),
+        '__channel': true,
+        'data': UpdateAuthMessage(credentials: null).toJson(),
       });
       return;
     }
@@ -106,7 +131,8 @@ class SolidAuthConnector implements WorkerPlugin {
     final dpopCredentials = _solidAuth.exportDpopCredentials();
     final webId = _solidAuth.currentWebId;
     _workerHandle.sendMessage({
-      '__channel': UpdateAuthMessage(
+      '__channel': true,
+      'data': UpdateAuthMessage(
         credentials: dpopCredentials,
         webId: webId,
       ).toJson(),

@@ -20,57 +20,6 @@ sealed class WorkerResponse extends WorkerMessage {
   WorkerResponse(this.requestId);
 }
 
-/// Setup request - sent once at worker initialization
-class SetupRequest extends WorkerRequest {
-  final Map<String, dynamic> config; // Serialized SyncEngineConfig
-  final String? databasePath; // Path to SQLite database file (for native)
-  final String? databaseName; // Database name (for web)
-
-  SetupRequest(super.requestId, this.config,
-      {this.databasePath, this.databaseName});
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'type': 'SetupRequest',
-        'requestId': requestId,
-        'config': config,
-        if (databasePath != null) 'databasePath': databasePath,
-        if (databaseName != null) 'databaseName': databaseName,
-      };
-
-  factory SetupRequest.fromJson(Map<String, dynamic> json) {
-    return SetupRequest(
-      json['requestId'] as String,
-      json['config'] as Map<String, dynamic>,
-      databasePath: json['databasePath'] as String?,
-      databaseName: json['databaseName'] as String?,
-    );
-  }
-}
-
-class SetupResponse extends WorkerResponse {
-  final bool success;
-  final String? error;
-
-  SetupResponse(super.requestId, {required this.success, this.error});
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'type': 'SetupResponse',
-        'requestId': requestId,
-        'success': success,
-        if (error != null) 'error': error,
-      };
-
-  factory SetupResponse.fromJson(Map<String, dynamic> json) {
-    return SetupResponse(
-      json['requestId'] as String,
-      success: json['success'] as bool,
-      error: json['error'] as String?,
-    );
-  }
-}
-
 /// Save request
 class SaveRequest extends WorkerRequest {
   final String typeIri; // Serialized IriTerm
@@ -566,8 +515,6 @@ WorkerMessage deserializeMessage(Map<String, dynamic> json) {
   final type = json['type'] as String;
 
   return switch (type) {
-    'SetupRequest' => SetupRequest.fromJson(json),
-    'SetupResponse' => SetupResponse.fromJson(json),
     'SaveRequest' => SaveRequest.fromJson(json),
     'SaveResponse' => SaveResponse.fromJson(json),
     'DeleteDocumentRequest' => DeleteDocumentRequest.fromJson(json),

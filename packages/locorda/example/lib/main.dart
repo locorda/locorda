@@ -37,7 +37,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Set up beautiful console logging for development
-  setupConsoleLogging();
+  setupMainLogging();
 
   runApp(const PersonalNotesApp());
 }
@@ -56,10 +56,14 @@ Future<Locorda> initializeLocorda({
   // Setup sync system with worker
   return Locorda.createWithWorker(
     paramsFactory: createEngineParams,
+    workerInitializer: setupWorkerLogging,
     jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
 
     // Create auth bridge to sync SolidAuth state to worker
-    plugins: [SolidAuthConnector.plugin(solidAuth)],
+    plugins: [
+      SolidAuthConnector.plugin(solidAuth),
+      DriftNativeOptionsConnector.plugin(),
+    ],
 
     mapperInitializer: (context) => initRdfMapper(
         rdfMapper: context.baseRdfMapper,

@@ -2,7 +2,7 @@
 import 'package:test/test.dart';
 
 // Import native implementation (web would require dart:html and fail on VM)
-import 'package:locorda_worker/src/worker/worker_handle_impl_native.dart'
+import 'package:locorda_worker/src/worker/locorda_worker_impl_native.dart'
     as native;
 
 void main() {

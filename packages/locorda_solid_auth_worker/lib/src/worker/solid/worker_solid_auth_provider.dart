@@ -83,6 +83,7 @@ class WorkerSolidAuthProvider implements SolidAuthProvider {
   /// Creates provider that listens to [channel] for authentication updates.
   ///
   /// Automatically subscribes to [UpdateAuthMessage] on the channel.
+  /// Requests initial auth state from main thread using Request/Response pattern.
   WorkerSolidAuthProvider(this._channel) {
     // Listen for auth updates on channel
     _channel.messages.listen((message) {
@@ -94,6 +95,9 @@ class WorkerSolidAuthProvider implements SolidAuthProvider {
         _notifier.isAuthenticated = _credentials != null;
       }
     });
+
+    // Request initial auth state from main thread
+    _channel.send({'type': 'RequestAuthState'});
   }
 
   /// Generates DPoP token for authenticated HTTP request.

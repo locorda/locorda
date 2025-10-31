@@ -15,12 +15,14 @@ import 'package:locorda_drift/locorda_drift.dart';
 import 'package:locorda_solid/locorda_solid.dart';
 import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
 import 'package:locorda_worker/locorda_worker.dart';
+import 'package:locorda/locorda.dart';
+import 'package:personal_notes_app/utils/logging_setup.dart';
 
 /// Worker entry point for web workers.
 ///
 /// On web, the compiled JS is loaded and main() is called automatically.
 void main() {
-  workerMain(createEngineParams);
+  workerMain(createEngineParams, workerInitializer: setupWorkerLogging);
 }
 
 /// Factory function that creates and configures the SyncEngine in the worker.
@@ -43,18 +45,25 @@ Future<EngineParams> createEngineParams(
 ) async {
   // Setup SyncEngine in worker
   // Config is already in SyncEngineConfig format (IRIs only, no Dart types)
-  return EngineParams(
-    storage: DriftStorage(
-      web: DriftWebOptions(
-        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-        driftWorker: Uri.parse('drift_worker.js'),
-      ),
-      native: DriftNativeOptions(),
+
+  final nativeOptions = await DriftNativeOptionsConnector.provider(context);
+
+  final storage = DriftStorage(
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+      driftWorker: Uri.parse('drift_worker.js'),
     ),
+    native: nativeOptions,
+  );
+
+  final authProvider = SolidAuthConnector.provider(context);
+
+  return EngineParams(
+    storage: storage,
     backends: [
       // Create auth provider that communicates with main thread
       // This receives credentials from main thread and generates DPoP tokens locally
-      SolidBackend(auth: SolidAuthConnector.provider(context)),
+      SolidBackend(auth: authProvider),
     ],
   );
 }

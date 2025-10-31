@@ -12,6 +12,9 @@ import 'package:locorda/src/mapping/local_resource_iri_service.dart';
 import 'package:locorda/src/mapping/solid_mapping_context.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_worker/locorda_worker.dart';
+import 'package:locorda_worker/src/worker/locorda_worker_impl_native.dart'
+    if (dart.library.html) 'package:locorda_worker/src/worker/locorda_worker_impl_web.dart'
+    as impl;
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
@@ -287,6 +290,7 @@ class Locorda {
     required String jsScript,
     required LocordaConfig config,
     required MapperInitializerFunction mapperInitializer,
+    void workerInitializer()?,
     List<WorkerPluginFactory> plugins = const [],
     IriTermFactory? iriTermFactory,
     RdfCore? rdfCore,
@@ -304,24 +308,23 @@ class Locorda {
       rdfCore: rdfCore,
     );
 
-    final workerHandle = await LocordaWorkerHandle.create(
+    // Create worker handle and initialize plugins in correct order:
+    // 1. Spawn worker (creates handle + communication channel)
+    // 2. Initialize plugins (sets up listeners before worker processes)
+    // 3. Send config to worker (triggers engine initialization)
+    // 4. Wait for ready (engine is now initialized)
+    final (workerHandle, closeFunctions) = await _createWorkerWithPlugins(
       paramsFactory: paramsFactory,
+      config: syncEngineConfig,
       jsScript: jsScript,
       debugName: debugName,
+      workerInitializer: workerInitializer,
+      pluginFactories: plugins,
     );
 
-    final closeFunctions = <Future<void> Function()>[];
-    for (final pluginFactory in plugins) {
-      final plugin = pluginFactory(workerHandle);
-      await plugin.initialize();
-      closeFunctions.add(plugin.dispose);
-    }
-
     // Create proxy that forwards operations to worker
-    // The proxy will send setup message with config to worker
     final syncEngine = await ProxySyncEngine.create(
       workerHandle: workerHandle,
-      config: syncEngineConfig,
     );
 
     return Locorda._(
@@ -702,6 +705,43 @@ class Locorda {
           },
       cancelOnError: false, // Keep stream alive despite errors
     );
+  }
+
+  /// Creates worker with proper plugin initialization order.
+  ///
+  /// Execution order guarantees plugins are ready before worker starts:
+  /// 1. Spawn worker isolate/web worker (creates communication channel)
+  /// 2. Initialize plugins (sets up message listeners)
+  /// 3. Send config to worker (triggers engine initialization)
+  /// 4. Wait for 'ready' (worker has created SyncEngine)
+  static Future<(LocordaWorker, List<Future<void> Function()>)>
+      _createWorkerWithPlugins({
+    required EngineParamsFactory paramsFactory,
+    required SyncEngineConfig config,
+    required String jsScript,
+    required List<WorkerPluginFactory> pluginFactories,
+    String? debugName,
+    void workerInitializer()?,
+  }) async {
+    final closeFunctions = <Future<void> Function()>[];
+
+    final workerHandle = await impl.createImpl(
+      paramsFactory,
+      config,
+      jsScript,
+      debugName,
+      (handle) async {
+        // Initialize all plugins with the handle
+        for (final pluginFactory in pluginFactories) {
+          final plugin = pluginFactory(handle);
+          await plugin.initialize();
+          closeFunctions.add(plugin.dispose);
+        }
+      },
+      workerInitializer: workerInitializer,
+    );
+
+    return (workerHandle, closeFunctions);
   }
 
   /// Close the sync system and free resources.

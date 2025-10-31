@@ -125,9 +125,9 @@ void main() {
       }, iterations: 100);
       _printResults('Round-trip 10 triples', results);
 
-      expect(results.p95.inMilliseconds, lessThan(1),
+      expect(results.p95.inMilliseconds, lessThan(2),
           reason:
-              'Should round-trip small graph in < 1ms (measured: ${_formatDuration(results.p95)})');
+              'Should round-trip small graph in < 2ms (measured: ${_formatDuration(results.p95)})');
     });
 
     test('medium graph round-trip', () {

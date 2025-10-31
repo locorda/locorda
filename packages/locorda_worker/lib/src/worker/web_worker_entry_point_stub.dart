@@ -1,7 +1,7 @@
 /// Stub for web worker entry point (used on non-web platforms).
 library;
 
-import 'worker_handle.dart';
+import 'locorda_worker.dart';
 
 /// Stub implementation that throws on non-web platforms.
 void startWebWorkerLoop(EngineParamsFactory setupFn) {

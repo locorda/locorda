@@ -97,7 +97,7 @@ import 'package:locorda_worker/locorda_worker.dart';
 import 'worker.dart' show createEngineParams;
 
 // Create worker handle
-final workerHandle = await LocordaWorkerHandle.create(
+final workerHandle = await LocordaWorker.start(
   paramsFactory: createEngineParams,
   jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
   debugName: 'locorda-worker',
@@ -122,7 +122,7 @@ Plugins extend worker functionality from the main thread. Common use case: authe
 ```dart
 class MyAuthPlugin implements WorkerPlugin {
   final MyAuth _auth;
-  final LocordaWorkerHandle _worker;
+  final LocordaWorker _worker;
   
   MyAuthPlugin(this._auth, this._worker);
   
@@ -143,7 +143,7 @@ class MyAuthPlugin implements WorkerPlugin {
 }
 
 // Register plugin
-final workerHandle = await LocordaWorkerHandle.create(
+final workerHandle = await LocordaWorker.start(
   paramsFactory: createEngineParams,
   jsScript: 'worker.dart.js',
 );
@@ -196,7 +196,7 @@ For web, compile your worker to JavaScript:
 dart compile js lib/worker.dart -o web/worker.dart.js
 ```
 
-Then reference it in `LocordaWorkerHandle.create(jsScript: 'worker.dart.js')`.
+Then reference it in `LocordaWorker.start(jsScript: 'worker.dart.js')`.
 
 ## See Also
 

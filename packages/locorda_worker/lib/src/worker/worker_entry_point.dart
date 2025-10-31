@@ -8,15 +8,18 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 
-import 'package:locorda_worker/src/worker/worker_channel.dart';
-import 'package:locorda_worker/src/worker/worker_handle.dart';
-import 'package:locorda_worker/src/worker/worker_messages.dart';
 import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_worker/src/worker/worker_channel.dart';
+import 'package:locorda_worker/src/worker/locorda_worker.dart';
+import 'package:locorda_worker/src/worker/worker_messages.dart';
+import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 // Conditional import for web worker implementation
 import 'web_worker_entry_point_stub.dart'
     if (dart.library.js_interop) 'web_worker_entry_point.dart';
+
+final _log = Logger('WorkerEntryPoint');
 
 /// Abstraction for sending messages back to main thread.
 ///
@@ -75,6 +78,8 @@ class WorkerContext {
         SyncStatus.error => 'error',
       };
 
+      _log.fine(
+          'Worker: Sending sync state update to main thread: $statusString');
       _sendMessage(SyncStateUpdateMessage(
         status: statusString,
         lastSyncTime: state.lastSyncTime,
@@ -114,11 +119,10 @@ class WorkerContext {
       } else if (workerMessage is GetSyncStateRequest) {
         await _handleGetSyncState(workerMessage);
       }
-      // Note: SetupRequest is NOT handled here - setup is done by app's setupFn
       // Note: Auth updates are NOT handled by framework - use WorkerChannel for app-specific messages
     } catch (e, st) {
       // Log error but don't crash worker
-      print('Worker error handling message: $e\n$st');
+      _log.severe('Worker error handling message: $e\n$st');
     }
   }
 
@@ -328,6 +332,8 @@ class WorkerContext {
         SyncStatus.error => 'error',
       };
 
+      _log.fine(
+          'Worker: Responding to GetSyncState request with status: $statusString');
       _sendMessage(GetSyncStateResponse(
         request.requestId,
         status: statusString,
@@ -393,7 +399,7 @@ class WorkerContext {
 /// ```dart
 /// import 'worker.dart' show createEngineParams;
 ///
-/// final handle = await LocordaWorkerHandle.create(
+/// final handle = await LocordaWorker.start(
 ///   paramsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 /// );
@@ -407,15 +413,41 @@ EngineParamsFactory? _currentSetupFunction;
 /// Entry point for web workers - called when worker JS loads.
 ///
 /// Web workers start by calling the compiled main() function.
-/// Apps must call this with their setup function in worker.dart's main():
+/// Apps must call this with their setup function in worker.dart's main().
+///
+/// The optional [workerInitializer] runs **before** engine setup, allowing
+/// apps to configure logging or other worker-global state. Must be a
+/// **top-level function** (not a closure) for native platform compatibility.
 ///
 /// ```dart
 /// // lib/worker.dart
+/// import 'package:logging/logging.dart';
+///
 /// void main() {
-///   workerMain(createEngineParams);
+///   workerMain(
+///     createEngineParams,
+///     workerInitializer: setupLogging,  // Top-level function
+///   );
+/// }
+///
+/// // Top-level function for worker initialization
+/// void setupLogging() {
+///   Logger.root.level = Level.INFO;
+///   Logger.root.onRecord.listen((record) {
+///     print('[Worker] ${record.level.name}: ${record.message}');
+///   });
 /// }
 /// ```
-void workerMain(EngineParamsFactory setupFn) {
+void workerMain(EngineParamsFactory setupFn, {void workerInitializer()?}) {
+  if (workerInitializer != null) {
+    try {
+      workerInitializer();
+    } catch (e, st) {
+      // Print to stderr since logger might not be configured yet if initializer failed
+      // ignore: avoid_print
+      print('ERROR: Worker initializer failed: $e\n$st');
+    }
+  }
   // FIXME: wtf?
   // Store setup function for later (not currently needed but kept for consistency)
   _currentSetupFunction = setupFn;
@@ -429,59 +461,70 @@ void workerMain(EngineParamsFactory setupFn) {
 /// Entry point for native isolates - receives factory via parameter.
 ///
 /// This is called by NativeWorkerHandle after Isolate.spawn().
-/// The factory function is passed directly, no global storage needed.
+/// The factory function is passed in spawn, config arrives via first message.
 void startWorkerIsolate(
     SendPort mainSendPort, EngineParamsFactory factory) async {
   // 1. Establish bidirectional communication
   final receivePort = ReceivePort();
   mainSendPort.send(receivePort.sendPort);
 
-  // 2. Wait for SetupRequest with config
-  final firstMessage = await receivePort.first;
-  if (firstMessage is! Map<String, dynamic>) {
-    throw StateError('Expected setup message, got: $firstMessage');
-  }
-
-  final setupRequest = SetupRequest.fromJson(firstMessage);
-  final config = SyncEngineConfig.fromJson(setupRequest.config);
-
-  // 3. Create WorkerChannel for app-specific messages
+  // 2. Create WorkerChannel for app-specific messages
   final channel = WorkerChannel((message) {
     // Send app-specific messages with special marker
     mainSendPort.send({'__channel': true, 'data': message});
   });
 
-  // 4. Create WorkerContext
+  // 3. Create WorkerContext
   final context = WorkerContext(
     IsolateSender(mainSendPort),
     channel,
   );
 
-  // 5. Call app's setup function
-  try {
-    final engineParams = await factory(config, context);
-    context._syncSystem =
-        await SyncEngine.createForParams(config: config, params: engineParams);
-    context._sendMessage(SetupResponse(setupRequest.requestId, success: true));
-  } catch (e, st) {
-    context._sendMessage(SetupResponse(
-      setupRequest.requestId,
-      success: false,
-      error: 'Setup failed: $e\n$st',
-    ));
-    return; // Abort worker
-  }
+  // 4. Wait for InitConfig message with configuration
+  SyncEngineConfig? config;
+  final configCompleter = Completer<SyncEngineConfig>();
 
-  // 6. Start message loop
   receivePort.listen((message) async {
-    if (message is Map<String, dynamic>) {
+    // First message must be InitConfig
+    if (config == null && message is Map<String, dynamic>) {
+      if (message['type'] == 'InitConfig') {
+        config = SyncEngineConfig.fromJson(
+            message['config'] as Map<String, dynamic>);
+        configCompleter.complete(config);
+        return;
+      }
+    }
+
+    // After config received, handle normal messages
+    if (config != null && message is Map<String, dynamic>) {
       // Check if it's a channel message
       if (message['__channel'] == true) {
         channel.deliver(message['data']);
-      } else {
-        // Framework message - handle normally
-        await context.handleMessage(message);
+        return;
       }
+
+      // Framework message - handle normally
+      await context.handleMessage(message);
     }
   });
+
+  // Wait for config
+  final receivedConfig = await configCompleter.future;
+
+  // 5. Call app's setup function and initialize SyncEngine
+  try {
+    final engineParams = await factory(receivedConfig, context);
+    final syncSystem = await SyncEngine.createForParams(
+        config: receivedConfig, params: engineParams);
+    context.setSyncSystem(syncSystem);
+  } catch (e, st) {
+    // Send error and abort worker
+    mainSendPort.send({
+      'error': 'Worker initialization failed: $e\n$st',
+    });
+    return;
+  }
+
+  // 6. Send 'ready' signal to main thread
+  mainSendPort.send('ready');
 }

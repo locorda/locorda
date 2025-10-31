@@ -1,32 +1,39 @@
 import 'dart:async';
 import 'dart:js_interop';
 
+import 'package:locorda_core/locorda_core.dart';
 import 'package:web/web.dart' as web;
 
-import 'worker_handle.dart';
+import 'locorda_worker.dart';
 
 /// Web platform implementation using Web Workers (modern web API).
-class WebWorkerHandle implements LocordaWorkerHandle {
+class WebWorkerHandle implements LocordaWorker {
   final web.Worker _worker;
   final StreamController<Object?> _controller = StreamController.broadcast();
 
   WebWorkerHandle._(this._worker);
 
-  /// Creates worker from compiled JavaScript file.
+  /// Creates worker with plugin support.
+  ///
+  /// Execution order guarantees plugins are ready before worker starts:
+  /// 1. Spawn web worker (creates communication channel)
+  /// 2. Caller initializes plugins via callback (sets up listeners)
+  /// 3. Send config to worker (triggers engine initialization)
+  /// 4. Wait for 'ready' (worker has created SyncEngine)
   ///
   /// The [jsScript] must be a path to a compiled JS file (e.g., 'worker.dart.js').
-  /// User must compile their worker.dart to JS beforehand:
-  /// ```bash
-  /// dart compile js -o web/worker.dart.js lib/worker.dart
-  /// ```
+  /// Compile with: `dart compile js -o web/worker.dart.js lib/worker.dart`
   static Future<WebWorkerHandle> create(
     String jsScript,
+    SyncEngineConfig config,
     String? debugName,
+    Future<void> Function(WebWorkerHandle handle) initializePlugins,
   ) async {
+    // 1. Spawn web worker
     final worker = web.Worker(jsScript.toJS);
     final handle = WebWorkerHandle._(worker);
 
-    // Set up message listener using modern EventTarget API
+    // Set up message listener
     worker.addEventListener(
         'message',
         (web.Event event) {
@@ -44,7 +51,13 @@ class WebWorkerHandle implements LocordaWorkerHandle {
           );
         }.toJS);
 
-    // Wait for 'ready' message from worker
+    // 2. Initialize plugins
+    await initializePlugins(handle);
+
+    // 3. Send config
+    handle.sendMessage({'type': 'InitConfig', 'config': config.toJson()});
+
+    // 4. Wait for ready
     await handle.messages.firstWhere((msg) => msg == 'ready');
 
     return handle;

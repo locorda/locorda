@@ -16,12 +16,18 @@ Future<EngineParams> _createEngineParams(
   );
 }
 
+SyncEngineConfig _createTestConfig() {
+  return SyncEngineConfig(resources: []);
+}
+
 void main() {
   group('NativeWorkerHandle', () {
     test('creates worker successfully', () async {
       final worker = await NativeWorkerHandle.create(
         _createEngineParams,
+        _createTestConfig().toJson(),
         'test-worker',
+        (_) async {}, // No plugins
       );
 
       expect(worker, isA<NativeWorkerHandle>());
@@ -32,7 +38,9 @@ void main() {
     test('exposes messages stream', () async {
       final worker = await NativeWorkerHandle.create(
         _createEngineParams,
+        _createTestConfig().toJson(),
         'test-worker',
+        (_) async {}, // No plugins
       );
 
       // Verify stream is available (don't listen yet - isolate already does)
@@ -44,13 +52,16 @@ void main() {
     test('can send messages', () async {
       final worker = await NativeWorkerHandle.create(
         _createEngineParams,
+        _createTestConfig().toJson(),
         'test-worker',
+        (_) async {}, // No plugins
       );
 
-      // Send messages - should not throw
-      worker.sendMessage({'test': 'message'});
-      worker.sendMessage({'index': 1});
-      worker.sendMessage({'index': 2});
+      // Send test channel messages (won't be deserialized by framework)
+      // Using __channel marker so worker treats them as app-specific messages
+      worker.sendMessage({'__channel': true, 'data': 'test-message-1'});
+      worker.sendMessage({'__channel': true, 'data': 'test-message-2'});
+      worker.sendMessage({'__channel': true, 'data': 'test-message-3'});
 
       // Give isolate time to process
       await Future.delayed(const Duration(milliseconds: 50));
@@ -61,7 +72,9 @@ void main() {
     test('disposes cleanly', () async {
       final worker = await NativeWorkerHandle.create(
         _createEngineParams,
+        _createTestConfig().toJson(),
         'test-worker',
+        (_) async {}, // No plugins
       );
 
       // Should not throw
@@ -71,11 +84,15 @@ void main() {
     test('can create multiple workers', () async {
       final worker1 = await NativeWorkerHandle.create(
         _createEngineParams,
+        _createTestConfig().toJson(),
         'worker-1',
+        (_) async {}, // No plugins
       );
       final worker2 = await NativeWorkerHandle.create(
         _createEngineParams,
+        _createTestConfig().toJson(),
         'worker-2',
+        (_) async {}, // No plugins
       );
 
       expect(worker1, isA<NativeWorkerHandle>());

@@ -63,7 +63,7 @@ Main Thread                                    Worker Isolate
    - Framework handles config transmission, message protocol, serialization
 
 4. **Platform Abstraction**:
-   - Framework provides `LocordaWorkerHandle.create(dartScript:, jsScript:)`
+   - Framework provides `LocordaWorker.start(dartScript:, jsScript:)`
    - Platform detection (`kIsWeb`) hidden inside framework
    - User code never checks platform explicitly
 
@@ -85,7 +85,7 @@ Initial approaches had issues:
 // packages/locorda/example/lib/main.dart
 Future<void> main() async {
   // 1. Create worker handle (framework abstracts platform)
-  final workerHandle = await LocordaWorkerHandle.create(
+  final workerHandle = await LocordaWorker.start(
     workerEntryPoint: workerMain,  // Function reference for native
     jsScript: 'worker.dart.js',     // Compiled JS for web
   );
@@ -316,9 +316,9 @@ Main Thread                              Worker Thread
 
 ```dart
 /// Platform-agnostic worker handle factory.
-abstract class LocordaWorkerHandle {
+abstract class LocordaWorker {
   /// Auto-detects platform and uses appropriate script.
-  static Future<LocordaWorkerHandle> create({
+  static Future<LocordaWorker> create({
     required void Function(SendPort) workerEntryPoint,  // For native
     required String jsScript,                            // For web
     String? debugName,
@@ -334,10 +334,10 @@ abstract class LocordaWorkerHandle {
   static LocordaWorkerHandleBuilder builder() => LocordaWorkerHandleBuilder._();
   
   /// Explicit single-platform factories (throw if wrong platform).
-  static Future<LocordaWorkerHandle> forDart(
+  static Future<LocordaWorker> forDart(
     void Function(SendPort) workerEntryPoint,
   ) { ... }
-  static Future<LocordaWorkerHandle> forWeb(String jsScript) { ... }
+  static Future<LocordaWorker> forWeb(String jsScript) { ... }
   
   // Internal message protocol
   void sendMessage(Object message);
@@ -348,7 +348,7 @@ abstract class LocordaWorkerHandle {
 
 **Native Implementation** (Isolate.spawn):
 ```dart
-class _NativeWorkerHandle implements LocordaWorkerHandle {
+class _NativeWorkerHandle implements LocordaWorker {
   final SendPort _sendPort;
   final ReceivePort _receivePort;
   
@@ -378,7 +378,7 @@ class _NativeWorkerHandle implements LocordaWorkerHandle {
 
 **Web Implementation** (Web Worker):
 ```dart
-class _WebWorkerHandle implements LocordaWorkerHandle {
+class _WebWorkerHandle implements LocordaWorker {
   final Worker _worker;
   final StreamController<Object> _controller = StreamController.broadcast();
   
@@ -413,7 +413,7 @@ class _WebWorkerHandle implements LocordaWorkerHandle {
 **Goal**: Platform-transparent worker creation and message protocol.
 
 **Deliverables**:
-1. `LocordaWorkerHandle` abstract class + factory methods
+1. `LocordaWorker` abstract class + factory methods
 2. `_NativeWorkerHandle` with Isolate.spawn
 3. `_WebWorkerHandle` with Web Worker
 4. `LocordaWorkerHandleBuilder` for advanced config
@@ -607,7 +607,7 @@ class WorkerContext {
 ### For New Projects
 ```dart
 // Just use setupWithWorker() from the start
-final worker = await LocordaWorkerHandle.create(
+final worker = await LocordaWorker.start(
   workerEntryPoint: workerMain,
   jsScript: 'worker.dart.js',
 );
