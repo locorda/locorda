@@ -111,14 +111,13 @@ class Locorda {
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
   static Future<Locorda> create({
-    required List<Backend> backends,
-    required Storage storage,
+    required EngineParams engineParams,
     required LocordaConfig config,
     required MapperInitializerFunction mapperInitializer,
-    IriTermFactory? iriTermFactory,
-    RdfCore? rdfCore,
-    http.Client? httpClient,
   }) async {
+    final iriTermFactory = engineParams.iriFactory ?? IriTerm.validated;
+    final rdfCore = engineParams.rdfCore ?? RdfCore.withStandardCodecs();
+
     final (
       :localResourceLocator,
       :resourceTypeCache,
@@ -133,12 +132,9 @@ class Locorda {
 
     // Setup the actual sync system
     final syncEngine = await SyncEngine.create(
-      backends: backends,
-      storage: storage,
+      engineParams:
+          engineParams.copyWith(iriFactory: iriTermFactory, rdfCore: rdfCore),
       config: syncEngineConfig,
-      iriFactory: iriTermFactory,
-      rdfCore: rdfCore,
-      httpClient: httpClient,
     );
 
     return Locorda._(
@@ -260,7 +256,7 @@ class Locorda {
   /// import 'worker.dart' show createEngineParams;
   ///
   /// final locorda = await Locorda.createWithWorker(
-  ///   paramsFactory: createEngineParams,  // Your factory function
+  ///   engineParamsFactory: createEngineParams,  // Your factory function
   ///   jsScript: 'worker.dart.js',  // For web: dart compile js lib/worker.dart
   ///   config: locordaConfig,
   ///   mapperInitializer: createMapper,
@@ -273,7 +269,7 @@ class Locorda {
   /// ## How It Works
   ///
   /// 1. `createWithWorker()` spawns a worker (isolate/web worker)
-  /// 2. Your `paramsFactory` is called in the worker to create EngineParams
+  /// 2. Your `engineParamsFactory` is called in the worker to create EngineParams
   /// 3. Framework creates SyncEngine from the returned parameters
   /// 4. Main thread gets a `ProxySyncEngine` that forwards all calls
   /// 5. Communication via JSON messages with Turtle-serialized RDF graphs
@@ -286,7 +282,7 @@ class Locorda {
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
   static Future<Locorda> createWithWorker({
-    required EngineParamsFactory paramsFactory,
+    required EngineParamsFactory engineParamsFactory,
     required String jsScript,
     required LocordaConfig config,
     required MapperInitializerFunction mapperInitializer,
@@ -314,7 +310,7 @@ class Locorda {
     // 3. Send config to worker (triggers engine initialization)
     // 4. Wait for ready (engine is now initialized)
     final (workerHandle, closeFunctions) = await _createWorkerWithPlugins(
-      paramsFactory: paramsFactory,
+      engineParamsFactory: engineParamsFactory,
       config: syncEngineConfig,
       jsScript: jsScript,
       debugName: debugName,
@@ -716,7 +712,7 @@ class Locorda {
   /// 4. Wait for 'ready' (worker has created SyncEngine)
   static Future<(LocordaWorker, List<Future<void> Function()>)>
       _createWorkerWithPlugins({
-    required EngineParamsFactory paramsFactory,
+    required EngineParamsFactory engineParamsFactory,
     required SyncEngineConfig config,
     required String jsScript,
     required List<WorkerPluginFactory> pluginFactories,
@@ -726,7 +722,7 @@ class Locorda {
     final closeFunctions = <Future<void> Function()>[];
 
     final workerHandle = await impl.createImpl(
-      paramsFactory,
+      engineParamsFactory,
       config,
       jsScript,
       debugName,

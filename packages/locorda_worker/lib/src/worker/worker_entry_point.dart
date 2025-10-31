@@ -400,7 +400,7 @@ class WorkerContext {
 /// import 'worker.dart' show createEngineParams;
 ///
 /// final handle = await LocordaWorker.start(
-///   paramsFactory: createEngineParams,
+///   engineParamsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 /// );
 /// ```
@@ -514,8 +514,8 @@ void startWorkerIsolate(
   // 5. Call app's setup function and initialize SyncEngine
   try {
     final engineParams = await factory(receivedConfig, context);
-    final syncSystem = await SyncEngine.createForParams(
-        config: receivedConfig, params: engineParams);
+    final syncSystem = await SyncEngine.create(
+        config: receivedConfig, engineParams: engineParams);
     context.setSyncSystem(syncSystem);
   } catch (e, st) {
     // Send error and abort worker

@@ -10,7 +10,7 @@
 ///
 /// ```dart
 /// final sync = await Locorda.createWithWorker(
-///   paramsFactory: createEngineParams,
+///   engineParamsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 ///   plugins: [
 ///     SolidAuthConnector.plugin(solidAuth),

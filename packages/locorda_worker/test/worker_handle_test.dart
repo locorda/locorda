@@ -20,13 +20,13 @@ SyncEngineConfig _createTestConfig() => SyncEngineConfig(
 
 /// Helper to create worker without plugins (for simple tests)
 Future<LocordaWorker> _createWorker({
-  required EngineParamsFactory paramsFactory,
+  required EngineParamsFactory engineParamsFactory,
   required SyncEngineConfig config,
   required String jsScript,
   String? debugName,
 }) {
   return impl.createImpl(
-    paramsFactory,
+    engineParamsFactory,
     config,
     jsScript,
     debugName,
@@ -38,7 +38,7 @@ void main() {
   group('LocordaWorker (platform-agnostic)', () {
     test('creates worker on current platform', () async {
       final worker = await _createWorker(
-        paramsFactory: _createEngineParams,
+        engineParamsFactory: _createEngineParams,
         config: _createTestConfig(),
         jsScript: 'worker.dart.js', // Ignored on native
         debugName: 'test-worker',
@@ -51,7 +51,7 @@ void main() {
 
     test('provides message stream', () async {
       final worker = await _createWorker(
-        paramsFactory: _createEngineParams,
+        engineParamsFactory: _createEngineParams,
         config: _createTestConfig(),
         jsScript: 'worker.dart.js',
       );
@@ -63,7 +63,7 @@ void main() {
 
     test('allows sending messages', () async {
       final worker = await _createWorker(
-        paramsFactory: _createEngineParams,
+        engineParamsFactory: _createEngineParams,
         config: _createTestConfig(),
         jsScript: 'worker.dart.js',
       );
@@ -80,7 +80,7 @@ void main() {
 
     test('disposes cleanly', () async {
       final worker = await _createWorker(
-        paramsFactory: _createEngineParams,
+        engineParamsFactory: _createEngineParams,
         config: _createTestConfig(),
         jsScript: 'worker.dart.js',
       );
@@ -90,14 +90,14 @@ void main() {
 
     test('can create multiple workers', () async {
       final worker1 = await _createWorker(
-        paramsFactory: _createEngineParams,
+        engineParamsFactory: _createEngineParams,
         config: _createTestConfig(),
         jsScript: 'worker.dart.js',
         debugName: 'worker-1',
       );
 
       final worker2 = await _createWorker(
-        paramsFactory: _createEngineParams,
+        engineParamsFactory: _createEngineParams,
         config: _createTestConfig(),
         jsScript: 'worker.dart.js',
         debugName: 'worker-2',

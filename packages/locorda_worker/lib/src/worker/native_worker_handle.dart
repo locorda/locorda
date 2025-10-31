@@ -35,7 +35,7 @@ class NativeWorkerHandle implements LocordaWorker {
   /// 3. Send config to worker (triggers engine initialization)
   /// 4. Wait for 'ready' (worker has created SyncEngine)
   static Future<NativeWorkerHandle> create(
-    EngineParamsFactory paramsFactory,
+    EngineParamsFactory engineParamsFactory,
     Map<String, dynamic> configJson,
     String? debugName,
     Future<void> Function(NativeWorkerHandle handle) initializePlugins, {
@@ -45,7 +45,7 @@ class NativeWorkerHandle implements LocordaWorker {
     final receivePort = ReceivePort();
     final isolate = await Isolate.spawn(
       _isolateEntryPoint,
-      _IsolateStartMessage(receivePort.sendPort, paramsFactory,
+      _IsolateStartMessage(receivePort.sendPort, engineParamsFactory,
           workerInitializer: workerInitializer),
       debugName: debugName,
     );

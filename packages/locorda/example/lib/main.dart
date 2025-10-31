@@ -55,7 +55,7 @@ Future<Locorda> initializeLocorda({
 }) {
   // Setup sync system with worker
   return Locorda.createWithWorker(
-    paramsFactory: createEngineParams,
+    engineParamsFactory: createEngineParams,
     workerInitializer: setupWorkerLogging,
     jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
 

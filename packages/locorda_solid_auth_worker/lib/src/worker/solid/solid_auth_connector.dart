@@ -31,7 +31,7 @@ final _log = Logger('SolidAuthConnector');
 /// await solidAuth.init();
 ///
 /// final sync = await Locorda.createWithWorker(
-///   paramsFactory: createEngineParams,
+///   engineParamsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 ///   plugins: [
 ///     SolidAuthConnector.plugin(solidAuth),

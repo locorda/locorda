@@ -39,7 +39,7 @@ await solidAuth.init();
 
 // Setup Locorda with worker and SolidAuthConnector plugin
 final sync = await Locorda.createWithWorker(
-  paramsFactory: createEngineParams,
+  engineParamsFactory: createEngineParams,
   jsScript: 'worker.dart.js',
   plugins: [
     SolidAuthConnector.plugin(solidAuth),

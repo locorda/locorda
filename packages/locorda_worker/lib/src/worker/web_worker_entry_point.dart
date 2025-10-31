@@ -123,8 +123,8 @@ Future<void> _handleWorkerMessage(
 
       // Initialize sync system
       final engineParams = await engineParamsFactory(config, newContext);
-      final syncSystem = await SyncEngine.createForParams(
-          params: engineParams, config: config);
+      final syncSystem =
+          await SyncEngine.create(engineParams: engineParams, config: config);
       newContext.setSyncSystem(syncSystem);
 
       // Store context

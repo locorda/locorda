@@ -20,7 +20,7 @@ typedef EngineParamsFactory = Future<EngineParams> Function(
 abstract class LocordaWorker {
   /// Creates worker handle auto-detecting the current platform.
   ///
-  /// - [paramsFactory]: Function that creates EngineParams in worker thread
+  /// - [engineParamsFactory]: Function that creates EngineParams in worker thread
   /// - [config]: SyncEngine configuration to pass to worker
   /// - [jsScript]: Path to compiled JS worker for web platform (e.g., 'worker.dart.js')
   /// - [debugName]: Optional name for debugging/logging purposes
@@ -101,7 +101,7 @@ abstract class LocordaWorker {
   /// import 'worker.dart' show createEngineParams;
   ///
   /// final sync = await Locorda.createWithWorker(
-  ///   paramsFactory: createEngineParams,
+  ///   engineParamsFactory: createEngineParams,
   ///   jsScript: 'worker.dart.js',
   ///   plugins: [...],  // Optional plugins for cross-thread communication
   ///   // ... config

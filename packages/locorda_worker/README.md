@@ -79,7 +79,7 @@ import 'package:locorda/locorda.dart';
 import 'worker.dart' show createEngineParams;
 
 final sync = await Locorda.createWithWorker(
-  paramsFactory: createEngineParams,
+  engineParamsFactory: createEngineParams,
   jsScript: 'worker.dart.js',
   plugins: [...],
   config: LocordaConfig(...),
@@ -98,7 +98,7 @@ import 'worker.dart' show createEngineParams;
 
 // Create worker handle
 final workerHandle = await LocordaWorker.start(
-  paramsFactory: createEngineParams,
+  engineParamsFactory: createEngineParams,
   jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
   debugName: 'locorda-worker',
 );
@@ -144,7 +144,7 @@ class MyAuthPlugin implements WorkerPlugin {
 
 // Register plugin
 final workerHandle = await LocordaWorker.start(
-  paramsFactory: createEngineParams,
+  engineParamsFactory: createEngineParams,
   jsScript: 'worker.dart.js',
 );
 

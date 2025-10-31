@@ -203,12 +203,14 @@ Future<void> _executeSaveTestWithSteps(
         // Get or create sync instance for this installation
 
         final syncFuture = SyncEngine.create(
-          backends: [sharedBackend],
-          storage: storage,
+          engineParams: EngineParams(
+            backends: [sharedBackend],
+            storage: storage,
+            fetcher: fetcher,
+            physicalTimestampFactory: timestampFactory,
+            installationIdFactory: () => stepInstallationId,
+          ),
           config: config,
-          fetcher: fetcher,
-          physicalTimestampFactory: timestampFactory,
-          installationIdFactory: () => stepInstallationId,
         );
 
         return _InstallationContext(
@@ -725,12 +727,15 @@ Future<void> _executeSaveErrorTest(
         baseInstallationId != null ? () => baseInstallationId : null;
 
     final sync = await SyncEngine.create(
+      config: config,
+      engineParams: EngineParams(
         backends: [InMemoryBackend()],
         storage: storage,
-        config: config,
         fetcher: fetcher,
         physicalTimestampFactory: timestampFactory,
-        installationIdFactory: installationIdFactory);
+        installationIdFactory: installationIdFactory,
+      ),
+    );
 
     // Set timestamp for save action if specified
     setTime(actionTs?['save'], timestampFactory);

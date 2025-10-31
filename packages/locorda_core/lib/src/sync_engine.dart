@@ -40,6 +40,30 @@ class EngineParams {
     this.httpClient,
     this.fetcher,
   });
+
+  EngineParams copyWith({
+    Storage? storage,
+    List<Backend>? backends,
+    PhysicalTimestampFactory? physicalTimestampFactory,
+    InstallationIdFactory? installationIdFactory,
+    IriTermFactory? iriFactory,
+    RdfCore? rdfCore,
+    http.Client? httpClient,
+    Fetcher? fetcher,
+  }) {
+    return EngineParams(
+      storage: storage ?? this.storage,
+      backends: backends ?? this.backends,
+      physicalTimestampFactory:
+          physicalTimestampFactory ?? this.physicalTimestampFactory,
+      installationIdFactory:
+          installationIdFactory ?? this.installationIdFactory,
+      iriFactory: iriFactory ?? this.iriFactory,
+      rdfCore: rdfCore ?? this.rdfCore,
+      httpClient: httpClient ?? this.httpClient,
+      fetcher: fetcher ?? this.fetcher,
+    );
+  }
 }
 
 /// Main facade for the locorda system.
@@ -60,43 +84,19 @@ abstract interface class SyncEngine {
   ///
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
   static Future<SyncEngine> create({
-    required List<Backend> backends,
-    required Storage storage,
     required SyncEngineConfig config,
-    PhysicalTimestampFactory? physicalTimestampFactory,
-    InstallationIdFactory? installationIdFactory,
-    IriTermFactory? iriFactory,
-    RdfCore? rdfCore,
-    http.Client? httpClient,
-    Fetcher? fetcher,
+    required EngineParams engineParams,
   }) async {
     return StandardSyncEngine.create(
-      backends: backends,
-      storage: storage,
+      backends: engineParams.backends,
+      storage: engineParams.storage,
       config: config,
-      physicalTimestampFactory: physicalTimestampFactory,
-      installationIdFactory: installationIdFactory,
-      iriFactory: iriFactory,
-      rdfCore: rdfCore,
-      httpClient: httpClient,
-      fetcher: fetcher,
-    );
-  }
-
-  static Future<SyncEngine> createForParams({
-    required SyncEngineConfig config,
-    required EngineParams params,
-  }) async {
-    return StandardSyncEngine.create(
-      backends: params.backends,
-      storage: params.storage,
-      config: config,
-      physicalTimestampFactory: params.physicalTimestampFactory,
-      installationIdFactory: params.installationIdFactory,
-      iriFactory: params.iriFactory,
-      rdfCore: params.rdfCore,
-      httpClient: params.httpClient,
-      fetcher: params.fetcher,
+      physicalTimestampFactory: engineParams.physicalTimestampFactory,
+      installationIdFactory: engineParams.installationIdFactory,
+      iriFactory: engineParams.iriFactory,
+      rdfCore: engineParams.rdfCore,
+      httpClient: engineParams.httpClient,
+      fetcher: engineParams.fetcher,
     );
   }
 

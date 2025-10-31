@@ -110,12 +110,13 @@
 - [x] Implement basic Solid backend with actual Pod storage operations (hard-coded storage locations)
 - [x] Implement tests for real CRDT Merge 
 - [ ] Example App Responsiveness: offload syncing from ui thread to isolate on native
-- [ ] API Improvements: use EngineParams as parameter for Locorda.create (and maybe SyncEngine.create) and rename paramsFactory in Locorda.createWithWorker to engineParamsFactory
+- [ ] API Improvements: use EngineParams as parameter for Locorda.create (and maybe SyncEngine.create) and rename engineParamsFactory in Locorda.createWithWorker to engineParamsFactory
 - [ ] Rework drift_native_options_connector and solid_auth_worker implementations 
   - provide a cleaner API to those classes (better encapsulation of the messaging)
   - Naming of plugin/provider - can we do better for those concepts?
 - [ ] AutoSync - we should sync on startup by default, same (throttled) after changes and maybe time based
 - [ ] Example App Responsiveness: offload syncing from ui thread to web worker on web
+- [ ] Streamline web worker experience - it should be built and deployed automatically, at least in the example app
 - [ ] Implement ensure
 - [ ] Thoroughly test, for example
   - Foreign indices/shards that are referenced, but not yet downloaded when an item is saved!
