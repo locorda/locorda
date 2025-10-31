@@ -57,7 +57,7 @@ class _WorkerAuthNotifier implements AuthValueListenable {
 ///
 /// ## Lifecycle
 ///
-/// 1. Created via [SolidAuthConnector.provider] in worker entry point
+/// 1. Created via [SolidAuthConnector.requester] in worker entry point
 /// 2. Listens to [WorkerChannel] for [UpdateAuthMessage]
 /// 3. Updates internal [_credentials] and [_webId]
 /// 4. Notifies listeners via [isAuthenticatedNotifier]
@@ -68,7 +68,7 @@ class _WorkerAuthNotifier implements AuthValueListenable {
 /// ```dart
 /// void workerEntryPoint() {
 ///   startWorkerIsolate((context) async {
-///     final authProvider = SolidAuthConnector.provider(context);
+///     final authProvider = SolidAuthConnector.requester(context);
 ///     final backend = SolidBackend(auth: authProvider);
 ///     // Backend now reacts to auth state changes automatically
 ///   });

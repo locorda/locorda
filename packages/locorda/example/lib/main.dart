@@ -59,10 +59,10 @@ Future<Locorda> initializeLocorda({
     workerInitializer: setupWorkerLogging,
     jsScript: 'worker.dart.js', // For web: dart compile js lib/worker.dart
 
-    // Create auth bridge to sync SolidAuth state to worker
+    // Create bridge to sync Backend and Storage configs from main to worker
     plugins: [
-      SolidAuthConnector.plugin(solidAuth),
-      DriftNativeOptionsConnector.plugin(),
+      SolidAuthConnector.responder(solidAuth),
+      DriftNativeOptionsConnector.responder(),
     ],
 
     mapperInitializer: (context) => initRdfMapper(

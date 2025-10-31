@@ -34,7 +34,7 @@ final _log = Logger('SolidAuthConnector');
 ///   engineParamsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 ///   plugins: [
-///     SolidAuthConnector.plugin(solidAuth),
+///     SolidAuthConnector.responder(solidAuth),
 ///   ],
 ///   // ... other config
 /// );
@@ -47,7 +47,7 @@ final _log = Logger('SolidAuthConnector');
 ///   SyncEngineConfig config,
 ///   WorkerContext context,
 /// ) async {
-///   final authProvider = SolidAuthConnector.provider(context);
+///   final authProvider = SolidAuthConnector.requester(context);
 ///   final backend = SolidBackend(auth: authProvider);
 ///   // ... create storage and return SyncEngine
 /// }
@@ -66,7 +66,7 @@ class SolidAuthConnector implements WorkerPlugin {
   ///
   /// Pass the main thread's [solidAuth] instance. The returned factory will be
   /// called by the worker framework with the [LocordaWorker].
-  static WorkerPluginFactory plugin(SolidAuth solidAuth) {
+  static WorkerPluginFactory responder(SolidAuth solidAuth) {
     return (LocordaWorker workerHandle) {
       return SolidAuthConnector._(
         solidAuth: solidAuth,
@@ -155,12 +155,12 @@ class SolidAuthConnector implements WorkerPlugin {
   /// ```dart
   /// void workerEntryPoint() {
   ///   startWorkerIsolate((context) async {
-  ///     final authProvider = SolidAuthConnector.provider(context);
+  ///     final authProvider = SolidAuthConnector.requester(context);
   ///     final backend = SolidBackend(auth: authProvider);
   ///   });
   /// }
   /// ```
-  static SolidAuthProvider provider(WorkerContext context) {
+  static SolidAuthProvider requester(WorkerContext context) {
     return WorkerSolidAuthProvider(context.channel);
   }
 }

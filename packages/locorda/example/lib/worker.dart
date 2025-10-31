@@ -46,7 +46,7 @@ Future<EngineParams> createEngineParams(
   // Setup SyncEngine in worker
   // Config is already in SyncEngineConfig format (IRIs only, no Dart types)
 
-  final nativeOptions = await DriftNativeOptionsConnector.provider(context);
+  final nativeOptions = await DriftNativeOptionsConnector.requester(context);
 
   final storage = DriftStorage(
     web: DriftWebOptions(
@@ -56,7 +56,7 @@ Future<EngineParams> createEngineParams(
     native: nativeOptions,
   );
 
-  final authProvider = SolidAuthConnector.provider(context);
+  final authProvider = SolidAuthConnector.requester(context);
 
   return EngineParams(
     storage: storage,

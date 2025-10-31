@@ -18,7 +18,6 @@ import 'package:locorda_worker/src/worker/locorda_worker_impl_native.dart'
 import 'package:logging/logging.dart';
 import 'package:rdf_core/rdf_core.dart';
 import 'package:rdf_mapper/rdf_mapper.dart';
-import 'package:http/http.dart' as http;
 
 /// Type alias for mapper initializer functions.
 ///
@@ -239,7 +238,7 @@ class Locorda {
   /// ) async {
   ///   final storage = DriftStorage(...);
   ///   final backends = [
-  ///     SolidBackend(auth: SolidAuthConnector.provider(context)),
+  ///     SolidBackend(auth: SolidAuthConnector.requester(context)),
   ///   ];
   ///   // Return parameters - framework creates SyncEngine from these
   ///   return EngineParams(

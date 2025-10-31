@@ -109,11 +109,9 @@
 - [x] Implement actual syncing to a backend
 - [x] Implement basic Solid backend with actual Pod storage operations (hard-coded storage locations)
 - [x] Implement tests for real CRDT Merge 
-- [ ] Example App Responsiveness: offload syncing from ui thread to isolate on native
-- [ ] API Improvements: use EngineParams as parameter for Locorda.create (and maybe SyncEngine.create) and rename engineParamsFactory in Locorda.createWithWorker to engineParamsFactory
-- [ ] Rework drift_native_options_connector and solid_auth_worker implementations 
-  - provide a cleaner API to those classes (better encapsulation of the messaging)
-  - Naming of plugin/provider - can we do better for those concepts?
+- [x] Example App Responsiveness: offload syncing from ui thread to isolate on native
+- [x] API Improvements: use EngineParams as parameter for Locorda.create (and maybe SyncEngine.create) and rename engineParamsFactory in Locorda.createWithWorker to engineParamsFactory
+- [x] Rework "plugin/provider": Rename to requester/responder
 - [ ] AutoSync - we should sync on startup by default, same (throttled) after changes and maybe time based
 - [ ] Example App Responsiveness: offload syncing from ui thread to web worker on web
 - [ ] Streamline web worker experience - it should be built and deployed automatically, at least in the example app
@@ -122,7 +120,7 @@
   - Foreign indices/shards that are referenced, but not yet downloaded when an item is saved!
 - [ ] Move Sync into a Background worker, use DriftIsolate to put DB-Operations into a single isolate. https://gemini.google.com/share/d862857eb169
 - [ ] Example App: I think that the synchronization takes a lot longer than I expected - why? Can I improve?
-- []
+- [ ] Rework "requester/responder": provide a cleaner API to those classes (better encapsulation of the messaging)
 
 ### Priority 4.b: Improve solid support
 - [ ] Solid: use solid type registry
