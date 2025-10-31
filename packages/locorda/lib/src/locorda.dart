@@ -238,7 +238,7 @@ class Locorda {
   /// ) async {
   ///   final storage = DriftStorage(...);
   ///   final backends = [
-  ///     SolidBackend(auth: SolidAuthConnector.requester(context)),
+  ///     SolidBackend(auth: SolidAuthConnector.receiver(context)),
   ///   ];
   ///   // Return parameters - framework creates SyncEngine from these
   ///   return EngineParams(

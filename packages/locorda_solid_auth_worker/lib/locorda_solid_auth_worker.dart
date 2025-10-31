@@ -13,7 +13,7 @@
 ///   engineParamsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 ///   plugins: [
-///     SolidAuthConnector.responder(solidAuth),
+///     SolidAuthConnector.sender(solidAuth),
 ///   ],
 ///   // ... other config
 /// );
@@ -28,7 +28,7 @@
 ///   SyncEngineConfig config,
 ///   WorkerContext context,
 /// ) async {
-///   final authProvider = SolidAuthConnector.requester(context);
+///   final authProvider = SolidAuthConnector.receiver(context);
 ///   final backend = SolidBackend(auth: authProvider);
 ///   // ... return SyncEngine
 /// }

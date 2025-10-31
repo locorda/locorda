@@ -61,8 +61,8 @@ Future<Locorda> initializeLocorda({
 
     // Create bridge to sync Backend and Storage configs from main to worker
     plugins: [
-      SolidAuthConnector.responder(solidAuth),
-      DriftNativeOptionsConnector.responder(),
+      SolidAuthConnector.sender(solidAuth),
+      DriftNativeOptionsConnector.sender(),
     ],
 
     mapperInitializer: (context) => initRdfMapper(

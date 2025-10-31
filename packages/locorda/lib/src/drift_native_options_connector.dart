@@ -56,7 +56,7 @@ class _ResponseDriftOptionsMessage {
 ///   engineParamsFactory: createEngineParams,
 ///   jsScript: 'worker.dart.js',
 ///   plugins: [
-///     DriftNativeOptionsConnector.responder(),
+///     DriftNativeOptionsConnector.sender(),
 ///   ],
 ///   // ... other config
 /// );
@@ -66,7 +66,7 @@ class _ResponseDriftOptionsMessage {
 ///
 /// ```dart
 /// plugins: [
-///   DriftNativeOptionsConnector.responder(
+///   DriftNativeOptionsConnector.sender(
 ///     databaseDirectory: () async => '/custom/db/path',
 ///     tempDirectoryPath: () async => '/custom/temp/path',
 ///   ),
@@ -80,7 +80,7 @@ class _ResponseDriftOptionsMessage {
 ///   SyncEngineConfig config,
 ///   WorkerContext context,
 /// ) async {
-///   final nativeOptions = await DriftNativeOptionsConnector.requester(context);
+///   final nativeOptions = await DriftNativeOptionsConnector.receiver(context);
 ///   final storage = DriftStorage(
 ///     web: DriftWebOptions(...),
 ///     native: nativeOptions,
@@ -109,7 +109,7 @@ class DriftNativeOptionsConnector implements WorkerPlugin {
   ///
   /// By default, uses [getApplicationDocumentsDirectory] and [getTemporaryDirectory].
   /// For testing or custom paths, provide custom provider functions.
-  static WorkerPluginFactory responder({
+  static WorkerPluginFactory sender({
     final Future<String> Function()? databasePath,
     final Future<Object> Function()? databaseDirectory,
     final Future<String?> Function()? tempDirectoryPath,
@@ -207,14 +207,14 @@ class DriftNativeOptionsConnector implements WorkerPlugin {
   ///   SyncEngineConfig config,
   ///   WorkerContext context,
   /// ) async {
-  ///   final nativeOptions = await DriftNativeOptionsConnector.requester(context);
+  ///   final nativeOptions = await DriftNativeOptionsConnector.receiver(context);
   ///   return EngineParams(
   ///     storage: DriftStorage(native: nativeOptions),
   ///     // ...
   ///   );
   /// }
   /// ```
-  static Future<DriftNativeOptions> requester(
+  static Future<DriftNativeOptions> receiver(
     WorkerContext context, {
     Duration timeout = const Duration(seconds: 5),
   }) async {
@@ -272,7 +272,7 @@ class DriftNativeOptionsConnector implements WorkerPlugin {
             '\n'
             'Add this to your Locorda.createWithWorker() call:\n'
             '  plugins: [\n'
-            '    DriftNativeOptionsConnector.responder(),\n'
+            '    DriftNativeOptionsConnector.sender(),\n'
             '  ],\n',
           );
         },
