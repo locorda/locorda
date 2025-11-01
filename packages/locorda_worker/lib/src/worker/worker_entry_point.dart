@@ -79,11 +79,12 @@ class WorkerContext {
       };
 
       _log.fine(
-          'Worker: Sending sync state update to main thread: $statusString');
+          'Worker: Sending sync state update to main thread: $statusString (trigger: ${state.lastTrigger})');
       _sendMessage(SyncStateUpdateMessage(
         status: statusString,
         lastSyncTime: state.lastSyncTime,
         errorMessage: state.errorMessage,
+        lastTrigger: state.lastTrigger,
       ));
     });
   }
@@ -333,12 +334,13 @@ class WorkerContext {
       };
 
       _log.fine(
-          'Worker: Responding to GetSyncState request with status: $statusString');
+          'Worker: Responding to GetSyncState request with status: $statusString (trigger: ${state.lastTrigger})');
       _sendMessage(GetSyncStateResponse(
         request.requestId,
         status: statusString,
         lastSyncTime: state.lastSyncTime,
         errorMessage: state.errorMessage,
+        lastTrigger: state.lastTrigger,
       ));
     } catch (e, st) {
       // On error, return error state

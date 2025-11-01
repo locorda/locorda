@@ -462,12 +462,14 @@ class GetSyncStateResponse extends WorkerResponse {
   final String status; // 'idle', 'syncing', 'success', 'error'
   final DateTime? lastSyncTime;
   final String? errorMessage;
+  final SyncTrigger? lastTrigger;
 
   GetSyncStateResponse(
     super.requestId, {
     required this.status,
     this.lastSyncTime,
     this.errorMessage,
+    this.lastTrigger,
   });
 
   @override
@@ -478,6 +480,7 @@ class GetSyncStateResponse extends WorkerResponse {
         if (lastSyncTime != null)
           'lastSyncTime': lastSyncTime!.toIso8601String(),
         if (errorMessage != null) 'errorMessage': errorMessage,
+        if (lastTrigger != null) 'lastTrigger': lastTrigger!.name,
       };
 
   factory GetSyncStateResponse.fromJson(Map<String, dynamic> json) {
@@ -488,6 +491,12 @@ class GetSyncStateResponse extends WorkerResponse {
           ? DateTime.parse(json['lastSyncTime'] as String)
           : null,
       errorMessage: json['errorMessage'] as String?,
+      lastTrigger: json['lastTrigger'] != null
+          ? SyncTrigger.values.firstWhere(
+              (t) => t.name == json['lastTrigger'],
+              orElse: () => SyncTrigger.manual,
+            )
+          : null,
     );
   }
 }
@@ -497,11 +506,13 @@ class SyncStateUpdateMessage extends WorkerMessage {
   final String status; // 'idle', 'syncing', 'success', 'error'
   final DateTime? lastSyncTime;
   final String? errorMessage;
+  final SyncTrigger? lastTrigger;
 
   SyncStateUpdateMessage({
     required this.status,
     this.lastSyncTime,
     this.errorMessage,
+    this.lastTrigger,
   });
 
   @override
@@ -511,6 +522,7 @@ class SyncStateUpdateMessage extends WorkerMessage {
         if (lastSyncTime != null)
           'lastSyncTime': lastSyncTime!.toIso8601String(),
         if (errorMessage != null) 'errorMessage': errorMessage,
+        if (lastTrigger != null) 'lastTrigger': lastTrigger!.name,
       };
 
   factory SyncStateUpdateMessage.fromJson(Map<String, dynamic> json) {
@@ -520,6 +532,12 @@ class SyncStateUpdateMessage extends WorkerMessage {
           ? DateTime.parse(json['lastSyncTime'] as String)
           : null,
       errorMessage: json['errorMessage'] as String?,
+      lastTrigger: json['lastTrigger'] != null
+          ? SyncTrigger.values.firstWhere(
+              (t) => t.name == json['lastTrigger'],
+              orElse: () => SyncTrigger.manual,
+            )
+          : null,
     );
   }
 }

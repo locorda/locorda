@@ -326,16 +326,18 @@ class _ProxySyncManager implements SyncManager {
     final response = await _proxy._sendAndAwait<GetSyncStateResponse>(request);
 
     _log.fine(
-        'Received initial sync state: ${response.status}, lastSync: ${response.lastSyncTime}');
-    _updateState(response.status, response.lastSyncTime, response.errorMessage);
+        'Received initial sync state: ${response.status}, lastSync: ${response.lastSyncTime}, trigger: ${response.lastTrigger}');
+    _updateState(response.status, response.lastSyncTime, response.errorMessage,
+        response.lastTrigger);
   }
 
   /// Update local state from status string and optional metadata
   void _updateState(
     String statusString,
     DateTime? lastSyncTime,
-    String? errorMessage,
-  ) {
+    String? errorMessage, [
+    SyncTrigger? lastTrigger,
+  ]) {
     final status = switch (statusString) {
       'idle' => SyncStatus.idle,
       'syncing' => SyncStatus.syncing,
@@ -348,10 +350,11 @@ class _ProxySyncManager implements SyncManager {
       status: status,
       lastSyncTime: lastSyncTime,
       errorMessage: errorMessage,
+      lastTrigger: lastTrigger,
     );
 
     _log.info(
-        'Sync state updated: $statusString${errorMessage != null ? ' - $errorMessage' : ''}');
+        'Sync state updated: $statusString (trigger: $lastTrigger)${errorMessage != null ? ' - $errorMessage' : ''}');
     _statusController.add(_currentState);
   }
 
@@ -383,8 +386,10 @@ class _ProxySyncManager implements SyncManager {
 
   /// Handle sync state update from worker
   void _handleSyncStateUpdate(SyncStateUpdateMessage message) {
-    _log.fine('Received sync state update from worker: ${message.status}');
-    _updateState(message.status, message.lastSyncTime, message.errorMessage);
+    _log.fine(
+        'Received sync state update from worker: ${message.status} (trigger: ${message.lastTrigger})');
+    _updateState(message.status, message.lastSyncTime, message.errorMessage,
+        message.lastTrigger);
   }
 
   @override
