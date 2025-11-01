@@ -150,6 +150,14 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
   void _showStatusMenu() {
     final l10n = SolidAuthLocalizations.of(context)!;
 
+    // Get current sync state
+    final bool isSyncing =
+        _syncState?.status == SyncStatus.syncing || widget.isSyncing;
+    final bool hasError =
+        _syncState?.status == SyncStatus.error || widget.hasError;
+    final String? errorMessage =
+        _syncState?.errorMessage ?? widget.errorMessage;
+
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -170,15 +178,47 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
             ),
             if (_isAuthenticated) ...[
               const Divider(),
-              if (widget.onManualSync != null || widget.syncManager != null)
+              // Show error details if present
+              if (hasError && errorMessage != null) ...[
+                ListTile(
+                  leading: const Icon(Icons.error_outline, color: Colors.red),
+                  title: Text(l10n.syncError),
+                  subtitle: Text(
+                    errorMessage,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+                const Divider(),
+              ],
+              // Retry option (only visible if error, replaces "Sync Now")
+              if (hasError &&
+                  (widget.onManualSync != null || widget.syncManager != null))
+                ListTile(
+                  leading: const Icon(Icons.refresh),
+                  title: const Text('Retry Sync'),
+                  enabled: !isSyncing,
+                  onTap: isSyncing
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _triggerSync();
+                        },
+                ),
+              // Manual sync option (visible only when no error)
+              if (!hasError &&
+                  (widget.onManualSync != null || widget.syncManager != null))
                 ListTile(
                   leading: const Icon(Icons.sync),
                   title: Text(l10n.syncNow),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _triggerSync();
-                  },
+                  enabled: !isSyncing,
+                  onTap: isSyncing
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _triggerSync();
+                        },
                 ),
+              // Sign out (always available)
               ListTile(
                 leading: const Icon(Icons.logout),
                 title: Text(l10n.signOut),
@@ -230,17 +270,17 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
     VoidCallback? onPressed;
 
     if (!_isAuthenticated) {
-      // Not connected
+      // Not connected - open login screen
       icon = Icon(Icons.cloud_off, color: colorScheme.onSurfaceVariant);
       tooltip = l10n.notConnected;
       onPressed = _showLoginScreen;
     } else if (hasError) {
-      // Connected but has error
+      // Connected but has error - open menu (includes retry option)
       icon = Icon(Icons.cloud_off, color: colorScheme.error);
       tooltip = errorMessage ?? l10n.syncError;
-      onPressed = _triggerSync;
+      onPressed = _showStatusMenu;
     } else if (isSyncing) {
-      // Connected and syncing
+      // Connected and syncing - open menu (options disabled during sync)
       icon = SizedBox(
         width: 20,
         height: 20,
@@ -250,9 +290,9 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
         ),
       );
       tooltip = l10n.syncing;
-      onPressed = null; // Disabled while syncing
+      onPressed = _showStatusMenu;
     } else {
-      // Connected and up to date
+      // Connected and up to date - open menu
       icon = Icon(Icons.cloud_done, color: Colors.green);
       tooltip = l10n.upToDate;
       onPressed = _showStatusMenu;
