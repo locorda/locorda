@@ -48,7 +48,7 @@ class SolidStatusWidget extends StatefulWidget {
   const SolidStatusWidget({
     super.key,
     required this.solidAuth,
-    required this.providerService,
+    this.providerService = const DefaultSolidProviderService(),
     this.onManualSync,
     this.syncManager,
     this.isSyncing = false,

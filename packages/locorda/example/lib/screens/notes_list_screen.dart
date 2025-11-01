@@ -352,7 +352,6 @@ class _NotesListScreenState extends State<NotesListScreen> {
           // Solid connection and sync status
           SolidStatusWidget(
             solidAuth: widget.solidAuth,
-            providerService: DefaultSolidProviderService(),
             syncManager: widget.syncSystem.syncManager,
             extraOidcScopes: ['openid', 'webid', 'offline_access', 'profile'],
           ),
