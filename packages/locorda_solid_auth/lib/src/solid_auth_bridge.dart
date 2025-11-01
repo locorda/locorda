@@ -5,7 +5,10 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:locorda_solid/locorda_solid.dart';
+import 'package:logging/logging.dart';
 import 'package:solid_auth/solid_auth.dart';
+
+final _log = Logger('SolidAuthBridge');
 
 class AuthValueListenableImpl implements AuthValueListenable {
   final ValueListenable<bool> _notifier;
@@ -52,6 +55,16 @@ class SolidAuthBridge implements SolidAuthProvider {
       String url, String method) async {
     final dpop = await _solidAuth.genDpopToken(url, method);
     return (accessToken: dpop.accessToken, dPoP: dpop.dpopToken);
+  }
+
+  @override
+  Future<void> refreshToken({String? reason}) async {
+    // This should never be called on main thread - all Pod HTTP requests
+    // happen in worker thread, so 401 errors are detected there.
+    // If this is called, it indicates a bug in the architecture.
+    _log.severe(
+      'refreshToken() called on SolidAuthBridge (main thread) - this should not happen. Reason: $reason',
+    );
   }
 
   /// Clean up resources.

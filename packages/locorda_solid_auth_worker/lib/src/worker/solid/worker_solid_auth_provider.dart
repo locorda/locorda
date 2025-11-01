@@ -4,6 +4,8 @@
 /// This keeps DPoP key operations in the worker thread where HTTP requests happen.
 library;
 
+import 'dart:async';
+
 import 'package:locorda_solid_auth_worker/src/worker/solid/solid_auth_messages.dart';
 import 'package:locorda_worker/locorda_worker.dart';
 import 'package:locorda_solid/locorda_solid.dart';
@@ -80,6 +82,10 @@ class WorkerSolidAuthProvider implements SolidAuthProvider {
   DpopCredentials? _credentials;
   String? _webId;
 
+  /// Pending token refresh requests waiting for response from main thread.
+  final Map<int, Completer<DpopCredentials>> _pendingRefreshRequests = {};
+  int _nextRequestId = 0;
+
   /// Creates provider that listens to [channel] for authentication updates.
   ///
   /// Automatically subscribes to [UpdateAuthMessage] on the channel.
@@ -87,17 +93,61 @@ class WorkerSolidAuthProvider implements SolidAuthProvider {
   WorkerSolidAuthProvider(this._channel) {
     // Listen for auth updates on channel
     _channel.messages.listen((message) {
-      if (message is Map<String, dynamic> &&
-          message['type'] == 'UpdateAuthMessage') {
-        final authMessage = UpdateAuthMessage.fromJson(message);
-        _credentials = authMessage.credentials;
-        _webId = authMessage.webId;
-        _notifier.isAuthenticated = _credentials != null;
+      if (message is Map<String, dynamic>) {
+        final type = message['type'] as String?;
+        switch (type) {
+          case 'UpdateAuthMessage':
+            _handleAuthUpdate(UpdateAuthMessage.fromJson(message));
+          case 'TokenRefreshResponse':
+            _handleTokenRefreshResponse(message);
+        }
       }
     });
 
     // Request initial auth state from main thread
-    _channel.send({'type': 'RequestAuthState'});
+    _channel.send(RequestAuthStateMessage().toJson());
+  }
+
+  /// Handles incoming auth updates from main thread.
+  ///
+  /// Updates stored credentials and notifies listeners.
+  /// Also completes any pending token refresh requests.
+  void _handleAuthUpdate(UpdateAuthMessage message) {
+    _credentials = message.credentials;
+    _webId = message.webId;
+    _notifier.isAuthenticated = _credentials != null;
+
+    // Complete pending refresh requests with new credentials
+    if (_credentials != null) {
+      for (final completer in _pendingRefreshRequests.values) {
+        if (!completer.isCompleted) {
+          completer.complete(_credentials);
+        }
+      }
+      _pendingRefreshRequests.clear();
+    }
+  }
+
+  /// Handles token refresh response from main thread.
+  void _handleTokenRefreshResponse(Map<String, dynamic> message) {
+    final requestId = message['requestId'] as int?;
+    if (requestId == null) return;
+
+    final completer = _pendingRefreshRequests.remove(requestId);
+    if (completer == null || completer.isCompleted) return;
+
+    // Extract credentials from response
+    final credentialsJson = message['credentials'] as Map<String, dynamic>?;
+    if (credentialsJson != null) {
+      final credentials = DpopCredentials.fromJson(credentialsJson);
+      _credentials = credentials;
+      _notifier.isAuthenticated = true;
+      completer.complete(credentials);
+    } else {
+      completer.completeError(
+        StateError('Token refresh failed: No credentials in response'),
+      );
+    }
   }
 
   /// Generates DPoP token for authenticated HTTP request.
@@ -115,6 +165,46 @@ class WorkerSolidAuthProvider implements SolidAuthProvider {
     return (
       accessToken: dpop.accessToken,
       dPoP: dpop.dpopToken,
+    );
+  }
+
+  /// Requests fresh credentials from main thread.
+  ///
+  /// Called by [SolidBackend] when HTTP request receives 401 Unauthorized.
+  /// This indicates the access token has expired and needs refresh.
+  ///
+  /// Sends [RequestTokenRefreshMessage] and waits for response.
+  /// Throws [TimeoutException] if no response within 10 seconds.
+  Future<void> refreshToken({String? reason}) async {
+    await _requestTokenRefresh(reason: reason);
+  }
+
+  /// Requests fresh token from main thread (internal).
+  ///
+  /// Sends [RequestTokenRefreshMessage] and waits for response.
+  /// Throws [TimeoutException] if no response within 10 seconds.
+  /// Updates internal credentials when response received.
+  Future<void> _requestTokenRefresh({String? reason}) async {
+    final requestId = _nextRequestId++;
+    final completer = Completer<DpopCredentials>();
+    _pendingRefreshRequests[requestId] = completer;
+
+    // Send refresh request to main thread
+    _channel.send({
+      'type': 'RequestTokenRefresh',
+      'requestId': requestId,
+      if (reason != null) 'reason': reason,
+    });
+
+    // Wait for response with timeout
+    await completer.future.timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        _pendingRefreshRequests.remove(requestId);
+        throw TimeoutException(
+          'Token refresh request timed out after 10 seconds',
+        );
+      },
     );
   }
 

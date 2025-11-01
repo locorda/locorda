@@ -147,12 +147,15 @@ class SolidClient {
         _rdfCore = rdfCore;
 
   Future<RemoteDownloadResult> download(String url,
-      {bool requiresAuth = true, String? ifNoneMatch}) async {
+      {bool requiresAuth = true,
+      String? ifNoneMatch,
+      bool isRetry = false}) async {
     final dpop = requiresAuth
         ? await _authProvider.getDpopToken(_prepareUrlForDpopToken(url), 'GET')
         : null;
 
-    _log.fine('GET $url with auth=${requiresAuth}');
+    _log.fine(
+        'GET $url with auth=${requiresAuth}${isRetry ? ' (retry after refresh)' : ''}');
     if (dpop != null) {
       _log.finer('Authorization: DPoP ${dpop.accessToken.substring(0, 20)}...');
       _log.finer('DPoP token length: ${dpop.dPoP.length}');
@@ -171,13 +174,38 @@ class SolidClient {
     _log.fine('Response status: ${response.statusCode}');
 
     if (response.statusCode == 401) {
-      _log.warning('401 Unauthorized for $url');
-      _log.warning('Response headers: ${response.headers}');
-      _log.warning('Response body: ${response.body}');
-      _log.warning('Access Token: ${dpop?.accessToken}');
-      _log.warning('DPoP: ${dpop?.dPoP}');
-      throw SolidClientException(
-          'Unauthorized (401) for $url: ${response.body}');
+      if (isRetry) {
+        // Already retried once after token refresh - give up
+        _log.severe(
+          '401 Unauthorized for $url even after token refresh - authentication failed',
+        );
+        throw SolidClientException(
+          'Unauthorized (401) for $url - token refresh did not resolve the issue',
+        );
+      }
+
+      _log.warning('401 Unauthorized for $url - attempting token refresh');
+
+      // Token expired - request refresh and retry once
+      try {
+        await _authProvider.refreshToken(reason: '401 on GET $url');
+        _log.info('Token refreshed - retrying GET request');
+
+        // Retry with fresh token (isRetry=true prevents infinite loop)
+        return await download(url,
+            requiresAuth: requiresAuth,
+            ifNoneMatch: ifNoneMatch,
+            isRetry: true);
+      } on SolidClientException {
+        // Already a SolidClientException (e.g., from retry 401) - rethrow as-is
+        rethrow;
+      } catch (e) {
+        // Other exceptions during refresh - add context
+        _log.severe('Token refresh failed: $e');
+        throw SolidClientException(
+          'Unauthorized (401) for $url - refresh failed: $e',
+        );
+      }
     }
 
     if (response.statusCode == 404) {
@@ -240,12 +268,13 @@ class SolidClient {
   }
 
   Future<RemoteUploadResult> upload(String url, RdfGraph graph,
-      {bool requiresAuth = true, String? ifMatch}) async {
+      {bool requiresAuth = true, String? ifMatch, bool isRetry = false}) async {
     final dpop = requiresAuth
         ? await _authProvider.getDpopToken(_prepareUrlForDpopToken(url), 'PUT')
         : null;
 
-    _log.fine('PUT $url with auth=${requiresAuth}');
+    _log.fine(
+        'PUT $url with auth=${requiresAuth}${isRetry ? ' (retry after refresh)' : ''}');
     if (dpop != null) {
       _log.finer('Authorization: DPoP ${dpop.accessToken.substring(0, 20)}...');
       _log.finer('DPoP token length: ${dpop.dPoP.length}');
@@ -267,11 +296,36 @@ class SolidClient {
     _log.fine('Response status: ${response.statusCode}');
 
     if (response.statusCode == 401) {
-      _log.warning('401 Unauthorized for $url');
-      _log.warning('Response headers: ${response.headers}');
-      _log.warning('Response body: ${response.body}');
-      throw SolidClientException(
-          'Unauthorized (401) for $url: ${response.body}');
+      if (isRetry) {
+        // Already retried once after token refresh - give up
+        _log.severe(
+          '401 Unauthorized for $url even after token refresh - authentication failed',
+        );
+        throw SolidClientException(
+          'Unauthorized (401) for $url - token refresh did not resolve the issue',
+        );
+      }
+
+      _log.warning('401 Unauthorized for $url - attempting token refresh');
+
+      // Token expired - request refresh and retry once
+      try {
+        await _authProvider.refreshToken(reason: '401 on PUT $url');
+        _log.info('Token refreshed - retrying PUT request');
+
+        // Retry with fresh token (isRetry=true prevents infinite loop)
+        return await upload(url, graph,
+            requiresAuth: requiresAuth, ifMatch: ifMatch, isRetry: true);
+      } on SolidClientException {
+        // Already a SolidClientException (e.g., from retry 401) - rethrow as-is
+        rethrow;
+      } catch (e) {
+        // Other exceptions during refresh - add context
+        _log.severe('Token refresh failed: $e');
+        throw SolidClientException(
+          'Unauthorized (401) for $url - refresh failed: $e',
+        );
+      }
     }
 
     if (response.statusCode == 404) {

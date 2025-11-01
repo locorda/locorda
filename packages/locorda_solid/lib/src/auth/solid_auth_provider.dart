@@ -79,4 +79,26 @@ abstract interface class SolidAuthProvider implements Auth {
       String url, String method);
   String? get currentWebId;
   AuthValueListenable get isAuthenticatedNotifier;
+
+  /// Refreshes the authentication token.
+  ///
+  /// Called by [SolidBackend] when an HTTP request receives 401 Unauthorized,
+  /// indicating the access token has expired. Implementations should request
+  /// fresh credentials from the authentication provider.
+  ///
+  /// ## Parameters
+  ///
+  /// - [reason]: Optional context about why refresh is needed (for debugging)
+  ///
+  /// ## Implementation Notes
+  ///
+  /// - **Main thread** ([SolidAuthBridge]): Can call `solid_auth.genDpopToken()`
+  ///   which internally handles token refresh
+  /// - **Worker thread** ([WorkerSolidAuthProvider]): Sends request to main
+  ///   thread and waits for fresh credentials
+  ///
+  /// ## Throws
+  ///
+  /// May throw if refresh fails (e.g., refresh token expired, network error).
+  Future<void> refreshToken({String? reason});
 }

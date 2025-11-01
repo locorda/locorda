@@ -45,3 +45,50 @@ class UpdateAuthMessage {
     );
   }
 }
+
+/// Message requesting token refresh from main thread.
+///
+/// Sent from worker's [WorkerSolidAuthProvider] when:
+/// - HTTP request receives 401 Unauthorized
+/// - Worker detects token might be expired
+///
+/// Main thread responds with [UpdateAuthMessage] containing fresh credentials.
+class RequestTokenRefreshMessage {
+  /// Optional context about why refresh is requested (for debugging).
+  final String? reason;
+
+  /// Creates refresh request with optional [reason].
+  const RequestTokenRefreshMessage({this.reason});
+
+  /// Serializes to JSON for transmission over channel.
+  Map<String, dynamic> toJson() => {
+        'type': 'RequestTokenRefresh',
+        if (reason != null) 'reason': reason,
+      };
+
+  /// Deserializes from JSON received on channel.
+  factory RequestTokenRefreshMessage.fromJson(Map<String, dynamic> json) {
+    return RequestTokenRefreshMessage(
+      reason: json['reason'] as String?,
+    );
+  }
+}
+
+/// Message requesting initial auth state from main thread.
+///
+/// Sent once by [WorkerSolidAuthProvider] on initialization to get
+/// current authentication state before any auth changes occur.
+class RequestAuthStateMessage {
+  /// Creates auth state request.
+  const RequestAuthStateMessage();
+
+  /// Serializes to JSON for transmission over channel.
+  Map<String, dynamic> toJson() => {
+        'type': 'RequestAuthState',
+      };
+
+  /// Deserializes from JSON received on channel.
+  factory RequestAuthStateMessage.fromJson(Map<String, dynamic> json) {
+    return const RequestAuthStateMessage();
+  }
+}

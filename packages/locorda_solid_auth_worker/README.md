@@ -88,10 +88,32 @@ Future<EngineParams> createEngineParams(
 ## Key Features
 
 - **Automatic Synchronization**: Auth state changes propagate automatically from main to worker
+- **Reactive Token Refresh**: On-demand token refresh when worker detects expiry
+- **Mobile-Friendly**: No background timers, purely event-driven architecture
 - **Local DPoP Generation**: DPoP tokens generated in worker where HTTP requests happen
-- **Minimal Serialization**: Only credentials transmitted once, tokens generated per-request
+- **Minimal Serialization**: Only credentials transmitted when needed
 - **Clean Lifecycle**: Proper setup/teardown via `WorkerPlugin` interface
-- **Type-Safe Messages**: Structured `UpdateAuthMessage` instead of raw maps
+- **Type-Safe Messages**: Structured messages for auth updates and token refresh
+- **Automatic Recovery**: Worker requests fresh tokens and retries on failures
+
+## Token Refresh
+
+Access tokens have limited lifetime (typically 1 hour). This package implements **reactive token refresh** to ensure uninterrupted operation:
+
+### Reactive Refresh (Primary Strategy)
+- `SolidBackend` detects **401 Unauthorized** responses from Pod server
+- Calls `authProvider.refreshToken()` to request fresh credentials
+- Worker sends `RequestTokenRefresh` to main thread
+- Main thread calls `solid_auth.exportDpopCredentials()` (automatic refresh)
+- Worker receives fresh credentials via `TokenRefreshResponse`
+- `SolidBackend` retries HTTP request with fresh token
+- **Mobile-friendly**: No background timers, purely event-driven
+
+### Future: Event-Driven Proactive Refresh
+Once our `solid_auth` fork exposes `onTokenChanged` stream:
+- Listen to token refresh events from `solid_auth`
+- Push updates immediately when tokens refreshed
+- Zero latency, no polling, no timers
 
 ## See Also
 
