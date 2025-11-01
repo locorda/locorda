@@ -59,7 +59,7 @@ class LocordaConfig extends ConfigBase {
 
   LocordaConfig({
     required this.resources,
-    super.autoSyncConfig = const AutoSyncConfig.disabled(),
+    super.autoSyncConfig = const AutoSyncConfig.enabled(),
   }) : super(resources: resources);
 
   ResourceConfig? getResourceConfig(Type type) {
