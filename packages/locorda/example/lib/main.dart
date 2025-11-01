@@ -57,7 +57,7 @@ Future<Locorda> initializeLocorda({
   required SolidAuth solidAuth,
 }) {
   // Setup sync system with worker
-  /*
+
   return Locorda.createWithWorker(
     engineParamsFactory: createEngineParams,
     workerInitializer: setupWorkerLogging,
@@ -68,7 +68,7 @@ Future<Locorda> initializeLocorda({
       SolidAuthConnector.sender(solidAuth),
       DriftNativeOptionsConnector.sender(),
     ],
-*/
+/*
   return Locorda.create(
     engineParams: EngineParams(
       storage: DriftStorage(
@@ -80,6 +80,7 @@ Future<Locorda> initializeLocorda({
       ),
       backends: [SolidBackend(auth: SolidAuthBridge(solidAuth))],
     ),
+    */
     mapperInitializer: (context) => initRdfMapper(
         rdfMapper: context.baseRdfMapper,
         $indexItemIriFactory: context.indexItemIriFactory,
