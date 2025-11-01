@@ -12,6 +12,9 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:locorda/locorda.dart';
+import 'package:locorda_core/locorda_core.dart';
+import 'package:locorda_drift/locorda_drift.dart';
+import 'package:locorda_solid/locorda_solid.dart';
 import 'package:locorda_solid_auth/locorda_solid_auth.dart';
 import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
 import 'package:personal_notes_app/init_rdf_mapper.g.dart';
@@ -54,6 +57,7 @@ Future<Locorda> initializeLocorda({
   required SolidAuth solidAuth,
 }) {
   // Setup sync system with worker
+  /*
   return Locorda.createWithWorker(
     engineParamsFactory: createEngineParams,
     workerInitializer: setupWorkerLogging,
@@ -64,7 +68,18 @@ Future<Locorda> initializeLocorda({
       SolidAuthConnector.sender(solidAuth),
       DriftNativeOptionsConnector.sender(),
     ],
-
+*/
+  return Locorda.create(
+    engineParams: EngineParams(
+      storage: DriftStorage(
+        web: DriftWebOptions(
+          sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+          driftWorker: Uri.parse('drift_worker.js'),
+        ),
+        native: DriftNativeOptions(),
+      ),
+      backends: [SolidBackend(auth: SolidAuthBridge(solidAuth))],
+    ),
     mapperInitializer: (context) => initRdfMapper(
         rdfMapper: context.baseRdfMapper,
         $indexItemIriFactory: context.indexItemIriFactory,
