@@ -274,7 +274,7 @@ class WorkerContext {
         throw StateError('Sync system not initialized');
       }
 
-      await _syncSystem!.syncManager.sync();
+      await _syncSystem!.syncManager.sync(trigger: request.trigger);
 
       _sendMessage(SyncTriggerResponse(request.requestId, success: true));
     } catch (e, st) {

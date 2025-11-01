@@ -74,6 +74,10 @@
   "@syncNow": {
     "description": "Button text to trigger manual sync"
   },
+  "retrySync": "Retry Sync",
+  "@retrySync": {
+    "description": "Button text to retry failed sync"
+  },
   "syncError": "Sync error",
   "@syncError": {
     "description": "Generic sync error message"

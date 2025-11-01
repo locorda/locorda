@@ -75,7 +75,7 @@ class StandardSyncManager implements SyncManager {
     if (_autoSyncConfig.syncOnStartup) {
       _log.info('Triggering startup sync');
       // Schedule for next event loop to allow initialization to complete
-      Future.microtask(() => sync());
+      Future.microtask(() => sync(trigger: SyncTrigger.startup));
     }
 
     // Setup automatic sync timer if enabled
@@ -88,9 +88,13 @@ class StandardSyncManager implements SyncManager {
 
   void _setupAutoSync() {
     _autoSyncTimer?.cancel();
+    if (_autoSyncConfig.interval <= Duration.zero) {
+      _autoSyncTimer = null;
+      return;
+    }
     _autoSyncTimer = Timer.periodic(_autoSyncConfig.interval, (_) {
       _log.fine('Auto-sync timer triggered');
-      sync();
+      sync(trigger: SyncTrigger.scheduled);
     });
   }
 
@@ -101,7 +105,8 @@ class StandardSyncManager implements SyncManager {
   ///
   /// Returns a [Future] that completes when the sync operation finishes
   /// (either successfully or with an error).
-  Future<void> sync() async {
+  @override
+  Future<void> sync({SyncTrigger trigger = SyncTrigger.manual}) async {
     if (_isDisposed) {
       _log.warning('Attempted to sync after disposal');
       return;
@@ -116,15 +121,18 @@ class StandardSyncManager implements SyncManager {
     _syncCompleter = Completer<void>();
 
     try {
-      _log.info('Starting sync operation');
-      _updateState(SyncState.syncing(lastSyncTime: _currentState.lastSyncTime));
+      _log.info('Starting sync operation (trigger: $trigger)');
+      _updateState(SyncState.syncing(
+        lastSyncTime: _currentState.lastSyncTime,
+        lastTrigger: trigger,
+      ));
 
       // Perform the actual sync
       final syncTime = _physicalTimestampFactory();
       await _syncFunction(syncTime);
 
       _log.info('Sync completed successfully');
-      _updateState(SyncState.success(syncTime));
+      _updateState(SyncState.success(syncTime, trigger: trigger));
       _syncCompleter!.complete();
     } catch (error, stackTrace) {
       _log.severe('Sync failed', error, stackTrace);
@@ -137,6 +145,7 @@ class StandardSyncManager implements SyncManager {
         errorMessage: errorMessage,
         error: exception,
         lastSyncTime: _currentState.lastSyncTime,
+        lastTrigger: trigger,
       ));
 
       _syncCompleter!.completeError(error, stackTrace);
@@ -155,6 +164,7 @@ class StandardSyncManager implements SyncManager {
   /// Enable automatic sync with the given interval.
   ///
   /// If automatic sync is already enabled, this will update the interval.
+  @override
   void enableAutoSync({Duration interval = const Duration(minutes: 5)}) {
     if (_isDisposed) {
       _log.warning('Attempted to enable auto-sync after disposal');
@@ -163,9 +173,13 @@ class StandardSyncManager implements SyncManager {
 
     _log.info('Enabling automatic sync with interval: $interval');
     _autoSyncTimer?.cancel();
+    if (interval <= Duration.zero) {
+      _autoSyncTimer = null;
+      return;
+    }
     _autoSyncTimer = Timer.periodic(interval, (_) {
       _log.fine('Auto-sync timer triggered');
-      sync();
+      sync(trigger: SyncTrigger.scheduled);
     });
   }
 

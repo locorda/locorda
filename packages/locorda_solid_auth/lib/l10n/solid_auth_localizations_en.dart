@@ -62,5 +62,8 @@ class SolidAuthLocalizationsEn extends SolidAuthLocalizations {
   String get syncNow => 'Sync Now';
 
   @override
+  String get retrySync => 'Retry Sync';
+
+  @override
   String get syncError => 'Sync error';
 }

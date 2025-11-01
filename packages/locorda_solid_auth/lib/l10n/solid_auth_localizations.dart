@@ -201,6 +201,12 @@ abstract class SolidAuthLocalizations {
   /// **'Sync Now'**
   String get syncNow;
 
+  /// Button text to retry failed sync
+  ///
+  /// In en, this message translates to:
+  /// **'Retry Sync'**
+  String get retrySync;
+
   /// Generic sync error message
   ///
   /// In en, this message translates to:

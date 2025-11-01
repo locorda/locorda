@@ -4,58 +4,97 @@ import 'package:logging/logging.dart';
 import 'package:solid_auth/solid_auth.dart';
 
 import '../../l10n/solid_auth_localizations.dart';
-import '../providers/solid_provider_service.dart';
-import 'login_page.dart';
+import 'solid_status_defaults.dart';
 
 final _log = Logger('SolidStatusWidget');
 
-/// A combined connection and sync status widget for the app bar.
+/// Callback signature for showing the status menu.
 ///
-/// This widget shows the current Solid authentication status and sync state
-/// in a compact format suitable for app bars. It handles the complete user
-/// journey from "not connected" → "connecting" → "syncing" → "up to date".
+/// Receives the current [state] and callbacks to trigger sync or disconnect actions.
+typedef StatusMenuCallback = void Function(
+  BuildContext context, {
+  required SolidStatusState state,
+  required VoidCallback onTriggerSync,
+  required VoidCallback onTriggerDisconnect,
+});
+
+/// Immutable state representing current Solid authentication and sync status.
 ///
-/// The widget provides tap functionality to:
-/// - Open login screen when not connected
-/// - Show status information when connected
-/// - Trigger manual sync when connected
+/// Used by [SolidStatusWidget] builders to render appropriate UI.
+class SolidStatusState {
+  final bool isAuthenticated;
+  final bool isSyncing;
+  final bool hasError;
+  final String? errorMessage;
+  final String? webId;
+  final SyncTrigger? lastTrigger;
+
+  const SolidStatusState({
+    required this.isAuthenticated,
+    this.isSyncing = false,
+    this.hasError = false,
+    this.errorMessage,
+    this.webId,
+    this.lastTrigger,
+  });
+}
+
+/// A combined authentication and sync status widget for the app bar.
+///
+/// This widget shows the current Solid authentication status and reactive
+/// sync state from [SyncManager] in a compact format suitable for app bars.
+/// It handles the complete user journey from "not connected" → "connecting"
+/// → "syncing" → "up to date".
+///
+/// ## Requirements
+///
+/// - [solidAuth]: SolidAuth instance for authentication state
+/// - [syncManager]: SyncManager for reactive sync status (required)
+///
+/// ## Customization
+///
+/// The widget can be customized via:
+///
+/// - [iconBuilder]: Custom status icon rendering based on state
+/// - [onShowLogin]: Custom login flow presentation
+///
+/// Both have sensible defaults - only override what you need.
 class SolidStatusWidget extends StatefulWidget {
   /// The SolidAuth instance to monitor for authentication state.
   final SolidAuth solidAuth;
 
-  /// The provider service for authentication UI.
-  final SolidProviderService providerService;
+  /// Sync manager for reactive sync status updates and sync operations.
+  final SyncManager syncManager;
 
-  final List<String> extraOidcScopes;
+  /// Custom icon builder. Receives current [SolidStatusState] and returns widget.
+  ///
+  /// Default: Material Design icons (cloud_off, cloud_done, spinner, etc.)
+  final Widget Function(BuildContext context, SolidStatusState state)
+      iconBuilder;
 
-  /// Optional callback for manual sync trigger.
-  /// If not provided and syncManager is provided, will use syncManager.sync()
-  final VoidCallback? onManualSync;
+  /// Custom login flow. Called when user taps icon while not authenticated.
+  ///
+  /// Default: Shows [SolidLoginScreen] as modal dialog
+  final Future<bool> Function(BuildContext context) onShowLogin;
 
-  /// Optional sync manager for reactive sync status updates.
-  /// If provided, isSyncing/hasError/errorMessage props are ignored.
-  final SyncManager? syncManager;
+  /// Custom status menu. Called when authenticated user taps the icon.
+  ///
+  /// Receives current state and callbacks for sync/disconnect actions.
+  /// Default: Shows modal bottom sheet with standard menu items
+  final StatusMenuCallback onShowStatusMenu;
 
-  /// Whether the system is currently syncing (only used if syncManager is null).
-  final bool isSyncing;
-
-  /// Whether there's a sync error (only used if syncManager is null).
-  final bool hasError;
-
-  /// Custom error message to display (only used if syncManager is null).
-  final String? errorMessage;
-
-  const SolidStatusWidget({
+  SolidStatusWidget({
     super.key,
     required this.solidAuth,
-    this.providerService = const DefaultSolidProviderService(),
-    this.onManualSync,
-    this.syncManager,
-    this.isSyncing = false,
-    this.hasError = false,
-    this.errorMessage,
-    this.extraOidcScopes = const [],
-  });
+    required this.syncManager,
+    Future<bool> Function(BuildContext)? onShowLogin,
+    Widget Function(BuildContext, SolidStatusState)? iconBuilder,
+    StatusMenuCallback? onShowStatusMenu,
+  })  : iconBuilder = iconBuilder ?? SolidStatusDefaults.materialIcon,
+        onShowLogin =
+            onShowLogin ?? SolidStatusDefaults.modalLogin(solidAuth: solidAuth),
+        onShowStatusMenu = onShowStatusMenu ??
+            SolidStatusDefaults.bottomSheetStatusMenu(solidAuth: solidAuth);
 
   @override
   State<SolidStatusWidget> createState() => _SolidStatusWidgetState();
@@ -106,23 +145,10 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
   }
 
   Future<void> _showLoginScreen() async {
-    final userInfo = await Navigator.of(context).push<UserAndWebId>(
-      MaterialPageRoute(
-        builder: (context) => SolidLoginScreen(
-          solidAuth: widget.solidAuth,
-          providerService: widget.providerService,
-          extraOidcScopes: widget.extraOidcScopes,
-          onLoginSuccess: (userInfo) {
-            Navigator.of(context).pop(userInfo);
-          },
-          onLoginError: (error) {
-            // Error is already shown in the login screen
-          },
-        ),
-      ),
-    );
+    // Use custom login flow
+    final success = await widget.onShowLogin(context);
 
-    if (userInfo != null) {
+    if (success) {
       // Refresh auth status after successful login
       _checkAuthStatus();
     }
@@ -147,153 +173,58 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
     }
   }
 
+  /// Show status menu with authentication and sync options.
   void _showStatusMenu() {
-    final l10n = SolidAuthLocalizations.of(context)!;
-
-    // Get current sync state
-    final bool isSyncing =
-        _syncState?.status == SyncStatus.syncing || widget.isSyncing;
-    final bool hasError =
-        _syncState?.status == SyncStatus.error || widget.hasError;
-    final String? errorMessage =
-        _syncState?.errorMessage ?? widget.errorMessage;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(
-                _isAuthenticated ? Icons.cloud_done : Icons.cloud_off,
-                color: _isAuthenticated ? Colors.green : Colors.grey,
-              ),
-              title:
-                  Text(_isAuthenticated ? l10n.connected : l10n.notConnected),
-              subtitle: widget.solidAuth.currentWebId != null
-                  ? Text(widget.solidAuth.currentWebId!)
-                  : null,
-            ),
-            if (_isAuthenticated) ...[
-              const Divider(),
-              // Show error details if present
-              if (hasError && errorMessage != null) ...[
-                ListTile(
-                  leading: const Icon(Icons.error_outline, color: Colors.red),
-                  title: Text(l10n.syncError),
-                  subtitle: Text(
-                    errorMessage,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                const Divider(),
-              ],
-              // Retry option (only visible if error, replaces "Sync Now")
-              if (hasError &&
-                  (widget.onManualSync != null || widget.syncManager != null))
-                ListTile(
-                  leading: const Icon(Icons.refresh),
-                  title: const Text('Retry Sync'),
-                  enabled: !isSyncing,
-                  onTap: isSyncing
-                      ? null
-                      : () {
-                          Navigator.pop(context);
-                          _triggerSync();
-                        },
-                ),
-              // Manual sync option (visible only when no error)
-              if (!hasError &&
-                  (widget.onManualSync != null || widget.syncManager != null))
-                ListTile(
-                  leading: const Icon(Icons.sync),
-                  title: Text(l10n.syncNow),
-                  enabled: !isSyncing,
-                  onTap: isSyncing
-                      ? null
-                      : () {
-                          Navigator.pop(context);
-                          _triggerSync();
-                        },
-                ),
-              // Sign out (always available)
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: Text(l10n.signOut),
-                onTap: () {
-                  Navigator.pop(context);
-                  _disconnect();
-                },
-              ),
-            ],
-          ],
-        ),
-      ),
+    if (!_isAuthenticated) return;
+    // Build state for icon builder
+    final state = _buildSolidStatusState();
+    widget.onShowStatusMenu(
+      context,
+      state: state,
+      onTriggerSync: _triggerSync,
+      onTriggerDisconnect: _disconnect,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // If syncManager is provided, use StreamBuilder for reactive updates
-    if (widget.syncManager != null) {
-      return StreamBuilder<SyncState>(
-        stream: widget.syncManager!.statusStream,
-        initialData: widget.syncManager!.currentState,
-        builder: (context, snapshot) {
-          _syncState = snapshot.data ?? const SyncState.idle();
-          return _buildIcon(context);
-        },
-      );
-    }
-
-    // Otherwise use the static props
-    return _buildIcon(context);
+    return StreamBuilder<SyncState>(
+      stream: widget.syncManager.statusStream,
+      initialData: widget.syncManager.currentState,
+      builder: (context, snapshot) {
+        _syncState = snapshot.data ?? const SyncState.idle();
+        return _buildIcon(context);
+      },
+    );
   }
 
   Widget _buildIcon(BuildContext context) {
     final l10n = SolidAuthLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
 
-    // Get sync status from either syncManager stream or static props
-    final bool isSyncing =
-        _syncState?.status == SyncStatus.syncing || widget.isSyncing;
-    final bool hasError =
-        _syncState?.status == SyncStatus.error || widget.hasError;
-    final String? errorMessage =
-        _syncState?.errorMessage ?? widget.errorMessage;
+    // Build state for icon builder
+    final state = _buildSolidStatusState();
 
-    // Determine the current status
-    Widget icon;
+    // Use custom icon builder
+    final icon = widget.iconBuilder(context, state);
+
+    // Determine tooltip and action
     String tooltip;
     VoidCallback? onPressed;
 
     if (!_isAuthenticated) {
       // Not connected - open login screen
-      icon = Icon(Icons.cloud_off, color: colorScheme.onSurfaceVariant);
       tooltip = l10n.notConnected;
       onPressed = _showLoginScreen;
-    } else if (hasError) {
+    } else if (state.hasError) {
       // Connected but has error - open menu (includes retry option)
-      icon = Icon(Icons.cloud_off, color: colorScheme.error);
-      tooltip = errorMessage ?? l10n.syncError;
+      tooltip = state.errorMessage ?? l10n.syncError;
       onPressed = _showStatusMenu;
-    } else if (isSyncing) {
+    } else if (state.isSyncing) {
       // Connected and syncing - open menu (options disabled during sync)
-      icon = SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-        ),
-      );
       tooltip = l10n.syncing;
       onPressed = _showStatusMenu;
     } else {
       // Connected and up to date - open menu
-      icon = Icon(Icons.cloud_done, color: Colors.green);
       tooltip = l10n.upToDate;
       onPressed = _showStatusMenu;
     }
@@ -305,11 +236,25 @@ class _SolidStatusWidgetState extends State<SolidStatusWidget> {
     );
   }
 
+  SolidStatusState _buildSolidStatusState() {
+    // Get sync status from syncManager stream
+    final bool isSyncing = _syncState?.status == SyncStatus.syncing;
+    final bool hasError = _syncState?.status == SyncStatus.error;
+    final String? errorMessage = _syncState?.errorMessage;
+    final SyncTrigger? lastTrigger = _syncState?.lastTrigger;
+
+    // Build state for icon builder
+    return SolidStatusState(
+      isAuthenticated: _isAuthenticated,
+      isSyncing: isSyncing,
+      hasError: hasError,
+      errorMessage: errorMessage,
+      webId: widget.solidAuth.currentWebId,
+      lastTrigger: lastTrigger,
+    );
+  }
+
   Future<void> _triggerSync() async {
-    if (widget.syncManager != null) {
-      await widget.syncManager!.sync();
-    } else {
-      widget.onManualSync?.call();
-    }
+    await widget.syncManager.sync(trigger: SyncTrigger.manual);
   }
 }

@@ -303,9 +303,13 @@ class _ProxySyncManager implements SyncManager {
   _ProxySyncManager(this._proxy);
 
   @override
-  Future<void> sync() async {
-    _log.info('Triggering sync...');
-    final request = SyncTriggerRequest(_proxy._nextRequestId());
+  @override
+  Future<void> sync({SyncTrigger trigger = SyncTrigger.manual}) async {
+    _log.info('Triggering sync (trigger: $trigger)...');
+    final request = SyncTriggerRequest(
+      _proxy._nextRequestId(),
+      trigger: trigger,
+    );
     final response = await _proxy._sendAndAwait<SyncTriggerResponse>(request);
 
     if (!response.success) {

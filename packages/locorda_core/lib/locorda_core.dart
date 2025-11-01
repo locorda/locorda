@@ -117,4 +117,4 @@ export 'src/storage/in_memory_storage.dart' show InMemoryStorage;
 // Sync engine and manager
 export 'src/sync_engine.dart' show SyncEngine, EngineParams;
 export 'src/sync/sync_manager.dart' show SyncManager, AutoSyncConfig;
-export 'src/sync/sync_state.dart' show SyncState, SyncStatus;
+export 'src/sync/sync_state.dart' show SyncState, SyncStatus, SyncTrigger;

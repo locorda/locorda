@@ -3,6 +3,8 @@
 /// All messages are JSON-serializable for cross-isolate/worker transmission.
 library;
 
+import 'package:locorda_core/locorda_core.dart';
+
 /// Base class for all worker messages.
 sealed class WorkerMessage {
   Map<String, dynamic> toJson();
@@ -317,16 +319,28 @@ class HydrationBatchMessage extends WorkerResponse {
 
 /// Sync trigger request
 class SyncTriggerRequest extends WorkerRequest {
-  SyncTriggerRequest(super.requestId);
+  final SyncTrigger trigger;
+
+  SyncTriggerRequest(
+    super.requestId, {
+    this.trigger = SyncTrigger.manual,
+  });
 
   @override
   Map<String, dynamic> toJson() => {
         'type': 'SyncTriggerRequest',
         'requestId': requestId,
+        'trigger': trigger.name,
       };
 
   factory SyncTriggerRequest.fromJson(Map<String, dynamic> json) {
-    return SyncTriggerRequest(json['requestId'] as String);
+    return SyncTriggerRequest(
+      json['requestId'] as String,
+      trigger: SyncTrigger.values.firstWhere(
+        (t) => t.name == json['trigger'],
+        orElse: () => SyncTrigger.manual,
+      ),
+    );
   }
 }
 

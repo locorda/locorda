@@ -8,5 +8,6 @@ library locorda_solid_auth;
 export 'src/solid_auth_bridge.dart';
 export 'src/ui/login_page.dart';
 export 'src/ui/solid_status_widget.dart';
+export 'src/ui/solid_status_defaults.dart';
 export 'src/providers/solid_provider_service.dart';
 export 'l10n/solid_auth_localizations.dart';

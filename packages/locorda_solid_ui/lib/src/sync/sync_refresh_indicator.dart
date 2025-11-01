@@ -52,7 +52,7 @@ class SyncRefreshIndicator extends StatelessWidget {
 
   Future<void> _handleRefresh() async {
     try {
-      await syncManager.sync();
+      await syncManager.sync(trigger: SyncTrigger.pullToRefresh);
       onSyncComplete?.call();
     } catch (error) {
       onSyncError?.call(error);

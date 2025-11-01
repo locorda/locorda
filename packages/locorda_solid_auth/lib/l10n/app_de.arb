@@ -17,5 +17,6 @@
   "signOut": "Abmelden",
   "pleaseEnterWebId": "Bitte geben Sie eine WebID ein oder wählen Sie einen Anbieter",
   "syncNow": "Jetzt synchronisieren",
+  "retrySync": "Synchronisierung erneut versuchen",
   "syncError": "Synchronisierungsfehler"
 }

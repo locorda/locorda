@@ -67,14 +67,18 @@ abstract interface class SyncManager {
   /// Whether a sync operation is currently in progress.
   bool get isSyncing;
 
-  /// Trigger a manual sync operation.
+  /// Trigger a sync operation.
+  ///
+  /// The [trigger] parameter indicates why the sync was initiated, enabling
+  /// UI to provide context-appropriate feedback (e.g., subtle indicator for
+  /// automatic syncs vs. explicit progress for user-initiated syncs).
   ///
   /// If a sync is already in progress, this will wait for it to complete
   /// and then return without triggering another sync.
   ///
   /// Returns a [Future] that completes when the sync operation finishes
   /// (either successfully or with an error).
-  Future<void> sync();
+  Future<void> sync({SyncTrigger trigger = SyncTrigger.manual});
 
   /// Enable automatic sync with the given interval.
   ///
