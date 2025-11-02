@@ -282,7 +282,7 @@ class Locorda {
   /// Throws [SyncConfigValidationException] if the configuration is invalid.
   static Future<Locorda> createWithWorker({
     required EngineParamsFactory engineParamsFactory,
-    required String jsScript,
+    String jsScript = 'worker.dart.js',
     required LocordaConfig config,
     required MapperInitializerFunction mapperInitializer,
     void workerInitializer()?,

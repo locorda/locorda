@@ -5,7 +5,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:rdf_core/rdf_core.dart';
 
@@ -1319,10 +1318,10 @@ class DocumentWithIri {
   daos: [SyncDocumentDao, SyncPropertyChangeDao, IndexDao, RemoteSyncStateDao],
 )
 class SyncDatabase extends _$SyncDatabase {
-  SyncDatabase({DriftWebOptions? web, DriftNativeOptions? native})
-      : super(_openConnection(web: web, native: native));
-
-  /// Internal constructor for test subclasses
+  /// Create database with custom QueryExecutor.
+  ///
+  /// Pure Dart constructor - works on all platforms including web workers.
+  /// For Flutter apps, use factory from sync_database_flutter.dart instead.
   SyncDatabase.forExecutor(QueryExecutor executor) : super(executor);
 
   @override
@@ -1469,10 +1468,4 @@ class SyncDatabase extends _$SyncDatabase {
           }
         },
       );
-}
-
-/// Create database connection based on platform
-QueryExecutor _openConnection(
-    {DriftWebOptions? web, DriftNativeOptions? native}) {
-  return driftDatabase(name: 'locorda_sync', web: web, native: native);
 }

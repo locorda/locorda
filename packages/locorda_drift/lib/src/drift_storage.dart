@@ -3,12 +3,14 @@ library;
 
 import 'dart:convert';
 
-import 'package:drift_flutter/drift_flutter.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
 import 'package:rdf_core/rdf_core.dart';
 
+import 'drift_options.dart';
 import 'sync_database.dart';
+import 'sync_database_impl_flutter.dart'
+    if (dart.library.html) 'sync_database_impl_web.dart';
 
 /// Drift-based implementation of the Storage interface.
 ///
@@ -36,13 +38,27 @@ class DriftStorage implements Storage {
         _iriTermFactory = iriTermFactory,
         _codec = TurtleCodec(iriTermFactory: iriTermFactory);
 
-  /// Create DriftStorage with database options
-  factory DriftStorage({
-    DriftWebOptions? web,
-    DriftNativeOptions? native,
+  /// Create DriftStorage with automatic platform detection.
+  ///
+  /// Uses conditional imports to select the right implementation:
+  /// - Native platforms: Uses drift_flutter with sqlite3_flutter_libs
+  /// - Web: Uses drift/wasm with WasmDatabase
+  ///
+  /// Example:
+  /// ```dart
+  /// final storage = await DriftStorage.create(
+  ///   web: LocordaDriftWebOptions(
+  ///     sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+  ///     driftWorker: Uri.parse('drift_worker.js'),
+  ///   ),
+  /// );
+  /// ```
+  static Future<DriftStorage> create({
+    LocordaDriftWebOptions? web,
+    LocordaDriftNativeOptions? native,
     IriTermFactory iriTermFactory = IriTerm.validated,
-  }) {
-    final database = SyncDatabase(web: web, native: native);
+  }) async {
+    final database = await SyncDatabaseImpl.create(web: web, native: native);
 
     return DriftStorage._(
         documentDao: database.syncDocumentDao,

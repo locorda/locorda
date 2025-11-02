@@ -1,0 +1,14 @@
+builders:
+  # Compiles lib/worker.dart to web/worker.dart.js
+  web_worker:
+    import: "package:locorda_builder/builder.dart"
+    builder_factories: ["webWorkerBuilder"]
+    build_extensions:
+      lib/worker.dart:
+        - web/worker.dart.js
+        - web/worker.dart.js.map
+    auto_apply: dependents
+    build_to: source
+    defaults:
+      generate_for:
+        - lib/worker.dart

@@ -6,4 +6,5 @@
 /// Supports all Flutter platforms: iOS, Android, Web, Windows, macOS, Linux.
 library locorda_drift;
 
+export 'src/drift_options.dart';
 export 'src/drift_storage.dart';

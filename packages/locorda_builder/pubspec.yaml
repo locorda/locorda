@@ -1,0 +1,23 @@
+name: locorda_builder
+description: Build-time transformations for Locorda - web worker compilation, asset copying, and future CRDT code generation
+version: 0.1.0-dev
+publisher: locorda.dev
+publish_to: none
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  build: ^2.4.0
+  build_config: ^1.1.0
+  analyzer: '>=7.4.0 <9.0.0'
+  path: ^1.9.0
+
+dev_dependencies:
+  test: ^1.21.0
+  build_test: ^2.2.0
+
+topics:
+  - build
+  - code-generation
+  - web-workers

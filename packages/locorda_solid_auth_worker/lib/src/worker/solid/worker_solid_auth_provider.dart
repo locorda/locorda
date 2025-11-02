@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:locorda_solid_auth_worker/src/worker/solid/solid_auth_messages.dart';
 import 'package:locorda_worker/locorda_worker.dart';
 import 'package:locorda_solid/locorda_solid.dart';
-import 'package:solid_auth/solid_auth.dart';
+import 'package:solid_auth/worker.dart';
 
 /// Notifier for worker authentication state changes.
 ///
@@ -76,7 +76,7 @@ class _WorkerAuthNotifier implements AuthValueListenable {
 ///   });
 /// }
 /// ```
-class WorkerSolidAuthProvider implements SolidAuthProvider {
+class SolidAuthReceiver implements SolidAuthProvider {
   final WorkerChannel _channel;
   final _WorkerAuthNotifier _notifier = _WorkerAuthNotifier();
   DpopCredentials? _credentials;
@@ -90,7 +90,7 @@ class WorkerSolidAuthProvider implements SolidAuthProvider {
   ///
   /// Automatically subscribes to [UpdateAuthMessage] on the channel.
   /// Requests initial auth state from main thread using Request/Response pattern.
-  WorkerSolidAuthProvider(this._channel) {
+  SolidAuthReceiver(this._channel) {
     // Listen for auth updates on channel
     _channel.messages.listen((message) {
       if (message is Map<String, dynamic>) {

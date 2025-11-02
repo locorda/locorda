@@ -40,5 +40,5 @@ library locorda;
 
 // Re-export the main API from core
 export 'src/config/locorda_config.dart';
-export 'src/drift_native_options_connector.dart';
+export 'src/driftworker/drift_native_options_connector.dart';
 export 'src/locorda.dart' show Locorda, TypedHydrationBatch;

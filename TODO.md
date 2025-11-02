@@ -112,11 +112,11 @@
 - [x] Example App Responsiveness: offload syncing from ui thread to isolate on native
 - [x] API Improvements: use EngineParams as parameter for Locorda.create (and maybe SyncEngine.create) and rename engineParamsFactory in Locorda.createWithWorker to engineParamsFactory
 - [x] Rework "plugin/provider": Rename to sender/receiver (Main thread sends data, worker receives)
-- [ ] Token refresh?
-- [ ] UI: User is stuck with refresh button
-- [ ] Remove extraOidcScopes from notes_list_screen (and client profile jsonld) again and verify it still works correctly
-- [ ] AutoSync - throttled sync after changes (save)
+- [x] Token refresh?
+- [x] UI: User is stuck with refresh button
+- [x] Remove extraOidcScopes from notes_list_screen (and client profile jsonld) again and verify it still works correctly
 - [ ] Example App Responsiveness: offload syncing from ui thread to web worker on web
+- [ ] AutoSync - throttled sync after changes (save)
 - [ ] Streamline web worker experience - it should be built and deployed automatically, at least in the example app
 - [ ] Implement ensure
 - [ ] Thoroughly test, for example

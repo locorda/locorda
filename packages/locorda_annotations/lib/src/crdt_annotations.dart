@@ -9,14 +9,6 @@ class CrdtLwwRegister {
   const CrdtLwwRegister();
 }
 
-/// Annotation for First-Writer-Wins Register merge strategy.
-///
-/// Used for single-value properties that should be immutable after
-/// first assignment.
-class CrdtFwwRegister {
-  const CrdtFwwRegister();
-}
-
 /// Annotation for Observed-Remove Set merge strategy.
 ///
 /// Used for multi-value properties where additions and removals

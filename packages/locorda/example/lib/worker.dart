@@ -9,13 +9,12 @@
 /// The main thread only handles UI and communicates via messages.
 library;
 
-import 'package:drift_flutter/drift_flutter.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_drift/locorda_drift.dart';
 import 'package:locorda_solid/locorda_solid.dart';
-import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
+import 'package:locorda_solid_auth_worker/worker.dart';
 import 'package:locorda_worker/locorda_worker.dart';
-import 'package:locorda/locorda.dart';
+import 'package:locorda/worker.dart';
 import 'package:personal_notes_app/utils/logging_setup.dart';
 
 /// Worker entry point for web workers.
@@ -48,8 +47,8 @@ Future<EngineParams> createEngineParams(
 
   final nativeOptions = await DriftNativeOptionsConnector.receiver(context);
 
-  final storage = DriftStorage(
-    web: DriftWebOptions(
+  final storage = await DriftStorage.create(
+    web: LocordaDriftWebOptions(
       sqlite3Wasm: Uri.parse('sqlite3.wasm'),
       driftWorker: Uri.parse('drift_worker.js'),
     ),

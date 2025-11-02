@@ -6,12 +6,7 @@
 library locorda_annotations;
 
 export 'src/crdt_annotations.dart'
-    show
-        CrdtFwwRegister,
-        CrdtImmutable,
-        CrdtLwwRegister,
-        CrdtOrSet,
-        McIdentifying;
+    show CrdtImmutable, CrdtLwwRegister, CrdtOrSet, McIdentifying;
 export 'src/resource.dart'
     show
         LcrdRootResource,
