@@ -22096,7 +22096,6 @@
       return index + 3;
     },
     main() {
-      A.print("Personal Notes App Worker starting... 6");
       A.workerMain(A.worker__createEngineParams$closure(), A.logging_setup__setupWorkerLogging$closure());
     },
     createEngineParams(config, context) {
