@@ -63,11 +63,11 @@ class OrganizedStatements {
           graph.findSingleObject<RdfSubject>(subject, RdfStatement.subject);
       if (rdfSubject is BlankNodeTerm) {
         throw StateError(
-            'Statement subject cannot be a blank node in document $documentIri: $rdfSubject');
+            'Statement subject cannot be a blank node in document ${documentIri.debug}: ${rdfSubject.debug}');
       }
       if (rdfSubject == null) {
         _log.severe(
-            'Could not find statement subject in document $documentIri for statement identifier $subject');
+            'Could not find statement subject in document ${documentIri.debug} for statement identifier ${subject.debug}');
         continue;
       }
       final rdfPredicate =
@@ -76,7 +76,7 @@ class OrganizedStatements {
           graph.findSingleObject<RdfObject>(subject, RdfStatement.object);
       if (rdfObject is BlankNodeTerm) {
         throw StateError(
-            'Statement object cannot be a blank node in document $documentIri: $rdfObject');
+            'Statement object cannot be a blank node in document ${documentIri.debug}: ${rdfObject.debug}');
       }
       final realSubject =
           blankNodeMappings.getBlankNode(rdfSubject) ?? rdfSubject;

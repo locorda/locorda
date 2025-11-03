@@ -110,7 +110,8 @@ class StandardSyncEngine implements SyncEngine {
     httpClient ??= http.Client();
     fetcher ??= HttpFetcher(httpClient: httpClient);
     iriFactory ??= IriTerm.validated;
-    physicalTimestampFactory ??= defaultPhysicalTimestampFactory;
+    final timestampFactory =
+        physicalTimestampFactory ?? defaultPhysicalTimestampFactory;
 
     // Automatically add configuration for Framework-Owned resources
     config = buildEffectiveConfig(config);
@@ -132,13 +133,13 @@ class StandardSyncEngine implements SyncEngine {
       resourceLocator: localResourceLocator,
       installationIdFactory: installationIdFactory,
       iriTermFactory: iriFactory,
-      physicalTimestampFactory: physicalTimestampFactory,
+      physicalTimestampFactory: timestampFactory,
     );
 
     // Create HlcService with installation IRI and localId
     final hlcService = HlcService(
       installationLocalId: installationService.installationLocalId,
-      physicalTimestampFactory: physicalTimestampFactory,
+      physicalTimestampFactory: timestampFactory,
     );
     final crdtTypeRegistry = CrdtTypeRegistry.forStandardTypes();
 
@@ -188,7 +189,7 @@ class StandardSyncEngine implements SyncEngine {
       mergeContractLoader: mergeContractLoader,
       localDocumentMerger: localDocumentMerger,
       hlcService: hlcService,
-      physicalTimestampFactory: physicalTimestampFactory,
+      physicalTimestampFactory: timestampFactory,
     );
 
     // Initialize indices after installation document is created
@@ -227,6 +228,7 @@ class StandardSyncEngine implements SyncEngine {
               mergeContractLoader: mergeContractLoader,
               localDocumentMerger: localDocumentMerger,
               shardDocumentGenerator: shardDocumentGenerator,
+              physicalTimestampFactory: timestampFactory,
             );
 
     final syncManager = StandardSyncManager(
@@ -237,7 +239,7 @@ class StandardSyncEngine implements SyncEngine {
           remoteSyncOrchestratorFactory: remoteSyncOrchestratorFactory,
         ),
         autoSyncConfig: config.autoSyncConfig,
-        physicalTimestampFactory: physicalTimestampFactory);
+        physicalTimestampFactory: timestampFactory);
 
     final sync = StandardSyncEngine._(
         storage: storage,
@@ -246,7 +248,7 @@ class StandardSyncEngine implements SyncEngine {
         resourceLocator: localResourceLocator,
         crdtDocumentManager: crdtDocumentManager,
         indexRdfGenerator: indexRdfGenerator,
-        physicalTimestampFactory: physicalTimestampFactory,
+        physicalTimestampFactory: timestampFactory,
         syncManager: syncManager);
 
     // installation documents might be organized in indices, so we need to use graph sync instead of crdtDocumentManager directly

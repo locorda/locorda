@@ -37,6 +37,10 @@ final class FullIndexSync extends IndexSyncSpec {
     IriTerm indexIri,
     this.fetchPolicy,
   ) : super(indexIri: indexIri);
+  @override
+  String toString() {
+    return 'FullIndexSync(indexIri: ${indexIri.debug}, fetchPolicy: ${fetchPolicy.toString()})';
+  }
 }
 
 /// Partial index sync: Upload-only for specific shards containing known items
@@ -50,6 +54,11 @@ final class PartialIndexSync extends IndexSyncSpec {
     required super.indexIri,
     required this.shardItems,
   });
+
+  @override
+  String toString() {
+    return 'PartialIndexSync(indexIri: ${indexIri.debug}, shardItems: ${shardItems.entries.map((e) => '\nShard ${e.key.debug}:\n\t${e.value.entries.map((e) => '${e.key.debug}: ${e.value}').join('\n\t')}').join('')}\n)';
+  }
 }
 
 sealed class ShardSyncSpec {
@@ -145,7 +154,7 @@ class RemoteSyncOrchestrator {
   final MergeContractLoader _mergeContractLoader;
   final LocalDocumentMerger _localDocumentMerger;
   final ShardDocumentGenerator _shardDocumentGenerator;
-
+  final PhysicalTimestampFactory _physicalTimestampFactory;
   RemoteSyncOrchestrator({
     required RemoteStorage remoteStorage,
     required Storage storage,
@@ -158,6 +167,7 @@ class RemoteSyncOrchestrator {
     required MergeContractLoader mergeContractLoader,
     required LocalDocumentMerger localDocumentMerger,
     required ShardDocumentGenerator shardDocumentGenerator,
+    required PhysicalTimestampFactory physicalTimestampFactory,
   })  : _remoteStorage = remoteStorage,
         _storage = storage,
         _merger = merger,
@@ -168,7 +178,8 @@ class RemoteSyncOrchestrator {
         _hlcService = hlcService,
         _mergeContractLoader = mergeContractLoader,
         _localDocumentMerger = localDocumentMerger,
-        _shardDocumentGenerator = shardDocumentGenerator;
+        _shardDocumentGenerator = shardDocumentGenerator,
+        _physicalTimestampFactory = physicalTimestampFactory;
 
   /// Execute complete remote synchronization cycle.
   ///
@@ -487,7 +498,8 @@ class RemoteSyncOrchestrator {
     // unlike ourPhysicalClock which only changes when WE modify the document.
     // This ensures we catch conflicts even if the concurrent change was a remote merge.
     final expectedUpdatedAt = localUpdatedAt;
-    final updatedAtTimestamp = syncTime.millisecondsSinceEpoch;
+    final updatedAtTimestamp =
+        _physicalTimestampFactory().millisecondsSinceEpoch;
     // save locally with optimistic lock - retry if conflict detected
     try {
       await _storage.saveDocument(
@@ -771,7 +783,7 @@ class RemoteSyncOrchestrator {
 
   Future<void> _syncIndex(IriTerm resourceType, IndexSyncSpec index,
       int lastSyncTimestamp, DateTime syncTime) async {
-    _log.fine('Syncing index: ${index.indexIri.debug}');
+    _log.fine('Syncing index: ${index}');
 
     final allShards = await _buildShardSyncSpecs(index);
 

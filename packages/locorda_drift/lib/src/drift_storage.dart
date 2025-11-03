@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_core/src/storage/storage_interface.dart' as storage;
+import 'package:locorda_drift/src/rdf/rdf_extensions.dart';
 import 'package:rdf_core/rdf_core.dart';
 
 import 'drift_options.dart';
@@ -114,10 +115,10 @@ class DriftStorage implements Storage {
       final previousCursor = previousTimestamp?.toString();
 
       // Validate that new timestamp is greater than existing max
-      if (previousTimestamp != null && metadata.updatedAt < previousTimestamp) {
+      if (previousTimestamp != null && metadata.updatedAt <= previousTimestamp) {
         throw ArgumentError(
             'New document updatedAt (${metadata.updatedAt}) must be greater than (or equal to) '
-            'existing max updatedAt ($previousTimestamp) for type ${typeIri.value}');
+            'existing max updatedAt ($previousTimestamp) for document ${documentIri.debug} of type ${typeIri.value}');
       }
 
       // Serialize RDF graph to Turtle

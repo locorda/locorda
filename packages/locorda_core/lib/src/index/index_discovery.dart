@@ -211,14 +211,14 @@ class IndexDiscovery {
         _removeIndexFromCache(cache, indexIri);
         // Invalidate parsed config cache
         _parsedConfigCache.remove(indexIri.value);
-        _log.fine('Removed $indexTypeName from cache: $indexIri');
+        _log.fine('Removed $indexTypeName from cache: ${indexIri.debug}');
         continue;
       }
 
       // Strict: headerProperties must be present (it's a tracked property)
       if (entry.headerProperties == null) {
         throw StateError(
-            'Index entry missing headerProperties (idx:indexesClass is tracked): $indexIri');
+            'Index entry missing headerProperties (idx:indexesClass is tracked): ${indexIri.debug}');
       }
 
       final headerProperties = turtle.decode(entry.headerProperties!);
@@ -228,17 +228,17 @@ class IndexDiscovery {
       // Strict: indexesClass must be present and unique
       if (indexedClassTriples.isEmpty) {
         throw StateError(
-            '$indexTypeName missing idx:indexesClass property: $indexIri');
+            '$indexTypeName missing idx:indexesClass property: ${indexIri.debug}');
       }
       if (indexedClassTriples.length > 1) {
         throw StateError(
-            '$indexTypeName has multiple idx:indexesClass values: $indexIri');
+            '$indexTypeName has multiple idx:indexesClass values: ${indexIri.debug}');
       }
 
       final indexedClass = indexedClassTriples.single.object;
       if (indexedClass is! IriTerm) {
         throw StateError(
-            '$indexTypeName idx:indexesClass is not an IRI: $indexIri → $indexedClass');
+            '$indexTypeName idx:indexesClass is not an IRI: ${indexIri.debug} → $indexedClass');
       }
 
       // Only track if this resource type is in our config
@@ -266,11 +266,11 @@ class IndexDiscovery {
       if (cachedEntry != null && cachedEntry.clockHash != clockHash) {
         _parsedConfigCache.remove(indexIri.value);
         _log.fine(
-            'Invalidated parsed config cache for $indexTypeName $indexIri (clockHash changed)');
+            'Invalidated parsed config cache for $indexTypeName ${indexIri.debug} (clockHash changed)');
       }
 
       _log.fine(
-          'Updated $indexTypeName metadata: $indexedClass → $indexIri (clockHash: $clockHash)');
+          'Index Discovery Cache refreshed $indexTypeName metadata: indexed class $indexedClass → index Iri ${indexIri.debug} (clockHash: $clockHash)');
     }
   }
 
@@ -404,16 +404,16 @@ class IndexDiscovery {
     final cachedEntry = _parsedConfigCache[indexIri.value];
     if (cachedEntry != null && cachedEntry.clockHash == expectedClockHash) {
       // Cache hit with matching clockHash
-      _log.fine('Cache hit for $indexTypeName: $indexIri');
+      _log.fine('Cache hit for $indexTypeName: ${indexIri.debug}');
       return cachedEntry.config as T;
     }
 
     // Cache miss or stale - load and parse
     if (cachedEntry != null) {
       _log.fine(
-          'Cache stale for $indexTypeName: $indexIri (expected: $expectedClockHash, cached: ${cachedEntry.clockHash})');
+          'Cache stale for $indexTypeName: ${indexIri.debug} (expected: $expectedClockHash, cached: ${cachedEntry.clockHash})');
     } else {
-      _log.fine('Cache miss for $indexTypeName: $indexIri');
+      _log.fine('Cache miss for $indexTypeName: ${indexIri.debug}');
     }
 
     final config = await loader(indexIri, mode);

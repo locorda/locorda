@@ -106,10 +106,10 @@ class ShardDocumentGenerator {
     if (entries.isEmpty) {
       // No active entries - generate empty shard (will remove any existing entries)
       _log.fine(
-          'Shard $shardIri has no active entries, generating empty graph');
+          'Shard ${shardIri.debug} has no active entries, generating empty graph');
     } else {
       _log.fine(
-          'Shard $shardIri has ${entries.length} active entries, generating document');
+          'Shard ${shardIri.debug} has ${entries.length} active entries, generating document');
     }
     // 2. Generate RDF graph for shard document from entries
     final newTriples = generateShardNodes(
@@ -138,7 +138,7 @@ class ShardDocumentGenerator {
     );
 
     if (saveResult == null) {
-      _log.fine('Shard $shardIri unchanged, skipping');
+      _log.fine('Shard ${shardIri.debug} unchanged, skipping');
       return null;
     }
 

@@ -233,12 +233,12 @@ class MergeContract {
       final rule = classMapping.getPropertyRule(propertyIri);
       if (rule != null) {
         _log.fine(
-            'Inferred type $inferredTypes for property $propertyIri to apply class-specific merge rule.');
+            'Inferred type ${classMapping.classIri.debug} for property $propertyIri to apply class-specific merge rule.');
         return rule;
       }
     } else if (inferredTypes.length > 1) {
       _log.warning(
-          'Cannot infer unique type for property $propertyIri, found multiple candidate types: $inferredTypes. ${globalRule == null ? 'No merge rule available. ' : 'Using global merge rule of this predicate.'}');
+          'Cannot infer unique type for property $propertyIri, found multiple candidate types: ${inferredTypes.map((t) => t.classIri.debug)}. ${globalRule == null ? 'No merge rule available. ' : 'Using global merge rule of this predicate.'}');
     } else {
       if (typeIri != null) {
         _log.warning(

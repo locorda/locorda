@@ -76,7 +76,7 @@ class RemoteDocumentMerger {
     required RdfGraph? localGraph,
     required RdfGraph? remoteGraph,
   }) async {
-    _log.fine('Merging document $documentIri');
+    _log.fine('Merging document ${documentIri.debug}');
 
     // Handle null cases
     if (remoteGraph == null) {

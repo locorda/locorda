@@ -116,7 +116,11 @@
 - [x] UI: User is stuck with refresh button
 - [x] Remove extraOidcScopes from notes_list_screen (and client profile jsonld) again and verify it still works correctly
 - [ ] Example App Responsiveness: offload syncing from ui thread to web worker on web
+- [ ] AutoSync - throttle sync after authorization (login)
 - [ ] AutoSync - throttled sync after changes (save)
+- [ ] Optimize: check after merge if merged result differs from remote and upload only if it does
+- [ ] build_runner: dirty detection for worker.dart.js is not working correctly - it will only detect changes to worker.dart itself, but not to  transitive changes - can this be fixed somehow?
+- [ ] Fix "Could not find statement subject in document" => apparently we are removing statement subjects, but keep the hasStatement triples during merges - we have to fix this and find out if this only affects statements, or if this can happen to any subject
 - [ ] Streamline web worker experience - it should be built and deployed automatically, at least in the example app
 - [ ] Implement ensure
 - [ ] Thoroughly test, for example

@@ -225,7 +225,7 @@ class LocalDocumentMerger {
 
     // Process deleted subjects - add resource tombstones
     for (final deletedSubject in deletedSubjects) {
-      _log.fine('Deleted subject detected: ${deletedSubject.subject} ');
+      _log.fine('Deleted subject detected: ${deletedSubject.subject.debug} ');
       statements.addAll(_metadataGenerator.createResourceMetadata(
           documentIri,
           IdTerm.create(deletedSubject.subject, oldAppBlankNodes),
@@ -365,7 +365,8 @@ class LocalDocumentMerger {
             isFrameworkProperty: isFrameworkData,
           ));
         }
-        _log.fine('Property change detected on $subjectTerm for $predicate');
+        _log.fine(
+            'Property change detected on ${subjectTerm.debug} for $predicate');
       }
     }
 
