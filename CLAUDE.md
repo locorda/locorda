@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Index Types**: FullIndex (monolithic) vs GroupIndex (partitioned), with ItemFetchPolicy (onRequest/prefetch)
 **Scale**: 2-100 installations (optimal: 2-20)
 **Key Commands**: `melos bootstrap`, `melos test`, `melos format`, `dart tool/run_tests.dart`
-**Critical Rule**: Always discuss API design before implementing
+**Critical Rule**: Ask before ANY code edit (bug fixes, features, refactoring)
 
 ## Project Overview
 
@@ -27,6 +27,32 @@ The project is organized as a monorepo with the following packages:
 - `locorda_solid_auth` - Solid authentication integration using solid-auth library
 - `locorda_solid_ui` - Flutter UI components including login forms and sync status widgets
 - `locorda_drift` - Drift (SQLite) storage backend implementation
+
+## 🛑 MANDATORY: Ask Before ANY Code Edit
+
+**CRITICAL WORKFLOW RULE - NO EXCEPTIONS**
+
+Before editing any file in the repository:
+
+1. ✅ Identify the issue and solution
+2. ✅ Explain what needs changing (code example optional)
+3. ⚠️ **ASK: "Shall I implement this?"**
+4. ⏸️ **WAIT for: "yes"/"approve"/"do it"**
+5. ✅ Then (and only then) use edit tools
+
+**Applies to everything:**
+- Bug fixes, refactoring, features, tests, docs
+- "Obvious" changes, "small" fixes, optimizations
+- ANY file modification in the repo
+
+**Enforcement checklist:**
+```
+□ Did I ask explicitly?
+□ Did user approve explicitly?
+□ If NO → STOP, ask first
+```
+
+**No exceptions. Ever.**
 
 ## Key Architecture Concepts
 
@@ -200,20 +226,27 @@ locorda_annotations
 
 ### Collaborative Development Approach
 
-**CRITICAL: Always discuss API design before implementing**
+**CRITICAL: Always ask before ANY code edit**
 
 When working on this codebase:
 
-1. **Discussion-first approach**: When implementing new interfaces, classes, or packages, always discuss the API design with the user before writing code
-2. **Ask before implementing**: Explicitly ask "Should I implement this?" or "Would you like me to code this up?" before creating classes or making architectural changes
-3. **Start minimal**: When moving to implementation, start with the smallest possible change that serves the real needs of the example application
-4. **Focus on actual usage**: Design interfaces based on what the example app actually needs, not theoretical requirements
-5. **Avoid over-engineering**: Do not create complex database schemas, elaborate class hierarchies, or interconnected systems without explicit approval
-6. **Iterative refinement**: Build incrementally - get the basic API working first, then add complexity only when needed
+1. **Ask-first approach**: Before ANY file edit, explicitly ask "Shall I implement this?"
+2. **Wait for approval**: User must say "yes"/"approve"/"do it" before you edit
+3. **Applies to everything**: Bug fixes, features, refactoring, tests, documentation
+4. **Start minimal**: When approved, start with smallest possible change
+5. **Focus on actual usage**: Design based on real example app needs
+6. **Avoid over-engineering**: No complex systems without explicit approval
+7. **Iterative refinement**: Basic working solution first, then add complexity if needed
 
-**Example of what NOT to do**: Creating comprehensive database schemas, complex interfaces, and multiple interconnected classes when asked to create a storage package, without first discussing what the storage interface should look like.
+**Example of correct workflow**:
+- You: "I found bug X. Fix would be Y. Shall I implement this?"
+- User: "yes"
+- You: [Implement the fix]
 
-**Example of what TO do**: Ask "What storage operations does the example app actually need?" and design a minimal interface that serves those specific needs.
+**Example of WRONG workflow**:
+- You: "I found bug X. [Implements fix immediately]" ← NO!
+- You: "Here's the solution [code block]. [Edits file]" ← NO!
+- You: "This is obviously needed [edits file]" ← NO!
 
 ### RDF and Semantic Web Focus
 - All data stored as clean, standard RDF that's human-readable

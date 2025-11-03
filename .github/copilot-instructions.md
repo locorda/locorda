@@ -6,6 +6,38 @@
 
 **⚠️ Critical**: Specification in `spec/` is outdated. Implementation has diverged significantly. **Always prioritize actual code over spec documentation**.
 
+## 🛑 MANDATORY: Ask Before ANY Code Edit
+
+**CRITICAL WORKFLOW RULE - NO EXCEPTIONS**
+
+Before calling `replace_string_in_file`, `create_file`, or any edit tool, you MUST:
+
+1. ✅ Analyze the problem and develop a solution
+2. ✅ Explain the proposed fix (show code example if helpful)
+3. ⚠️ **EXPLICITLY ASK: "Shall I implement this change?"**
+4. ⏸️ **WAIT for explicit approval** (user says: "yes"/"approve"/"do it")
+5. ✅ Only THEN edit the file
+
+**This applies to ALL edits:**
+- ✗ Bug fixes → Ask first
+- ✗ Refactoring/optimization → Ask first
+- ✗ New features → Ask first
+- ✗ Test changes → Ask first
+- ✗ "Obvious" fixes → Ask first
+- ✗ Documentation updates → Ask first
+
+**No rationalizations allowed:**
+- "This is just a small fix" → Still ask
+- "The user will obviously want this" → Still ask
+- "I already explained the solution" ≠ "I have permission to implement"
+
+**Checklist before editing:**
+```
+□ Have I explicitly asked: "Shall I implement this change?"
+□ Has the user replied: "yes"/"approve"/"do it"?
+□ If NO to either → STOP and ask first
+```
+
 ## Architecture: 4-Layer Design
 
 1. **Data Resource Layer**: Clean RDF using standard vocabularies (schema.org)
@@ -70,14 +102,31 @@ rm -f ~/Library/Containers/com.example.personalNotesApp/Data/Documents/*.sqlite*
 
 ### 🚨 CRITICAL: Discussion-First Approach
 
-**Before implementing ANY API/class/package changes:**
-1. **Stop and discuss** - Always ask "Should I implement this?" or "What API design do you prefer?"
+**Before implementing ANY repository edit:**
+1. **Stop and discuss** - Always ask "Shall I implement this?" before ANY code change
 2. **Start minimal** - Design for actual example app needs, not theoretical requirements
 3. **Avoid over-engineering** - No complex schemas/hierarchies without explicit approval
 4. **Iterative refinement** - Basic working API first, then add complexity if needed
 
-**Bad**: Creating comprehensive interfaces and schemas when asked to create a storage package  
-**Good**: Asking "What storage operations does the example app actually need?" and designing minimal interface
+**This rule covers ALL edits, including:**
+- Bug fixes and error corrections
+- Performance optimizations
+- Refactoring and code cleanup
+- New features and APIs
+- Test modifications
+- Documentation changes in code files
+
+**Example workflow:**
+```
+You: "I found a bug in X. The fix would be to change Y to Z. Shall I implement this?"
+User: "yes" / "approve" / "do it"
+You: [Now you may edit]
+```
+
+**What NOT to do**: 
+- ✗ Implementing "obvious" fixes without asking
+- ✗ Making changes while explaining the problem
+- ✗ Assuming silence = approval
 
 ### Code Patterns
 

@@ -21,7 +21,7 @@ import 'package:personal_notes_app/utils/logging_setup.dart';
 ///
 /// On web, the compiled JS is loaded and main() is called automatically.
 void main() {
-  print('Personal Notes App Worker starting... 4');
+  //print('Personal Notes App Worker starting... 5');
   workerMain(createEngineParams, workerInitializer: setupWorkerLogging);
 }
 

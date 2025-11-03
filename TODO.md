@@ -122,6 +122,7 @@
 - [ ] build_runner: dirty detection for worker.dart.js is not working correctly - it will only detect changes to worker.dart itself, but not to  transitive changes - can this be fixed somehow?
 - [ ] Fix "Could not find statement subject in document" => apparently we are removing statement subjects, but keep the hasStatement triples during merges - we have to fix this and find out if this only affects statements, or if this can happen to any subject
 - [ ] Streamline web worker experience - it should be built and deployed automatically, at least in the example app
+- [ ] Fix bugs in the group index template document 
 - [ ] Implement ensure
 - [ ] Thoroughly test, for example
   - Foreign indices/shards that are referenced, but not yet downloaded when an item is saved!

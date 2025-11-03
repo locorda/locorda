@@ -247,6 +247,8 @@ class RemoteSyncOrchestrator {
         .map((tuple) =>
             FullIndexSync(tuple.$1, tuple.$3)) // (indexIri, fetchPolicy)
         .toList();
+    final groupIndexIris =
+        groupIndices.map((tuple) => tuple.$1).toSet(); // indexIri
 
     final configuredIndices = <IndexSyncSpec>[
       ...fullIndices,
@@ -272,11 +274,19 @@ class RemoteSyncOrchestrator {
         'Found ${configuredIndices.length} configured indices and ${foreignIndices.length} foreign indices for ${resourceType.debug}');
 
     // We rely on the index of indices sync to have updated the index documents,
-    // so we don't need to re-sync them here again - except for the index-of
-    // indices itself (resourceType == idx:FullIndex).
-    if (resourceType == IdxFullIndex.classIri) {
-      for (final spec in indices) {
-        final documentIri = spec.indexIri.getDocumentIri();
+    // so we don't need to re-sync them here again - except for:
+    // 1. The index-of-indices itself (resourceType == idx:FullIndex)
+    // 2. Group indices - these are NOT in the index-of-indices, only their
+    //    templates are. We need to sync each group index document separately.
+    final bool isIndexOfIndices = resourceType == IdxFullIndex.classIri;
+
+    for (final spec in indices) {
+      final documentIri = spec.indexIri.getDocumentIri();
+
+      // Sync if:
+      // - This is the index-of-indices itself, OR
+      // - This is a GroupIndex (detected by presence in groupIndexIris set)
+      if (isIndexOfIndices || groupIndexIris.contains(spec.indexIri)) {
         await _syncDocument(
           documentIri,
           lastSyncTimestamp,
