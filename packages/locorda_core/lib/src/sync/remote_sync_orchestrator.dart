@@ -326,33 +326,31 @@ class RemoteSyncOrchestrator {
       _log.fine('$debugName unchanged (304)');
       loadedLocalDocument = await _getLocalDocumentWithMetadata(documentIri,
           ifChangedSincePhysicalClock: lastSyncTimestamp);
-      if (loadedLocalDocument != null) {
-        documentToUpload = loadedLocalDocument.document;
-        mergeContract = await _mergeContractLoader.load(_mergeContractLoader
-            .extractGovernanceIris(loadedLocalDocument.document, documentIri));
-      } else {
+      if (loadedLocalDocument == null) {
         _log.fine('Local $debugName has no changes since last sync');
+        // Return null to indicate no changes
+        return null;
       }
-      // Return null to indicate no changes
-      return null;
+      documentToUpload = loadedLocalDocument.document;
+      mergeContract = await _mergeContractLoader.load(_mergeContractLoader
+          .extractGovernanceIris(loadedLocalDocument.document, documentIri));
     } else if (downloadResult.graph != null) {
+      final remoteGraph = downloadResult.graph!;
       // Case: 200 OK - Remote changed
       _log.fine('$debugName changed remotely');
       // Theoretically, we could skip merge if local unchanged since last sync
-      // but just to be safe, always merge if remote changed
+      // but just to be safe, always merge if remote changed and then compare
       loadedLocalDocument = await _getLocalDocumentWithMetadata(documentIri);
       final localDocument = loadedLocalDocument?.document;
-      final governanceIris = _mergeContractLoader.getMergedGovernanceIris([
-        if (localDocument != null) localDocument,
-        if (downloadResult.graph != null) downloadResult.graph!
-      ], documentIri);
+      final governanceIris = _mergeContractLoader.getMergedGovernanceIris(
+          [if (localDocument != null) localDocument, remoteGraph], documentIri);
       mergeContract = await _mergeContractLoader.load(governanceIris);
       // CRDT merge local + remote
       final mergeResult = await _merger.merge(
         mergeContract: mergeContract,
         documentIri: documentIri,
         localGraph: localDocument,
-        remoteGraph: downloadResult.graph,
+        remoteGraph: remoteGraph,
       );
       final actualGovernanceIris = _mergeContractLoader.extractGovernanceIris(
           mergeResult.mergedGraph, documentIri);
@@ -361,7 +359,14 @@ class RemoteSyncOrchestrator {
             'Expected: $governanceIris, '
             'Found: $actualGovernanceIris');
       }
-
+      if (remoteGraph == mergeResult.mergedGraph) {
+        _log.finest('No changes after merging $debugName');
+        // Note: it would be more correct to use rdf canonicalization here,
+        // but for performance reasons we just use graph equality, assuming
+        // that the merger produces consistent output and that blank nodes
+        // are not re-created but reused.
+        return null; // No changes after merge
+      }
       documentToUpload = mergeResult.mergedGraph;
     } else {
       // Case: 404 Not Found - New index
