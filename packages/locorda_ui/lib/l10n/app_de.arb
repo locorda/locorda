@@ -1,0 +1,12 @@
+{
+  "@@locale": "de",
+  "errorConnecting": "Fehler beim Verbinden: {error}",
+  "connected": "Verbunden",
+  "syncing": "Synchronisiere...",
+  "upToDate": "Auf dem neuesten Stand",
+  "notConnected": "Nicht verbunden",
+  "signOut": "Abmelden",
+  "syncNow": "Jetzt synchronisieren",
+  "retrySync": "Synchronisierung erneut versuchen",
+  "syncError": "Synchronisierungsfehler"
+}

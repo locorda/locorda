@@ -37,6 +37,8 @@ dependencies:
     path: ../../locorda_solid
   locorda_solid_ui:
     path: ../../locorda_solid_ui
+  locorda_ui:
+    path: ../../locorda_ui
   locorda_drift:
     path: ../../locorda_drift
   locorda_worker:

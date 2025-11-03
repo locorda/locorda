@@ -1,0 +1,45 @@
+{
+  "@@locale": "en",
+  "errorConnecting": "Error connecting: {error}",
+  "@errorConnecting": {
+    "description": "Error message when connection fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "connected": "Connected",
+  "@connected": {
+    "description": "Status message when connected"
+  },
+  "notConnected": "Not connected",
+  "@notConnected": {
+    "description": "Status message when not connected"
+  },
+  "syncError": "Sync error",
+  "@syncError": {
+    "description": "Generic sync error message"
+  },
+  "syncing": "Syncing...",
+  "@syncing": {
+    "description": "Status message when syncing"
+  },
+  "upToDate": "Up to date",
+  "@upToDate": {
+    "description": "Status message when sync is complete"
+  },
+  "signOut": "Sign Out",
+  "@signOut": {
+    "description": "Button text to sign out"
+  },
+  "syncNow": "Sync Now",
+  "@syncNow": {
+    "description": "Button text to trigger manual sync"
+  },
+  "retrySync": "Retry Sync",
+  "@retrySync": {
+    "description": "Button text to retry failed sync"
+  }
+}

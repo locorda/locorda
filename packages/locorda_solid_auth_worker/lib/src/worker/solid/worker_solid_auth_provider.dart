@@ -6,6 +6,7 @@ library;
 
 import 'dart:async';
 
+import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_solid_auth_worker/src/worker/solid/solid_auth_messages.dart';
 import 'package:locorda_worker/locorda_worker.dart';
 import 'package:locorda_solid/locorda_solid.dart';
@@ -106,6 +107,15 @@ class SolidAuthReceiver implements SolidAuthProvider {
 
     // Request initial auth state from main thread
     _channel.send(RequestAuthStateMessage().toJson());
+  }
+
+  @override
+  String? get userDisplayName => currentWebId;
+
+  @override
+  Future<void> logout() {
+    // not needed in worker - main thread handles logout
+    throw UnimplementedError();
   }
 
   /// Handles incoming auth updates from main thread.

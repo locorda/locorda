@@ -11,7 +11,7 @@
 library locorda_core;
 
 // Core interfaces
-export 'src/auth/auth_interface.dart' show Auth;
+export 'src/auth/auth_interface.dart' show Auth, AuthValueListenable;
 export 'src/backend/backend.dart' show Backend;
 
 export 'src/backend/in_memory_backend.dart' show InMemoryBackend;

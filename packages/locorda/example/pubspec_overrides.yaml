@@ -1,4 +1,4 @@
-# melos_managed_dependency_overrides: locorda,locorda_annotations,locorda_builder,locorda_core,locorda_drift,locorda_solid,locorda_solid_auth,locorda_solid_auth_worker,locorda_solid_ui,locorda_worker
+# melos_managed_dependency_overrides: locorda,locorda_annotations,locorda_builder,locorda_core,locorda_drift,locorda_solid,locorda_solid_auth,locorda_solid_auth_worker,locorda_solid_ui,locorda_worker,locorda_ui
 dependency_overrides:
   # Custom override for StackOverflow fix
   oidc_core:
@@ -26,3 +26,5 @@ dependency_overrides:
     path: ../../locorda_solid_ui
   locorda_worker:
     path: ../../locorda_worker
+  locorda_ui:
+    path: ../../locorda_ui

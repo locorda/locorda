@@ -9,7 +9,9 @@ class SolidAuthLocalizationsDe extends SolidAuthLocalizations {
   SolidAuthLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get connectToSolid => 'Mit Solid verbinden';
+  String errorConnectingSolid(String error) {
+    return 'Fehler beim Verbinden mit Solid: $error';
+  }
 
   @override
   String get syncAcrossDevices => 'Geräteübergreifend synchronisieren';
@@ -27,44 +29,15 @@ class SolidAuthLocalizationsDe extends SolidAuthLocalizations {
   String get connect => 'Verbinden';
 
   @override
-  String get noPod => 'Haben Sie noch keinen Pod?';
-
-  @override
-  String get getPod => 'Pod erhalten';
-
-  @override
-  String errorConnectingSolid(String error) {
-    return 'Fehler beim Verbinden mit Solid: $error';
-  }
-
-  @override
-  String get connecting => 'Verbinde...';
-
-  @override
-  String get connected => 'Verbunden';
-
-  @override
-  String get syncing => 'Synchronisiere...';
-
-  @override
-  String get upToDate => 'Auf dem neuesten Stand';
-
-  @override
-  String get notConnected => 'Nicht verbunden';
-
-  @override
-  String get signOut => 'Abmelden';
-
-  @override
   String get pleaseEnterWebId =>
       'Bitte geben Sie eine WebID ein oder wählen Sie einen Anbieter';
 
   @override
-  String get syncNow => 'Jetzt synchronisieren';
+  String get connectToSolid => 'Mit Solid verbinden';
 
   @override
-  String get retrySync => 'Synchronisierung erneut versuchen';
+  String get noPod => 'Haben Sie noch keinen Pod?';
 
   @override
-  String get syncError => 'Synchronisierungsfehler';
+  String get getPod => 'Pod erhalten';
 }

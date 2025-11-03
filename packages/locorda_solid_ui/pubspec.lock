@@ -338,6 +338,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev"
+  locorda_ui:
+    dependency: "direct overridden"
+    description:
+      path: "../locorda_ui"
+      relative: true
+    source: path
+    version: "0.1.0-dev"
   logging:
     dependency: "direct main"
     description:

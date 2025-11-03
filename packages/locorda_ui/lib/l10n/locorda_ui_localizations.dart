@@ -5,24 +5,24 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'solid_auth_localizations_de.dart';
-import 'solid_auth_localizations_en.dart';
+import 'locorda_ui_localizations_de.dart';
+import 'locorda_ui_localizations_en.dart';
 
 // ignore_for_file: type=lint
 
-/// Callers can lookup localized strings with an instance of SolidAuthLocalizations
-/// returned by `SolidAuthLocalizations.of(context)`.
+/// Callers can lookup localized strings with an instance of LocordaUILocalizations
+/// returned by `LocordaUILocalizations.of(context)`.
 ///
-/// Applications need to include `SolidAuthLocalizations.delegate()` in their app's
+/// Applications need to include `LocordaUILocalizations.delegate()` in their app's
 /// `localizationDelegates` list, and the locales they support in the app's
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
-/// import 'l10n/solid_auth_localizations.dart';
+/// import 'l10n/locorda_ui_localizations.dart';
 ///
 /// return MaterialApp(
-///   localizationsDelegates: SolidAuthLocalizations.localizationsDelegates,
-///   supportedLocales: SolidAuthLocalizations.supportedLocales,
+///   localizationsDelegates: LocordaUILocalizations.localizationsDelegates,
+///   supportedLocales: LocordaUILocalizations.supportedLocales,
 ///   home: MyApplicationHome(),
 /// );
 /// ```
@@ -59,21 +59,21 @@ import 'solid_auth_localizations_en.dart';
 /// Select and expand the newly-created Localizations item then, for each
 /// locale your application supports, add a new item and select the locale
 /// you wish to add from the pop-up menu in the Value field. This list should
-/// be consistent with the languages listed in the SolidAuthLocalizations.supportedLocales
+/// be consistent with the languages listed in the LocordaUILocalizations.supportedLocales
 /// property.
-abstract class SolidAuthLocalizations {
-  SolidAuthLocalizations(String locale)
+abstract class LocordaUILocalizations {
+  LocordaUILocalizations(String locale)
       : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
-  static SolidAuthLocalizations? of(BuildContext context) {
-    return Localizations.of<SolidAuthLocalizations>(
-        context, SolidAuthLocalizations);
+  static LocordaUILocalizations? of(BuildContext context) {
+    return Localizations.of<LocordaUILocalizations>(
+        context, LocordaUILocalizations);
   }
 
-  static const LocalizationsDelegate<SolidAuthLocalizations> delegate =
-      _SolidAuthLocalizationsDelegate();
+  static const LocalizationsDelegate<LocordaUILocalizations> delegate =
+      _LocordaUILocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -102,72 +102,66 @@ abstract class SolidAuthLocalizations {
   /// Error message when connection fails
   ///
   /// In en, this message translates to:
-  /// **'Error connecting to Solid: {error}'**
-  String errorConnectingSolid(String error);
+  /// **'Error connecting: {error}'**
+  String errorConnecting(String error);
 
-  /// Subtitle explaining the purpose of connecting to Solid
+  /// Status message when connected
   ///
   /// In en, this message translates to:
-  /// **'Sync Across Devices'**
-  String get syncAcrossDevices;
+  /// **'Connected'**
+  String get connected;
 
-  /// Label for the provider selection section
+  /// Status message when not connected
   ///
   /// In en, this message translates to:
-  /// **'Choose a provider:'**
-  String get chooseProvider;
+  /// **'Not connected'**
+  String get notConnected;
 
-  /// Label for manual WebID input section
+  /// Generic sync error message
   ///
   /// In en, this message translates to:
-  /// **'Or enter your WebID manually:'**
-  String get orEnterManually;
+  /// **'Sync error'**
+  String get syncError;
 
-  /// Placeholder text for WebID input field
+  /// Status message when syncing
   ///
   /// In en, this message translates to:
-  /// **'https://username.provider.com/profile/card#me'**
-  String get webIdHint;
+  /// **'Syncing...'**
+  String get syncing;
 
-  /// Button text to initiate connection
+  /// Status message when sync is complete
   ///
   /// In en, this message translates to:
-  /// **'Connect'**
-  String get connect;
+  /// **'Up to date'**
+  String get upToDate;
 
-  /// Validation message when WebID field is empty
+  /// Button text to sign out
   ///
   /// In en, this message translates to:
-  /// **'Please enter a WebID or select a provider'**
-  String get pleaseEnterWebId;
+  /// **'Sign Out'**
+  String get signOut;
 
-  /// Title for the Solid login screen
+  /// Button text to trigger manual sync
   ///
   /// In en, this message translates to:
-  /// **'Connect to Solid'**
-  String get connectToSolid;
+  /// **'Sync Now'**
+  String get syncNow;
 
-  /// Text asking if user doesn't have a Pod
+  /// Button text to retry failed sync
   ///
   /// In en, this message translates to:
-  /// **'Don\'t have a Pod yet?'**
-  String get noPod;
-
-  /// Button text to get a new Pod
-  ///
-  /// In en, this message translates to:
-  /// **'Get a Pod'**
-  String get getPod;
+  /// **'Retry Sync'**
+  String get retrySync;
 }
 
-class _SolidAuthLocalizationsDelegate
-    extends LocalizationsDelegate<SolidAuthLocalizations> {
-  const _SolidAuthLocalizationsDelegate();
+class _LocordaUILocalizationsDelegate
+    extends LocalizationsDelegate<LocordaUILocalizations> {
+  const _LocordaUILocalizationsDelegate();
 
   @override
-  Future<SolidAuthLocalizations> load(Locale locale) {
-    return SynchronousFuture<SolidAuthLocalizations>(
-        lookupSolidAuthLocalizations(locale));
+  Future<LocordaUILocalizations> load(Locale locale) {
+    return SynchronousFuture<LocordaUILocalizations>(
+        lookupLocordaUILocalizations(locale));
   }
 
   @override
@@ -175,20 +169,20 @@ class _SolidAuthLocalizationsDelegate
       <String>['de', 'en'].contains(locale.languageCode);
 
   @override
-  bool shouldReload(_SolidAuthLocalizationsDelegate old) => false;
+  bool shouldReload(_LocordaUILocalizationsDelegate old) => false;
 }
 
-SolidAuthLocalizations lookupSolidAuthLocalizations(Locale locale) {
+LocordaUILocalizations lookupLocordaUILocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'de':
-      return SolidAuthLocalizationsDe();
+      return LocordaUILocalizationsDe();
     case 'en':
-      return SolidAuthLocalizationsEn();
+      return LocordaUILocalizationsEn();
   }
 
   throw FlutterError(
-      'SolidAuthLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'LocordaUILocalizations.delegate failed to load unsupported locale "$locale". This is likely '
       'an issue with the localizations generation tool. Please file an issue '
       'on GitHub with a reproducible sample app and the gen-l10n configuration '
       'that was used.');

@@ -4,6 +4,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_solid/locorda_solid.dart';
 import 'package:logging/logging.dart';
 import 'package:solid_auth/solid_auth.dart';
@@ -40,6 +41,14 @@ class SolidAuthBridge implements SolidAuthProvider {
   SolidAuthBridge(this._solidAuth)
       : _isAuthenticatedNotifier =
             AuthValueListenableImpl(_solidAuth.isAuthenticatedNotifier);
+
+  @override
+  String? get userDisplayName => _solidAuth.currentWebId;
+
+  @override
+  Future<void> logout() {
+    return _solidAuth.logout();
+  }
 
   @override
   Future<bool> isAuthenticated() async => _solidAuth.isAuthenticated;

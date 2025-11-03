@@ -9,7 +9,9 @@ class SolidAuthLocalizationsEn extends SolidAuthLocalizations {
   SolidAuthLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get connectToSolid => 'Connect to Solid';
+  String errorConnectingSolid(String error) {
+    return 'Error connecting to Solid: $error';
+  }
 
   @override
   String get syncAcrossDevices => 'Sync Across Devices';
@@ -27,43 +29,14 @@ class SolidAuthLocalizationsEn extends SolidAuthLocalizations {
   String get connect => 'Connect';
 
   @override
+  String get pleaseEnterWebId => 'Please enter a WebID or select a provider';
+
+  @override
+  String get connectToSolid => 'Connect to Solid';
+
+  @override
   String get noPod => 'Don\'t have a Pod yet?';
 
   @override
   String get getPod => 'Get a Pod';
-
-  @override
-  String errorConnectingSolid(String error) {
-    return 'Error connecting to Solid: $error';
-  }
-
-  @override
-  String get connecting => 'Connecting...';
-
-  @override
-  String get connected => 'Connected';
-
-  @override
-  String get syncing => 'Syncing...';
-
-  @override
-  String get upToDate => 'Up to date';
-
-  @override
-  String get notConnected => 'Not connected';
-
-  @override
-  String get signOut => 'Sign Out';
-
-  @override
-  String get pleaseEnterWebId => 'Please enter a WebID or select a provider';
-
-  @override
-  String get syncNow => 'Sync Now';
-
-  @override
-  String get retrySync => 'Retry Sync';
-
-  @override
-  String get syncError => 'Sync error';
 }

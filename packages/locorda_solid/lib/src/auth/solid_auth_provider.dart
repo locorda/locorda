@@ -1,16 +1,5 @@
 import 'package:locorda_core/locorda_core.dart';
 
-abstract interface class AuthValueListenable {
-  bool get isAuthenticated;
-
-  /// Register a closure to be called when the object notifies its listeners.
-  void addListener(void Function() listener);
-
-  /// Remove a previously registered closure from the list of closures that the
-  /// object notifies.
-  void removeListener(void Function() listener);
-}
-
 abstract interface class SolidAuthProvider implements Auth {
   /// Generates a DPoP (Demonstration of Proof-of-Possession) token for API requests.
   ///
@@ -78,7 +67,6 @@ abstract interface class SolidAuthProvider implements Auth {
   Future<({String accessToken, String dPoP})> getDpopToken(
       String url, String method);
   String? get currentWebId;
-  AuthValueListenable get isAuthenticatedNotifier;
 
   /// Refreshes the authentication token.
   ///

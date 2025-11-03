@@ -1,8 +1,14 @@
 {
   "@@locale": "en",
-  "connectToSolid": "Connect to Solid",
-  "@connectToSolid": {
-    "description": "Title for the Solid login screen"
+  "errorConnectingSolid": "Error connecting to Solid: {error}",
+  "@errorConnectingSolid": {
+    "description": "Error message when connection fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
   },
   "syncAcrossDevices": "Sync Across Devices",
   "@syncAcrossDevices": {
@@ -24,6 +30,14 @@
   "@connect": {
     "description": "Button text to initiate connection"
   },
+  "pleaseEnterWebId": "Please enter a WebID or select a provider",
+  "@pleaseEnterWebId": {
+    "description": "Validation message when WebID field is empty"
+  },
+  "connectToSolid": "Connect to Solid",
+  "@connectToSolid": {
+    "description": "Title for the Solid login screen"
+  },
   "noPod": "Don't have a Pod yet?",
   "@noPod": {
     "description": "Text asking if user doesn't have a Pod"
@@ -31,55 +45,5 @@
   "getPod": "Get a Pod",
   "@getPod": {
     "description": "Button text to get a new Pod"
-  },
-  "errorConnectingSolid": "Error connecting to Solid: {error}",
-  "@errorConnectingSolid": {
-    "description": "Error message when connection fails",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The error message"
-      }
-    }
-  },
-  "connecting": "Connecting...",
-  "@connecting": {
-    "description": "Status message when connecting"
-  },
-  "connected": "Connected",
-  "@connected": {
-    "description": "Status message when connected"
-  },
-  "syncing": "Syncing...",
-  "@syncing": {
-    "description": "Status message when syncing"
-  },
-  "upToDate": "Up to date",
-  "@upToDate": {
-    "description": "Status message when sync is complete"
-  },
-  "notConnected": "Not connected",
-  "@notConnected": {
-    "description": "Status message when not connected"
-  },
-  "signOut": "Sign Out",
-  "@signOut": {
-    "description": "Button text to sign out"
-  },
-  "pleaseEnterWebId": "Please enter a WebID or select a provider",
-  "@pleaseEnterWebId": {
-    "description": "Validation message when WebID field is empty"
-  },
-  "syncNow": "Sync Now",
-  "@syncNow": {
-    "description": "Button text to trigger manual sync"
-  },
-  "retrySync": "Retry Sync",
-  "@retrySync": {
-    "description": "Button text to retry failed sync"
-  },
-  "syncError": "Sync error",
-  "@syncError": {
-    "description": "Generic sync error message"
   }
 }

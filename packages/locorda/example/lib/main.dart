@@ -14,6 +14,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:locorda/locorda.dart';
 import 'package:locorda_solid_auth/locorda_solid_auth.dart';
 import 'package:locorda_solid_auth_worker/locorda_solid_auth_worker.dart';
+import 'package:locorda_ui/locorda_ui.dart';
 import 'package:personal_notes_app/init_rdf_mapper.g.dart';
 import 'package:personal_notes_app/models/category.dart';
 import 'package:personal_notes_app/models/note.dart';
@@ -123,6 +124,7 @@ class PersonalNotesApp extends StatelessWidget {
       localizationsDelegates: [
         ...GlobalMaterialLocalizations.delegates,
         SolidAuthLocalizations.delegate,
+        LocordaUILocalizations.delegate,
       ],
       supportedLocales: SolidAuthLocalizations.supportedLocales,
       home: const AppInitializer(),

@@ -9,14 +9,5 @@
   "noPod": "Haben Sie noch keinen Pod?",
   "getPod": "Pod erhalten",
   "errorConnectingSolid": "Fehler beim Verbinden mit Solid: {error}",
-  "connecting": "Verbinde...",
-  "connected": "Verbunden",
-  "syncing": "Synchronisiere...",
-  "upToDate": "Auf dem neuesten Stand",
-  "notConnected": "Nicht verbunden",
-  "signOut": "Abmelden",
-  "pleaseEnterWebId": "Bitte geben Sie eine WebID ein oder wählen Sie einen Anbieter",
-  "syncNow": "Jetzt synchronisieren",
-  "retrySync": "Synchronisierung erneut versuchen",
-  "syncError": "Synchronisierungsfehler"
+  "pleaseEnterWebId": "Bitte geben Sie eine WebID ein oder wählen Sie einen Anbieter"
 }
