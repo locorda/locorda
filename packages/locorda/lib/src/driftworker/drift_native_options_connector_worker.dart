@@ -6,7 +6,8 @@ library;
 
 import 'dart:async';
 
-import 'package:locorda/src/driftworker/drift_native_options_receiver.dart';
+import 'package:locorda/src/driftworker/drift_native_options_receiver_native.dart'
+    if (dart.library.html) 'package:locorda/src/driftworker/drift_native_options_receiver_web.dart';
 import 'package:locorda_drift/locorda_drift.dart';
 import 'package:locorda_worker/locorda_worker.dart';
 

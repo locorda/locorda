@@ -8,12 +8,38 @@ import 'dart:js_interop';
 import 'package:logging/logging.dart';
 import 'package:web/web.dart' as web;
 
+import 'js_interop_utils.dart';
 import 'worker_channel.dart';
 import 'worker_entry_point.dart';
 import 'locorda_worker.dart';
 import 'package:locorda_core/locorda_core.dart';
 
 final _log = Logger('WebWorkerEntryPoint');
+
+/// Sanitizes message data for logging by never exposing field values.
+///
+/// Returns a safe summary showing message type and field names only,
+/// without exposing sensitive values like private keys or tokens.
+String _sanitizeForLog(dynamic data) {
+  if (data is Map) {
+    final type = data['type'];
+    final channelFlag = data['__channel'];
+    final fieldCount = data.length;
+
+    // For channel messages, show the nested data type
+    if (channelFlag == true && data['data'] is Map) {
+      final nestedData = data['data'] as Map;
+      final nestedType = nestedData['type'];
+      return '__channel message: $nestedType (${nestedData.length} fields)';
+    }
+
+    return 'type: $type, fields: $fieldCount';
+  } else if (data is List) {
+    return 'List(${data.length} items)';
+  } else {
+    return data.runtimeType.toString();
+  }
+}
 
 /// Access to the global scope in a Web Worker.
 ///
@@ -40,6 +66,12 @@ external void _postMessage(JSAny? message);
 /// This sets up the message handler for the web worker's global scope
 /// and initializes the worker when the first setup message arrives.
 void startWebWorkerLoop(EngineParamsFactory setupFn) {
+  _log.info('Starting web worker');
+
+  // Create WorkerChannel early (like native implementation does)
+  final channel = WorkerChannel((message) {
+    _postMessage({'__channel': true, 'data': message}.jsify());
+  });
   WorkerContext? context;
   bool isInitializing = false;
 
@@ -47,21 +79,36 @@ void startWebWorkerLoop(EngineParamsFactory setupFn) {
   workerGlobalScope.addEventListener(
     'message',
     ((web.Event event) {
-      // Extract message data synchronously
+      // Extract and convert message data synchronously
       final messageEvent = event as web.MessageEvent;
-      final data = messageEvent.data.dartify();
+      final data = dartifyAndConvert(messageEvent.data);
 
-      if (data is! Map<String, dynamic>) return;
+      // Log sanitized message info (no sensitive data)
+      _log.fine('Worker received message: ${_sanitizeForLog(data)}');
 
-      // Handle message asynchronously (fire-and-forget pattern for event handlers)
+      if (data is! Map) {
+        _log.warning(
+            'Data is not a Map, it is ${data.runtimeType}. Ignoring message.');
+        return;
+      }
+
+      final messageData = data as Map<String,
+          dynamic>; // Check if this is a channel message - route directly to channel (like native impl)
+      if (messageData['__channel'] == true) {
+        channel.deliver(messageData['data']);
+        return;
+      }
+
+      // Handle framework messages asynchronously
       _handleWorkerMessage(
-        data,
+        messageData,
         () => context,
         (newContext) {
           context = newContext;
           isInitializing = false;
         },
         setupFn,
+        channel,
         () => isInitializing,
         () => isInitializing = true,
       ).catchError((e, st) {
@@ -90,6 +137,7 @@ Future<void> _handleWorkerMessage(
   WorkerContext? Function() getContext,
   void Function(WorkerContext) setContext,
   EngineParamsFactory engineParamsFactory,
+  WorkerChannel channel,
   bool Function() isInitializing,
   void Function() markInitializing,
 ) async {
@@ -110,28 +158,23 @@ Future<void> _handleWorkerMessage(
             'Expected InitConfig as first message, got: ${data['type']}');
       }
 
-      final config =
-          SyncEngineConfig.fromJson(data['config'] as Map<String, dynamic>);
+      _log.info('Worker initializing...');
 
-      // Create WorkerChannel for app-specific messages
-      final channel = WorkerChannel((message) {
-        _postMessage({'__channel': true, 'data': message}.jsify());
-      });
-
-      // Create WorkerContext
+      // Parse config (recursively convert JsLinkedHashMaps)
+      final configMap = data['config'] as Map<String, dynamic>;
+      final config = SyncEngineConfig.fromJson(
+          configMap); // Create context and initialize sync system
       final newContext = WorkerContext(WebWorkerSender(), channel);
-
-      // Initialize sync system
       final engineParams = await engineParamsFactory(config, newContext);
       final syncSystem =
           await SyncEngine.create(engineParams: engineParams, config: config);
       newContext.setSyncSystem(syncSystem);
 
-      // Store context
       setContext(newContext);
 
-      // Send 'ready' signal to main thread
+      // Send ready signal to main thread
       _postMessage('ready'.toJS);
+      _log.info('Worker initialized and ready');
     } catch (e, st) {
       // Send error to main thread
       _postMessage({
@@ -142,15 +185,9 @@ Future<void> _handleWorkerMessage(
       markInitializing();
     }
   } else {
-    // Worker is initialized - handle messages
+    // Worker is initialized - handle framework messages
     try {
-      // Check if it's a channel message
-      if (data['__channel'] == true) {
-        context.channel.deliver(data['data']);
-      } else {
-        // Framework message - handle normally
-        await context.handleMessage(data);
-      }
+      await context.handleMessage(data);
     } catch (e, st) {
       // Log but don't crash worker
       _log.severe('Error handling message: $e\n$st');

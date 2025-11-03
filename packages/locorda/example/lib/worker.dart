@@ -9,18 +9,19 @@
 /// The main thread only handles UI and communicates via messages.
 library;
 
+import 'package:locorda/worker.dart';
 import 'package:locorda_core/locorda_core.dart';
 import 'package:locorda_drift/locorda_drift.dart';
 import 'package:locorda_solid/locorda_solid.dart';
 import 'package:locorda_solid_auth_worker/worker.dart';
 import 'package:locorda_worker/locorda_worker.dart';
-import 'package:locorda/worker.dart';
 import 'package:personal_notes_app/utils/logging_setup.dart';
 
 /// Worker entry point for web workers.
 ///
 /// On web, the compiled JS is loaded and main() is called automatically.
 void main() {
+  print('2');
   workerMain(createEngineParams, workerInitializer: setupWorkerLogging);
 }
 
@@ -41,28 +42,18 @@ void main() {
 Future<EngineParams> createEngineParams(
   SyncEngineConfig config,
   WorkerContext context,
-) async {
-  // Setup SyncEngine in worker
-  // Config is already in SyncEngineConfig format (IRIs only, no Dart types)
-
-  final nativeOptions = await DriftNativeOptionsConnector.receiver(context);
-
-  final storage = await DriftStorage.create(
-    web: LocordaDriftWebOptions(
-      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-      driftWorker: Uri.parse('drift_worker.js'),
-    ),
-    native: nativeOptions,
-  );
-
-  final authProvider = SolidAuthConnector.receiver(context);
-
-  return EngineParams(
-    storage: storage,
-    backends: [
-      // Create auth provider that communicates with main thread
-      // This receives credentials from main thread and generates DPoP tokens locally
-      SolidBackend(auth: authProvider),
-    ],
-  );
-}
+) async =>
+    EngineParams(
+      storage: await DriftStorage.create(
+        web: LocordaDriftWebOptions(
+          sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+          driftWorker: Uri.parse('drift_worker.js'),
+        ),
+        native: await DriftNativeOptionsConnector.receiver(context),
+      ),
+      backends: [
+        // Create auth provider that communicates with main thread
+        // This receives credentials from main thread and generates DPoP tokens locally
+        SolidBackend(auth: SolidAuthConnector.receiver(context)),
+      ],
+    );

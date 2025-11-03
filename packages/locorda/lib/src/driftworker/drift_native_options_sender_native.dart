@@ -10,7 +10,7 @@ library;
 
 import 'dart:async';
 
-import 'package:locorda/src/driftworker/drift_native_options_receiver.dart';
+import 'package:locorda/src/driftworker/drift_native_options_receiver_native.dart';
 import 'package:locorda_worker/locorda_worker.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';

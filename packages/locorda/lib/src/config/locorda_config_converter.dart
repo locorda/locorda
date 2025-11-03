@@ -54,5 +54,8 @@ SyncEngineConfig toSyncEngineConfig(
       .map((resource) => _toResourceGraphConfig(resource, resourceTypeCache))
       .toList();
 
-  return SyncEngineConfig(resources: resources);
+  return SyncEngineConfig(
+    resources: resources,
+    autoSyncConfig: config.autoSyncConfig,
+  );
 }

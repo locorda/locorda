@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:locorda_core/locorda_core.dart';
+import 'package:logging/logging.dart';
 import 'package:web/web.dart' as web;
 
+import 'js_interop_utils.dart';
 import 'locorda_worker.dart';
+
+final _log = Logger('WebWorkerHandle');
 
 /// Web platform implementation using Web Workers (modern web API).
 class WebWorkerHandle implements LocordaWorker {
@@ -38,7 +42,9 @@ class WebWorkerHandle implements LocordaWorker {
         'message',
         (web.Event event) {
           final messageEvent = event as web.MessageEvent;
-          handle._controller.add(messageEvent.data);
+          // Convert JS objects to Dart objects (including nested structures)
+          final converted = dartifyAndConvert(messageEvent.data);
+          handle._controller.add(converted);
         }.toJS);
 
     // Set up error listener
@@ -52,13 +58,18 @@ class WebWorkerHandle implements LocordaWorker {
         }.toJS);
 
     // 2. Initialize plugins
+    _log.info('Initializing plugins...');
     await initializePlugins(handle);
 
     // 3. Send config
+    _log.info('Sending InitConfig to worker...');
     handle.sendMessage({'type': 'InitConfig', 'config': config.toJson()});
+    _log.info('InitConfig sent');
 
     // 4. Wait for ready
+    _log.info('Waiting for ready signal from worker...');
     await handle.messages.firstWhere((msg) => msg == 'ready');
+    _log.info('Worker is ready!');
 
     return handle;
   }

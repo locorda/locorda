@@ -2404,6 +2404,11 @@
     },
     ConstantMap: function ConstantMap() {
     },
+    ConstantMap_map_closure: function ConstantMap_map_closure(t0, t1, t2) {
+      this.$this = t0;
+      this.transform = t1;
+      this.result = t2;
+    },
     ConstantStringMap: function ConstantStringMap(t0, t1, t2) {
       this._jsIndex = t0;
       this._values = t1;
@@ -9524,6 +9529,13 @@
     CanonicalizedMap_keys_closure: function CanonicalizedMap_keys_closure(t0) {
       this.$this = t0;
     },
+    CanonicalizedMap_map_closure: function CanonicalizedMap_map_closure(t0, t1, t2, t3) {
+      var _ = this;
+      _.$this = t0;
+      _.transform = t1;
+      _.K2 = t2;
+      _.V2 = t3;
+    },
     CanonicalizedMap_putIfAbsent_closure: function CanonicalizedMap_putIfAbsent_closure(t0, t1, t2) {
       this.$this = t0;
       this.key = t1;
@@ -11880,86 +11892,6 @@
     },
     expectQuotedString_closure: function expectQuotedString_closure() {
     },
-    DriftNativeOptionsReceiver_receiver(context, timeout) {
-      return A.DriftNativeOptionsReceiver_receiver$body(context, timeout);
-    },
-    DriftNativeOptionsReceiver_receiver$body(context, timeout) {
-      var $async$goto = 0,
-        $async$completer = A._makeAsyncAwaitCompleter(type$.LocordaDriftNativeOptions),
-        $async$returnValue, $async$handler = 2, $async$errorStack = [], completer, subscription, t2, t3, exception, t1, $async$exception;
-      var $async$DriftNativeOptionsReceiver_receiver = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
-        if ($async$errorCode === 1) {
-          $async$errorStack.push($async$result);
-          $async$goto = $async$handler;
-        }
-        while (true)
-          switch ($async$goto) {
-            case 0:
-              // Function start
-              t1 = $.$get$_log7();
-              t1.log$4(B.Level_INFO_800, "Worker: Starting provider...", null, null);
-              completer = new A._AsyncCompleter(new A._Future($.Zone__current, type$._Future_LocordaDriftNativeOptions), type$._AsyncCompleter_LocordaDriftNativeOptions);
-              subscription = A._Cell$named("subscription");
-              t2 = context.channel;
-              t3 = t2._incomingController;
-              subscription.set$finalLocalValue(new A._BroadcastStream(t3, A._instanceType(t3)._eval$1("_BroadcastStream<1>")).listen$1(new A.DriftNativeOptionsReceiver_receiver_closure(completer, subscription)));
-              t1.log$4(B.Level_INFO_800, "Worker: Sending RequestDriftOptions via __channel...", null, null);
-              t3 = type$.String;
-              t2._sendMessage.call$1(A.LinkedHashMap_LinkedHashMap$_literal(["type", "RequestDriftOptions"], t3, t3));
-              t1.log$4(B.Level_INFO_800, "Worker: Request sent, waiting for response...", null, null);
-              $async$handler = 4;
-              $async$goto = 7;
-              return A._asyncAwait(completer.future.timeout$2$onTimeout(timeout, new A.DriftNativeOptionsReceiver_receiver_closure0(subscription, timeout)), $async$DriftNativeOptionsReceiver_receiver);
-            case 7:
-              // returning from await.
-              t1 = $async$result;
-              $async$returnValue = t1;
-              // goto return
-              $async$goto = 1;
-              break;
-              $async$handler = 2;
-              // goto after finally
-              $async$goto = 6;
-              break;
-            case 4:
-              // catch
-              $async$handler = 3;
-              $async$exception = $async$errorStack.pop();
-              subscription._readLocal$0().cancel$0();
-              throw $async$exception;
-              // goto after finally
-              $async$goto = 6;
-              break;
-            case 3:
-              // uncaught
-              // goto rethrow
-              $async$goto = 2;
-              break;
-            case 6:
-              // after finally
-            case 1:
-              // return
-              return A._asyncReturn($async$returnValue, $async$completer);
-            case 2:
-              // rethrow
-              return A._asyncRethrow($async$errorStack.at(-1), $async$completer);
-          }
-      });
-      return A._asyncStartSync($async$DriftNativeOptionsReceiver_receiver, $async$completer);
-    },
-    ResponseDriftOptionsMessage: function ResponseDriftOptionsMessage(t0, t1, t2) {
-      this.databaseDirectory = t0;
-      this.tempDirectoryPath = t1;
-      this.databasePath = t2;
-    },
-    DriftNativeOptionsReceiver_receiver_closure: function DriftNativeOptionsReceiver_receiver_closure(t0, t1) {
-      this.completer = t0;
-      this.subscription = t1;
-    },
-    DriftNativeOptionsReceiver_receiver_closure0: function DriftNativeOptionsReceiver_receiver_closure0(t0, t1) {
-      this.subscription = t0;
-      this.timeout = t1;
-    },
     ResourceConfigBase: function ResourceConfigBase() {
     },
     ConfigBase: function ConfigBase() {
@@ -12444,7 +12376,7 @@
       t1 = t2._eval$1("EfficientLengthMappedIterable<1,RdfObject>");
       remoteValues = A.LinkedHashSet_LinkedHashSet$of(new A.EfficientLengthMappedIterable(remoteTriples, t2._eval$1("RdfObject(1)")._as(new A._handleBothEmptyClocksTriples_closure0()), t1), t1._eval$1("Iterable.E"));
       if (!B.UnorderedIterableEquality_DefaultEquality.equals$2(localValues, remoteValues))
-        $.$get$_log26().log$4(B.Level_INFO_800, "Both clocks empty with different values. Local: " + localValues.toString$0(0) + ", Remote: " + remoteValues.toString$0(0) + ". This may occur with template resources. Local value wins.", null, null);
+        $.$get$_log25().log$4(B.Level_INFO_800, "Both clocks empty with different values. Local: " + localValues.toString$0(0) + ", Remote: " + remoteValues.toString$0(0) + ". This may occur with template resources. Local value wins.", null, null);
       return localTriples;
     },
     objectsIfSubjectNonNull(graph, subject, predicate) {
@@ -13639,7 +13571,7 @@
       identifyingPreds = identifyingPredicates.$index(0, blankNode);
       parentTriplesForNode = parentTriples.$index(0, blankNode);
       if (parentTriplesForNode == null || J.get$isEmpty$asx(parentTriplesForNode)) {
-        t1 = $.$get$_log22();
+        t1 = $.$get$_log21();
         t2 = blankNode.toString$0(0);
         t3 = B.JSString_methods.$mul("-", 40);
         t4 = $.$get$turtle();
@@ -14638,7 +14570,7 @@
         if (rdfSubject instanceof A.BlankNodeTerm)
           throw A.wrapException(A.StateError$("Statement subject cannot be a blank node in document " + documentIri.toString$0(0) + ": " + rdfSubject.toString$0(0)));
         if (rdfSubject == null) {
-          $.$get$_log27().log$4(B.Level_SEVERE_1000, "Could not find statement subject in document " + documentIri.toString$0(0) + " for statement identifier " + subject.toString$0(0), null, null);
+          $.$get$_log26().log$4(B.Level_SEVERE_1000, "Could not find statement subject in document " + documentIri.toString$0(0) + " for statement identifier " + subject.toString$0(0), null, null);
           continue;
         }
         rdfPredicate = A.RdfGraphExtensions__findSingleObject(graph, subject, B.IriTerm_uIa, false, B.ExpectationSeverity_1, t3);
@@ -15950,19 +15882,51 @@
       this.$this = t0;
       this.requestId = t1;
     },
+    _deepConvertJsObject(value) {
+      var t1;
+      if (type$.Map_dynamic_dynamic._is(value))
+        return value.map$2$1(0, new A._deepConvertJsObject_closure(), type$.String, type$.dynamic);
+      else if (type$.List_dynamic._is(value)) {
+        t1 = J.map$1$1$ax(value, A.js_interop_utils___deepConvertJsObject$closure(), type$.dynamic);
+        t1 = A.List_List$_of(t1, t1.$ti._eval$1("ListIterable.E"));
+        return t1;
+      }
+      return value;
+    },
+    _deepConvertJsObject_closure: function _deepConvertJsObject_closure() {
+    },
+    _sanitizeForLog(data) {
+      var type, channelFlag, fieldCount, nestedData,
+        t1 = type$.Map_dynamic_dynamic;
+      if (t1._is(data)) {
+        type = data.$index(0, "type");
+        channelFlag = data.$index(0, "__channel");
+        fieldCount = data.get$length(data);
+        if (J.$eq$(channelFlag, true) && t1._is(data.$index(0, "data"))) {
+          nestedData = t1._as(data.$index(0, "data"));
+          return "__channel message: " + A.S(nestedData.$index(0, "type")) + " (" + nestedData.get$length(nestedData) + " fields)";
+        }
+        return "type: " + A.S(type) + ", fields: " + fieldCount;
+      } else if (type$.List_dynamic._is(data))
+        return "List(" + J.get$length$asx(data) + " items)";
+      else
+        return A._rtiToString(J.get$runtimeType$(data)._rti, null);
+    },
     startWebWorkerLoop(setupFn) {
-      var t1 = {};
+      var t2, t1 = {};
+      $.$get$_log7().log$4(B.Level_INFO_800, "Starting web worker", null, null);
+      t2 = A.StreamController_StreamController$broadcast(false, type$.nullable_Object);
       t1.context = null;
       t1.isInitializing = false;
-      A._asJSObject(init.G.self).addEventListener("message", A._functionToJS1(new A.startWebWorkerLoop_closure(t1, setupFn)));
+      A._asJSObject(init.G.self).addEventListener("message", A._functionToJS1(new A.startWebWorkerLoop_closure(t1, new A.WorkerChannel(t2, new A.startWebWorkerLoop_closure0()), setupFn)));
     },
-    _handleWorkerMessage(data, getContext, setContext, engineParamsFactory, isInitializing, markInitializing) {
-      return A._handleWorkerMessage$body(data, getContext, setContext, engineParamsFactory, isInitializing, markInitializing);
+    _handleWorkerMessage(data, getContext, setContext, engineParamsFactory, channel, isInitializing, markInitializing) {
+      return A._handleWorkerMessage$body(data, getContext, setContext, engineParamsFactory, channel, isInitializing, markInitializing);
     },
-    _handleWorkerMessage$body(data, getContext, setContext, engineParamsFactory, isInitializing, markInitializing) {
+    _handleWorkerMessage$body(data, getContext, setContext, engineParamsFactory, channel, isInitializing, markInitializing) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
-        $async$returnValue, $async$handler = 2, $async$errorStack = [], config, channel, newContext, engineParams, syncSystem, e, st, e0, st0, t1, exception, t2, context, $async$exception, $async$exception1;
+        $async$returnValue, $async$handler = 2, $async$errorStack = [], configMap, config, newContext, engineParams, syncSystem, e, st, e0, st0, t1, exception, t2, context, $async$exception, $async$exception1;
       var $async$_handleWorkerMessage = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1) {
           $async$errorStack.push($async$result);
@@ -15978,7 +15942,7 @@
             case 3:
               // then
               if (isInitializing.call$0()) {
-                $.$get$_log8().log$4(B.Level_WARNING_900, "Received init message while already initializing", null, null);
+                $.$get$_log7().log$4(B.Level_WARNING_900, "Received init message while already initializing", null, null);
                 // goto return
                 $async$goto = 1;
                 break;
@@ -15989,8 +15953,10 @@
                 t1 = A.StateError$("Expected InitConfig as first message, got: " + A.S(data.$index(0, "type")));
                 throw A.wrapException(t1);
               }
-              config = A.SyncEngineConfig_SyncEngineConfig$fromJson(type$.Map_String_dynamic._as(data.$index(0, "config")));
-              channel = new A.WorkerChannel(A.StreamController_StreamController$broadcast(false, type$.nullable_Object), new A._handleWorkerMessage_closure());
+              t1 = $.$get$_log7();
+              t1.log$4(B.Level_INFO_800, "Worker initializing...", null, null);
+              configMap = type$.Map_String_dynamic._as(data.$index(0, "config"));
+              config = A.SyncEngineConfig_SyncEngineConfig$fromJson(configMap);
               newContext = new A.WorkerContext(new A.WebWorkerSender(), A.TurtleCodec$(B.C_TurtleDecoderOptions, B.TurtleEncoderOptions_ics, A.rdf_term_IriTerm___validated_tearOff$closure(), null), channel, A.LinkedHashMap_LinkedHashMap$_empty(type$.String, type$.StreamSubscription_Record_3_nullable_String_cursor_and_List_Record_2_IriTerm_and_RdfGraph_deletions_and_List_Record_2_IriTerm_and_RdfGraph_updates));
               $async$goto = 10;
               return A._asyncAwait(engineParamsFactory.call$2(config, newContext), $async$_handleWorkerMessage);
@@ -16005,6 +15971,7 @@
               newContext.setSyncSystem$1(syncSystem);
               setContext.call$1(newContext);
               init.G.self.postMessage("ready");
+              t1.log$4(B.Level_INFO_800, "Worker initialized and ready", null, null);
               $async$handler = 2;
               // goto after finally
               $async$goto = 9;
@@ -16036,22 +16003,10 @@
             case 5:
               // else
               $async$handler = 13;
-              $async$goto = J.$eq$(data.$index(0, "__channel"), true) ? 16 : 18;
-              break;
-            case 16:
-              // then
-              context.channel._incomingController.add$1(0, data.$index(0, "data"));
-              // goto join
-              $async$goto = 17;
-              break;
-            case 18:
-              // else
-              $async$goto = 19;
+              $async$goto = 16;
               return A._asyncAwait(context.handleMessage$1(data), $async$_handleWorkerMessage);
-            case 19:
+            case 16:
               // returning from await.
-            case 17:
-              // join
               $async$handler = 2;
               // goto after finally
               $async$goto = 15;
@@ -16062,7 +16017,7 @@
               $async$exception1 = $async$errorStack.pop();
               e0 = A.unwrapException($async$exception1);
               st0 = A.getTraceFromException($async$exception1);
-              $.$get$_log8().log$4(B.Level_SEVERE_1000, "Error handling message: " + A.S(e0) + "\n" + A.S(st0), null, null);
+              $.$get$_log7().log$4(B.Level_SEVERE_1000, "Error handling message: " + A.S(e0) + "\n" + A.S(st0), null, null);
               throw $async$exception1;
               // goto after finally
               $async$goto = 15;
@@ -16088,9 +16043,12 @@
     },
     WebWorkerSender: function WebWorkerSender() {
     },
-    startWebWorkerLoop_closure: function startWebWorkerLoop_closure(t0, t1) {
+    startWebWorkerLoop_closure0: function startWebWorkerLoop_closure0() {
+    },
+    startWebWorkerLoop_closure: function startWebWorkerLoop_closure(t0, t1, t2) {
       this._box_0 = t0;
-      this.setupFn = t1;
+      this.channel = t1;
+      this.setupFn = t2;
     },
     startWebWorkerLoop__closure: function startWebWorkerLoop__closure(t0) {
       this._box_0 = t0;
@@ -16105,8 +16063,6 @@
       this._box_0 = t0;
     },
     startWebWorkerLoop__closure3: function startWebWorkerLoop__closure3() {
-    },
-    _handleWorkerMessage_closure: function _handleWorkerMessage_closure() {
     },
     WorkerChannel: function WorkerChannel(t0, t1) {
       this._incomingController = t0;
@@ -21857,7 +21813,7 @@
               maxRetries = 3;
               log = log;
               if (log == null)
-                log = $.$get$_log18();
+                log = $.$get$_log17();
               attempt = 0;
               t1 = "Retrying " + debugOperationName + " (attempt ";
               t2 = type$.dynamic;
@@ -22104,12 +22060,13 @@
       return index + 3;
     },
     main() {
+      A.print("2");
       A.workerMain(A.worker__createEngineParams$closure(), A.logging_setup__setupWorkerLogging$closure());
     },
     createEngineParams(config, context) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.EngineParams),
-        $async$returnValue, storage, authProvider, t1, t2, t3, $async$temp1;
+        $async$returnValue, t3, t4, t5, t1, t2, $async$temp1;
       var $async$createEngineParams = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -22117,24 +22074,26 @@
           switch ($async$goto) {
             case 0:
               // Function start
+              t1 = A.Uri_parse("sqlite3.wasm");
+              t2 = A.Uri_parse("drift_worker.js");
               $async$temp1 = A;
               $async$goto = 4;
-              return A._asyncAwait(A.DriftNativeOptionsReceiver_receiver(context, B.Duration_5000000), $async$createEngineParams);
+              return A._asyncAwait(A.Future_Future$value(new A.LocordaDriftNativeOptions(), type$.LocordaDriftNativeOptions), $async$createEngineParams);
             case 4:
               // returning from await.
               $async$goto = 3;
-              return A._asyncAwait($async$temp1.DriftStorage_create($async$result, new A.LocordaDriftWebOptions(A.Uri_parse("sqlite3.wasm"), A.Uri_parse("drift_worker.js"))), $async$createEngineParams);
+              return A._asyncAwait($async$temp1.DriftStorage_create($async$result, new A.LocordaDriftWebOptions(t1, t2)), $async$createEngineParams);
             case 3:
               // returning from await.
-              storage = $async$result;
-              authProvider = A.SolidAuthReceiver$(context.channel);
-              t1 = A._setArrayType([], type$.JSArray_RemoteStorage);
-              t2 = A._createRetryClient();
-              t3 = A.RdfCore_RdfCore$withStandardCodecs(A.rdf_term_IriTerm___validated_tearOff$closure());
-              t1 = new A.SolidBackend(authProvider, A.rdf_term_IriTerm___validated_tearOff$closure(), new A.SolidClient(t2, authProvider, t3), t1);
-              B.JSArray_methods.add$1(authProvider._notifier._listeners, type$.void_Function._as(t1.get$_authStateChanged()));
-              t1._authStateChanged$0();
-              $async$returnValue = new A.EngineParams(storage, A._setArrayType([t1], type$.JSArray_Backend));
+              t2 = $async$result;
+              t1 = A.SolidAuthReceiver$(context.channel);
+              t3 = A._setArrayType([], type$.JSArray_RemoteStorage);
+              t4 = A._createRetryClient();
+              t5 = A.RdfCore_RdfCore$withStandardCodecs(A.rdf_term_IriTerm___validated_tearOff$closure());
+              t3 = new A.SolidBackend(t1, A.rdf_term_IriTerm___validated_tearOff$closure(), new A.SolidClient(t4, t1, t5), t3);
+              B.JSArray_methods.add$1(t1._notifier._listeners, type$.void_Function._as(t3.get$_authStateChanged()));
+              t3._authStateChanged$0();
+              $async$returnValue = new A.EngineParams(t2, A._setArrayType([t3], type$.JSArray_Backend));
               // goto return
               $async$goto = 1;
               break;
@@ -24638,6 +24597,11 @@
         };
       };
     },
+    map$2$1(_, transform, $K2, $V2) {
+      var result = A.LinkedHashMap_LinkedHashMap$_empty($K2, $V2);
+      this.forEach$1(0, new A.ConstantMap_map_closure(this, A._instanceType(this)._bind$1($K2)._bind$1($V2)._eval$1("MapEntry<1,2>(3,4)")._as(transform), result));
+      return result;
+    },
     update$3$ifAbsent(key, update, ifAbsent) {
       var t1 = A._instanceType(this);
       t1._precomputed1._as(key);
@@ -24646,6 +24610,16 @@
       A.ConstantMap__throwUnmodifiable();
     },
     $isMap: 1
+  };
+  A.ConstantMap_map_closure.prototype = {
+    call$2(key, value) {
+      var t1 = A._instanceType(this.$this),
+        entry = this.transform.call$2(t1._precomputed1._as(key), t1._rest[1]._as(value));
+      this.result.$indexSet(0, entry.key, entry.value);
+    },
+    $signature() {
+      return A._instanceType(this.$this)._eval$1("~(1,2)");
+    }
   };
   A.ConstantStringMap.prototype = {
     get$length(_) {
@@ -25363,7 +25337,7 @@
     call$1(o) {
       return this.getTag(o);
     },
-    $signature: 127
+    $signature: 52
   };
   A.initHooks_closure0.prototype = {
     call$2(o, tag) {
@@ -25375,7 +25349,7 @@
     call$1(tag) {
       return this.prototypeForTag(A._asString(tag));
     },
-    $signature: 126
+    $signature: 127
   };
   A._Record.prototype = {
     get$runtimeType(_) {
@@ -26060,7 +26034,7 @@
       t1.storedCallback = null;
       f.call$0();
     },
-    $signature: 17
+    $signature: 16
   };
   A._AsyncRun__initializeScheduleImmediate_closure.prototype = {
     call$1(callback) {
@@ -26214,7 +26188,7 @@
       var errorCode = this.controller.cancelationFuture != null ? 2 : 0;
       this.bodyFunction.call$2(errorCode, null);
     },
-    $signature: 17
+    $signature: 16
   };
   A._AsyncStarStreamController.prototype = {
     _AsyncStarStreamController$1(body, $T) {
@@ -26727,7 +26701,7 @@
         _this._future._completeErrorObject$1(new A.AsyncError(t2, t1));
       }
     },
-    $signature: 13
+    $signature: 12
   };
   A.Future_wait_closure.prototype = {
     call$1(value) {
@@ -27162,7 +27136,7 @@
     call$1(__wc0_formal) {
       this.joinedResult._completeWithResultOf$1(this.originalSource);
     },
-    $signature: 17
+    $signature: 16
   };
   A._Future__propagateToListeners_handleWhenCompleteCallback_closure0.prototype = {
     call$2(e, s) {
@@ -29673,13 +29647,13 @@
     call$2(k, v) {
       this.result.$indexSet(0, this.K._as(k), this.V._as(v));
     },
-    $signature: 123
+    $signature: 125
   };
   A.LinkedHashMap_LinkedHashMap$from_closure.prototype = {
     call$2(k, v) {
       this.result.$indexSet(0, this.K._as(k), this.V._as(v));
     },
-    $signature: 123
+    $signature: 125
   };
   A.LinkedList.prototype = {
     remove$1(_, entry) {
@@ -30130,7 +30104,7 @@
       t2 = A.S(v);
       t1._contents += t2;
     },
-    $signature: 46
+    $signature: 49
   };
   A.UnmodifiableMapBase.prototype = {};
   A._MapBaseValueIterable.prototype = {
@@ -30244,6 +30218,9 @@
     },
     get$entries() {
       return this._collection$_map.get$entries();
+    },
+    map$2$1(_, transform, $K2, $V2) {
+      return this._collection$_map.map$2$1(0, A._instanceType(this)._bind$1($K2)._bind$1($V2)._eval$1("MapEntry<1,2>(3,4)")._as(transform), $K2, $V2);
     },
     update$3$ifAbsent(key, update, ifAbsent) {
       var t1 = A._instanceType(this);
@@ -30763,7 +30740,7 @@
     call$1(each) {
       return this.$this.$index(0, A._asString(each));
     },
-    $signature: 126
+    $signature: 127
   };
   A._JsonMapKeyIterable.prototype = {
     get$length(_) {
@@ -30806,7 +30783,7 @@
       }
       return null;
     },
-    $signature: 120
+    $signature: 123
   };
   A._Utf8Decoder__decoderNonfatal_closure.prototype = {
     call$0() {
@@ -30818,7 +30795,7 @@
       }
       return null;
     },
-    $signature: 120
+    $signature: 123
   };
   A.AsciiCodec.prototype = {
     get$name() {
@@ -31378,7 +31355,7 @@
       B.JSArray_methods.$indexSet(t1, t2.i++, key);
       B.JSArray_methods.$indexSet(t1, t2.i++, value);
     },
-    $signature: 46
+    $signature: 49
   };
   A._JsonPrettyPrintMixin.prototype = {
     writeList$1(list) {
@@ -31442,7 +31419,7 @@
       B.JSArray_methods.$indexSet(t1, t2.i++, key);
       B.JSArray_methods.$indexSet(t1, t2.i++, value);
     },
-    $signature: 46
+    $signature: 49
   };
   A._JsonStringStringifier.prototype = {
     get$_partialResult() {
@@ -32473,7 +32450,7 @@
       hash ^= hash >>> 11;
       return hash + ((hash & 16383) << 15) & 536870911;
     },
-    $signature: 26
+    $signature: 20
   };
   A._BigIntImpl_toDouble_readBits.prototype = {
     call$1(n) {
@@ -32501,7 +32478,7 @@
       t1.cachedBitsLength = t5;
       return result;
     },
-    $signature: 26
+    $signature: 20
   };
   A._BigIntImpl_toDouble_roundUp.prototype = {
     call$0() {
@@ -32659,7 +32636,7 @@
         return 0;
       return A.int_parse(matched, null, null);
     },
-    $signature: 117
+    $signature: 120
   };
   A.DateTime_parse_parseMilliAndMicroseconds.prototype = {
     call$1(matched) {
@@ -32676,12 +32653,9 @@
       }
       return result;
     },
-    $signature: 117
+    $signature: 120
   };
   A.Duration.prototype = {
-    get$inSeconds() {
-      return B.JSInt_methods._tdivFast$1(this._duration, 1000000);
-    },
     get$inMicroseconds() {
       return this._duration;
     },
@@ -33182,13 +33156,13 @@
     call$2(msg, position) {
       throw A.wrapException(A.FormatException$("Illegal IPv4 address, " + msg, this.host, position));
     },
-    $signature: 348
+    $signature: 514
   };
   A.Uri_parseIPv6Address_error.prototype = {
     call$2(msg, position) {
       throw A.wrapException(A.FormatException$("Illegal IPv6 address, " + msg, this.host, position));
     },
-    $signature: 559
+    $signature: 560
   };
   A.Uri_parseIPv6Address_parseHex.prototype = {
     call$2(start, end) {
@@ -33880,7 +33854,7 @@
       } else
         return o;
     },
-    $signature: 35
+    $signature: 37
   };
   A.promiseToFuture_closure.prototype = {
     call$1(r) {
@@ -33941,7 +33915,7 @@
       }
       return o;
     },
-    $signature: 35
+    $signature: 37
   };
   A.NullRejectionException.prototype = {
     toString$0(_) {
@@ -34439,6 +34413,9 @@
     get$length(_) {
       return this._base.__js_helper$_length;
     },
+    map$2$1(_, transform, $K2, $V2) {
+      return this._base.map$2$1(0, new A.CanonicalizedMap_map_closure(this, this.$ti._bind$1($K2)._bind$1($V2)._eval$1("MapEntry<1,2>(CanonicalizedMap.K,CanonicalizedMap.V)")._as(transform), $K2, $V2), $K2, $V2);
+    },
     putIfAbsent$2(key, ifAbsent) {
       var _this = this,
         t1 = _this.$ti;
@@ -34509,6 +34486,17 @@
     },
     $signature() {
       return this.$this.$ti._eval$1("CanonicalizedMap.K(MapEntry<CanonicalizedMap.K,CanonicalizedMap.V>)");
+    }
+  };
+  A.CanonicalizedMap_map_closure.prototype = {
+    call$2(_, pair) {
+      var t1 = this.$this.$ti;
+      t1._eval$1("CanonicalizedMap.C")._as(_);
+      t1._eval$1("MapEntry<CanonicalizedMap.K,CanonicalizedMap.V>")._as(pair);
+      return this.transform.call$2(pair.key, pair.value);
+    },
+    $signature() {
+      return this.$this.$ti._bind$1(this.K2)._bind$1(this.V2)._eval$1("MapEntry<1,2>(CanonicalizedMap.C,MapEntry<CanonicalizedMap.K,CanonicalizedMap.V>)");
     }
   };
   A.CanonicalizedMap_putIfAbsent_closure.prototype = {
@@ -35412,13 +35400,13 @@
   A._RemoteStreamQueryStore_handleTableUpdates_closure.prototype = {
     call$1(_) {
     },
-    $signature: 17
+    $signature: 16
   };
   A._RemoteStreamQueryStore_handleTableUpdates_closure0.prototype = {
     call$1(e) {
       return A._asObject(e) instanceof A.ConnectionClosedException;
     },
-    $signature: 114
+    $signature: 115
   };
   A._RemoteStreamQueryStore_handleTableUpdates_closure1.prototype = {
     call$0() {
@@ -35865,7 +35853,7 @@
       t1.toString;
       return A._asInt(J.$index$asx(t1, index));
     },
-    $signature: 26
+    $signature: 20
   };
   A.DriftProtocol_decodePayload_readNullableInt.prototype = {
     call$1(index) {
@@ -35884,7 +35872,7 @@
       }
       return t1;
     },
-    $signature: 113
+    $signature: 114
   };
   A.Message.prototype = {};
   A.Request0.prototype = {
@@ -36575,7 +36563,7 @@
       type$.JSArray_nullable_Object._as(e);
       return e;
     },
-    $signature: 344
+    $signature: 345
   };
   A.WebProtocol__deserializeRequest_closure.prototype = {
     call$1(e) {
@@ -36606,7 +36594,7 @@
       }
       return new A.TableUpdate(t1, table);
     },
-    $signature: 345
+    $signature: 348
   };
   A.WebProtocol__serializeSelectResult_closure.prototype = {
     call$1(e) {
@@ -36971,7 +36959,7 @@
       type$.MultiStreamController_Set_TableUpdate._as(controller);
       this.engine.connection.streamQueries.updatesForSync$1(this.query).pipe$1(controller);
     },
-    $signature: 552
+    $signature: 553
   };
   A.DatabaseConnectionUser_doWhenOpened_closure.prototype = {
     call$1(_) {
@@ -36989,20 +36977,20 @@
     call$3(executor, sql, vars) {
       return executor.runUpdate$2(sql, vars);
     },
-    $signature: 128
+    $signature: 113
   };
   A.DatabaseConnectionUser_customInsert_closure.prototype = {
     call$3(executor, sql, vars) {
       return executor.runInsert$2(sql, vars);
     },
-    $signature: 128
+    $signature: 113
   };
   A.DatabaseConnectionUser__customWrite_closure.prototype = {
     call$1(v) {
       type$.Variable_Object._as(v);
       return A.BaseSqlType_mapToSqlParameter(this.ctx, v._customType, v.value, v.$ti._precomputed1);
     },
-    $signature: 103
+    $signature: 128
   };
   A.DatabaseConnectionUser__customWrite_closure0.prototype = {
     call$1(e) {
@@ -37323,7 +37311,7 @@
         t2 = A._instanceType(t1);
       return A.MappedIterable_MappedIterable(t1, t2._eval$1("String?(Iterable.E)")._as(new A.DriftRuntimeOptions_debugPrint__closure()), t2._eval$1("Iterable.E"), type$.nullable_String).forEach$1(0, A.core__print$closure());
     },
-    $signature: 100
+    $signature: 103
   };
   A.DriftRuntimeOptions_debugPrint__closure.prototype = {
     call$1(m) {
@@ -37624,7 +37612,7 @@
       var t1 = type$.nullable_Object;
       A.postEvent("drift:event", A.LinkedHashMap_LinkedHashMap$_literal(["subscription", this.id, "payload", B.C_DriftProtocol.encodePayload$1(new A.NotifyTablesUpdated(type$.Set_TableUpdate._as($event).toList$0(0)))], t1, t1));
     },
-    $signature: 98
+    $signature: 100
   };
   A.DriftServiceExtension__handle_closure1.prototype = {
     call$1(rows) {
@@ -37665,7 +37653,7 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 16
+    $signature: 18
   };
   A.DriftServiceExtension__handle_closure4.prototype = {
     call$0() {
@@ -37722,7 +37710,7 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 16
+    $signature: 18
   };
   A.DriftServiceExtension_registerIfNeeded_closure.prototype = {
     call$2(method, parameters) {
@@ -37978,7 +37966,7 @@
       t1._log$2(t2, t3);
       return t1.get$impl().runUpdate$2(t2, t3);
     },
-    $signature: 96
+    $signature: 98
   };
   A._BaseExecutor_runInsert_closure.prototype = {
     call$0() {
@@ -37988,7 +37976,7 @@
       t1._log$2(t2, t3);
       return t1.get$impl().runInsert$2(t2, t3);
     },
-    $signature: 96
+    $signature: 98
   };
   A._BaseExecutor_runCustom_closure.prototype = {
     call$0() {
@@ -38201,7 +38189,7 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 16
+    $signature: 18
   };
   A._StatementBasedTransactionExecutor_ensureOpen_closure0.prototype = {
     call$0() {
@@ -38474,7 +38462,7 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 16
+    $signature: 18
   };
   A.QueryResult.prototype = {
     get$asMap(_) {
@@ -38934,7 +38922,7 @@
       if (t1._stream_queries$_listeners.length - t1._pausedListeners > 0)
         t1.fetchAndEmitData$0();
     },
-    $signature: 98
+    $signature: 100
   };
   A.QueryStream__onCancelOrPause_closure.prototype = {
     call$0() {
@@ -39900,7 +39888,7 @@
       });
       return A._asyncStartSync($async$call$1, $async$completer);
     },
-    $signature: 93
+    $signature: 95
   };
   A.InsertStatement_insertOnConflictUpdate_closure.prototype = {
     call$1(_) {
@@ -39940,7 +39928,7 @@
         t3._contents += ")";
       }
     },
-    $signature: 212
+    $signature: 213
   };
   A.InsertMode.prototype = {
     _enumToString$0() {
@@ -40087,7 +40075,7 @@
       type$.Variable_Object._as(v);
       return A.BaseSqlType_mapToSqlParameter(this.ctx, v._customType, v.value, v.$ti._precomputed1);
     },
-    $signature: 103
+    $signature: 128
   };
   A.CustomSelectStatement__executeRaw_closure.prototype = {
     call$1(e) {
@@ -40562,7 +40550,7 @@
       else
         return "c" + t1._columnAliases.__js_helper$_length;
     },
-    $signature: 32
+    $signature: 34
   };
   A.JoinedSelectStatement__getRaw_closure.prototype = {
     call$1(e) {
@@ -40801,7 +40789,7 @@
       });
       return A._asyncStartSync($async$call$1, $async$completer);
     },
-    $signature: 93
+    $signature: 95
   };
   A._CustomSelectStatement_Object_Selectable.prototype = {};
   A._JoinedSelectStatement_Query_LimitContainerMixin.prototype = {};
@@ -41249,7 +41237,7 @@
       else
         return null;
     },
-    $signature: 92
+    $signature: 93
   };
   A.MapAndAwait_mapAsyncAndAwait_closure.prototype = {
     call$1(e) {
@@ -41404,7 +41392,7 @@
         }
       }
     },
-    $signature: 31
+    $signature: 32
   };
   A.WebPortToChannel_channel_closure0.prototype = {
     call$1(e) {
@@ -41827,7 +41815,7 @@
       if (this._box_0.subscription != null)
         this.listener.addSync$1(new A.WorkerError("Worker emitted an error through onError."));
     },
-    $signature: 31
+    $signature: 32
   };
   A._readMessages__closure0.prototype = {
     call$0() {
@@ -41868,7 +41856,7 @@
       t1 = transfer == null ? B.List_empty6 : transfer;
       this.worker.postMessage(msg, t1);
     },
-    $signature: 90
+    $signature: 92
   };
   A.WasmInitializationMessage_sendToPort_closure.prototype = {
     call$2(msg, transfer) {
@@ -41877,7 +41865,7 @@
       t1 = transfer == null ? B.List_empty6 : transfer;
       this.port.postMessage(msg, t1);
     },
-    $signature: 90
+    $signature: 92
   };
   A.CompatibilityResult.prototype = {};
   A.SharedWorkerCompatibilityResult.prototype = {
@@ -42678,12 +42666,12 @@
     call$1(_) {
       type$.List_int._as(_);
     },
-    $signature: 85
+    $signature: 71
   };
   A.RetryClient_send_closure0.prototype = {
     call$1(_) {
     },
-    $signature: 17
+    $signature: 16
   };
   A.RequestAbortedException.prototype = {};
   A.BaseClient.prototype = {
@@ -42935,14 +42923,14 @@
     call$1(_) {
       return null;
     },
-    $signature: 17
+    $signature: 16
   };
   A._readBody_closure0.prototype = {
     call$1(_) {
       A._asObject(_);
       return this._box_0.isError;
     },
-    $signature: 114
+    $signature: 115
   };
   A.ByteStream.prototype = {
     toBytes$0() {
@@ -42957,7 +42945,7 @@
     call$1(bytes) {
       return this.completer.complete$1(new Uint8Array(A._ensureNativeList(type$.List_int._as(bytes))));
     },
-    $signature: 85
+    $signature: 71
   };
   A.ClientException.prototype = {
     toString$0(_) {
@@ -43136,7 +43124,7 @@
     call$1(match) {
       return "\\" + A.S(match.$index(0, 0));
     },
-    $signature: 30
+    $signature: 43
   };
   A.expectQuotedString_closure.prototype = {
     call$1(match) {
@@ -43144,46 +43132,7 @@
       t1.toString;
       return t1;
     },
-    $signature: 30
-  };
-  A.ResponseDriftOptionsMessage.prototype = {
-    toJson$0() {
-      var t2,
-        t1 = A.LinkedHashMap_LinkedHashMap$_empty(type$.String, type$.dynamic);
-      t1.$indexSet(0, "type", "ResponseDriftOptions");
-      t2 = this.databaseDirectory;
-      if (t2 != null)
-        t1.$indexSet(0, "databaseDirectory", t2);
-      t2 = this.tempDirectoryPath;
-      if (t2 != null)
-        t1.$indexSet(0, "tempDirectoryPath", t2);
-      t2 = this.databasePath;
-      if (t2 != null)
-        t1.$indexSet(0, "databasePath", t2);
-      return t1;
-    }
-  };
-  A.DriftNativeOptionsReceiver_receiver_closure.prototype = {
-    call$1(message) {
-      var _null = null,
-        t1 = $.$get$_log7();
-      t1.log$4(B.Level_FINE_500, "Worker: Received __channel message: " + A.S(type$.Map_dynamic_dynamic._is(message) ? message.$index(0, "type") : J.get$runtimeType$(message)), _null, _null);
-      if (type$.Map_String_dynamic._is(message) && J.$eq$(message.$index(0, "type"), "ResponseDriftOptions")) {
-        t1.log$4(B.Level_INFO_800, "Worker: Got ResponseDriftOptions from __channel!", _null, _null);
-        t1.log$4(B.Level_FINE_500, "Worker: Parsed response: databaseDirectory=" + A.S(A._asStringQ(message.$index(0, "databaseDirectory"))) + ", tempDirectory=" + A.S(A._asStringQ(message.$index(0, "tempDirectoryPath"))) + ", databasePath=" + A.S(A._asStringQ(message.$index(0, "databasePath"))), _null, _null);
-        t1.log$4(B.Level_INFO_800, "Worker: Completing with LocordaDriftNativeOptions", _null, _null);
-        this.completer.complete$1(new A.LocordaDriftNativeOptions());
-        this.subscription._readLocal$0().cancel$0();
-      }
-    },
-    $signature: 4
-  };
-  A.DriftNativeOptionsReceiver_receiver_closure0.prototype = {
-    call$0() {
-      this.subscription._readLocal$0().cancel$0();
-      throw A.wrapException(A.TimeoutException$("DriftNativeOptionsConnector: No response received from main thread after " + this.timeout.get$inSeconds() + "s.\n\nDid you forget to register the plugin?\n\nAdd this to your Locorda.createWithWorker() call:\n  plugins: [\n    DriftNativeOptionsConnector.sender(),\n  ],\n", null));
-    },
-    $signature: 20
+    $signature: 43
   };
   A.ResourceConfigBase.prototype = {};
   A.ConfigBase.prototype = {};
@@ -43285,7 +43234,7 @@
     call$1(p) {
       return type$.IriTerm._as(p).value;
     },
-    $signature: 15
+    $signature: 11
   };
   A.FullIndexData.prototype = {
     toJson$0() {
@@ -43321,13 +43270,13 @@
     call$1(gp) {
       return A.GroupingProperty_GroupingProperty$fromJson(type$.Map_String_dynamic._as(gp));
     },
-    $signature: 354
+    $signature: 349
   };
   A.GroupIndexData_toJson_closure.prototype = {
     call$1(gp) {
       return type$.GroupingProperty._as(gp).toJson$0();
     },
-    $signature: 479
+    $signature: 355
   };
   A.DocumentIriTemplate.prototype = {
     toJson$0() {
@@ -43363,7 +43312,7 @@
       t1.toString;
       return t1;
     },
-    $signature: 505
+    $signature: 480
   };
   A.ResourceConfigData.prototype = {
     get$indicesInOrder() {
@@ -43405,7 +43354,7 @@
       t1._as(b);
       return B.JSString_methods.compareTo$1(a.get$localName(), b.get$localName());
     },
-    $signature: 512
+    $signature: 506
   };
   A.ResourceConfigData_getIndexByName_closure.prototype = {
     call$1(i) {
@@ -43417,7 +43366,7 @@
     call$0() {
       return A.throwExpression(A.ArgumentError$("No index found with localName: " + this.localName, null));
     },
-    $signature: 20
+    $signature: 27
   };
   A.ResourceConfigData_toJson_closure.prototype = {
     call$1(index) {
@@ -43429,7 +43378,7 @@
       t2.$indexSet(0, "type", t1 ? "FullIndex" : "GroupIndex");
       return t2;
     },
-    $signature: 530
+    $signature: 531
   };
   A.SyncEngineConfig.prototype = {
     get$resourcesInSyncOrder() {
@@ -43513,7 +43462,7 @@
         return 1;
       return B.JSString_methods.compareTo$1(t1, t2);
     },
-    $signature: 545
+    $signature: 546
   };
   A.SyncEngineConfig_allIndicesInOrder_closure.prototype = {
     call$1(r) {
@@ -43523,25 +43472,25 @@
       t2 = A._arrayInstanceType(t1);
       return new A.MappedListIterable(t1, t2._eval$1("+(CrdtIndexData,IriTerm)(1)")._as(new A.SyncEngineConfig_allIndicesInOrder__closure(r)), t2._eval$1("MappedListIterable<1,+(CrdtIndexData,IriTerm)>"));
     },
-    $signature: 546
+    $signature: 547
   };
   A.SyncEngineConfig_allIndicesInOrder__closure.prototype = {
     call$1(i) {
       return new A._Record_2(type$.CrdtIndexData._as(i), this.r.typeIri);
     },
-    $signature: 547
+    $signature: 548
   };
   A.SyncEngineConfig_SyncEngineConfig$fromJson_closure.prototype = {
     call$1(r) {
       return A.ResourceConfigData_ResourceConfigData$fromJson(type$.Map_String_dynamic._as(r));
     },
-    $signature: 548
+    $signature: 549
   };
   A.SyncEngineConfig_toJson_closure.prototype = {
     call$1(r) {
       return type$.ResourceConfigData._as(r).toJson$0();
     },
-    $signature: 550
+    $signature: 551
   };
   A.SyncEngineConfig_getResourceConfig_closure.prototype = {
     call$1(r) {
@@ -43554,7 +43503,7 @@
     call$0() {
       return A.throwExpression(A.ArgumentError$("No resource config found for type: " + this.type.toString$0(0), null));
     },
-    $signature: 20
+    $signature: 27
   };
   A.SyncEngineConfigValidator.prototype = {
     _validateResourceUniqueness$2(config, result) {
@@ -43575,7 +43524,7 @@
     call$1(c) {
       return type$.ResourceConfigBase._as(c).typeIri.value;
     },
-    $signature: 557
+    $signature: 558
   };
   A.ValidationResult.prototype = {
     addError$3$context$details(message, context, details) {
@@ -43746,7 +43695,7 @@
     call$2(key, value) {
       return new A.MapEntry(type$.RdfPredicate._as(key), type$.Set_RdfObject._as(value).toList$0(0), type$.MapEntry_of_RdfPredicate_and_Iterable_RdfObject);
     },
-    $signature: 560
+    $signature: 561
   };
   A.MetadataStatementKey.prototype = {};
   A.SubjectMetadataStatement.prototype = {
@@ -43814,19 +43763,19 @@
       }
       return acc;
     },
-    $signature: 563
+    $signature: 564
   };
   A.MergeResults_join__closure.prototype = {
     call$1(existing) {
       return type$.MetadataStatement._as(existing).merge$1(this.entry.value);
     },
-    $signature: 564
+    $signature: 565
   };
   A.MergeResults_join__closure0.prototype = {
     call$0() {
       return this.entry.value;
     },
-    $signature: 580
+    $signature: 581
   };
   A.subjectAndInlineTriples_closure.prototype = {
     call$2(triple, depth) {
@@ -43850,7 +43799,7 @@
       }
       return t1;
     },
-    $signature: 18
+    $signature: 19
   };
   A._RdfObjectComparison.prototype = {
     _enumToString$0() {
@@ -43890,7 +43839,7 @@
         A.throwExpression(A.StateError$(obj.toString$0(0) + " is not numeric"));
       return new A._Record_2(obj, A.LiteralTermExtensions_get_numericValue(obj));
     },
-    $signature: 633
+    $signature: 634
   };
   A._RdfObjectComparison__max_closure0.prototype = {
     call$2(a, b) {
@@ -43899,7 +43848,7 @@
       t1._as(b);
       return a._1 > b._1 ? a : b;
     },
-    $signature: 634
+    $signature: 635
   };
   A._RdfObjectComparison__max_closure1.prototype = {
     call$1(obj) {
@@ -44051,13 +44000,13 @@
     call$1(bnode) {
       return A.subjectAndInlineTriples(this.local, type$.BlankNodeTerm._as(bnode));
     },
-    $signature: 75
+    $signature: 78
   };
   A.addInlineTriples_closure0.prototype = {
     call$1(bnode) {
       return A.subjectAndInlineTriples(this.remote, type$.BlankNodeTerm._as(bnode));
     },
-    $signature: 75
+    $signature: 78
   };
   A.Immutable.prototype = {
     get$iri() {
@@ -44227,13 +44176,13 @@
     call$1(v) {
       return A._identify(type$.RdfObject._as(v), this.newPropertyValue._values[1]);
     },
-    $signature: 74
+    $signature: 75
   };
   A.OrSet_localValueChange_closure0.prototype = {
     call$1(v) {
       return A._identify(type$.RdfObject._as(v), this.oldPropertyValue._values[1]);
     },
-    $signature: 74
+    $signature: 75
   };
   A.OrSet_localValueChange_closure1.prototype = {
     call$1(value) {
@@ -44286,19 +44235,19 @@
     call$1(t) {
       return type$.Triple._as(t).subject;
     },
-    $signature: 29
+    $signature: 28
   };
   A._findStatementTriplesToRemove_closure0.prototype = {
     call$1(t) {
       return type$.Triple._as(t).subject;
     },
-    $signature: 29
+    $signature: 28
   };
   A._findStatementTriplesToRemove_closure1.prototype = {
     call$1(t) {
       return type$.Triple._as(t).subject;
     },
-    $signature: 29
+    $signature: 28
   };
   A._findStatementTriplesToRemove_closure2.prototype = {
     call$1(subj) {
@@ -44335,25 +44284,25 @@
     call$1(v) {
       return !(type$.RdfObject._as(v) instanceof A.BlankNodeTerm);
     },
-    $signature: 19
+    $signature: 17
   };
   A._handleIdenticalClocksTriples_closure2.prototype = {
     call$1(v) {
       return !(type$.RdfObject._as(v) instanceof A.BlankNodeTerm);
     },
-    $signature: 19
+    $signature: 17
   };
   A._handleIdenticalClocksTriples_closure3.prototype = {
     call$1(v) {
       return this.localGraph.subgraph$1(type$.RdfSubject._as(v));
     },
-    $signature: 73
+    $signature: 74
   };
   A._handleIdenticalClocksTriples_closure4.prototype = {
     call$1(v) {
       return this.remoteGraph.subgraph$1(type$.RdfSubject._as(v));
     },
-    $signature: 73
+    $signature: 74
   };
   A._handleIdenticalClocksTriples_closure5.prototype = {
     call$1(g) {
@@ -44411,7 +44360,7 @@
     call$1(t) {
       return type$.Triple._as(t).predicate;
     },
-    $signature: 72
+    $signature: 73
   };
   A._constructCrdtDocument_closure1.prototype = {
     call$2(t, depth) {
@@ -44421,7 +44370,7 @@
       t1 = t.predicate;
       return t1.value !== string$.https_sh && this.allManagedDocumentLevelPredicates.contains$1(0, t1) ? B.TraversalDecision_1 : B.TraversalDecision_0;
     },
-    $signature: 18
+    $signature: 19
   };
   A.CrdtDocumentManager.prototype = {
     save$4$logicalTime$physicalTime(type, appData, logicalTime, physicalTime) {
@@ -44452,11 +44401,11 @@
                 t1 = A.unwrapException(exception);
                 if (t1 instanceof A.ArgumentError) {
                   e = t1;
-                  $.$get$_log14().log$4(B.Level_SEVERE_1000, "Invalid resource configuration for type " + type.toString$0(0) + ": " + A.S(e), null, null);
+                  $.$get$_log13().log$4(B.Level_SEVERE_1000, "Invalid resource configuration for type " + type.toString$0(0) + ": " + A.S(e), null, null);
                   throw exception;
                 } else if (t1 instanceof A.StateError) {
                   e0 = t1;
-                  $.$get$_log14().log$4(B.Level_SEVERE_1000, "Multiple or no resources of type " + type.toString$0(0) + " found in graph: " + A.S(e0), null, null);
+                  $.$get$_log13().log$4(B.Level_SEVERE_1000, "Multiple or no resources of type " + type.toString$0(0) + " found in graph: " + A.S(e0), null, null);
                   throw A.wrapException(A.ArgumentError$("Graph must contain exactly one resource of type " + type.toString$0(0), null));
                 } else
                   throw exception;
@@ -44558,7 +44507,7 @@
               $async$handler = 3;
               $async$exception = $async$errorStack.pop();
               e = A.unwrapException($async$exception);
-              $.$get$_log14().log$4(B.Level_WARNING_900, "Failed to load existing document " + documentIri.toString$0(0) + ": " + A.S(e), null, null);
+              $.$get$_log13().log$4(B.Level_WARNING_900, "Failed to load existing document " + documentIri.toString$0(0) + ": " + A.S(e), null, null);
               // goto after finally
               $async$goto = 6;
               break;
@@ -44634,7 +44583,7 @@
                 throw A.wrapException(t1);
               }
               A._validateResourceGraph(documentIri, resourceIri, type, appData);
-              t2 = $.$get$_log14();
+              t2 = $.$get$_log13();
               t3 = $.$get$IriTermExtensions__debugStringCache();
               t2.log$4(B.Level_FINE_500, "Saving resource " + t3.putIfAbsent$2(resourceIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + " to document " + t3.putIfAbsent$2(documentIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
               clock = $async$self._hlcService.createOrIncrementClock$4$logicalTime$physicalTime(oldFrameworkGraph, documentIri, logicalTime, physicalTime);
@@ -44711,7 +44660,7 @@
                 throw $async$exception;
               else {
                 e = t1;
-                $.$get$_log14().log$4(B.Level_SEVERE_1000, "Failed to save document " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(documentIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + " to storage: " + A.S(e), null, null);
+                $.$get$_log13().log$4(B.Level_SEVERE_1000, "Failed to save document " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(documentIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + " to storage: " + A.S(e), null, null);
                 throw $async$exception;
               }
               // goto after finally
@@ -44747,7 +44696,7 @@
               if (t1 instanceof A.UnidentifiedBlankNodeException) {
                 e0 = t1;
                 stackTrace = A.getTraceFromException($async$exception1);
-                $.$get$_log14().log$4(B.Level_SEVERE_1000, "Save operation failed for type " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(type, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), e0, type$.nullable_StackTrace._as(stackTrace));
+                $.$get$_log13().log$4(B.Level_SEVERE_1000, "Save operation failed for type " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(type, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), e0, type$.nullable_StackTrace._as(stackTrace));
                 blankNode = e0.blankNode;
                 $async$self._throwIfUsedIn$4(stackTrace, "Old Document", oldDocument, blankNode);
                 $async$self._throwIfUsedIn$4(stackTrace, "New App Data", appData, blankNode);
@@ -44757,7 +44706,7 @@
               } else {
                 e1 = t1;
                 stackTrace0 = A.getTraceFromException($async$exception1);
-                $.$get$_log14().log$4(B.Level_SEVERE_1000, "Save operation failed for type " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(type, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), e1, type$.nullable_StackTrace._as(stackTrace0));
+                $.$get$_log13().log$4(B.Level_SEVERE_1000, "Save operation failed for type " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(type, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), e1, type$.nullable_StackTrace._as(stackTrace0));
                 throw $async$exception1;
               }
               // goto after finally
@@ -44932,7 +44881,7 @@
     call$1(t) {
       return type$.RdfSubject._as(type$.Triple._as(t).object);
     },
-    $signature: 29
+    $signature: 28
   };
   A.HlcService__extractCrdtClock_closure0.prototype = {
     call$1(clockEntrySubject) {
@@ -45265,7 +45214,7 @@
       t2 = type$.JSArray_IriTerm;
       B.JSArray_methods.add$1(watchSubscriptions, t1.watchIndexEntries$2$cursorTimestamp$indexIris(_null, A._setArrayType([fullIndicesIndexIri], t2)).listen$2$onError(new A.IndexDiscovery__initializeWatches_closure(_this), new A.IndexDiscovery__initializeWatches_closure0()));
       B.JSArray_methods.add$1(watchSubscriptions, t1.watchIndexEntries$2$cursorTimestamp$indexIris(_null, A._setArrayType([groupIndexTemplatesIndexIri], t2)).listen$2$onError(new A.IndexDiscovery__initializeWatches_closure1(_this), new A.IndexDiscovery__initializeWatches_closure2()));
-      $.$get$_log16().log$4(B.Level_FINE_500, "Initialized index-of-indices watches", _null, _null);
+      $.$get$_log15().log$4(B.Level_FINE_500, "Initialized index-of-indices watches", _null, _null);
       return watchSubscriptions;
     },
     _updateIndexMetadataCache$3(entries, cache, indexTypeName) {
@@ -45289,7 +45238,7 @@
                 if (t9.isDeleted) {
                   $async$self._removeIndexFromCache$2(cache, indexIri);
                   t5.remove$1(0, t4._as(indexIri.value));
-                  $.$get$_log16().log$4(B.Level_FINE_500, t8 + indexIri.toString$0(0), null, null);
+                  $.$get$_log15().log$4(B.Level_FINE_500, t8 + indexIri.toString$0(0), null, null);
                   continue;
                 }
                 t9 = t9.headerProperties;
@@ -45306,7 +45255,7 @@
                 if (!(indexedClass instanceof A.IriTerm))
                   throw A.wrapException(A.StateError$(indexTypeName + " idx:indexesClass is not an IRI: " + indexIri.toString$0(0) + " \u2192 " + indexedClass.toString$0(0)));
                 if (!$async$self._isConfiguredResourceType$1(indexedClass)) {
-                  $.$get$_log16().log$4(B.Level_FINE_500, t7 + indexedClass.toString$0(0), null, null);
+                  $.$get$_log15().log$4(B.Level_FINE_500, t7 + indexedClass.toString$0(0), null, null);
                   continue;
                 }
                 metadataSet = cache.putIfAbsent$2(indexedClass, new A.IndexDiscovery__updateIndexMetadataCache_closure());
@@ -45316,9 +45265,9 @@
                 cachedEntry = t3.$index(0, t9);
                 if (cachedEntry != null && cachedEntry.clockHash !== clockHash) {
                   t5.remove$1(0, t4._as(t9));
-                  $.$get$_log16().log$4(B.Level_FINE_500, t6 + indexIri.toString$0(0) + " (clockHash changed)", null, null);
+                  $.$get$_log15().log$4(B.Level_FINE_500, t6 + indexIri.toString$0(0) + " (clockHash changed)", null, null);
                 }
-                $.$get$_log16().log$4(B.Level_FINE_500, t2 + indexedClass.toString$0(0) + " \u2192 " + indexIri.toString$0(0) + " (clockHash: " + clockHash + ")", null, null);
+                $.$get$_log15().log$4(B.Level_FINE_500, t2 + indexedClass.toString$0(0) + " \u2192 " + indexIri.toString$0(0) + " (clockHash: " + clockHash + ")", null, null);
               }
               // implicit return
               return A._asyncReturn(null, $async$completer);
@@ -45367,7 +45316,7 @@
               templateMetadata = $async$self._indexedClassToTemplateMetadata.$index(0, indexedClass);
               if (templateMetadata == null)
                 templateMetadata = A.LinkedHashSet_LinkedHashSet$_empty(type$._IndexMetadata);
-              $.$get$_log16().log$4(B.Level_FINE_500, "Discovered " + fullIndexMetadata.get$length(fullIndexMetadata) + " FullIndex + " + templateMetadata.get$length(templateMetadata) + " GroupIndexTemplate for " + indexedClass.toString$0(0), null, null);
+              $.$get$_log15().log$4(B.Level_FINE_500, "Discovered " + fullIndexMetadata.get$length(fullIndexMetadata) + " FullIndex + " + templateMetadata.get$length(templateMetadata) + " GroupIndexTemplate for " + indexedClass.toString$0(0), null, null);
               t2 = fullIndexMetadata.get$iterator(fullIndexMetadata), t3 = $async$self.get$_loadAndParseFullIndex(), t4 = type$.FullIndexData;
             case 3:
               // for condition
@@ -45451,16 +45400,16 @@
               cachedEntry = t1.$index(0, t2);
               t3 = cachedEntry != null;
               if (t3 && cachedEntry.clockHash === expectedClockHash) {
-                $.$get$_log16().log$4(B.Level_FINE_500, "Cache hit for " + indexTypeName + ": " + indexIri.toString$0(0), null, null);
+                $.$get$_log15().log$4(B.Level_FINE_500, "Cache hit for " + indexTypeName + ": " + indexIri.toString$0(0), null, null);
                 $async$returnValue = $T._as(cachedEntry.config);
                 // goto return
                 $async$goto = 1;
                 break;
               }
               if (t3)
-                $.$get$_log16().log$4(B.Level_FINE_500, "Cache stale for " + indexTypeName + ": " + indexIri.toString$0(0) + " (expected: " + expectedClockHash + ", cached: " + cachedEntry.clockHash + ")", null, null);
+                $.$get$_log15().log$4(B.Level_FINE_500, "Cache stale for " + indexTypeName + ": " + indexIri.toString$0(0) + " (expected: " + expectedClockHash + ", cached: " + cachedEntry.clockHash + ")", null, null);
               else
-                $.$get$_log16().log$4(B.Level_FINE_500, "Cache miss for " + indexTypeName + ": " + indexIri.toString$0(0), null, null);
+                $.$get$_log15().log$4(B.Level_FINE_500, "Cache miss for " + indexTypeName + ": " + indexIri.toString$0(0), null, null);
               $async$goto = 3;
               return A._asyncAwait(loader.call$2(indexIri, mode), $async$_getOrLoadIndexConfig$1$4$mode);
             case 3:
@@ -45504,7 +45453,7 @@
                 message = indexTypeName + " document not found: " + documentIri.toString$0(0);
                 if (mode === B.ShardDeterminationMode_0)
                   throw A.wrapException(A.StateError$(message + " (strict mode)"));
-                $.$get$_log16().log$4(B.Level_WARNING_900, message + " (lenient mode)", null, null);
+                $.$get$_log15().log$4(B.Level_WARNING_900, message + " (lenient mode)", null, null);
                 $async$returnValue = null;
                 // goto return
                 $async$goto = 1;
@@ -45518,7 +45467,7 @@
                     t1 = A.StateError$(A.S(message) + " (strict mode)");
                     throw A.wrapException(t1);
                   }
-                  $.$get$_log16().log$4(B.Level_WARNING_900, A.S(message) + " (lenient mode)", null, null);
+                  $.$get$_log15().log$4(B.Level_WARNING_900, A.S(message) + " (lenient mode)", null, null);
                   $async$returnValue = null;
                   // goto return
                   $async$goto = 1;
@@ -45533,10 +45482,10 @@
                 st = A.getTraceFromException(exception);
                 message0 = "Error parsing " + indexTypeName + ": " + indexIri.toString$0(0);
                 if (mode === B.ShardDeterminationMode_0) {
-                  $.$get$_log16().log$4(B.Level_SEVERE_1000, A.S(message0) + " (strict mode)", e, type$.nullable_StackTrace._as(st));
+                  $.$get$_log15().log$4(B.Level_SEVERE_1000, A.S(message0) + " (strict mode)", e, type$.nullable_StackTrace._as(st));
                   throw exception;
                 }
-                $.$get$_log16().log$4(B.Level_WARNING_900, A.S(message0) + " (lenient mode)", e, type$.nullable_StackTrace._as(st));
+                $.$get$_log15().log$4(B.Level_WARNING_900, A.S(message0) + " (lenient mode)", e, type$.nullable_StackTrace._as(st));
                 $async$returnValue = null;
                 // goto return
                 $async$goto = 1;
@@ -45583,7 +45532,7 @@
                 message = "GroupIndexTemplate not found in cache: " + templateIri.toString$0(0);
                 if (mode === B.ShardDeterminationMode_0)
                   throw A.wrapException(A.StateError$(message + " (strict mode). Ensure the template is indexed via groupIndexTemplates meta-index."));
-                $.$get$_log16().log$4(B.Level_WARNING_900, message + " (lenient mode)", null, null);
+                $.$get$_log15().log$4(B.Level_WARNING_900, message + " (lenient mode)", null, null);
                 $async$returnValue = null;
                 // goto return
                 $async$goto = 1;
@@ -45610,26 +45559,26 @@
       var t1 = this.$this;
       return t1._updateIndexMetadataCache$3(type$.List_IndexEntryWithIri._as(entries), t1._indexedClassToFullIndexMetadata, "FullIndex");
     },
-    $signature: 71
+    $signature: 72
   };
   A.IndexDiscovery__initializeWatches_closure0.prototype = {
     call$2(error, stackTrace) {
-      $.$get$_log16().log$4(B.Level_SEVERE_1000, "Error watching fullIndices index-of-indices", error, type$.nullable_StackTrace._as(stackTrace));
+      $.$get$_log15().log$4(B.Level_SEVERE_1000, "Error watching fullIndices index-of-indices", error, type$.nullable_StackTrace._as(stackTrace));
     },
-    $signature: 42
+    $signature: 41
   };
   A.IndexDiscovery__initializeWatches_closure1.prototype = {
     call$1(entries) {
       var t1 = this.$this;
       return t1._updateIndexMetadataCache$3(type$.List_IndexEntryWithIri._as(entries), t1._indexedClassToTemplateMetadata, "GroupIndexTemplate");
     },
-    $signature: 71
+    $signature: 72
   };
   A.IndexDiscovery__initializeWatches_closure2.prototype = {
     call$2(error, stackTrace) {
-      $.$get$_log16().log$4(B.Level_SEVERE_1000, "Error watching groupIndexTemplates index-of-indices", error, type$.nullable_StackTrace._as(stackTrace));
+      $.$get$_log15().log$4(B.Level_SEVERE_1000, "Error watching groupIndexTemplates index-of-indices", error, type$.nullable_StackTrace._as(stackTrace));
     },
-    $signature: 42
+    $signature: 41
   };
   A.IndexDiscovery__updateIndexMetadataCache_closure.prototype = {
     call$0() {
@@ -45927,7 +45876,7 @@
       return A._asyncStartSync($async$_createGroupIndex$5, $async$completer);
     },
     _saveWithRetry$4$context$physicalTime(type, appData, context, physicalTime) {
-      return A.retryOnConflict(new A.IndexManager__saveWithRetry_closure(this, type, appData, physicalTime, null), "save " + context, $.$get$_log13(), type$.nullable_Record_9_RdfGraph_appData_and_RdfGraph_crdtDocument_and_String_currentCursor_and_IriTerm_documentIri_and_List_MissingGroupIndex_missingGroupIndices_and_int_physicalTime_and_nullable_String_previousCursor_and_RdfSubject_resourceIri_and_int_updatedAt);
+      return A.retryOnConflict(new A.IndexManager__saveWithRetry_closure(this, type, appData, physicalTime, null), "save " + context, $.$get$_log12(), type$.nullable_Record_9_RdfGraph_appData_and_RdfGraph_crdtDocument_and_String_currentCursor_and_IriTerm_documentIri_and_List_MissingGroupIndex_missingGroupIndices_and_int_physicalTime_and_nullable_String_previousCursor_and_RdfSubject_resourceIri_and_int_updatedAt);
     },
     _saveWithRetry$3$context(type, appData, context) {
       return this._saveWithRetry$4$context$physicalTime(type, appData, context, null);
@@ -45997,7 +45946,7 @@
                 break;
               }
               t2 = t1.get$current();
-              $.$get$_log13().log$4(B.Level_INFO_800, 'Creating missing GroupIndex for group "' + t2.groupKey + '" at ' + t2.groupIndexIri.toString$0(0), null, null);
+              $.$get$_log12().log$4(B.Level_INFO_800, 'Creating missing GroupIndex for group "' + t2.groupKey + '" at ' + t2.groupIndexIri.toString$0(0), null, null);
               $async$goto = 4;
               return A._asyncAwait($async$self._createMissingGroupIndex$1(t2), $async$updateIndices$6$document$documentIri$missingGroupIndices$physicalTime$resourceTypeIri$updatedAt);
             case 4:
@@ -46071,7 +46020,7 @@
               indexIri = _0_0._0;
               indexedProperties = _0_0._1;
               if (indexIri == null) {
-                $.$get$_log13().log$4(B.Level_WARNING_900, "Shard " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(shardDocumentIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + " has no associated index or template, skipping.", null, null);
+                $.$get$_log12().log$4(B.Level_WARNING_900, "Shard " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(shardDocumentIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + " has no associated index or template, skipping.", null, null);
                 // goto for update
                 $async$goto = 3;
                 break;
@@ -46157,7 +46106,7 @@
                 $async$goto = 1;
                 break;
               }
-              t3 = $.$get$_log13();
+              t3 = $.$get$_log12();
               t3.log$4(B.Level_INFO_800, "Found " + t1 + " tombstoned shard references for " + resourceIri.toString$0(0), null, null);
               t1 = tombstones.length, t4 = $async$self._index_manager$_storage, t5 = $async$self._propertyResolver, _i = 0;
             case 3:
@@ -46239,7 +46188,7 @@
     call$1(v) {
       return type$.RdfObject._as(v) instanceof A.BlankNodeTerm;
     },
-    $signature: 19
+    $signature: 17
   };
   A.ParsedFullIndex.prototype = {};
   A.ParsedGroupIndexTemplate.prototype = {};
@@ -46342,7 +46291,7 @@
         return levelCompare;
       return B.JSString_methods.compareTo$1(a.predicate.value, b.predicate.value);
     },
-    $signature: 88
+    $signature: 90
   };
   A.IndexParser__parseGroupingProperty_closure.prototype = {
     call$1(node) {
@@ -46701,7 +46650,7 @@
         return levelCompare;
       return B.JSString_methods.compareTo$1(a.predicate.value, b.predicate.value);
     },
-    $signature: 88
+    $signature: 90
   };
   A.IndexRdfGenerator_generateGroupIndexTemplateIri_closure0.prototype = {
     call$1(prop) {
@@ -46804,7 +46753,7 @@
         return t1 == null ? "" : t1;
       }
     },
-    $signature: 30
+    $signature: 43
   };
   A.ShardDeterminationMode.prototype = {
     _enumToString$0() {
@@ -46914,7 +46863,7 @@
               if (mode === B.ShardDeterminationMode_0) {
                 t1 = oldStoredShards.length;
                 if (t1 !== 0 && t1 !== newShards.get$length(newShards))
-                  $.$get$_log15().log$4(B.Level_FINE_500, "Strict mode: Using only " + newShards.get$length(newShards) + " calculated shards, discarding " + (oldStoredShards.length - newShards.get$length(newShards)) + " old shards", null, null);
+                  $.$get$_log14().log$4(B.Level_FINE_500, "Strict mode: Using only " + newShards.get$length(newShards) + " calculated shards, discarding " + (oldStoredShards.length - newShards.get$length(newShards)) + " old shards", null, null);
                 allShards = newShards;
               } else {
                 if (removed.get$isEmpty(removed))
@@ -46927,7 +46876,7 @@
                 t1.addAll$1(0, shardsFromOtherInstallations);
                 t2 = J.getInterceptor$asx(shardsFromOtherInstallations);
                 if (t2.get$isNotEmpty(shardsFromOtherInstallations))
-                  $.$get$_log15().log$4(B.Level_FINE_500, "Lenient mode: Using " + newShards.get$length(newShards) + " calculated shards + " + t2.get$length(shardsFromOtherInstallations) + " preserved shards", null, null);
+                  $.$get$_log14().log$4(B.Level_FINE_500, "Lenient mode: Using " + newShards.get$length(newShards) + " calculated shards + " + t2.get$length(shardsFromOtherInstallations) + " preserved shards", null, null);
                 allShards = t1;
               }
               t1 = A.LinkedHashSet_LinkedHashSet$of(newShardResult.missingGroupIndices, type$.MissingGroupIndex);
@@ -46974,7 +46923,7 @@
                 else
                   t1 = false;
                 if (t1)
-                  $.$get$_log15().log$4(B.Level_WARNING_900, "No index configs found for type " + type.toString$0(0), null, null);
+                  $.$get$_log14().log$4(B.Level_WARNING_900, "No index configs found for type " + type.toString$0(0), null, null);
                 $async$returnValue = new A.ShardDeterminationResult(shards, missingGroupIndices, missingIndexDocuments);
                 // goto return
                 $async$goto = 1;
@@ -47069,7 +47018,7 @@
                   B.JSArray_methods.add$1(missingIndexDocuments, new A.MissingIndexDocument(indexResourceIri, typeIri, B.IndexType_0));
                   if (mode === B.ShardDeterminationMode_0)
                     throw A.wrapException(A.StateError$("FullIndex document not found (strict mode): " + A.IriTermExtensions_get_debug(indexDocumentIri) + ". Ensure index-of-indices has been synced and FullIndex documents are available."));
-                  $.$get$_log15().log$4(B.Level_WARNING_900, "FullIndex document not found (" + mode._name + " mode): " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(indexDocumentIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
+                  $.$get$_log14().log$4(B.Level_WARNING_900, "FullIndex document not found (" + mode._name + " mode): " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(indexDocumentIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
                 }
                 $async$returnValue = new A.ShardDeterminationResult(A.LinkedHashSet_LinkedHashSet$from(shards, type$.IriTerm), B.List_empty9, missingIndexDocuments);
                 // goto return
@@ -47079,7 +47028,7 @@
               t2 = $async$self._shardManager;
               shardingConfig = t2.parseShardingConfig$2(storedDoc.document, indexResourceIri);
               if (shardingConfig == null) {
-                $.$get$_log15().log$4(B.Level_WARNING_900, "Could not parse sharding config from index: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(indexResourceIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
+                $.$get$_log14().log$4(B.Level_WARNING_900, "Could not parse sharding config from index: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(indexResourceIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
                 $async$returnValue = new A.ShardDeterminationResult(A.LinkedHashSet_LinkedHashSet$from(shards, type$.IriTerm), B.List_empty9, missingIndexDocuments);
                 // goto return
                 $async$goto = 1;
@@ -47122,7 +47071,7 @@
               t3 = A._setArrayType(t3.slice(0), A._arrayInstanceType(t3));
               groupKeys = new A.GroupKeyGenerator(t2).generateGroupKeys$1(t3);
               if (groupKeys._collection$_length === 0) {
-                $.$get$_log15().log$4(B.Level_FINE_500, "Resource " + resourceIri.toString$0(0) + " has no group keys for template " + templateIri.toString$0(0), null, null);
+                $.$get$_log14().log$4(B.Level_FINE_500, "Resource " + resourceIri.toString$0(0) + " has no group keys for template " + templateIri.toString$0(0), null, null);
                 $async$returnValue = new A.ShardDeterminationResult(A.LinkedHashSet_LinkedHashSet$from(shards, type$.IriTerm), missingGroupIndices, missingIndexDocuments);
                 // goto return
                 $async$goto = 1;
@@ -47139,7 +47088,7 @@
                 B.JSArray_methods.add$1(missingIndexDocuments, new A.MissingIndexDocument(templateIri, typeIri, B.IndexType_1));
                 if (mode === B.ShardDeterminationMode_0)
                   throw A.wrapException(A.StateError$("GroupIndexTemplate document not found (strict mode): " + templateDocumentIri.toString$0(0) + ". Ensure index-of-indices has been synced and GroupIndexTemplate documents are available."));
-                $.$get$_log15().log$4(B.Level_WARNING_900, "GroupIndexTemplate document not found (" + mode._name + " mode): " + templateDocumentIri.toString$0(0), null, null);
+                $.$get$_log14().log$4(B.Level_WARNING_900, "GroupIndexTemplate document not found (" + mode._name + " mode): " + templateDocumentIri.toString$0(0), null, null);
                 $async$returnValue = new A.ShardDeterminationResult(A.LinkedHashSet_LinkedHashSet$from(shards, type$.IriTerm), missingGroupIndices, missingIndexDocuments);
                 // goto return
                 $async$goto = 1;
@@ -47148,7 +47097,7 @@
               t3 = $async$self._shardManager;
               shardingConfig = t3.parseShardingConfig$2(templateDoc.document, templateIri);
               if (shardingConfig == null) {
-                $.$get$_log15().log$4(B.Level_WARNING_900, "Could not parse sharding config from GroupIndexTemplate: " + templateIri.toString$0(0), null, null);
+                $.$get$_log14().log$4(B.Level_WARNING_900, "Could not parse sharding config from GroupIndexTemplate: " + templateIri.toString$0(0), null, null);
                 $async$returnValue = new A.ShardDeterminationResult(A.LinkedHashSet_LinkedHashSet$from(shards, type$.IriTerm), missingGroupIndices, missingIndexDocuments);
                 // goto return
                 $async$goto = 1;
@@ -47172,7 +47121,7 @@
             case 6:
               // returning from await.
               if ($async$result == null) {
-                $.$get$_log15().log$4(B.Level_FINE_500, 'GroupIndex for group "' + t8 + '" does not exist at ' + groupIndexDocumentIri.toString$0(0), null, null);
+                $.$get$_log14().log$4(B.Level_FINE_500, 'GroupIndex for group "' + t8 + '" does not exist at ' + groupIndexDocumentIri.toString$0(0), null, null);
                 B.JSArray_methods.add$1(missingGroupIndices, new A.MissingGroupIndex(typeIri, templateIri, t8, groupIndexIri));
               }
               B.JSArray_methods.add$1(shards, t1.generateShardIri$5(t5, t3.determineShardNumber$2$numberOfShards(resourceIri, t5), t6, groupIndexIri, B.IriTerm_oTK));
@@ -47197,7 +47146,7 @@
     call$1(shard) {
       return !this.removed.contains$1(0, type$.IriTerm._as(shard));
     },
-    $signature: 37
+    $signature: 30
   };
   A.ShardManager.prototype = {
     determineShardNumber$2$numberOfShards(resourceIri, numberOfShards) {
@@ -47290,7 +47239,7 @@
     call$0() {
       return B.C_Uuid.v4$0();
     },
-    $signature: 32
+    $signature: 34
   };
   A.LocalDocumentMerger.prototype = {
     get$_identifiedBlankNodeBuilder() {
@@ -47414,7 +47363,7 @@
       context = new A.CrdtMergeContext(t2);
       for (t3 = deletedSubjects.get$iterator(deletedSubjects), t4 = type$.RdfSubject, t5 = type$.IdTerm_RdfSubject, t6 = type$.Iterable_Triple_Function_RdfSubject; t3.moveNext$0();) {
         t7 = t3.get$current();
-        $.$get$_log21().log$4(B.Level_FINE_500, "Deleted subject detected: " + t7.get$subject().toString$0(0) + " ", _null, _null);
+        $.$get$_log20().log$4(B.Level_FINE_500, "Deleted subject detected: " + t7.get$subject().toString$0(0) + " ", _null, _null);
         B.JSArray_methods.addAll$1(statements, t2._createPropertyValueMetadata$3(documentIri, t5._as(A.IdTerm_IdTerm$create(t7.get$subject(), oldAppBlankNodes, t4)), t6._as(new A.LocalDocumentMerger__generateCrdtMetadataForChanges_closure(clock))));
       }
       for (t2 = addedSubjects.get$iterator(addedSubjects), t3 = clock._values, t4 = _this._local_document_merger$_crdtTypeRegistry, t5 = type$.RdfObject, t6 = type$.IriTerm; t2.moveNext$0();) {
@@ -47491,7 +47440,7 @@
           triplesToRemove.addAll$1(0, metadataGraph._1);
           for (t11 = J.get$iterator$ax(t7.get$propertyChangeIris()); t11.moveNext$0();)
             B.JSArray_methods.add$1(propertyChanges, new A.PropertyChange(t11.get$current(), t8, t3[3], t3[2], isFrameworkData));
-          $.$get$_log21().log$4(B.Level_FINE_500, "Property change detected on " + subjectTerm.toString$0(0) + " for " + t8.toString$0(0), _null, _null);
+          $.$get$_log20().log$4(B.Level_FINE_500, "Property change detected on " + subjectTerm.toString$0(0) + " for " + t8.toString$0(0), _null, _null);
         }
       }
       return new A.CrdtMetadataResult(statements, triplesToRemove, propertyChanges);
@@ -47609,7 +47558,7 @@
     call$1(oldId) {
       return J.contains$1$asx(this.newIdentifiers, oldId);
     },
-    $signature: 69
+    $signature: 68
   };
   A.CrdtMetadataResult.prototype = {};
   A.collectClassMappings_closure.prototype = {
@@ -47821,7 +47770,7 @@
     call$0() {
       return new A.BlankNodeTerm();
     },
-    $signature: 28
+    $signature: 29
   };
   A._GraphWithLabels.prototype = {};
   A.IdentifiedBlankNodeParent.prototype = {
@@ -47983,13 +47932,13 @@
     call$1(t) {
       return "  " + type$.Triple._as(t).toString$0(0);
     },
-    $signature: 41
+    $signature: 42
   };
   A.UnidentifiedBlankNodeWithContextException_toString_closure0.prototype = {
     call$1(t) {
       return "  " + type$.Triple._as(t).toString$0(0);
     },
-    $signature: 41
+    $signature: 42
   };
   A.IdentifiedBlankNodeBuilder.prototype = {
     computeCanonicalBlankNodes$3(documentIri, graph, mergeContract) {
@@ -48046,7 +47995,7 @@
       }
       t3 = circularReferences._collection$_length;
       if (t3 !== 0)
-        $.$get$_log22().log$4(B.Level_WARNING_900, "Detected " + t3 + " circular references in identified blank nodes. These blank nodes will be removed from identification, so they will be handled as non-identified nodes.", _null, _null);
+        $.$get$_log21().log$4(B.Level_WARNING_900, "Detected " + t3 + " circular references in identified blank nodes. These blank nodes will be removed from identification, so they will be handled as non-identified nodes.", _null, _null);
       t3 = $T._eval$1("MapEntry<BlankNodeTerm,List<0>>?");
       t1 = A.LinkedHashMap_LinkedHashMap$_empty(t1, $T._eval$1("List<0>"));
       for (t2 = new A.NonNullsIterator(A.MappedIterable_MappedIterable(new A.LinkedHashMapEntriesIterable(identifiedBlankNodes, t2), t2._bind$1(t3)._eval$1("1(Iterable.E)")._as(new A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure4(circularReferences, reversedIdentifiedMap, converter, $T)), t2._eval$1("Iterable.E"), t3).get$iterator(0), $T._eval$1("NonNullsIterator<MapEntry<BlankNodeTerm,List<0>>>")); t2.moveNext$0();) {
@@ -48133,7 +48082,7 @@
       if (t1._collection$_length !== 0) {
         filtered = J.where$1$ax(filtered, new A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes__closure(_this.reversedIdentifiedMap, t1));
         if (!filtered.get$iterator(0).moveNext$0()) {
-          $.$get$_log22().log$4(B.Level_INFO_800, "Removing blank node " + entry.key.toString$0(0) + " from identified blank nodes because it is part of a circular reference.", null, null);
+          $.$get$_log21().log$4(B.Level_INFO_800, "Removing blank node " + entry.key.toString$0(0) + " from identified blank nodes because it is part of a circular reference.", null, null);
           return null;
         }
       }
@@ -48187,7 +48136,7 @@
     call$1(o) {
       return type$.RdfObject._as(o) instanceof A.BlankNodeTerm;
     },
-    $signature: 19
+    $signature: 17
   };
   A._addIdentifiedBlankNodes_closure1.prototype = {
     call$1(triple) {
@@ -48205,7 +48154,7 @@
       if (t1) {
         t1 = _this.circuitCheck;
         if (t1.contains$1(0, blankNodeParent)) {
-          $.$get$_log22().log$4(B.Level_WARNING_900, "Detected circular reference while identifying Blank node " + _this.blankNode.toString$0(0) + ". Skipping further processing of this branch.", _null, _null);
+          $.$get$_log21().log$4(B.Level_WARNING_900, "Detected circular reference while identifying Blank node " + _this.blankNode.toString$0(0) + ". Skipping further processing of this branch.", _null, _null);
           return A._setArrayType([new A.IdentifiedBlankNode(new A.IdentifiedBlankNodeParent(_null, _null, t1), _this.identifyingProps, effectiveParentPredicate)], type$.JSArray_IdentifiedBlankNode);
         }
         t1 = J.map$1$1$ax(A._addIdentifiedBlankNodes(_this.graph, blankNodeParent, _this.identifyingPredicates, _this.parentTriples, _this.identifiedBlankNodes, _this.mergeContract, t1), new A._addIdentifiedBlankNodes__closure(_this.identifyingProps, effectiveParentPredicate), type$.IdentifiedBlankNode);
@@ -48267,7 +48216,7 @@
     call$1(id) {
       return J.contains$1$asx(this.other.identifiers, type$.IriTerm._as(id));
     },
-    $signature: 37
+    $signature: 30
   };
   A.NoOpIriTranslator.prototype = {
     externalToInternal$1(externalIri) {
@@ -48302,7 +48251,7 @@
         t1 = A.unwrapException(exception);
         if (t1 instanceof A.UnsupportedIriException) {
           e = t1;
-          $.$get$_log12().log$4(B.Level_WARNING_900, "Failed to extract ResourceIdentifier from " + fromName + " IRI " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(iri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + ": " + A.S(e), _null, _null);
+          $.$get$_log11().log$4(B.Level_WARNING_900, "Failed to extract ResourceIdentifier from " + fromName + " IRI " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(iri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + ": " + A.S(e), _null, _null);
           return iri;
         } else
           throw exception;
@@ -48314,7 +48263,7 @@
         t1 = A.unwrapException(exception);
         if (t1 instanceof A.UnsupportedIriException) {
           e0 = t1;
-          $.$get$_log12().log$4(B.Level_WARNING_900, "Failed to convert ResourceIdentifier to " + toName + " IRI for " + fromName + " IRI " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(iri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + ": " + A.S(e0), _null, _null);
+          $.$get$_log11().log$4(B.Level_WARNING_900, "Failed to convert ResourceIdentifier to " + toName + " IRI for " + fromName + " IRI " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(iri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()) + ": " + A.S(e0), _null, _null);
           return iri;
         } else
           throw exception;
@@ -48473,25 +48422,25 @@
       type$.PredicateMergeRule._as(r);
       return r.isIdentifying === true;
     },
-    $signature: 58
+    $signature: 61
   };
   A.ClassMergeRules__computeIdentifyingPredicates_closure0.prototype = {
     call$1(r) {
       return type$.PredicateMergeRule._as(r).predicateIri;
     },
-    $signature: 53
+    $signature: 58
   };
   A.ClassMergeRules__computeNonIdentifyingPredicates_closure.prototype = {
     call$1(r) {
       return type$.PredicateMergeRule._as(r).isIdentifying === false;
     },
-    $signature: 58
+    $signature: 61
   };
   A.ClassMergeRules__computeNonIdentifyingPredicates_closure0.prototype = {
     call$1(r) {
       return type$.PredicateMergeRule._as(r).predicateIri;
     },
-    $signature: 53
+    $signature: 58
   };
   A.MergeContract.prototype = {
     get$_classMappingsByPredicate() {
@@ -48527,7 +48476,7 @@
         t2 = "Global Property: " + t2.predicateIri.toString$0(0) + ", mergeWith: " + A.S(t2.mergeWith) + _s17_ + A.S(t2.stopTraversal) + _s17_0 + A.S(t2.isIdentifying) + _s21_ + t2.isPathIdentifying + "\n";
         buffer._contents += t2;
       }
-      $.$get$_log17().log$4(B.Level_FINE_500, "MergeContract:\n" + buffer.toString$0(0), null, null);
+      $.$get$_log16().log$4(B.Level_FINE_500, "MergeContract:\n" + buffer.toString$0(0), null, null);
     },
     getEffectiveMergeWith$2(typeIri, propertyIri) {
       var _null = null,
@@ -48536,9 +48485,9 @@
         t1 = rule == null;
       if ((t1 ? _null : rule.mergeWith) == null)
         if (t1)
-          $.$get$_log17().log$4(B.Level_WARNING_900, "No predicate rule found for " + propertyIri.toString$0(0) + " on " + A.S(typeIri) + _s76_, _null, _null);
+          $.$get$_log16().log$4(B.Level_WARNING_900, "No predicate rule found for " + propertyIri.toString$0(0) + " on " + A.S(typeIri) + _s76_, _null, _null);
         else
-          $.$get$_log17().log$4(B.Level_FINE_500, "No merge algorithm found in rule for " + propertyIri.toString$0(0) + " on " + A.S(typeIri) + _s76_, _null, _null);
+          $.$get$_log16().log$4(B.Level_FINE_500, "No merge algorithm found in rule for " + propertyIri.toString$0(0) + " on " + A.S(typeIri) + _s76_, _null, _null);
       return t1 ? _null : rule.mergeWith;
     },
     getEffectivePredicateRule$2(typeIri, propertyIri) {
@@ -48558,17 +48507,17 @@
       if (t1.get$length(inferredTypes) === 1) {
         rule = t1.get$single(inferredTypes)._propertyRules.$index(0, propertyIri);
         if (rule != null) {
-          $.$get$_log17().log$4(B.Level_FINE_500, "Inferred type " + A.S(inferredTypes) + " for property " + propertyIri.toString$0(0) + " to apply class-specific merge rule.", _null, _null);
+          $.$get$_log16().log$4(B.Level_FINE_500, "Inferred type " + A.S(inferredTypes) + " for property " + propertyIri.toString$0(0) + " to apply class-specific merge rule.", _null, _null);
           return rule;
         }
       } else if (t1.get$length(inferredTypes) > 1) {
-        t1 = $.$get$_log17();
+        t1 = $.$get$_log16();
         t2 = propertyIri.toString$0(0);
         t3 = A.S(inferredTypes);
         t4 = globalRule == null ? "No merge rule available. " : "Using global merge rule of this predicate.";
         t1.log$4(B.Level_WARNING_900, "Cannot infer unique type for property " + t2 + ", found multiple candidate types: " + t3 + ". " + t4, _null, _null);
       } else if (globalRule == null)
-        $.$get$_log17().log$4(B.Level_WARNING_900, "No merge rule found for property " + propertyIri.toString$0(0) + " on unknown type, using https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#LWW_Register.", _null, _null);
+        $.$get$_log16().log$4(B.Level_WARNING_900, "No merge rule found for property " + propertyIri.toString$0(0) + " on unknown type, using https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms#LWW_Register.", _null, _null);
       return globalRule;
     },
     _computeIdentifyingPredicates$0() {
@@ -48634,7 +48583,7 @@
         missing = t1.difference$1(predicates);
         if (missing.get$isEmpty(missing))
           return t1;
-        $.$get$_log17().log$4(B.Level_WARNING_900, "Found identifiable Blank node " + blankNode.toString$0(0) + " of type " + type.toString$0(0) + " that cannot be identified because it is missing properties " + missing.join$1(0, " | ") + ".", _null, _null);
+        $.$get$_log16().log$4(B.Level_WARNING_900, "Found identifiable Blank node " + blankNode.toString$0(0) + " of type " + type.toString$0(0) + " that cannot be identified because it is missing properties " + missing.join$1(0, " | ") + ".", _null, _null);
         return B.Set_empty4;
       }
       return B.Set_empty4;
@@ -48648,26 +48597,26 @@
         J.add$1$ax(r.putIfAbsent$2(t2.get$current(), new A.MergeContract__classMappingsByPredicate__closure()), t1);
       return r;
     },
-    $signature: 129
+    $signature: 212
   };
   A.MergeContract__classMappingsByPredicate__closure.prototype = {
     call$0() {
       return A._setArrayType([], type$.JSArray_ClassMergeRules);
     },
-    $signature: 213
+    $signature: 129
   };
   A.MergeContract__computeIdentifyingPredicates_closure.prototype = {
     call$1(r) {
       type$.PredicateMergeRule._as(r);
       return r.isIdentifying === true;
     },
-    $signature: 58
+    $signature: 61
   };
   A.MergeContract__computeIdentifyingPredicates_closure0.prototype = {
     call$1(r) {
       return type$.PredicateMergeRule._as(r).predicateIri;
     },
-    $signature: 53
+    $signature: 58
   };
   A.MergeContract_getIdentifyingPredicates_closure.prototype = {
     call$1(predicateIri) {
@@ -48704,7 +48653,7 @@
     call$1(iri) {
       return type$.IriTerm._as(iri).value;
     },
-    $signature: 15
+    $signature: 11
   };
   A.CachingMergeContractLoader_load_closure.prototype = {
     call$1(error) {
@@ -48848,7 +48797,7 @@
         t1 = type$.IriTerm,
         predicateIri = A.RdfGraphExtensions__findSingleObject(graph, ref, B.IriTerm_Mh5, false, B.ExpectationSeverity_1, t1);
       if (predicateIri == null) {
-        $.$get$_log23().log$4(B.Level_WARNING_900, "Predicate mapping missing mc:predicate: " + ref.toString$0(0), _null, _null);
+        $.$get$_log22().log$4(B.Level_WARNING_900, "Predicate mapping missing mc:predicate: " + ref.toString$0(0), _null, _null);
         validation.addError$1("Predicate mapping missing mc:predicate");
         return new A._Record_2(_null, validation);
       }
@@ -48880,13 +48829,13 @@
         validation0 = new A.ValidationResult(t11, t12, B.List_empty, _null);
         validations.$indexSet(0, ref, validation0);
         if (!graph.hasTriples$3$object$predicate$subject(B.IriTerm_oun0, B.IriTerm_f2r, ref)) {
-          $.$get$_log23().log$4(B.Level_WARNING_900, "Skipping invalid class mapping reference: " + ref.toString$0(0), _null, _null);
+          $.$get$_log22().log$4(B.Level_WARNING_900, "Skipping invalid class mapping reference: " + ref.toString$0(0), _null, _null);
           validation0.addError$2$details("Cannot resolve class mapping reference", A.LinkedHashMap_LinkedHashMap$_literal(["ref", ref], t4, t2));
           continue;
         }
         classIri = A.RdfGraphExtensions__findSingleObject(graph, ref, B.IriTerm_a85, false, B.ExpectationSeverity_1, t1);
         if (classIri == null) {
-          $.$get$_log23().log$4(B.Level_WARNING_900, "Class mapping missing appliesToClass: " + ref.toString$0(0), _null, _null);
+          $.$get$_log22().log$4(B.Level_WARNING_900, "Class mapping missing appliesToClass: " + ref.toString$0(0), _null, _null);
           validation0.addError$2$details("Class mapping missing appliesToClass", A.LinkedHashMap_LinkedHashMap$_literal(["ref", ref], t4, t2));
           continue;
         }
@@ -48917,7 +48866,7 @@
           validation0.addSubvalidationResult$3$context$details(t16, t17, A.LinkedHashMap_LinkedHashMap$_literal(["ref", ref], t4, t5));
         }
         if (classMappings.containsKey$1(classIri)) {
-          $.$get$_log23().log$4(B.Level_WARNING_900, _s28_ + classIri.toString$0(0) + ", overwriting.", _null, _null);
+          $.$get$_log22().log$4(B.Level_WARNING_900, _s28_ + classIri.toString$0(0) + ", overwriting.", _null, _null);
           validation0.addWarning$2$details(_s28_ + classIri.toString$0(0), A.LinkedHashMap_LinkedHashMap$_literal(["ref", ref, "classIri", classIri], t4, t2));
         }
         classMappings.$indexSet(0, classIri, new A.ClassMapping(classIri, t11));
@@ -48985,7 +48934,7 @@
       type$.ValidationResult._as(v);
       return v.errors.length !== 0 || v.warnings.length !== 0;
     },
-    $signature: 27
+    $signature: 24
   };
   A.StandardMergeContractLoader__parseDocumentMapping_closure.prototype = {
     call$1(ref) {
@@ -49010,13 +48959,13 @@
       type$.ValidationResult._as(v);
       return v.errors.length !== 0 || v.warnings.length !== 0;
     },
-    $signature: 27
+    $signature: 24
   };
   A.StandardMergeContractLoader__parseDocumentMapping_closure3.prototype = {
     call$1(ref) {
       type$.RdfSubject._as(ref);
       if (this.seen.contains$1(0, ref)) {
-        $.$get$_log23().log$4(B.Level_WARNING_900, "Detected cyclic import in merge contract at " + ref.toString$0(0) + ", skipping.", null, null);
+        $.$get$_log22().log$4(B.Level_WARNING_900, "Detected cyclic import in merge contract at " + ref.toString$0(0) + ", skipping.", null, null);
         this.validation.addError$1("Cyclic import in merge contract at " + ref.toString$0(0));
         return false;
       } else
@@ -49047,7 +48996,7 @@
       type$.ValidationResult._as(v);
       return v.errors.length !== 0 || v.warnings.length !== 0;
     },
-    $signature: 27
+    $signature: 24
   };
   A.StandardMergeContractLoader__parseClassMappings_closure.prototype = {
     call$1(r) {
@@ -49072,7 +49021,7 @@
       type$.ValidationResult._as(v);
       return v.errors.length !== 0 || v.warnings.length !== 0;
     },
-    $signature: 27
+    $signature: 24
   };
   A.StandardMergeContractLoader__parseClassMappings_closure3.prototype = {
     call$1(e) {
@@ -49104,7 +49053,7 @@
       type$.ValidationResult._as(v);
       return v.errors.length !== 0 || v.warnings.length !== 0;
     },
-    $signature: 27
+    $signature: 24
   };
   A.MetadataGenerator.prototype = {
     _createPropertyValueMetadata$5$predicate$value(documentIri, subject, createMetadataTriples, predicate, value) {
@@ -49575,7 +49524,7 @@
         return B.TraversalDecision_3;
       return B.TraversalDecision_1;
     },
-    $signature: 18
+    $signature: 19
   };
   A.RdfGraphExtensions_traverseListObjects_closure0.prototype = {
     call$1(t) {
@@ -49595,7 +49544,7 @@
       t1 = t1 == null ? null : t1.stopTraversal;
       return t1 === true ? B.TraversalDecision_3 : B.TraversalDecision_0;
     },
-    $signature: 18
+    $signature: 19
   };
   A.splitDocument__closure.prototype = {
     call$0() {
@@ -49623,7 +49572,7 @@
               _0_0 = $async$self._config.findGroupIndexConfig$1(indexName);
               resourceConfig = _0_0._0;
               indexConfig = _0_0._1;
-              $.$get$_log11().log$4(B.Level_INFO_800, "configure called for index: " + indexName + " and group key: " + groupKeyGraph.toString$0(0) + ", resolved to group identifiers: " + groupIdentifiers.toString$0(0), null, null);
+              $.$get$_log10().log$4(B.Level_INFO_800, "configure called for index: " + indexName + " and group key: " + groupKeyGraph.toString$0(0) + ", resolved to group identifiers: " + groupIdentifiers.toString$0(0), null, null);
               t1 = groupIdentifiers.get$iterator(groupIdentifiers), t2 = $async$self._indexRdfGenerator, t3 = resourceConfig.typeIri, t4 = $async$self._storage, t5 = $async$self._standard_sync_engine$_physicalTimestampFactory;
             case 3:
               // for condition
@@ -49756,7 +49705,7 @@
                 t2 = parts[0];
                 cursorTimestamp = A.Primitives_parseInt(t2, null);
                 if (cursorTimestamp == null) {
-                  t3 = $.$get$_log11();
+                  t3 = $.$get$_log10();
                   if (0 >= t1) {
                     A.ioore(parts, 0);
                     // goto return
@@ -49845,7 +49794,7 @@
               break;
             case 6:
               // then
-              $.$get$_log11().log$4(B.Level_WARNING_900, "No subscriptions for GroupIndex " + indexName + ", emitting empty stream.", null, null);
+              $.$get$_log10().log$4(B.Level_WARNING_900, "No subscriptions for GroupIndex " + indexName + ", emitting empty stream.", null, null);
               t1 = type$.JSArray_Record_2_IriTerm_and_RdfGraph;
               t2 = A._setArrayType([], t1);
               t1 = A._setArrayType([], t1);
@@ -49888,7 +49837,7 @@
               break;
             case 14:
               // then
-              $.$get$_log11().log$4(B.Level_INFO_800, "Loading historical data for " + newIndexIris.get$length(newIndexIris) + " new indices up to cursor " + startCursor, null, null);
+              $.$get$_log10().log$4(B.Level_INFO_800, "Loading historical data for " + newIndexIris.get$length(newIndexIris) + " new indices up to cursor " + startCursor, null, null);
               result = $async$self._loadExistingEntriesAsStream$5$fromCursor$initialBatchSize$toCursor(newIndexIris, indexSetVersionId, 0, initialBatchSize, startCursor);
               $async$goto = 17;
               $async$nextWhenCanceled = [1];
@@ -50179,7 +50128,7 @@
               e = A.unwrapException($async$exception);
               st = A.getTraceFromException($async$exception);
               $async$self.lastCursorCompleter.completeError$2(e, st);
-              $.$get$_log11().log$4(B.Level_SEVERE_1000, "Error loading index entries", e, type$.nullable_StackTrace._as(st));
+              $.$get$_log10().log$4(B.Level_SEVERE_1000, "Error loading index entries", e, type$.nullable_StackTrace._as(st));
               $async$self.controller.addError$2(e, st);
               $async$next.push(5);
               // goto finally
@@ -50233,7 +50182,7 @@
       appGraph = !t1 ? externalGraph.subgraph$1(primaryTopicIri) : externalGraph;
       isDeletion = externalGraph.hasTriples$2$predicate$subject(B.IriTerm_jPP, externalIri);
       if (t1) {
-        $.$get$_log11().log$4(B.Level_WARNING_900, "Document " + t2.toString$0(0) + " (isDeletion: " + isDeletion + ") is missing foaf:primaryTopic, cannot determine resource IRI. Skipping.", null, null);
+        $.$get$_log10().log$4(B.Level_WARNING_900, "Document " + t2.toString$0(0) + " (isDeletion: " + isDeletion + ") is missing foaf:primaryTopic, cannot determine resource IRI. Skipping.", null, null);
         return acc;
       }
       t1 = isDeletion ? acc._0 : acc._1;
@@ -50565,7 +50514,7 @@
         subject = type$.IriTerm._as(triple.subject);
         map.putIfAbsent$2(type$.BlankNodeTerm._as(triple.object), new A.OrganizedBlankNodeMappings__buildBlankNodeToCanonicalMap__closure()).add$1(0, subject);
       } else
-        $.$get$_log27().log$4(B.Level_WARNING_900, "Unexpected triple in blank node mapping: " + triple.toString$0(0), null, null);
+        $.$get$_log26().log$4(B.Level_WARNING_900, "Unexpected triple in blank node mapping: " + triple.toString$0(0), null, null);
       return map;
     },
     $signature: 258
@@ -50707,7 +50656,7 @@
     call$1(id) {
       return B.JSArray_methods.contains$1(this.other.identifiers, type$.IriTerm._as(id));
     },
-    $signature: 37
+    $signature: 30
   };
   A.UnIdentifiedBlankNodeKey.prototype = {
     get$value() {
@@ -50785,7 +50734,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              t1 = $.$get$_log25();
+              t1 = $.$get$_log24();
               t1.log$4(B.Level_FINE_500, "Merging document " + documentIri.toString$0(0), null, null);
               if (remoteGraph == null) {
                 t1.log$4(B.Level_FINE_500, "Remote is null - keeping local", null, null);
@@ -51133,7 +51082,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              $.$get$_log24().log$4(B.Level_INFO_800, "Starting remote synchronization cycle", null, null);
+              $.$get$_log23().log$4(B.Level_INFO_800, "Starting remote synchronization cycle", null, null);
               $async$handler = 3;
               t1 = $async$self._remote_sync_orchestrator$_config.get$resourcesInSyncOrder(), t2 = A._arrayInstanceType(t1), t3 = t2._eval$1("MappedListIterable<1,IriTerm>"), t2 = new A.MappedListIterable(t1, t2._eval$1("IriTerm(1)")._as(new A.RemoteSyncOrchestrator_sync_closure()), t3), t2 = new A.ListIterator(t2, t2.get$length(0), t3._eval$1("ListIterator<ListIterable.E>")), t3 = t3._eval$1("ListIterable.E");
             case 6:
@@ -51154,7 +51103,7 @@
               break;
             case 7:
               // after for
-              $.$get$_log24().log$4(B.Level_INFO_800, "Remote synchronization cycle completed successfully", null, null);
+              $.$get$_log23().log$4(B.Level_INFO_800, "Remote synchronization cycle completed successfully", null, null);
               $async$handler = 1;
               // goto after finally
               $async$goto = 5;
@@ -51165,7 +51114,7 @@
               $async$exception = $async$errorStack.pop();
               e = A.unwrapException($async$exception);
               st = A.getTraceFromException($async$exception);
-              $.$get$_log24().log$4(B.Level_SEVERE_1000, "Remote synchronization cycle failed", e, type$.nullable_StackTrace._as(st));
+              $.$get$_log23().log$4(B.Level_SEVERE_1000, "Remote synchronization cycle failed", e, type$.nullable_StackTrace._as(st));
               throw $async$exception;
               // goto after finally
               $async$goto = 5;
@@ -51197,7 +51146,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              t1 = $.$get$_log24();
+              t1 = $.$get$_log23();
               t2 = $.$get$IriTermExtensions__debugStringCache();
               t1.log$4(B.Level_FINE_500, "Syncing index documents for " + t2.putIfAbsent$2(resourceType, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
               t3 = type$.WhereTypeIterable_FullIndexData;
@@ -51290,7 +51239,7 @@
               break;
             case 5:
               // then
-              t1 = $.$get$_log24();
+              t1 = $.$get$_log23();
               t1.log$4(B.Level_FINE_500, debugName + " unchanged (304)", null, null);
               $async$goto = 8;
               return A._asyncAwait($async$self._getLocalDocumentWithMetadata$2$ifChangedSincePhysicalClock(documentIri, lastSyncTimestamp), $async$_downloadAndMerge$3$debugName);
@@ -51331,7 +51280,7 @@
               break;
             case 13:
               // then
-              t2 = $.$get$_log24();
+              t2 = $.$get$_log23();
               t2.log$4(B.Level_FINE_500, debugName + " changed remotely", null, null);
               $async$goto = 16;
               return A._asyncAwait($async$self._getLocalDocumentWithMetadata$1(documentIri), $async$_downloadAndMerge$3$debugName);
@@ -51365,7 +51314,7 @@
               break;
             case 15:
               // else
-              t2 = $.$get$_log24();
+              t2 = $.$get$_log23();
               t2.log$4(B.Level_FINE_500, debugName + " not found remotely (404)", null, null);
               $async$goto = 19;
               return A._asyncAwait($async$self._getLocalDocumentWithMetadata$1(documentIri), $async$_downloadAndMerge$3$debugName);
@@ -51417,7 +51366,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              $.$get$_log24().log$4(B.Level_FINE_500, "Syncing " + debugName, null, null);
+              $.$get$_log23().log$4(B.Level_FINE_500, "Syncing " + debugName, null, null);
               $async$goto = 2;
               return A._asyncAwait(A.retryOnConflict(new A.RemoteSyncOrchestrator__syncDocument_closure($async$self, documentIri, lastSyncTimestamp, debugName, syncTime), "syncing " + debugName, null, type$.Null), $async$_syncDocument$4$debugName);
             case 2:
@@ -51789,7 +51738,7 @@
               if (foreignIndices.length !== 0) {
                 t1 = A._arrayInstanceType(foreignIndices);
                 totalShards = new A.MappedListIterable(foreignIndices, t1._eval$1("int(1)")._as(new A.RemoteSyncOrchestrator__findForeignIndices_closure0()), t1._eval$1("MappedListIterable<1,int>")).reduce$1(0, new A.RemoteSyncOrchestrator__findForeignIndices_closure1());
-                $.$get$_log24().log$4(B.Level_INFO_800, "Found " + foreignIndices.length + " foreign indices with " + totalShards + " shards to sync for " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(resourceType, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
+                $.$get$_log23().log$4(B.Level_INFO_800, "Found " + foreignIndices.length + " foreign indices with " + totalShards + " shards to sync for " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(resourceType, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
               }
               $async$returnValue = foreignIndices;
               // goto return
@@ -51813,7 +51762,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              $.$get$_log24().log$4(B.Level_INFO_800, "Syncing resource type: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(resourceType, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
+              $.$get$_log23().log$4(B.Level_INFO_800, "Syncing resource type: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(resourceType, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
               $async$temp1 = J;
               $async$goto = 2;
               return A._asyncAwait($async$self._syncIndexDocuments$3(resourceType, lastSyncTimestamp, syncTime), $async$_syncResourceType$3);
@@ -51836,7 +51785,7 @@
               break;
             case 4:
               // after for
-              $.$get$_log24().log$4(B.Level_INFO_800, "Completed sync for resource type: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(resourceType, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
+              $.$get$_log23().log$4(B.Level_INFO_800, "Completed sync for resource type: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(resourceType, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
               // implicit return
               return A._asyncReturn(null, $async$completer);
           }
@@ -51855,7 +51804,7 @@
             case 0:
               // Function start
               t1 = index.indexIri;
-              $.$get$_log24().log$4(B.Level_FINE_500, "Syncing index: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(t1, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
+              $.$get$_log23().log$4(B.Level_FINE_500, "Syncing index: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(t1, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
               $async$temp1 = J;
               $async$goto = 2;
               return A._asyncAwait($async$self._buildShardSyncSpecs$1(index), $async$_syncIndex$4);
@@ -51878,7 +51827,7 @@
               break;
             case 4:
               // after for
-              $.$get$_log24().log$4(B.Level_INFO_800, "Completed sync for index: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(t1, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
+              $.$get$_log23().log$4(B.Level_INFO_800, "Completed sync for index: " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(t1, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
               // implicit return
               return A._asyncReturn(null, $async$completer);
           }
@@ -51898,7 +51847,7 @@
               // Function start
               shardIri = shard.shardIri;
               debugName = "Shard " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(shardIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure());
-              $.$get$_log24().log$4(B.Level_FINE_500, "Syncing: " + debugName, null, null);
+              $.$get$_log23().log$4(B.Level_FINE_500, "Syncing: " + debugName, null, null);
               $async$goto = 2;
               return A._asyncAwait(A.retryOnConflict(new A.RemoteSyncOrchestrator__syncShard_closure($async$self, shardIri, lastSyncTimestamp, debugName, shard, syncTime), "syncing " + debugName, null, type$.Null), $async$_syncShard$5);
             case 2:
@@ -52033,12 +51982,12 @@
               $async$exception = $async$errorStack.pop();
               t1 = A.unwrapException($async$exception);
               if (t1 instanceof A.ConcurrentUpdateException) {
-                $.$get$_log24().log$4(B.Level_FINE_500, "Conflict detected while syncing " + $async$self.debugName + ", retrying...", null, null);
+                $.$get$_log23().log$4(B.Level_FINE_500, "Conflict detected while syncing " + $async$self.debugName + ", retrying...", null, null);
                 throw $async$exception;
               } else {
                 e = t1;
                 st = A.getTraceFromException($async$exception);
-                $.$get$_log24().log$4(B.Level_WARNING_900, "Error syncing " + $async$self.debugName, e, type$.nullable_StackTrace._as(st));
+                $.$get$_log23().log$4(B.Level_WARNING_900, "Error syncing " + $async$self.debugName, e, type$.nullable_StackTrace._as(st));
                 throw $async$exception;
               }
               // goto after finally
@@ -52061,7 +52010,7 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 16
+    $signature: 18
   };
   A.RemoteSyncOrchestrator__buildShardSyncSpecs_closure.prototype = {
     call$1(shardIri) {
@@ -52110,19 +52059,19 @@
     call$1(value) {
       return this.filter.acceptedObjectValues.contains$1(0, type$.RdfObject._as(value));
     },
-    $signature: 19
+    $signature: 17
   };
   A.RemoteSyncOrchestrator__matchesFilter_closure0.prototype = {
     call$1(value) {
       return this.filter.acceptedObjectValues.contains$1(0, type$.RdfObject._as(value));
     },
-    $signature: 19
+    $signature: 17
   };
   A.RemoteSyncOrchestrator__getFinalEntrySet_closure.prototype = {
     call$1(entry) {
       return this.limitToResourceIris.contains$1(0, type$.IndexEntryWithIri._as(entry).resourceIri);
     },
-    $signature: 70
+    $signature: 88
   };
   A.RemoteSyncOrchestrator__findForeignIndices_closure.prototype = {
     call$1(entry) {
@@ -52284,7 +52233,7 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 16
+    $signature: 18
   };
   A.RemoteSyncOrchestrator__syncShard__closure.prototype = {
     call$1(e) {
@@ -52310,13 +52259,13 @@
         return B.TraversalDecision_1;
       return B.TraversalDecision_0;
     },
-    $signature: 18
+    $signature: 19
   };
   A.RemoteSyncOrchestrator__syncShard__closure2.prototype = {
     call$1(entry) {
       return type$.IndexEntryWithIri._as(entry).ourPhysicalClock > this.ourCurrentShardClock._values[3];
     },
-    $signature: 70
+    $signature: 88
   };
   A.ShardDocumentGenerator.prototype = {
     call$2(syncTime, lastSyncTimestamp) {
@@ -52333,7 +52282,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              t1 = $.$get$_log20();
+              t1 = $.$get$_log19();
               t1.log$4(B.Level_INFO_800, "Sync triggered - finding shards to update", null, null);
               t1.log$4(B.Level_FINE_500, "Last sync timestamp: " + A.S(lastSyncTimestamp), null, null);
               $async$goto = 3;
@@ -52369,7 +52318,7 @@
               break;
             case 5:
               // after for
-              $.$get$_log20().log$4(B.Level_INFO_800, "Synced " + syncedCount + " shard(s)", null, null);
+              $.$get$_log19().log$4(B.Level_INFO_800, "Synced " + syncedCount + " shard(s)", null, null);
             case 1:
               // return
               return A._asyncReturn($async$returnValue, $async$completer);
@@ -52399,10 +52348,10 @@
               entries = $async$result;
               t1 = J.getInterceptor$asx(entries);
               if (t1.get$isEmpty(entries)) {
-                t1 = $.$get$_log20();
+                t1 = $.$get$_log19();
                 t1.log$4(B.Level_FINE_500, "Shard " + shardIri.toString$0(0) + " has no active entries, generating empty graph", null, null);
               } else {
-                t2 = $.$get$_log20();
+                t2 = $.$get$_log19();
                 t2.log$4(B.Level_FINE_500, "Shard " + shardIri.toString$0(0) + " has " + t1.get$length(entries) + " active entries, generating document", null, null);
                 t1 = t2;
               }
@@ -52512,24 +52461,24 @@
     call$0() {
       return A._setArrayType([], type$.JSArray_RdfObject);
     },
-    $signature: 43
+    $signature: 31
   };
   A.buildShardAppData_closure.prototype = {
     call$2(triple, depth) {
       return triple.predicate.value === string$.https_ic ? B.TraversalDecision_1 : B.TraversalDecision_0;
     },
-    $signature: 18
+    $signature: 19
   };
   A.StandardSyncManager.prototype = {
     _initialize$0() {
       var _null = null,
         t1 = this._autoSyncConfig;
       if (t1.syncOnStartup) {
-        $.$get$_log10().log$4(B.Level_INFO_800, "Triggering startup sync", _null, _null);
+        $.$get$_log9().log$4(B.Level_INFO_800, "Triggering startup sync", _null, _null);
         A.Future_Future$microtask(new A.StandardSyncManager__initialize_closure(this), type$.void);
       }
       if (t1.enabled) {
-        $.$get$_log10().log$4(B.Level_INFO_800, "Enabling automatic sync with interval: " + t1.interval.toString$0(0), _null, _null);
+        $.$get$_log9().log$4(B.Level_INFO_800, "Enabling automatic sync with interval: " + t1.interval.toString$0(0), _null, _null);
         this._setupAutoSync$0();
       }
     },
@@ -52562,13 +52511,13 @@
             case 0:
               // Function start
               if ($async$self._isDisposed) {
-                $.$get$_log10().log$4(B.Level_WARNING_900, "Attempted to sync after disposal", null, null);
+                $.$get$_log9().log$4(B.Level_WARNING_900, "Attempted to sync after disposal", null, null);
                 // goto return
                 $async$goto = 1;
                 break;
               }
               if ($async$self._syncCompleter != null) {
-                $.$get$_log10().log$4(B.Level_FINE_500, "Sync already in progress, waiting for completion", null, null);
+                $.$get$_log9().log$4(B.Level_FINE_500, "Sync already in progress, waiting for completion", null, null);
                 $async$returnValue = $async$self._syncCompleter.future;
                 // goto return
                 $async$goto = 1;
@@ -52576,7 +52525,7 @@
               }
               $async$self._syncCompleter = new A._AsyncCompleter(new A._Future($.Zone__current, type$._Future_void), type$._AsyncCompleter_void);
               $async$handler = 4;
-              t1 = $.$get$_log10();
+              t1 = $.$get$_log9();
               t1.log$4(B.Level_INFO_800, "Starting sync operation (trigger: " + trigger.toString$0(0) + ")", null, null);
               $async$self._updateState$1(new A.SyncState(B.SyncStatus_1, $async$self._currentState.lastSyncTime, null, null, trigger));
               syncTime = $async$self._physicalTimestampFactory.call$0();
@@ -52597,7 +52546,7 @@
               $async$exception0 = $async$errorStack.pop();
               error = A.unwrapException($async$exception0);
               stackTrace = A.getTraceFromException($async$exception0);
-              $.$get$_log10().log$4(B.Level_SEVERE_1000, "Sync failed", error, type$.nullable_StackTrace._as(stackTrace));
+              $.$get$_log9().log$4(B.Level_SEVERE_1000, "Sync failed", error, type$.nullable_StackTrace._as(stackTrace));
               errorMessage = J.toString$0$(error);
               exception = type$.Exception._is(error) ? error : new A._Exception(J.toString$0$(error));
               $async$self._updateState$1(new A.SyncState(B.SyncStatus_3, $async$self._currentState.lastSyncTime, errorMessage, exception, trigger));
@@ -52637,10 +52586,10 @@
     enableAutoSync$1$interval(interval) {
       var t1, _this = this, _null = null;
       if (_this._isDisposed) {
-        $.$get$_log10().log$4(B.Level_WARNING_900, "Attempted to enable auto-sync after disposal", _null, _null);
+        $.$get$_log9().log$4(B.Level_WARNING_900, "Attempted to enable auto-sync after disposal", _null, _null);
         return;
       }
-      $.$get$_log10().log$4(B.Level_INFO_800, "Enabling automatic sync with interval: " + interval.toString$0(0), _null, _null);
+      $.$get$_log9().log$4(B.Level_INFO_800, "Enabling automatic sync with interval: " + interval.toString$0(0), _null, _null);
       t1 = _this._autoSyncTimer;
       if (t1 != null)
         t1.cancel$0();
@@ -52661,7 +52610,7 @@
   A.StandardSyncManager__setupAutoSync_closure.prototype = {
     call$1(_) {
       type$.Timer._as(_);
-      $.$get$_log10().log$4(B.Level_FINE_500, "Auto-sync timer triggered", null, null);
+      $.$get$_log9().log$4(B.Level_FINE_500, "Auto-sync timer triggered", null, null);
       this.$this.sync$1$trigger(B.SyncTrigger_2);
     },
     $signature: 91
@@ -52669,7 +52618,7 @@
   A.StandardSyncManager_enableAutoSync_closure.prototype = {
     call$1(_) {
       type$.Timer._as(_);
-      $.$get$_log10().log$4(B.Level_FINE_500, "Auto-sync timer triggered", null, null);
+      $.$get$_log9().log$4(B.Level_FINE_500, "Auto-sync timer triggered", null, null);
       this.$this.sync$1$trigger(B.SyncTrigger_2);
     },
     $signature: 91
@@ -52719,7 +52668,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              t1 = $.$get$_log19();
+              t1 = $.$get$_log18();
               t1.log$4(B.Level_INFO_800, "Phase 0: Sync Preparation - materializing local shard state", null, null);
               t2 = $async$self._sync_function$_storage;
               $async$goto = 2;
@@ -52750,7 +52699,7 @@
               $async$exception = $async$errorStack.pop();
               e = A.unwrapException($async$exception);
               st = A.getTraceFromException($async$exception);
-              $.$get$_log19().log$4(B.Level_SEVERE_1000, "Error during Phase 0 sync preparation", e, type$.nullable_StackTrace._as(st));
+              $.$get$_log18().log$4(B.Level_SEVERE_1000, "Error during Phase 0 sync preparation", e, type$.nullable_StackTrace._as(st));
               throw $async$exception;
               // goto after finally
               $async$goto = 6;
@@ -52796,7 +52745,7 @@
                 break;
               }
               backend = t1[_i];
-              t5 = $.$get$_log19();
+              t5 = $.$get$_log18();
               t5.log$4(B.Level_FINE_500, "Using backend: solid", null, null);
               t6 = backend._remotes, t7 = t6.length, _i0 = 0;
             case 6:
@@ -52854,7 +52803,7 @@
               $async$exception = $async$errorStack.pop();
               e = A.unwrapException($async$exception);
               st = A.getTraceFromException($async$exception);
-              $.$get$_log19().log$4(B.Level_SEVERE_1000, "Error during remote synchronization", e, type$.nullable_StackTrace._as(st));
+              $.$get$_log18().log$4(B.Level_SEVERE_1000, "Error during remote synchronization", e, type$.nullable_StackTrace._as(st));
               throw $async$exception;
               // goto after finally
               $async$goto = 14;
@@ -54049,7 +53998,7 @@
     call$1(iri) {
       return type$.IriTerm._as(iri).value;
     },
-    $signature: 15
+    $signature: 11
   };
   A.DriftStorage_getIndexEntries_closure0.prototype = {
     call$1(e) {
@@ -54058,13 +54007,13 @@
       t1 = e.entry;
       return new A.IndexEntryWithIri(this.$this._drift_storage$_iriTermFactory.call$1(e.resourceIri), t1.clockHash, t1.headerProperties, t1.updatedAt, t1.ourPhysicalClock, t1.isDeleted);
     },
-    $signature: 57
+    $signature: 63
   };
   A.DriftStorage_watchIndexEntries_closure.prototype = {
     call$1(iri) {
       return type$.IriTerm._as(iri).value;
     },
-    $signature: 15
+    $signature: 11
   };
   A.DriftStorage_watchIndexEntries_closure0.prototype = {
     call$1(entries) {
@@ -54081,7 +54030,7 @@
       t1 = e.entry;
       return new A.IndexEntryWithIri(this.$this._drift_storage$_iriTermFactory.call$1(e.resourceIri), t1.clockHash, t1.headerProperties, t1.updatedAt, t1.ourPhysicalClock, t1.isDeleted);
     },
-    $signature: 57
+    $signature: 63
   };
   A.DriftStorage_getSubscribedGroupIndices_closure.prototype = {
     call$1(subscription) {
@@ -54102,7 +54051,7 @@
     call$1(iri) {
       return type$.IriTerm._as(iri).value;
     },
-    $signature: 15
+    $signature: 11
   };
   A.DriftStorage_getIndexIrisForVersion_closure.prototype = {
     call$1(iri) {
@@ -54117,7 +54066,7 @@
       t1 = driftEntry.entry;
       return new A.IndexEntryWithIri(this.$this._drift_storage$_iriTermFactory.call$1(driftEntry.resourceIri), t1.clockHash, t1.headerProperties, t1.updatedAt, t1.ourPhysicalClock, t1.isDeleted);
     },
-    $signature: 57
+    $signature: 63
   };
   A.DriftStorage_getShardsToUpdate_closure.prototype = {
     call$1(iri) {
@@ -54133,7 +54082,7 @@
     call$1(iri) {
       return type$.IriTerm._as(iri).value;
     },
-    $signature: 15
+    $signature: 11
   };
   A.DriftStorage__convertToStoredDocuments_closure.prototype = {
     call$1(doc) {
@@ -54856,7 +54805,7 @@
         t2 = t1.$ti._eval$1("Expression.D");
       return new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.documentIriId), t2), B._ComparisonOperator_3X3);
     },
-    $signature: 11
+    $signature: 13
   };
   A.SyncDocumentDao_saveDocument_closure0.prototype = {
     call$1(d) {
@@ -54864,7 +54813,7 @@
         t2 = t1.$ti._eval$1("Expression.D");
       return new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.existingDocument.id), t2), B._ComparisonOperator_3X3);
     },
-    $signature: 11
+    $signature: 13
   };
   A.SyncDocumentDao_saveDocument_closure1.prototype = {
     call$1(d) {
@@ -54872,7 +54821,7 @@
         t2 = t1.$ti._eval$1("Expression.D");
       return new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.ifMatchUpdatedAt), t2), B._ComparisonOperator_3X3);
     },
-    $signature: 11
+    $signature: 13
   };
   A.SyncDocumentDao_getDocument_closure.prototype = {
     call$1(d) {
@@ -54880,13 +54829,13 @@
         t2 = t1.$ti._eval$1("Expression.D");
       return new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.documentIriId), t2), B._ComparisonOperator_3X3);
     },
-    $signature: 11
+    $signature: 13
   };
   A.SyncDocumentDao_getDocument_closure0.prototype = {
     call$1(d) {
       return A.ComparableExpr_isBiggerThanValue(type$.$SyncDocumentsTable._as(d).get$ourPhysicalClock(), this.ifChangedSincePhysicalClock, type$.int);
     },
-    $signature: 11
+    $signature: 13
   };
   A.SyncDocumentDao_getDocumentsModifiedSince_closure.prototype = {
     call$1(d) {
@@ -54896,7 +54845,7 @@
       t2 = t1.$ti._eval$1("Expression.D");
       return new A.BaseInfixOperator(new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.typeIriId), t2), B._ComparisonOperator_3X3), "AND", A.ComparableExpr_isBiggerThanValue(d.get$updatedAt(), this.timestamp, type$.int), B.Precedence_11_2_and, type$.BaseInfixOperator_bool);
     },
-    $signature: 11
+    $signature: 13
   };
   A.SyncDocumentDao_getDocumentsModifiedSince_closure0.prototype = {
     call$1(d) {
@@ -54912,7 +54861,7 @@
       t2 = t1.$ti._eval$1("Expression.D");
       return new A.BaseInfixOperator(new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.typeIriId), t2), B._ComparisonOperator_3X3), "AND", A.ComparableExpr_isBiggerThanValue(d.get$updatedAt(), this.timestamp, type$.int), B.Precedence_11_2_and, type$.BaseInfixOperator_bool);
     },
-    $signature: 11
+    $signature: 13
   };
   A.SyncDocumentDao_watchDocumentsModifiedSince_closure0.prototype = {
     call$1(d) {
@@ -55497,13 +55446,13 @@
     call$1(e) {
       return type$.$IndexEntriesTable._as(e).get$indexIriId().isIn$1(this.indexIds);
     },
-    $signature: 45
+    $signature: 51
   };
   A.IndexDao_getIndexEntries_closure0.prototype = {
     call$1(e) {
       return A.ComparableExpr_isBiggerThanValue(type$.$IndexEntriesTable._as(e).get$updatedAt(), this.cursorTimestamp, type$.int);
     },
-    $signature: 45
+    $signature: 51
   };
   A.IndexDao_getIndexEntries_closure1.prototype = {
     call$1(e) {
@@ -55515,7 +55464,7 @@
     call$1(e) {
       return type$.IndexEntry._as(e).resourceIriId;
     },
-    $signature: 67
+    $signature: 46
   };
   A.IndexDao_getIndexEntries_closure2.prototype = {
     call$1(e) {
@@ -55531,7 +55480,7 @@
     call$1(e) {
       return type$.$IndexEntriesTable._as(e).get$indexIriId().isIn$1(this.indexIds);
     },
-    $signature: 45
+    $signature: 51
   };
   A.IndexDao_watchIndexEntries_closure0.prototype = {
     call$1(e) {
@@ -55597,7 +55546,7 @@
     call$1(e) {
       return type$.IndexEntry._as(e).updatedAt;
     },
-    $signature: 67
+    $signature: 46
   };
   A.IndexDao_watchIndexEntries__closure1.prototype = {
     call$2(a, b) {
@@ -55611,7 +55560,7 @@
     call$1(e) {
       return type$.IndexEntry._as(e).resourceIriId;
     },
-    $signature: 67
+    $signature: 46
   };
   A.IndexDao_watchIndexEntries__closure2.prototype = {
     call$1(e) {
@@ -55864,7 +55813,7 @@
         t2 = t1.$ti._eval$1("Expression.D");
       return new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.remoteId), t2), B._ComparisonOperator_3X3);
     },
-    $signature: 66
+    $signature: 45
   };
   A.RemoteSyncStateDao_getRemoteLastSyncTimestamp_closure.prototype = {
     call$1(r) {
@@ -55872,7 +55821,7 @@
         t2 = t1.$ti._eval$1("Expression.D");
       return new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.remoteId), t2), B._ComparisonOperator_3X3);
     },
-    $signature: 66
+    $signature: 45
   };
   A.RemoteSyncStateDao_updateRemoteLastSyncTimestamp_closure.prototype = {
     call$1(r) {
@@ -55880,7 +55829,7 @@
         t2 = t1.$ti._eval$1("Expression.D");
       return new A._Comparison(t1, A.WithTypes_variable(t1, t2._as(this.remoteId), t2), B._ComparisonOperator_3X3);
     },
-    $signature: 66
+    $signature: 45
   };
   A.RemoteSyncStateDao_getETag_closure.prototype = {
     call$1(s) {
@@ -58808,13 +58757,13 @@
     call$1(_) {
       return true;
     },
-    $signature: 69
+    $signature: 68
   };
   A.SolidRemoteStorage_isAvailable_closure0.prototype = {
     call$1(_) {
       return false;
     },
-    $signature: 69
+    $signature: 68
   };
   A.SolidProfileParser.prototype = {
     _findStorageUrls$1(graph) {
@@ -59116,25 +59065,46 @@
       this.$this._pendingRefreshRequests.remove$1(0, this.requestId);
       throw A.wrapException(A.TimeoutException$("Token refresh request timed out after 10 seconds", null));
     },
-    $signature: 20
+    $signature: 27
+  };
+  A._deepConvertJsObject_closure.prototype = {
+    call$2(key, val) {
+      return new A.MapEntry(J.toString$0$(key), A._deepConvertJsObject(val), type$.MapEntry_String_dynamic);
+    },
+    $signature: 339
   };
   A.WebWorkerSender.prototype = {$isWorkerMessageSender: 1};
+  A.startWebWorkerLoop_closure0.prototype = {
+    call$1(message) {
+      init.G.self.postMessage(A.jsify(A.LinkedHashMap_LinkedHashMap$_literal(["__channel", true, "data", message], type$.String, type$.nullable_Object)));
+    },
+    $signature: 4
+  };
   A.startWebWorkerLoop_closure.prototype = {
     call$1($event) {
-      var t1,
-        data = A.dartify(A._asJSObject($event).data);
-      if (!type$.Map_String_dynamic._is(data))
+      var _this = this, _null = null,
+        data = A._deepConvertJsObject(A.dartify(A._asJSObject($event).data)),
+        t1 = $.$get$_log7();
+      t1.log$4(B.Level_FINE_500, "Worker received message: " + A._sanitizeForLog(data), _null, _null);
+      if (!type$.Map_dynamic_dynamic._is(data)) {
+        t1.log$4(B.Level_WARNING_900, "Data is not a Map, it is " + J.get$runtimeType$(data).toString$0(0) + ". Ignoring message.", _null, _null);
         return;
-      t1 = this._box_0;
-      A._handleWorkerMessage(data, new A.startWebWorkerLoop__closure(t1), new A.startWebWorkerLoop__closure0(t1), this.setupFn, new A.startWebWorkerLoop__closure1(t1), new A.startWebWorkerLoop__closure2(t1)).catchError$1(new A.startWebWorkerLoop__closure3());
+      }
+      type$.Map_String_dynamic._as(data);
+      if (J.$eq$(data.$index(0, "__channel"), true)) {
+        _this.channel._incomingController.add$1(0, data.$index(0, "data"));
+        return;
+      }
+      t1 = _this._box_0;
+      A._handleWorkerMessage(data, new A.startWebWorkerLoop__closure(t1), new A.startWebWorkerLoop__closure0(t1), _this.setupFn, _this.channel, new A.startWebWorkerLoop__closure1(t1), new A.startWebWorkerLoop__closure2(t1)).catchError$1(new A.startWebWorkerLoop__closure3());
     },
-    $signature: 31
+    $signature: 32
   };
   A.startWebWorkerLoop__closure.prototype = {
     call$0() {
       return this._box_0.context;
     },
-    $signature: 339
+    $signature: 340
   };
   A.startWebWorkerLoop__closure0.prototype = {
     call$1(newContext) {
@@ -59142,13 +59112,13 @@
       t1.context = newContext;
       t1.isInitializing = false;
     },
-    $signature: 340
+    $signature: 341
   };
   A.startWebWorkerLoop__closure1.prototype = {
     call$0() {
       return this._box_0.isInitializing;
     },
-    $signature: 341
+    $signature: 342
   };
   A.startWebWorkerLoop__closure2.prototype = {
     call$0() {
@@ -59159,21 +59129,15 @@
   A.startWebWorkerLoop__closure3.prototype = {
     call$2(e, st) {
       var t1, exception, _null = null;
-      $.$get$_log8().log$4(B.Level_SEVERE_1000, "Web worker error: " + A.S(e) + "\n" + A.S(st), _null, _null);
+      $.$get$_log7().log$4(B.Level_SEVERE_1000, "Web worker error: " + A.S(e) + "\n" + A.S(st), _null, _null);
       try {
         t1 = type$.String;
         init.G.self.postMessage(A.jsify(A.LinkedHashMap_LinkedHashMap$_literal(["type", "error", "error", A.S(e), "stackTrace", A.S(st)], t1, t1)));
       } catch (exception) {
-        $.$get$_log8().log$4(B.Level_SEVERE_1000, "Failed to send error to main thread", _null, _null);
+        $.$get$_log7().log$4(B.Level_SEVERE_1000, "Failed to send error to main thread", _null, _null);
       }
     },
-    $signature: 42
-  };
-  A._handleWorkerMessage_closure.prototype = {
-    call$1(message) {
-      init.G.self.postMessage(A.jsify(A.LinkedHashMap_LinkedHashMap$_literal(["__channel", true, "data", message], type$.String, type$.nullable_Object)));
-    },
-    $signature: 4
+    $signature: 41
   };
   A.WorkerChannel.prototype = {};
   A.WorkerContext.prototype = {
@@ -59331,7 +59295,7 @@
               $async$exception = $async$errorStack.pop();
               e = A.unwrapException($async$exception);
               st = A.getTraceFromException($async$exception);
-              $.$get$_log9().log$4(B.Level_SEVERE_1000, "Worker error handling message: " + A.S(e) + "\n" + A.S(st), null, null);
+              $.$get$_log8().log$4(B.Level_SEVERE_1000, "Worker error handling message: " + A.S(e) + "\n" + A.S(st), null, null);
               // goto after finally
               $async$goto = 6;
               break;
@@ -59694,7 +59658,7 @@
                   throw A.wrapException(t1);
                 }
                 t1 = t1._syncManager;
-                $.$get$_log10().log$4(B.Level_INFO_800, "Disabling automatic sync", null, null);
+                $.$get$_log9().log$4(B.Level_INFO_800, "Disabling automatic sync", null, null);
                 t2 = t1._autoSyncTimer;
                 if (t2 != null)
                   t2.cancel$0();
@@ -59750,7 +59714,7 @@
                     break;
                 }
                 statusString = t1;
-                $.$get$_log9().log$4(B.Level_FINE_500, "Worker: Responding to GetSyncState request with status: " + A.S(statusString) + " (trigger: " + A.S(state.lastTrigger) + ")", null, null);
+                $.$get$_log8().log$4(B.Level_FINE_500, "Worker: Responding to GetSyncState request with status: " + A.S(statusString) + " (trigger: " + A.S(state.lastTrigger) + ")", null, null);
                 t1 = new A.GetSyncStateResponse(statusString, state.lastSyncTime, state.errorMessage, state.lastTrigger, request.requestId).toJson$0();
                 init.G.self.postMessage(A.jsify(t1));
               } catch (exception) {
@@ -59789,11 +59753,11 @@
           t1 = null;
       }
       t2 = state.lastTrigger;
-      $.$get$_log9().log$4(B.Level_FINE_500, "Worker: Sending sync state update to main thread: " + t1 + " (trigger: " + A.S(t2) + ")", null, null);
+      $.$get$_log8().log$4(B.Level_FINE_500, "Worker: Sending sync state update to main thread: " + t1 + " (trigger: " + A.S(t2) + ")", null, null);
       t2 = new A.SyncStateUpdateMessage(t1, state.lastSyncTime, state.errorMessage, t2).toJson$0();
       init.G.self.postMessage(A.jsify(t2));
     },
-    $signature: 342
+    $signature: 343
   };
   A.WorkerContext__handleHydrateStream_closure.prototype = {
     call$1(batch) {
@@ -59810,7 +59774,7 @@
       t1 = new A.HydrationBatchMessage(updates, deletions, batch._0, false, this.request.requestId).toJson$0();
       init.G.self.postMessage(A.jsify(t1));
     },
-    $signature: 343
+    $signature: 344
   };
   A.WorkerContext__handleHydrateStream__closure.prototype = {
     call$1(item) {
@@ -59834,7 +59798,7 @@
       init.G.self.postMessage(A.jsify(t2));
       this.$this._activeStreams.remove$1(0, t1);
     },
-    $signature: 42
+    $signature: 41
   };
   A.WorkerContext__handleHydrateStream_closure0.prototype = {
     call$0() {
@@ -59985,13 +59949,13 @@
     call$1(t) {
       return type$.SyncTrigger._as(t)._name === this.json.$index(0, "trigger");
     },
-    $signature: 68
+    $signature: 70
   };
   A.SyncTriggerRequest_SyncTriggerRequest$fromJson_closure0.prototype = {
     call$0() {
       return B.SyncTrigger_0;
     },
-    $signature: 63
+    $signature: 69
   };
   A.SyncTriggerResponse.prototype = {
     toJson$0() {
@@ -60054,13 +60018,13 @@
     call$1(t) {
       return type$.SyncTrigger._as(t)._name === this.json.$index(0, "lastTrigger");
     },
-    $signature: 68
+    $signature: 70
   };
   A.GetSyncStateResponse_GetSyncStateResponse$fromJson_closure0.prototype = {
     call$0() {
       return B.SyncTrigger_0;
     },
-    $signature: 63
+    $signature: 69
   };
   A.SyncStateUpdateMessage.prototype = {
     toJson$0() {
@@ -60084,13 +60048,13 @@
     call$1(t) {
       return type$.SyncTrigger._as(t)._name === this.json.$index(0, "lastTrigger");
     },
-    $signature: 68
+    $signature: 70
   };
   A.SyncStateUpdateMessage_SyncStateUpdateMessage$fromJson_closure0.prototype = {
     call$0() {
       return B.SyncTrigger_0;
     },
-    $signature: 63
+    $signature: 69
   };
   A.Level.prototype = {
     $eq(_, other) {
@@ -60189,7 +60153,7 @@
         $parent._children.$indexSet(0, thisName, t1);
       return t1;
     },
-    $signature: 349
+    $signature: 350
   };
   A.Context.prototype = {
     absolute$15(part1, part2, part3, part4, part5, part6, part7, part8, part9, part10, part11, part12, part13, part14, part15) {
@@ -60698,7 +60662,7 @@
       A._asStringQ(arg);
       return arg == null ? "null" : '"' + arg + '"';
     },
-    $signature: 350
+    $signature: 351
   };
   A._PathDirection.prototype = {
     toString$0(_) {
@@ -61144,7 +61108,7 @@
       if (t1 != null)
         A.print("  \u21b3 Stack trace:\n" + A._indentStackTrace(t1));
     },
-    $signature: 351
+    $signature: 352
   };
   A._indentStackTrace_closure.prototype = {
     call$1(line) {
@@ -61760,7 +61724,7 @@
       A._asString(_);
       return new A.OAEPEncoding_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 352
+    $signature: 353
   };
   A.OAEPEncoding_factoryConfig__closure.prototype = {
     call$0() {
@@ -61768,7 +61732,7 @@
       t1.toString;
       return A.OAEPEncoding_OAEPEncoding$withSHA1($.$get$registry().create$1$1(t1, type$.AsymmetricBlockCipher), null);
     },
-    $signature: 353
+    $signature: 354
   };
   A.OAEPEncoding_OAEPEncoding$withSHA1_closure.prototype = {
     call$0() {
@@ -61843,7 +61807,7 @@
       A._asString(_);
       return new A.PKCS1Encoding_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 355
+    $signature: 356
   };
   A.PKCS1Encoding_factoryConfig__closure.prototype = {
     call$0() {
@@ -61851,7 +61815,7 @@
       t1.toString;
       return A.PKCS1Encoding$($.$get$registry().create$1$1(t1, type$.AsymmetricBlockCipher));
     },
-    $signature: 356
+    $signature: 357
   };
   A.RSAEngine.prototype = {
     get$inputBlockSize() {
@@ -61949,7 +61913,7 @@
     call$0() {
       return A.RSAEngine$();
     },
-    $signature: 357
+    $signature: 358
   };
   A.AESEngine.prototype = {
     _subWord$1(x) {
@@ -62465,7 +62429,7 @@
       var t1 = J.JSArray_JSArray$fixed(0, type$.int);
       return new A.AESEngine(t1);
     },
-    $signature: 358
+    $signature: 359
   };
   A.DesBase.prototype = {
     generateWorkingKey$2(encrypting, key) {
@@ -62752,7 +62716,7 @@
     call$0() {
       return new A.DESedeEngine();
     },
-    $signature: 359
+    $signature: 360
   };
   A.CBCBlockCipher.prototype = {
     get$blockSize() {
@@ -62821,7 +62785,7 @@
       A._asString(_);
       return new A.CBCBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 360
+    $signature: 361
   };
   A.CBCBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -62829,7 +62793,7 @@
       t1.toString;
       return A.CBCBlockCipher$($.$get$registry().create$1$1(t1, type$.BlockCipher));
     },
-    $signature: 361
+    $signature: 362
   };
   A.CCMBlockCipher.prototype = {
     get$macSize() {
@@ -62878,7 +62842,7 @@
       A._asString(_);
       return new A.CCMBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 362
+    $signature: 363
   };
   A.CCMBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -62893,7 +62857,7 @@
         A.throwExpression(A.ArgumentError$("CCM requires a block size of 16", null));
       return new A.CCMBlockCipher(new A._CopyingBytesBuilder(t1), new A._CopyingBytesBuilder(t1), underlying);
     },
-    $signature: 363
+    $signature: 364
   };
   A.CFBBlockCipher.prototype = {
     reset$0() {
@@ -62978,7 +62942,7 @@
       A._asString(_);
       return new A.CFBBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 364
+    $signature: 365
   };
   A.CFBBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -63001,7 +62965,7 @@
       t1._cfbOutV = new Uint8Array(t2);
       return t1;
     },
-    $signature: 365
+    $signature: 366
   };
   A.CTRBlockCipher.prototype = {};
   A.CTRBlockCipher_factoryConfig_closure.prototype = {
@@ -63009,7 +62973,7 @@
       A._asString(_);
       return new A.CTRBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 366
+    $signature: 367
   };
   A.CTRBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -63020,7 +62984,7 @@
       t1 = underlying.get$blockSize();
       return new A.CTRBlockCipher(A.CTRStreamCipher$(underlying), t1);
     },
-    $signature: 367
+    $signature: 368
   };
   A.ECBBlockCipher.prototype = {
     get$blockSize() {
@@ -63041,7 +63005,7 @@
       A._asString(_);
       return new A.ECBBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 368
+    $signature: 369
   };
   A.ECBBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -63049,7 +63013,7 @@
       t1.toString;
       return new A.ECBBlockCipher($.$get$registry().create$1$1(t1, type$.BlockCipher));
     },
-    $signature: 369
+    $signature: 370
   };
   A.GCMBlockCipher.prototype = {
     init$2(forEncryption, params) {
@@ -63225,7 +63189,7 @@
       A._asString(_);
       return new A.GCMBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 370
+    $signature: 371
   };
   A.GCMBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -63237,7 +63201,7 @@
       t1[0] = 225;
       return new A.GCMBlockCipher(t1, underlying);
     },
-    $signature: 371
+    $signature: 372
   };
   A.GCTRBlockCipher.prototype = {
     get$blockSize() {
@@ -63341,7 +63305,7 @@
       A._asString(_);
       return new A.GCTRBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 372
+    $signature: 373
   };
   A.GCTRBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -63360,7 +63324,7 @@
       t1._gctr$_ofbOutV = new Uint8Array(t2);
       return t1;
     },
-    $signature: 373
+    $signature: 374
   };
   A.IGEBlockCipher.prototype = {
     get$blockSize() {
@@ -63452,7 +63416,7 @@
       A._asString(_);
       return new A.IGEBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 374
+    $signature: 375
   };
   A.IGEBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -63471,7 +63435,7 @@
       t1.__IGEBlockCipher__yPrev_A = new Uint8Array(t2);
       return t1;
     },
-    $signature: 375
+    $signature: 376
   };
   A.OFBBlockCipher.prototype = {
     reset$0() {
@@ -63549,7 +63513,7 @@
       A._asString(_);
       return new A.OFBBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 376
+    $signature: 377
   };
   A.OFBBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -63572,7 +63536,7 @@
       t1._ofbOutV = new Uint8Array(t2);
       return t1;
     },
-    $signature: 377
+    $signature: 378
   };
   A.SICBlockCipher.prototype = {};
   A.SICBlockCipher_factoryConfig_closure.prototype = {
@@ -63580,7 +63544,7 @@
       A._asString(_);
       return new A.SICBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 378
+    $signature: 379
   };
   A.SICBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -63591,7 +63555,7 @@
       t1 = underlying.get$blockSize();
       return new A.SICBlockCipher(A.SICStreamCipher$(underlying), t1);
     },
-    $signature: 379
+    $signature: 380
   };
   A.RC2Engine.prototype = {
     get$blockSize() {
@@ -64037,7 +64001,7 @@
     call$0() {
       return new A.RC2Engine();
     },
-    $signature: 380
+    $signature: 381
   };
   A.Blake2bDigest.prototype = {
     get$algorithmName() {
@@ -64539,7 +64503,7 @@
       t1.init$0();
       return t1;
     },
-    $signature: 381
+    $signature: 382
   };
   A.CSHAKEDigest.prototype = {
     CSHAKEDigest$3(bitLength, $N, $S) {
@@ -64601,7 +64565,7 @@
       A._asString(_);
       return new A.CSHAKEDigest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 382
+    $signature: 383
   };
   A.CSHAKEDigest_factoryConfig__closure.prototype = {
     call$0() {
@@ -64616,7 +64580,7 @@
       t1.CSHAKEDigest$3(bitLength, _null, _null);
       return t1;
     },
-    $signature: 383
+    $signature: 384
   };
   A.KeccakDigest.prototype = {
     KeccakDigest$1(bitLength) {
@@ -64652,7 +64616,7 @@
       A._asString(_);
       return new A.KeccakDigest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 384
+    $signature: 385
   };
   A.KeccakDigest_factoryConfig__closure.prototype = {
     call$0() {
@@ -64665,7 +64629,7 @@
       t1.KeccakDigest$1(bitLength);
       return t1;
     },
-    $signature: 385
+    $signature: 386
   };
   A.MD2Digest.prototype = {
     get$algorithmName() {
@@ -64783,7 +64747,7 @@
         t2 = new Uint8Array(16);
       return new A.MD2Digest(t1, t2, new Uint8Array(16));
     },
-    $signature: 386
+    $signature: 387
   };
   A.MD4Digest.prototype = {
     resetState$0() {
@@ -64918,7 +64882,7 @@
       t3.reset$0();
       return t3;
     },
-    $signature: 387
+    $signature: 388
   };
   A.MD5Digest.prototype = {
     resetState$0() {
@@ -65068,7 +65032,7 @@
       t3.reset$0();
       return t3;
     },
-    $signature: 388
+    $signature: 389
   };
   A.RIPEMD128Digest.prototype = {
     resetState$0() {
@@ -65299,7 +65263,7 @@
       t3.reset$0();
       return t3;
     },
-    $signature: 389
+    $signature: 390
   };
   A.RIPEMD160Digest.prototype = {
     resetState$0() {
@@ -65710,7 +65674,7 @@
       t3.reset$0();
       return t3;
     },
-    $signature: 390
+    $signature: 391
   };
   A.RIPEMD256Digest.prototype = {
     resetState$0() {
@@ -65960,7 +65924,7 @@
       t3.reset$0();
       return t3;
     },
-    $signature: 391
+    $signature: 392
   };
   A.RIPEMD320Digest.prototype = {
     resetState$0() {
@@ -66395,7 +66359,7 @@
       t3.reset$0();
       return t3;
     },
-    $signature: 392
+    $signature: 393
   };
   A.SHA1Digest.prototype = {
     resetState$0() {
@@ -66775,7 +66739,7 @@
       t3.reset$0();
       return t3;
     },
-    $signature: 393
+    $signature: 394
   };
   A.SHA256Digest.prototype = {
     resetState$0() {
@@ -66966,7 +66930,7 @@
       t3.reset$0();
       return t3;
     },
-    $signature: 394
+    $signature: 395
   };
   A.SHA3Digest.prototype = {
     SHA3Digest$1(bitLength) {
@@ -67001,7 +66965,7 @@
       A._asString(_);
       return new A.SHA3Digest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 395
+    $signature: 396
   };
   A.SHA3Digest_factoryConfig__closure.prototype = {
     call$0() {
@@ -67014,7 +66978,7 @@
       t1.SHA3Digest$1(bitLength);
       return t1;
     },
-    $signature: 396
+    $signature: 397
   };
   A.SHA384Digest.prototype = {
     reset$0() {
@@ -67065,7 +67029,7 @@
       t1.reset$0();
       return t1;
     },
-    $signature: 397
+    $signature: 398
   };
   A.SHA512Digest.prototype = {
     reset$0() {
@@ -67118,7 +67082,7 @@
       t1.reset$0();
       return t1;
     },
-    $signature: 398
+    $signature: 399
   };
   A.SHA512tDigest.prototype = {
     get$algorithmName() {
@@ -67163,7 +67127,7 @@
       A._asString(_);
       return new A.SHA512tDigest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 399
+    $signature: 400
   };
   A.SHA512tDigest_factoryConfig__closure.prototype = {
     call$0() {
@@ -67244,7 +67208,7 @@
       t18.reset$0();
       return t18;
     },
-    $signature: 400
+    $signature: 401
   };
   A.SHAKEDigest.prototype = {
     SHAKEDigest$1(bitLength) {
@@ -67285,7 +67249,7 @@
       A._asString(_);
       return new A.SHAKEDigest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 401
+    $signature: 402
   };
   A.SHAKEDigest_factoryConfig__closure.prototype = {
     call$0() {
@@ -67293,7 +67257,7 @@
       t1.toString;
       return A.SHAKEDigest$(A.int_parse(t1, null, null));
     },
-    $signature: 402
+    $signature: 403
   };
   A.SM3Digest.prototype = {
     resetState$0() {
@@ -67406,7 +67370,7 @@
       t1.reset$0();
       return t1;
     },
-    $signature: 403
+    $signature: 404
   };
   A.TigerDigest.prototype = {
     reset$0() {
@@ -67851,7 +67815,7 @@
       t1.reset$0();
       return t1;
     },
-    $signature: 404
+    $signature: 405
   };
   A.WhirlpoolDigest.prototype = {
     reset$0() {
@@ -68416,7 +68380,7 @@
       t1.reset$0();
       return t1;
     },
-    $signature: 405
+    $signature: 406
   };
   A.ECSignature.prototype = {
     toString$0(_) {
@@ -68444,7 +68408,7 @@
         t5 = A._BigIntImpl_parse("e95e4a5f737059dc60df5991d45029409e60fc09", 16);
       return type$.ECCurve_brainpoolp160r1._as(A.constructFpStandardCurve("brainpoolp160r1", A.brainpoolp160r1_ECCurve_brainpoolp160r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 406
+    $signature: 407
   };
   A.ECCurve_brainpoolp160t1.prototype = {};
   A.ECCurve_brainpoolp160t1_factoryConfig_closure.prototype = {
@@ -68456,7 +68420,7 @@
         t5 = A._BigIntImpl_parse("e95e4a5f737059dc60df5991d45029409e60fc09", 16);
       return type$.ECCurve_brainpoolp160t1._as(A.constructFpStandardCurve("brainpoolp160t1", A.brainpoolp160t1_ECCurve_brainpoolp160t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 407
+    $signature: 408
   };
   A.ECCurve_brainpoolp192r1.prototype = {};
   A.ECCurve_brainpoolp192r1_factoryConfig_closure.prototype = {
@@ -68468,7 +68432,7 @@
         t5 = A._BigIntImpl_parse(string$.c302f42, 16);
       return type$.ECCurve_brainpoolp192r1._as(A.constructFpStandardCurve("brainpoolp192r1", A.brainpoolp192r1_ECCurve_brainpoolp192r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 408
+    $signature: 409
   };
   A.ECCurve_brainpoolp192t1.prototype = {};
   A.ECCurve_brainpoolp192t1_factoryConfig_closure.prototype = {
@@ -68480,7 +68444,7 @@
         t5 = A._BigIntImpl_parse(string$.c302f42, 16);
       return type$.ECCurve_brainpoolp192t1._as(A.constructFpStandardCurve("brainpoolp192t1", A.brainpoolp192t1_ECCurve_brainpoolp192t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 409
+    $signature: 410
   };
   A.ECCurve_brainpoolp224r1.prototype = {};
   A.ECCurve_brainpoolp224r1_factoryConfig_closure.prototype = {
@@ -68492,7 +68456,7 @@
         t5 = A._BigIntImpl_parse(string$.d7c1340, 16);
       return type$.ECCurve_brainpoolp224r1._as(A.constructFpStandardCurve("brainpoolp224r1", A.brainpoolp224r1_ECCurve_brainpoolp224r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 410
+    $signature: 411
   };
   A.ECCurve_brainpoolp224t1.prototype = {};
   A.ECCurve_brainpoolp224t1_factoryConfig_closure.prototype = {
@@ -68504,7 +68468,7 @@
         t5 = A._BigIntImpl_parse(string$.d7c1340, 16);
       return type$.ECCurve_brainpoolp224t1._as(A.constructFpStandardCurve("brainpoolp224t1", A.brainpoolp224t1_ECCurve_brainpoolp224t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 411
+    $signature: 412
   };
   A.ECCurve_brainpoolp256r1.prototype = {};
   A.ECCurve_brainpoolp256r1_factoryConfig_closure.prototype = {
@@ -68516,7 +68480,7 @@
         t5 = A._BigIntImpl_parse(string$.a9fb571, 16);
       return type$.ECCurve_brainpoolp256r1._as(A.constructFpStandardCurve("brainpoolp256r1", A.brainpoolp256r1_ECCurve_brainpoolp256r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 412
+    $signature: 413
   };
   A.ECCurve_brainpoolp256t1.prototype = {};
   A.ECCurve_brainpoolp256t1_factoryConfig_closure.prototype = {
@@ -68528,7 +68492,7 @@
         t5 = A._BigIntImpl_parse(string$.a9fb571, 16);
       return type$.ECCurve_brainpoolp256t1._as(A.constructFpStandardCurve("brainpoolp256t1", A.brainpoolp256t1_ECCurve_brainpoolp256t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 413
+    $signature: 414
   };
   A.ECCurve_brainpoolp320r1.prototype = {};
   A.ECCurve_brainpoolp320r1_factoryConfig_closure.prototype = {
@@ -68540,7 +68504,7 @@
         t5 = A._BigIntImpl_parse(string$.d35e475, 16);
       return type$.ECCurve_brainpoolp320r1._as(A.constructFpStandardCurve("brainpoolp320r1", A.brainpoolp320r1_ECCurve_brainpoolp320r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 414
+    $signature: 415
   };
   A.ECCurve_brainpoolp320t1.prototype = {};
   A.ECCurve_brainpoolp320t1_factoryConfig_closure.prototype = {
@@ -68552,7 +68516,7 @@
         t5 = A._BigIntImpl_parse(string$.d35e475, 16);
       return type$.ECCurve_brainpoolp320t1._as(A.constructFpStandardCurve("brainpoolp320t1", A.brainpoolp320t1_ECCurve_brainpoolp320t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 415
+    $signature: 416
   };
   A.ECCurve_brainpoolp384r1.prototype = {};
   A.ECCurve_brainpoolp384r1_factoryConfig_closure.prototype = {
@@ -68564,7 +68528,7 @@
         t5 = A._BigIntImpl_parse(string$.x38cb91e3, 16);
       return type$.ECCurve_brainpoolp384r1._as(A.constructFpStandardCurve("brainpoolp384r1", A.brainpoolp384r1_ECCurve_brainpoolp384r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 416
+    $signature: 417
   };
   A.ECCurve_brainpoolp384t1.prototype = {};
   A.ECCurve_brainpoolp384t1_factoryConfig_closure.prototype = {
@@ -68576,7 +68540,7 @@
         t5 = A._BigIntImpl_parse(string$.x38cb91e3, 16);
       return type$.ECCurve_brainpoolp384t1._as(A.constructFpStandardCurve("brainpoolp384t1", A.brainpoolp384t1_ECCurve_brainpoolp384t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 417
+    $signature: 418
   };
   A.ECCurve_brainpoolp512r1.prototype = {};
   A.ECCurve_brainpoolp512r1_factoryConfig_closure.prototype = {
@@ -68588,7 +68552,7 @@
         t5 = A._BigIntImpl_parse(string$.aadd9d0, 16);
       return type$.ECCurve_brainpoolp512r1._as(A.constructFpStandardCurve("brainpoolp512r1", A.brainpoolp512r1_ECCurve_brainpoolp512r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 418
+    $signature: 419
   };
   A.ECCurve_brainpoolp512t1.prototype = {};
   A.ECCurve_brainpoolp512t1_factoryConfig_closure.prototype = {
@@ -68600,7 +68564,7 @@
         t5 = A._BigIntImpl_parse(string$.aadd9d0, 16);
       return type$.ECCurve_brainpoolp512t1._as(A.constructFpStandardCurve("brainpoolp512t1", A.brainpoolp512t1_ECCurve_brainpoolp512t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 419
+    $signature: 420
   };
   A.ECCurve_gostr3410_2001_cryptopro_a.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_a_factoryConfig_closure.prototype = {
@@ -68612,7 +68576,7 @@
         t5 = A._BigIntImpl_parse(string$.fffffffff6, 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_a._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-A", A.gostr3410_2001_cryptopro_a_ECCurve_gostr3410_2001_cryptopro_a__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 420
+    $signature: 421
   };
   A.ECCurve_gostr3410_2001_cryptopro_b.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_b_factoryConfig_closure.prototype = {
@@ -68624,7 +68588,7 @@
         t5 = A._BigIntImpl_parse("800000000000000000000000000000015f700cfff1a624e5e497161bcc8a198f", 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_b._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-B", A.gostr3410_2001_cryptopro_b_ECCurve_gostr3410_2001_cryptopro_b__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 421
+    $signature: 422
   };
   A.ECCurve_gostr3410_2001_cryptopro_c.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_c_factoryConfig_closure.prototype = {
@@ -68636,7 +68600,7 @@
         t5 = A._BigIntImpl_parse(string$.x39b9f605, 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_c._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-C", A.gostr3410_2001_cryptopro_c_ECCurve_gostr3410_2001_cryptopro_c__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 422
+    $signature: 423
   };
   A.ECCurve_gostr3410_2001_cryptopro_xcha.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_xcha_factoryConfig_closure.prototype = {
@@ -68648,7 +68612,7 @@
         t5 = A._BigIntImpl_parse(string$.fffffffff6, 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_xcha._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-XchA", A.gostr3410_2001_cryptopro_xcha_ECCurve_gostr3410_2001_cryptopro_xcha__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 423
+    $signature: 424
   };
   A.ECCurve_gostr3410_2001_cryptopro_xchb.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_xchb_factoryConfig_closure.prototype = {
@@ -68660,7 +68624,7 @@
         t5 = A._BigIntImpl_parse(string$.x39b9f605, 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_xchb._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-XchB", A.gostr3410_2001_cryptopro_xchb_ECCurve_gostr3410_2001_cryptopro_xchb__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 637
+    $signature: 638
   };
   A.ECCurve_prime192v1.prototype = {};
   A.ECCurve_prime192v1_factoryConfig_closure.prototype = {
@@ -68672,7 +68636,7 @@
         t5 = A._BigIntImpl_parse(string$.fffffff9, 16);
       return type$.ECCurve_prime192v1._as(A.constructFpStandardCurve("prime192v1", A.prime192v1_ECCurve_prime192v1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("3045ae6fc8422f64ed579528d38120eae12196d5", 16)));
     },
-    $signature: 425
+    $signature: 426
   };
   A.ECCurve_prime192v2.prototype = {};
   A.ECCurve_prime192v2_factoryConfig_closure.prototype = {
@@ -68684,7 +68648,7 @@
         t5 = A._BigIntImpl_parse("fffffffffffffffffffffffe5fb1a724dc80418648d8dd31", 16);
       return type$.ECCurve_prime192v2._as(A.constructFpStandardCurve("prime192v2", A.prime192v2_ECCurve_prime192v2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("31a92ee2029fd10d901b113e990710f0d21ac6b6", 16)));
     },
-    $signature: 426
+    $signature: 427
   };
   A.ECCurve_prime192v3.prototype = {};
   A.ECCurve_prime192v3_factoryConfig_closure.prototype = {
@@ -68696,7 +68660,7 @@
         t5 = A._BigIntImpl_parse("ffffffffffffffffffffffff7a62d031c83f4294f640ec13", 16);
       return type$.ECCurve_prime192v3._as(A.constructFpStandardCurve("prime192v3", A.prime192v3_ECCurve_prime192v3__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("c469684435deb378c4b65ca9591e2a5763059a2e", 16)));
     },
-    $signature: 427
+    $signature: 428
   };
   A.ECCurve_prime239v1.prototype = {};
   A.ECCurve_prime239v1_factoryConfig_closure.prototype = {
@@ -68708,7 +68672,7 @@
         t5 = A._BigIntImpl_parse("7fffffffffffffffffffffff7fffff9e5e9a9f5d9071fbd1522688909d0b", 16);
       return type$.ECCurve_prime239v1._as(A.constructFpStandardCurve("prime239v1", A.prime239v1_ECCurve_prime239v1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("e43bb460f0b80cc0c0b075798e948060f8321b7d", 16)));
     },
-    $signature: 428
+    $signature: 429
   };
   A.ECCurve_prime239v2.prototype = {};
   A.ECCurve_prime239v2_factoryConfig_closure.prototype = {
@@ -68720,7 +68684,7 @@
         t5 = A._BigIntImpl_parse("7fffffffffffffffffffffff800000cfa7e8594377d414c03821bc582063", 16);
       return type$.ECCurve_prime239v2._as(A.constructFpStandardCurve("prime239v2", A.prime239v2_ECCurve_prime239v2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("e8b4011604095303ca3b8099982be09fcb9ae616", 16)));
     },
-    $signature: 429
+    $signature: 430
   };
   A.ECCurve_prime239v3.prototype = {};
   A.ECCurve_prime239v3_factoryConfig_closure.prototype = {
@@ -68732,7 +68696,7 @@
         t5 = A._BigIntImpl_parse("7fffffffffffffffffffffff7fffff975deb41b3a6057c3c432146526551", 16);
       return type$.ECCurve_prime239v3._as(A.constructFpStandardCurve("prime239v3", A.prime239v3_ECCurve_prime239v3__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("7d7374168ffe3471b60a857686a19475d3bfa2ff", 16)));
     },
-    $signature: 430
+    $signature: 431
   };
   A.ECCurve_prime256v1.prototype = {};
   A.ECCurve_prime256v1_factoryConfig_closure.prototype = {
@@ -68744,7 +68708,7 @@
         t5 = A._BigIntImpl_parse(string$.ffffff00, 16);
       return type$.ECCurve_prime256v1._as(A.constructFpStandardCurve("prime256v1", A.prime256v1_ECCurve_prime256v1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("c49d360886e704936a6678e1139d26b7819f7e90", 16)));
     },
-    $signature: 431
+    $signature: 432
   };
   A.ECCurve_secp112r1.prototype = {};
   A.ECCurve_secp112r1_factoryConfig_closure.prototype = {
@@ -68756,7 +68720,7 @@
         t5 = A._BigIntImpl_parse("db7c2abf62e35e7628dfac6561c5", 16);
       return type$.ECCurve_secp112r1._as(A.constructFpStandardCurve("secp112r1", A.secp112r1_ECCurve_secp112r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("00f50b028e4d696e676875615175290472783fb1", 16)));
     },
-    $signature: 432
+    $signature: 433
   };
   A.ECCurve_secp112r2.prototype = {};
   A.ECCurve_secp112r2_factoryConfig_closure.prototype = {
@@ -68768,7 +68732,7 @@
         t5 = A._BigIntImpl_parse("36df0aafd8b8d7597ca10520d04b", 16);
       return type$.ECCurve_secp112r2._as(A.constructFpStandardCurve("secp112r2", A.secp112r2_ECCurve_secp112r2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("4", 16), t5, t1, A._BigIntImpl_parse("002757a1114d696e6768756151755316c05e0bd4", 16)));
     },
-    $signature: 433
+    $signature: 434
   };
   A.ECCurve_secp128r1.prototype = {};
   A.ECCurve_secp128r1_factoryConfig_closure.prototype = {
@@ -68780,7 +68744,7 @@
         t5 = A._BigIntImpl_parse("fffffffe0000000075a30d1b9038a115", 16);
       return type$.ECCurve_secp128r1._as(A.constructFpStandardCurve("secp128r1", A.secp128r1_ECCurve_secp128r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("000e0d4d696e6768756151750cc03a4473d03679", 16)));
     },
-    $signature: 434
+    $signature: 435
   };
   A.ECCurve_secp128r2.prototype = {};
   A.ECCurve_secp128r2_factoryConfig_closure.prototype = {
@@ -68792,7 +68756,7 @@
         t5 = A._BigIntImpl_parse("3fffffff7fffffffbe0024720613b5a3", 16);
       return type$.ECCurve_secp128r2._as(A.constructFpStandardCurve("secp128r2", A.secp128r2_ECCurve_secp128r2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("4", 16), t5, t1, A._BigIntImpl_parse("004d696e67687561517512d8f03431fce63b88f4", 16)));
     },
-    $signature: 435
+    $signature: 436
   };
   A.ECCurve_secp160k1.prototype = {};
   A.ECCurve_secp160k1_factoryConfig_closure.prototype = {
@@ -68804,7 +68768,7 @@
         t5 = A._BigIntImpl_parse("100000000000000000001b8fa16dfab9aca16b6b3", 16);
       return type$.ECCurve_secp160k1._as(A.constructFpStandardCurve("secp160k1", A.secp160k1_ECCurve_secp160k1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 436
+    $signature: 437
   };
   A.ECCurve_secp160r1.prototype = {};
   A.ECCurve_secp160r1_factoryConfig_closure.prototype = {
@@ -68816,7 +68780,7 @@
         t5 = A._BigIntImpl_parse("100000000000000000001f4c8f927aed3ca752257", 16);
       return type$.ECCurve_secp160r1._as(A.constructFpStandardCurve("secp160r1", A.secp160r1_ECCurve_secp160r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("1053cde42c14d696e67687561517533bf3f83345", 16)));
     },
-    $signature: 437
+    $signature: 438
   };
   A.ECCurve_secp160r2.prototype = {};
   A.ECCurve_secp160r2_factoryConfig_closure.prototype = {
@@ -68828,7 +68792,7 @@
         t5 = A._BigIntImpl_parse("100000000000000000000351ee786a818f3a1a16b", 16);
       return type$.ECCurve_secp160r2._as(A.constructFpStandardCurve("secp160r2", A.secp160r2_ECCurve_secp160r2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("b99b99b099b323e02709a4d696e6768756151751", 16)));
     },
-    $signature: 438
+    $signature: 439
   };
   A.ECCurve_secp192k1.prototype = {};
   A.ECCurve_secp192k1_factoryConfig_closure.prototype = {
@@ -68840,7 +68804,7 @@
         t5 = A._BigIntImpl_parse("fffffffffffffffffffffffe26f2fc170f69466a74defd8d", 16);
       return type$.ECCurve_secp192k1._as(A.constructFpStandardCurve("secp192k1", A.secp192k1_ECCurve_secp192k1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 439
+    $signature: 440
   };
   A.ECCurve_secp192r1.prototype = {};
   A.ECCurve_secp192r1_factoryConfig_closure.prototype = {
@@ -68852,7 +68816,7 @@
         t5 = A._BigIntImpl_parse(string$.fffffff9, 16);
       return type$.ECCurve_secp192r1._as(A.constructFpStandardCurve("secp192r1", A.secp192r1_ECCurve_secp192r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("3045ae6fc8422f64ed579528d38120eae12196d5", 16)));
     },
-    $signature: 440
+    $signature: 441
   };
   A.ECCurve_secp224k1.prototype = {};
   A.ECCurve_secp224k1_factoryConfig_closure.prototype = {
@@ -68864,7 +68828,7 @@
         t5 = A._BigIntImpl_parse("10000000000000000000000000001dce8d2ec6184caf0a971769fb1f7", 16);
       return type$.ECCurve_secp224k1._as(A.constructFpStandardCurve("secp224k1", A.secp224k1_ECCurve_secp224k1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 441
+    $signature: 442
   };
   A.ECCurve_secp224r1.prototype = {};
   A.ECCurve_secp224r1_factoryConfig_closure.prototype = {
@@ -68876,7 +68840,7 @@
         t5 = A._BigIntImpl_parse("ffffffffffffffffffffffffffff16a2e0b8f03e13dd29455c5c2a3d", 16);
       return type$.ECCurve_secp224r1._as(A.constructFpStandardCurve("secp224r1", A.secp224r1_ECCurve_secp224r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("bd71344799d5c7fcdc45b59fa3b9ab8f6a948bc5", 16)));
     },
-    $signature: 442
+    $signature: 443
   };
   A.ECCurve_secp256k1.prototype = {};
   A.ECCurve_secp256k1_factoryConfig_closure.prototype = {
@@ -68888,7 +68852,7 @@
         t5 = A._BigIntImpl_parse("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
       return type$.ECCurve_secp256k1._as(A.constructFpStandardCurve("secp256k1", A.secp256k1_ECCurve_secp256k1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 443
+    $signature: 444
   };
   A.ECCurve_secp256r1.prototype = {};
   A.ECCurve_secp256r1_factoryConfig_closure.prototype = {
@@ -68900,7 +68864,7 @@
         t5 = A._BigIntImpl_parse(string$.ffffff00, 16);
       return type$.ECCurve_secp256r1._as(A.constructFpStandardCurve("secp256r1", A.secp256r1_ECCurve_secp256r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("c49d360886e704936a6678e1139d26b7819f7e90", 16)));
     },
-    $signature: 444
+    $signature: 445
   };
   A.ECCurve_secp384r1.prototype = {};
   A.ECCurve_secp384r1_factoryConfig_closure.prototype = {
@@ -68912,7 +68876,7 @@
         t5 = A._BigIntImpl_parse("ffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973", 16);
       return type$.ECCurve_secp384r1._as(A.constructFpStandardCurve("secp384r1", A.secp384r1_ECCurve_secp384r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("a335926aa319a27a1d00896a6773a4827acdac73", 16)));
     },
-    $signature: 445
+    $signature: 446
   };
   A.ECCurve_secp521r1.prototype = {};
   A.ECCurve_secp521r1_factoryConfig_closure.prototype = {
@@ -68924,7 +68888,7 @@
         t5 = A._BigIntImpl_parse("1fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa51868783bf2f966b7fcc0148f709a5d03bb5c9b8899c47aebb6fb71e91386409", 16);
       return type$.ECCurve_secp521r1._as(A.constructFpStandardCurve("secp521r1", A.secp521r1_ECCurve_secp521r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("d09e8800291cb85396cc6717393284aaa0da64ba", 16)));
     },
-    $signature: 446
+    $signature: 447
   };
   A.ECDomainParametersImpl.prototype = {$isECDomainParameters: 1};
   A.ECFieldElementBase.prototype = {
@@ -69199,14 +69163,14 @@
       type$.nullable_ECPoint._as(e);
       return e == null ? type$.ECPoint._as(e) : e;
     },
-    $signature: 447
+    $signature: 448
   };
   A.Argon2BytesGenerator.prototype = {};
   A.Argon2BytesGenerator_factoryConfig_closure.prototype = {
     call$0() {
       return new A.Argon2BytesGenerator(A.Register64$(0, null));
     },
-    $signature: 448
+    $signature: 449
   };
   A.ConcatKDFDerivator.prototype = {};
   A.ConcatKDFDerivator_factoryConfig_closure.prototype = {
@@ -69217,20 +69181,20 @@
       digestName.toString;
       return new A.ConcatKDFDerivator_factoryConfig__closure($.$get$registry().create$1$1(digestName, type$.Digest_2));
     },
-    $signature: 449
+    $signature: 450
   };
   A.ConcatKDFDerivator_factoryConfig__closure.prototype = {
     call$0() {
       return new A.ConcatKDFDerivator();
     },
-    $signature: 450
+    $signature: 451
   };
   A.ECDHKeyDerivator.prototype = {};
   A.ECDHKeyDerivator_factoryConfig_closure.prototype = {
     call$0() {
       return new A.ECDHKeyDerivator();
     },
-    $signature: 451
+    $signature: 452
   };
   A.HKDFKeyDerivator.prototype = {};
   A.HKDFKeyDerivator_factoryConfig_closure.prototype = {
@@ -69241,7 +69205,7 @@
       digestName.toString;
       return new A.HKDFKeyDerivator_factoryConfig__closure($.$get$registry().create$1$1(digestName, type$.Digest_2));
     },
-    $signature: 452
+    $signature: 453
   };
   A.HKDFKeyDerivator_factoryConfig__closure.prototype = {
     call$0() {
@@ -69258,13 +69222,13 @@
       t2.__HKDFKeyDerivator__hMac_A = t4;
       return t2;
     },
-    $signature: 453
+    $signature: 454
   };
   A.HKDFKeyDerivator__getBlockLengthFromDigest_closure.prototype = {
     call$1(map) {
       return type$.MapEntry_String_int._as(map).key.toLowerCase() === this.digestName.toLowerCase();
     },
-    $signature: 454
+    $signature: 455
   };
   A.PBKDF2KeyDerivator.prototype = {};
   A.PBKDF2KeyDerivator_factoryConfig_closure.prototype = {
@@ -69272,7 +69236,7 @@
       A._asString(_);
       return new A.PBKDF2KeyDerivator_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 455
+    $signature: 456
   };
   A.PBKDF2KeyDerivator_factoryConfig__closure.prototype = {
     call$0() {
@@ -69284,7 +69248,7 @@
       new Uint8Array(t1);
       return new A.PBKDF2KeyDerivator(mac);
     },
-    $signature: 456
+    $signature: 457
   };
   A.PKCS12ParametersGenerator.prototype = {};
   A.PKCS12ParametersGenerator_factoryConfig_closure.prototype = {
@@ -69292,7 +69256,7 @@
       A._asString(_);
       return new A.PKCS12ParametersGenerator_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 457
+    $signature: 458
   };
   A.PKCS12ParametersGenerator_factoryConfig__closure.prototype = {
     call$0() {
@@ -69304,7 +69268,7 @@
       mac.get$byteLength(mac);
       return new A.PKCS12ParametersGenerator(mac);
     },
-    $signature: 458
+    $signature: 459
   };
   A.PKCS5S1ParameterGenerator.prototype = {};
   A.PKCS5S1ParameterGenerator_factoryConfig_closure.prototype = {
@@ -69312,7 +69276,7 @@
       A._asString(_);
       return new A.PKCS5S1ParameterGenerator_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 459
+    $signature: 460
   };
   A.PKCS5S1ParameterGenerator_factoryConfig__closure.prototype = {
     call$0() {
@@ -69321,7 +69285,7 @@
       $.$get$registry().create$1$1(t1, type$.Digest_2);
       return new A.PKCS5S1ParameterGenerator();
     },
-    $signature: 460
+    $signature: 461
   };
   A.Scrypt.prototype = {};
   A.Scrypt_factoryConfig_closure.prototype = {
@@ -69329,21 +69293,21 @@
       var t1 = type$.int;
       return new A.Scrypt(A.List_List$filled(16, 0, false, t1), A.List_List$filled(16, 0, false, t1));
     },
-    $signature: 461
+    $signature: 462
   };
   A.ECKeyGenerator.prototype = {};
   A.ECKeyGenerator_factoryConfig_closure.prototype = {
     call$0() {
       return new A.ECKeyGenerator();
     },
-    $signature: 462
+    $signature: 463
   };
   A.RSAKeyGenerator.prototype = {};
   A.RSAKeyGenerator_factoryConfig_closure.prototype = {
     call$0() {
       return new A.RSAKeyGenerator();
     },
-    $signature: 463
+    $signature: 464
   };
   A.CBCBlockCipherMac.prototype = {
     init$1(params) {
@@ -69477,7 +69441,7 @@
       A._asString(_);
       return new A.CBCBlockCipherMac_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 464
+    $signature: 465
   };
   A.CBCBlockCipherMac_factoryConfig__closure.prototype = {
     call$0() {
@@ -69504,7 +69468,7 @@
       t2.__CBCBlockCipherMac__bufOff_A = 0;
       return t2;
     },
-    $signature: 465
+    $signature: 466
   };
   A.CMac.prototype = {
     _doubleLu$1(inp) {
@@ -69665,7 +69629,7 @@
       A._asString(_);
       return new A.CMac_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 466
+    $signature: 467
   };
   A.CMac_factoryConfig__closure.prototype = {
     call$0() {
@@ -69691,7 +69655,7 @@
       t2.__CMac__bufOff_A = 0;
       return t2;
     },
-    $signature: 467
+    $signature: 468
   };
   A.HMac.prototype = {
     get$macSize() {
@@ -69773,7 +69737,7 @@
       A._asString(_);
       return new A.HMac_factoryConfig__closure(type$.Match._as(match).group$1(1));
     },
-    $signature: 468
+    $signature: 469
   };
   A.HMac_factoryConfig__closure.prototype = {
     call$0() {
@@ -69789,7 +69753,7 @@
       t2.__HMac__outputBuf_A = new Uint8Array(t3 + t1);
       return t2;
     },
-    $signature: 469
+    $signature: 470
   };
   A.Poly1305.prototype = {
     get$macSize() {
@@ -70060,7 +70024,7 @@
       A._asString(_);
       return new A.Poly1305_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 470
+    $signature: 471
   };
   A.Poly1305_factoryConfig__closure.prototype = {
     call$0() {
@@ -70073,7 +70037,7 @@
       $.$get$PlatformWeb_instance().assertFullWidthInteger$0();
       return new A.Poly1305(cipher, t1, t2);
     },
-    $signature: 471
+    $signature: 472
   };
   A.PaddedBlockCipherImpl.prototype = {
     get$blockSize() {
@@ -70097,7 +70061,7 @@
       A._asString(_);
       return new A.PaddedBlockCipherImpl_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 472
+    $signature: 473
   };
   A.PaddedBlockCipherImpl_factoryConfig__closure.prototype = {
     call$0() {
@@ -70111,7 +70075,7 @@
       t1.toString;
       return new A.PaddedBlockCipherImpl(padding, t3.create$1$1(t1, type$.BlockCipher));
     },
-    $signature: 473
+    $signature: 474
   };
   A.ISO7816d4Padding.prototype = {
     init$1(params) {
@@ -70136,7 +70100,7 @@
     call$0() {
       return new A.ISO7816d4Padding();
     },
-    $signature: 474
+    $signature: 475
   };
   A.PKCS7Padding.prototype = {
     init$1(params) {
@@ -70159,7 +70123,7 @@
     call$0() {
       return new A.PKCS7Padding();
     },
-    $signature: 475
+    $signature: 476
   };
   A.AutoSeedBlockCtrRandom.prototype = {
     nextUint8$0() {
@@ -70202,7 +70166,7 @@
       A._asString(_);
       return new A.AutoSeedBlockCtrRandom_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 476
+    $signature: 477
   };
   A.AutoSeedBlockCtrRandom_factoryConfig__closure.prototype = {
     call$0() {
@@ -70210,7 +70174,7 @@
       blockCipherName.toString;
       return A.AutoSeedBlockCtrRandom$($.$get$registry().create$1$1(blockCipherName, type$.BlockCipher), true);
     },
-    $signature: 477
+    $signature: 478
   };
   A.AutoSeedBlockCtrRandom_nextUint8_closure.prototype = {
     call$0() {
@@ -70226,7 +70190,7 @@
       t1 === $ && A.throwLateFieldNI("_delegate");
       return A.decodeBigIntWithSign(1, t1._randomBits$1(this.bitLength));
     },
-    $signature: 478
+    $signature: 479
   };
   A.AutoSeedBlockCtrRandom_nextBytes_closure.prototype = {
     call$0() {
@@ -70292,7 +70256,7 @@
       A._asString(_);
       return new A.BlockCtrRandom_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 480
+    $signature: 481
   };
   A.BlockCtrRandom_factoryConfig__closure.prototype = {
     call$0() {
@@ -70300,7 +70264,7 @@
       blockCipherName.toString;
       return A.BlockCtrRandom$($.$get$registry().create$1$1(blockCipherName, type$.BlockCipher));
     },
-    $signature: 481
+    $signature: 482
   };
   A.FortunaRandom.prototype = {
     seed$1(param) {
@@ -70343,7 +70307,7 @@
     call$0() {
       return A.FortunaRandom$();
     },
-    $signature: 482
+    $signature: 483
   };
   A.ECDSASigner.prototype = {
     init$2(forSigning, params) {
@@ -70447,7 +70411,7 @@
       type$.Match._as(match);
       return new A.ECDSASigner_factoryConfig__closure(match.group$1(1), match.group$1(2) != null);
     },
-    $signature: 483
+    $signature: 484
   };
   A.ECDSASigner_factoryConfig__closure.prototype = {
     call$0() {
@@ -70458,7 +70422,7 @@
       underlyingDigest = t2.create$1$1(t1, type$.Digest_2);
       return new A.ECDSASigner(underlyingDigest, this.withMac ? t2.create$1$1(t1 + "/HMAC", type$.Mac) : null);
     },
-    $signature: 484
+    $signature: 485
   };
   A._RFC6979KCalculator.prototype = {
     nextK$0() {
@@ -70643,7 +70607,7 @@
       A._asString(_);
       return new A.PSSSigner_factoryConfig__closure(type$.Match._as(match).group$1(1));
     },
-    $signature: 485
+    $signature: 486
   };
   A.PSSSigner_factoryConfig__closure.prototype = {
     call$0() {
@@ -70657,7 +70621,7 @@
       t4 = t3.create$1$1(t2, t4);
       return new A.PSSSigner(t5, t4, t1, t5.get$digestSize(), t4.get$digestSize());
     },
-    $signature: 486
+    $signature: 487
   };
   A.RSASigner.prototype = {
     init$2(forSigning, params) {
@@ -70747,7 +70711,7 @@
         throw A.wrapException(A.RegistryFactoryException$("RSA signing with digest " + digestName + " is not supported"));
       return new A.RSASigner_factoryConfig__closure(digestName, digestIdentifierHex);
     },
-    $signature: 487
+    $signature: 488
   };
   A.RSASigner_factoryConfig__closure.prototype = {
     call$0() {
@@ -70756,7 +70720,7 @@
       t1.__RSASigner__digestIdentifier_A = t1._hexStringToBytes$1(this.digestIdentifierHex);
       return t1;
     },
-    $signature: 488
+    $signature: 489
   };
   A.BaseAEADBlockCipher.prototype = {
     get$blockSize() {
@@ -72136,7 +72100,7 @@
     call$1(m) {
       return "\\" + A.S(m.group$1(0));
     },
-    $signature: 30
+    $signature: 43
   };
   A._escapeRegExp_closure0.prototype = {
     call$1(s) {
@@ -72318,13 +72282,13 @@
     call$0() {
       return A.LinkedHashMap_LinkedHashMap$_empty(type$.String, type$.dynamic_Function);
     },
-    $signature: 489
+    $signature: 490
   };
   A._RegistryImpl__addDynamicFactoryConfig_closure.prototype = {
     call$0() {
       return A.LinkedHashSet_LinkedHashSet$_empty(type$.DynamicFactoryConfig);
     },
-    $signature: 490
+    $signature: 491
   };
   A.Register64.prototype = {
     get$_hi32() {
@@ -72753,7 +72717,7 @@
       A._asString(_);
       return new A.ChaCha20Engine_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 491
+    $signature: 492
   };
   A.ChaCha20Engine_factoryConfig__closure.prototype = {
     call$0() {
@@ -72766,7 +72730,7 @@
       t1 = A.List_List$filled(16, 0, false, t1);
       return new A.ChaCha20Engine(rounds, t2, t1, new Uint8Array(64));
     },
-    $signature: 492
+    $signature: 493
   };
   A.ChaCha20Poly1305_factoryConfig_closure.prototype = {
     call$0() {
@@ -72779,7 +72743,7 @@
       $.$get$PlatformWeb_instance().assertFullWidthInteger$0();
       return void 1;
     },
-    $signature: 493
+    $signature: 494
   };
   A.ChaCha7539Engine.prototype = {};
   A.ChaCha7539Engine_factoryConfig_closure.prototype = {
@@ -72787,7 +72751,7 @@
       A._asString(_);
       return new A.ChaCha7539Engine_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 494
+    $signature: 495
   };
   A.ChaCha7539Engine_factoryConfig__closure.prototype = {
     call$0() {
@@ -72800,7 +72764,7 @@
       t1 = A.List_List$filled(16, 0, false, t1);
       return new A.ChaCha7539Engine(rounds, t2, t1, new Uint8Array(64));
     },
-    $signature: 495
+    $signature: 496
   };
   A.CTRStreamCipher.prototype = {};
   A.CTRStreamCipher_factoryConfig_closure.prototype = {
@@ -72808,7 +72772,7 @@
       A._asString(_);
       return new A.CTRStreamCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 496
+    $signature: 497
   };
   A.CTRStreamCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -72816,7 +72780,7 @@
       digestName.toString;
       return A.CTRStreamCipher$($.$get$registry().create$1$1(digestName, type$.BlockCipher));
     },
-    $signature: 497
+    $signature: 498
   };
   A.EAX.prototype = {};
   A.EAX_factoryConfig_closure.prototype = {
@@ -72824,7 +72788,7 @@
       A._asString(_);
       return new A.EAX_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 498
+    $signature: 499
   };
   A.EAX_factoryConfig__closure.prototype = {
     call$0() {
@@ -72837,14 +72801,14 @@
       B.JSInt_methods._tdivFast$1(t1.get$blockSize(), 2);
       return new A.EAX();
     },
-    $signature: 499
+    $signature: 500
   };
   A.RC4Engine.prototype = {};
   A.RC4Engine_factoryConfig_closure.prototype = {
     call$0() {
       return new A.RC4Engine();
     },
-    $signature: 500
+    $signature: 501
   };
   A.Salsa20Engine.prototype = {};
   A.Salsa20Engine_factoryConfig_closure.prototype = {
@@ -72854,7 +72818,7 @@
       t1 = A.List_List$filled(16, 0, false, t1);
       return new A.Salsa20Engine(t2, t1, new Uint8Array(64));
     },
-    $signature: 501
+    $signature: 502
   };
   A.SICStreamCipher.prototype = {
     SICStreamCipher$1(underlyingCipher) {
@@ -72932,7 +72896,7 @@
       A._asString(_);
       return new A.SICStreamCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 502
+    $signature: 503
   };
   A.SICStreamCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -72940,7 +72904,7 @@
       digestName.toString;
       return A.SICStreamCipher$($.$get$registry().create$1$1(digestName, type$.BlockCipher));
     },
-    $signature: 503
+    $signature: 504
   };
   A.RdfCore.prototype = {
     decode$3$contentType$documentUrl($content, contentType, documentUrl) {
@@ -73017,7 +72981,7 @@
       type$.MapEntry_RdfGraphName_RdfGraph._as(entry);
       return new A.RdfNamedGraph(entry.key, entry.value);
     },
-    $signature: 504
+    $signature: 505
   };
   A.RdfDataset__buildDefaultGraph_closure.prototype = {
     call$1(quad) {
@@ -73030,7 +72994,7 @@
       type$.Quad._as(quad);
       return new A.Triple(quad.subject, quad.predicate, quad.object);
     },
-    $signature: 506
+    $signature: 507
   };
   A.RdfDataset__buildNamedGraphs_closure.prototype = {
     call$1(quad) {
@@ -73048,14 +73012,14 @@
     call$2($name, triples) {
       return new A.MapEntry(type$.RdfGraphName._as($name), new A.RdfGraph(A.List_List$unmodifiable(type$.List_Triple._as(triples), type$.Triple), true, null), type$.MapEntry_RdfGraphName_RdfGraph);
     },
-    $signature: 507
+    $signature: 508
   };
   A.RdfDataset_operator$eq_closure.prototype = {
     call$1(entry) {
       type$.MapEntry_RdfGraphName_RdfGraph._as(entry);
       return J.$eq$(this.other._namedGraphs.$index(0, entry.key), entry.value);
     },
-    $signature: 508
+    $signature: 509
   };
   A.RdfDataset_hashCode_closure.prototype = {
     call$1(entry) {
@@ -73064,7 +73028,7 @@
       t1 = entry.key;
       return A.Object_hash(t1.get$hashCode(t1), A.Object_hashAllUnordered(entry.value._triples), B.C_SentinelValue, B.C_SentinelValue, B.C_SentinelValue, B.C_SentinelValue, B.C_SentinelValue, B.C_SentinelValue, B.C_SentinelValue);
     },
-    $signature: 509
+    $signature: 510
   };
   A.RdfNamedGraph.prototype = {};
   A.RdfDecoderException.prototype = {
@@ -73541,25 +73505,25 @@
       J.add$1$ax(t1, triple);
       return r;
     },
-    $signature: 510
+    $signature: 511
   };
   A.RdfGraph_subjects_closure.prototype = {
     call$1(triple) {
       return type$.Triple._as(triple).subject;
     },
-    $signature: 29
+    $signature: 28
   };
   A.RdfGraph_predicates_closure.prototype = {
     call$1(triple) {
       return type$.Triple._as(triple).predicate;
     },
-    $signature: 72
+    $signature: 73
   };
   A.RdfGraph_predicates_closure0.prototype = {
     call$1(predicateMap) {
       return type$.Map_of_RdfPredicate_and_List_Triple._as(predicateMap).get$keys();
     },
-    $signature: 511
+    $signature: 512
   };
   A.RdfGraph_findTriples_closure.prototype = {
     call$1(p) {
@@ -73571,13 +73535,13 @@
     call$1(list) {
       return type$.List_Triple._as(list);
     },
-    $signature: 34
+    $signature: 35
   };
   A.RdfGraph_findTriples_closure1.prototype = {
     call$1(list) {
       return type$.List_Triple._as(list);
     },
-    $signature: 34
+    $signature: 35
   };
   A.RdfGraph_findTriples_closure2.prototype = {
     call$1(triple) {
@@ -73624,7 +73588,7 @@
     call$1(list) {
       return type$.nullable_List_Triple._as(list) != null;
     },
-    $signature: 514
+    $signature: 515
   };
   A.RdfGraph_hasTriples__closure1.prototype = {
     call$1(list) {
@@ -73632,13 +73596,13 @@
       list.toString;
       return list;
     },
-    $signature: 515
+    $signature: 516
   };
   A.RdfGraph_hasTriples__closure2.prototype = {
     call$1(list) {
       return type$.List_Triple._as(list);
     },
-    $signature: 34
+    $signature: 35
   };
   A.RdfGraph_hasTriples__closure3.prototype = {
     call$1(triple) {
@@ -73657,7 +73621,7 @@
     call$1(list) {
       return type$.List_Triple._as(list);
     },
-    $signature: 34
+    $signature: 35
   };
   A.RdfTerm.prototype = {};
   A.RdfObject.prototype = {};
@@ -73796,19 +73760,19 @@
       type$.MapEntry_of_Record_2_IriTerm_and_IriRole_and_CompactIri._as(e);
       return e.key._0.value === this.iri.value;
     },
-    $signature: 516
+    $signature: 517
   };
   A.IriCompactionResult_compactIri_closure0.prototype = {
     call$1(e) {
       return type$.MapEntry_of_Record_2_IriTerm_and_IriRole_and_CompactIri._as(e).key._1;
     },
-    $signature: 517
+    $signature: 518
   };
   A.IriCompactionResult_compactIri_closure1.prototype = {
     call$1(e) {
       return type$.IriRole._as(e)._name;
     },
-    $signature: 518
+    $signature: 519
   };
   A.IriCompaction.prototype = {
     compactAllIris$3$baseUri(graph, customPrefixes, baseUri) {
@@ -74017,7 +73981,7 @@
         t1.push(new A._Record_2(t3.datatype, B.IriRole_4));
       return t1;
     },
-    $signature: 519
+    $signature: 520
   };
   A.BaseIriRequiredException.prototype = {};
   A.JsonLdGraphCodec.prototype = {
@@ -74339,7 +74303,7 @@
       $.$get$_log3().log$4(B.Level_FINE_500, "Created blank node for label " + this.label + ": " + blankNode.toString$0(0), null, null);
       return blankNode;
     },
-    $signature: 28
+    $signature: 29
   };
   A.JsonLdParser__addTripleForValue_closure.prototype = {
     call$1(k) {
@@ -74643,7 +74607,7 @@
       t1 = this._box_0;
       return this.$this._createNodeObject$5$compactedIris(entry.key, entry.value, t1.context, this.blankNodeLabels, t1.compactedIris);
     },
-    $signature: 520
+    $signature: 521
   };
   A.JsonLdEncoder__groupTriplesBySubject_closure.prototype = {
     call$0() {
@@ -74655,19 +74619,19 @@
     call$0() {
       return A._setArrayType([], type$.JSArray_RdfObject);
     },
-    $signature: 43
+    $signature: 31
   };
   A.JsonLdEncoder__createNodeObject_closure0.prototype = {
     call$1(obj) {
       return this.$this._getTypeValue$3$blankNodeLabels$compactedIris(type$.RdfObject._as(obj), this.blankNodeLabels, this.compactedIris);
     },
-    $signature: 521
+    $signature: 522
   };
   A.JsonLdEncoder__createNodeObject_closure1.prototype = {
     call$1(obj) {
       return this.$this._getObjectValue$3$compactedIris(type$.RdfObject._as(obj), this.blankNodeLabels, this.compactedIris);
     },
-    $signature: 522
+    $signature: 523
   };
   A.JsonLdEncoder__renderIri_closure.prototype = {
     call$0() {
@@ -74675,7 +74639,7 @@
       $.$get$_log1().log$4(B.Level_WARNING_900, "Unexpected special IRI type: " + t1.specialIri.value + " for " + this.role.toString$0(0), null, null);
       return t1.specialIri.value;
     },
-    $signature: 32
+    $signature: 34
   };
   A.NQuadsCodec.prototype = {
     get$primaryMimeType() {
@@ -75043,19 +75007,19 @@
     call$0() {
       return new A.BlankNodeTerm();
     },
-    $signature: 28
+    $signature: 29
   };
   A.NQuadsDecoder__parseObject_closure.prototype = {
     call$0() {
       return new A.BlankNodeTerm();
     },
-    $signature: 28
+    $signature: 29
   };
   A.NQuadsDecoder__parseGraphName_closure.prototype = {
     call$0() {
       return new A.BlankNodeTerm();
     },
-    $signature: 28
+    $signature: 29
   };
   A.NQuadsEncoderOptions.prototype = {
     $eq(_, other) {
@@ -75210,7 +75174,7 @@
       t3 = buffer._contents += " .";
       return t3.charCodeAt(0) == 0 ? t3 : t3;
     },
-    $signature: 41
+    $signature: 42
   };
   A.NQuadsEncoder_encode_closure0.prototype = {
     call$1(namedGraph) {
@@ -75220,7 +75184,7 @@
       t2 = A._arrayInstanceType(t1);
       return new A.MappedListIterable(t1, t2._eval$1("String(1)")._as(new A.NQuadsEncoder_encode__closure(_this.$this, namedGraph, _this.blankNodeIdentifiers, _this.counter, _this.canonical)), t2._eval$1("MappedListIterable<1,String>"));
     },
-    $signature: 523
+    $signature: 524
   };
   A.NQuadsEncoder_encode__closure.prototype = {
     call$1(quad) {
@@ -75241,13 +75205,13 @@
       t3 = buffer._contents += " .";
       return t3.charCodeAt(0) == 0 ? t3 : t3;
     },
-    $signature: 41
+    $signature: 42
   };
   A.NQuadsEncoder__writeTerm_closure.prototype = {
     call$0() {
       return this.counter.next$0();
     },
-    $signature: 32
+    $signature: 34
   };
   A._BlankNodeLabelFactoryImpl.prototype = {
     _BlankNodeLabelFactoryImpl$1(existingLabels) {
@@ -76648,7 +76612,7 @@
         return 1;
       return B.JSString_methods.compareTo$1(t1, t2);
     },
-    $signature: 524
+    $signature: 525
   };
   A.TurtleEncoder__extractCollection_closure.prototype = {
     call$1(t) {
@@ -76686,7 +76650,7 @@
     call$0() {
       return A.throwExpression(A.Exception_Exception("Invalid RDF collection: missing rdf:first for " + this._box_0.currentNode.toString$0(0)));
     },
-    $signature: 20
+    $signature: 27
   };
   A.TurtleEncoder__extractCollection_closure4.prototype = {
     call$1(t) {
@@ -76704,7 +76668,7 @@
     call$0() {
       return A.throwExpression(A.Exception_Exception("Invalid RDF collection: missing rdf:rest for " + this._box_0.currentNode.toString$0(0)));
     },
-    $signature: 20
+    $signature: 27
   };
   A.TurtleEncoder__markCollectionNodesAsProcessed_closure.prototype = {
     call$1(t) {
@@ -76760,7 +76724,7 @@
         return 1;
       return B.JSInt_methods.compareTo$1(A.objectHashCode(a), A.objectHashCode(b));
     },
-    $signature: 525
+    $signature: 526
   };
   A.TurtleEncoder__isPartOfRdfCollection_closure.prototype = {
     call$1(t) {
@@ -76789,7 +76753,7 @@
     call$0() {
       return A._setArrayType([], type$.JSArray_RdfObject);
     },
-    $signature: 43
+    $signature: 31
   };
   A.TurtleEncoder__writeSubjectGroup_closure0.prototype = {
     call$2(a, b) {
@@ -76806,13 +76770,13 @@
         return 1;
       return B.JSString_methods.compareTo$1(t1, t2);
     },
-    $signature: 526
+    $signature: 527
   };
   A.TurtleEncoder__writeInlineBlankNode_closure.prototype = {
     call$0() {
       return A._setArrayType([], type$.JSArray_RdfObject);
     },
-    $signature: 43
+    $signature: 31
   };
   A.TurtleParsingFlag.prototype = {
     _enumToString$0() {
@@ -78209,7 +78173,7 @@
     call$0() {
       return this.call$1(null);
     },
-    $signature: 527
+    $signature: 528
   };
   A._forward__listenToUpstream_closure.prototype = {
     call$0() {
@@ -78784,7 +78748,7 @@
     call$0() {
       return this.color;
     },
-    $signature: 528
+    $signature: 529
   };
   A.Highlighter$__closure.prototype = {
     call$1(line) {
@@ -78792,34 +78756,34 @@
         t2 = A._arrayInstanceType(t1);
       return new A.WhereIterable(t1, t2._eval$1("bool(1)")._as(new A.Highlighter$___closure()), t2._eval$1("WhereIterable<1>")).get$length(0);
     },
-    $signature: 529
+    $signature: 530
   };
   A.Highlighter$___closure.prototype = {
     call$1(highlight) {
       var t1 = type$._Highlight._as(highlight).span;
       return t1.get$start().get$line() !== t1.get$end().get$line();
     },
-    $signature: 60
+    $signature: 62
   };
   A.Highlighter$__closure0.prototype = {
     call$1(line) {
       return type$._Line._as(line).url;
     },
-    $signature: 531
+    $signature: 532
   };
   A.Highlighter__collateLines_closure.prototype = {
     call$1(highlight) {
       var t1 = type$._Highlight._as(highlight).span.get$sourceUrl();
       return t1 == null ? new A.Object() : t1;
     },
-    $signature: 532
+    $signature: 533
   };
   A.Highlighter__collateLines_closure0.prototype = {
     call$2(highlight1, highlight2) {
       var t1 = type$._Highlight;
       return t1._as(highlight1).span.compareTo$1(0, t1._as(highlight2).span);
     },
-    $signature: 533
+    $signature: 534
   };
   A.Highlighter__collateLines_closure1.prototype = {
     call$1(entry) {
@@ -78862,20 +78826,20 @@
       }
       return lines;
     },
-    $signature: 534
+    $signature: 535
   };
   A.Highlighter__collateLines__closure.prototype = {
     call$1(highlight) {
       return type$._Highlight._as(highlight).span.get$end().get$line() < this.line.number;
     },
-    $signature: 60
+    $signature: 62
   };
   A.Highlighter_highlight_closure.prototype = {
     call$1(highlight) {
       type$._Highlight._as(highlight);
       return true;
     },
-    $signature: 60
+    $signature: 62
   };
   A.Highlighter__writeFileStart_closure.prototype = {
     call$0() {
@@ -79029,7 +78993,7 @@
       }
       return A._Highlight__normalizeEndOfLine(A._Highlight__normalizeTrailingNewline(A._Highlight__normalizeNewlines(newSpan)));
     },
-    $signature: 535
+    $signature: 536
   };
   A._Line.prototype = {
     toString$0(_) {
@@ -79247,7 +79211,7 @@
       else
         return J.toString$0$(e);
     },
-    $signature: 536
+    $signature: 537
   };
   A.AllowedArgumentCount.prototype = {};
   A.RawSqliteBindings.prototype = {};
@@ -79450,7 +79414,7 @@
     call$2(context, args) {
       A._extension_0_runWithArgsAndSetResult(context, this.$function, type$.List_RawSqliteValue._as(args));
     },
-    $signature: 537
+    $signature: 538
   };
   A.DatabaseImplementation__prepareInternal_freeIntermediateResults.prototype = {
     call$0() {
@@ -79514,7 +79478,7 @@
     call$1(element) {
       type$.FinalizablePart._as(element).dispose$0();
     },
-    $signature: 538
+    $signature: 539
   };
   A.Sqlite3Implementation.prototype = {
     open$2$vfs(filename, vfs) {
@@ -80126,13 +80090,13 @@
       this.importsJs[module] = _this;
       moduleImports.forEach$1(0, new A.WasmInstance_load__closure(_this));
     },
-    $signature: 539
+    $signature: 540
   };
   A.WasmInstance_load__closure.prototype = {
     call$2($name, value) {
       this.moduleJs[A._asString($name)] = value;
     },
-    $signature: 540
+    $signature: 541
   };
   A.WasmSqlite3.prototype = {};
   A.WasmVfs.prototype = {
@@ -80615,7 +80579,7 @@
         A._asJSObject(database.createObjectStore("blocks"));
       }
     },
-    $signature: 31
+    $signature: 32
   };
   A.AsynchronousIndexedDbFileSystem__readFile_closure.prototype = {
     call$1(value) {
@@ -80625,7 +80589,7 @@
       else
         return value;
     },
-    $signature: 541
+    $signature: 542
   };
   A.AsynchronousIndexedDbFileSystem_readFully_closure.prototype = {
     call$0() {
@@ -80713,7 +80677,7 @@
       });
       return A._asyncStartSync($async$call$2, $async$completer);
     },
-    $signature: 542
+    $signature: 543
   };
   A.AsynchronousIndexedDbFileSystem__write_closure.prototype = {
     call$1(offset) {
@@ -80723,7 +80687,7 @@
       t1.toString;
       return this.writeBlock.call$2(offset, t1);
     },
-    $signature: 543
+    $signature: 544
   };
   A._FileWriteRequest.prototype = {
     _updateBlock$3(blockOffset, offsetInBlock, data) {
@@ -81313,7 +81277,7 @@
       });
       return A._asyncStartSync($async$call$1, $async$completer);
     },
-    $signature: 544
+    $signature: 545
   };
   A._SimpleOpfsFile.prototype = {
     readInto$2(buffer, offset) {
@@ -81390,7 +81354,7 @@
     call$1(ptr) {
       A.print("[sqlite3] " + A.WrappedMemory_readString(this.memory, A._asInt(ptr), null));
     },
-    $signature: 24
+    $signature: 22
   };
   A._InjectedValues_closure0.prototype = {
     call$5(vfsId, zName, dartFdPtr, flags, pOutFlags) {
@@ -81449,7 +81413,7 @@
     },
     "call*": "call$3",
     $requiredArgCount: 3,
-    $signature: 62
+    $signature: 53
   };
   A._InjectedValues__closure12.prototype = {
     call$0() {
@@ -81528,7 +81492,7 @@
     },
     "call*": "call$3",
     $requiredArgCount: 3,
-    $signature: 62
+    $signature: 53
   };
   A._InjectedValues__closure9.prototype = {
     call$0() {
@@ -81568,13 +81532,13 @@
       t1 = type$.JavaScriptBigInt._as(init.G.BigInt(Date.now()));
       A.JSObjectUnsafeUtilExtension__callMethod(A.NativeByteData_NativeByteData$view(type$.NativeArrayBuffer._as(this.memory.buffer), 0, null), "setBigInt64", target, t1, true, null);
     },
-    $signature: 549
+    $signature: 550
   };
   A._InjectedValues_closure7.prototype = {
     call$1(fd) {
       return this.$this.callbacks.openedFiles.$index(0, A._asInt(fd)).get$xDeviceCharacteristics();
     },
-    $signature: 26
+    $signature: 20
   };
   A._InjectedValues_closure8.prototype = {
     call$1(fd) {
@@ -81585,7 +81549,7 @@
       t2.toString;
       return A._runVfs(new A._InjectedValues__closure7(t1, t2, fd));
     },
-    $signature: 26
+    $signature: 20
   };
   A._InjectedValues__closure7.prototype = {
     call$0() {
@@ -81647,7 +81611,7 @@
       t1.toString;
       return A._runVfs(new A._InjectedValues__closure4(t1, size));
     },
-    $signature: 551
+    $signature: 552
   };
   A._InjectedValues__closure4.prototype = {
     call$0() {
@@ -81767,7 +81731,7 @@
     },
     "call*": "call$3",
     $requiredArgCount: 3,
-    $signature: 49
+    $signature: 67
   };
   A._InjectedValues_closure18.prototype = {
     call$3(ctx, args, value) {
@@ -81784,7 +81748,7 @@
     },
     "call*": "call$3",
     $requiredArgCount: 3,
-    $signature: 49
+    $signature: 67
   };
   A._InjectedValues_closure19.prototype = {
     call$3(ctx, args, value) {
@@ -81801,7 +81765,7 @@
     },
     "call*": "call$3",
     $requiredArgCount: 3,
-    $signature: 49
+    $signature: 67
   };
   A._InjectedValues_closure20.prototype = {
     call$1(ctx) {
@@ -81812,7 +81776,7 @@
       t2 === $ && A.throwLateFieldNI("bindings");
       t1.callbacks.functions.$index(0, A._asInt(t2.sqlite3.sqlite3_user_data(ctx))).xFinal.call$1(new A.WasmContext(t1.___InjectedValues_bindings_A, ctx));
     },
-    $signature: 24
+    $signature: 22
   };
   A._InjectedValues_closure21.prototype = {
     call$1(ctx) {
@@ -81824,13 +81788,13 @@
       t1.callbacks.functions.$index(0, A._asInt(t2.sqlite3.sqlite3_user_data(ctx))).toString;
       null.call$1(new A.WasmContext(t1.___InjectedValues_bindings_A, ctx));
     },
-    $signature: 24
+    $signature: 22
   };
   A._InjectedValues_closure22.prototype = {
     call$1(ctx) {
       this.$this.callbacks.functions.remove$1(0, A._asInt(ctx));
     },
-    $signature: 24
+    $signature: 22
   };
   A._InjectedValues_closure23.prototype = {
     call$5(ctx, lengthA, a, lengthB, b) {
@@ -81861,20 +81825,20 @@
     },
     "call*": "call$5",
     $requiredArgCount: 5,
-    $signature: 553
+    $signature: 554
   };
   A._InjectedValues_closure25.prototype = {
     call$1(id) {
       A._asInt(id);
       return null;
     },
-    $signature: 113
+    $signature: 114
   };
   A._InjectedValues_closure26.prototype = {
     call$1(id) {
       A._asInt(id);
     },
-    $signature: 24
+    $signature: 22
   };
   A._InjectedValues_closure27.prototype = {
     call$2(timestamp, resultPtr) {
@@ -81908,7 +81872,7 @@
         return A.ioore(tmValues, 6);
       tmValues[6] = t2;
     },
-    $signature: 554
+    $signature: 555
   };
   A._InjectedValues_closure28.prototype = {
     call$2(context, zTab) {
@@ -81927,7 +81891,7 @@
     },
     "call*": "call$3",
     $requiredArgCount: 3,
-    $signature: 62
+    $signature: 53
   };
   A.DartCallbacks.prototype = {
     register$1(set) {
@@ -81969,7 +81933,7 @@
     call$1(trace) {
       return type$.Trace._as(trace).get$frames();
     },
-    $signature: 555
+    $signature: 556
   };
   A.Chain_toString_closure0.prototype = {
     call$1(trace) {
@@ -81977,7 +81941,7 @@
         t2 = A._arrayInstanceType(t1);
       return new A.MappedListIterable(t1, t2._eval$1("int(1)")._as(new A.Chain_toString__closure0()), t2._eval$1("MappedListIterable<1,int>")).fold$1$2(0, 0, B.CONSTANT, type$.int);
     },
-    $signature: 556
+    $signature: 557
   };
   A.Chain_toString__closure0.prototype = {
     call$1(frame) {
@@ -81991,7 +81955,7 @@
         t2 = A._arrayInstanceType(t1);
       return new A.MappedListIterable(t1, t2._eval$1("String(1)")._as(new A.Chain_toString__closure(this.longest)), t2._eval$1("MappedListIterable<1,String>")).join$0(0);
     },
-    $signature: 558
+    $signature: 559
   };
   A.Chain_toString__closure.prototype = {
     call$1(frame) {
@@ -82060,7 +82024,7 @@
       line = t1 > 1 ? A.int_parse(lineAndColumn[1], _null, _null) : _null;
       return new A.Frame(uri, line, t1 > 2 ? A.int_parse(lineAndColumn[2], _null, _null) : _null, member);
     },
-    $signature: 21
+    $signature: 26
   };
   A.Frame_Frame$parseV8_closure.prototype = {
     call$0() {
@@ -82107,7 +82071,7 @@
       }
       return new A.UnparsedFrame(A._Uri__Uri(_null, "unparsed", _null, _null), t1);
     },
-    $signature: 21
+    $signature: 26
   };
   A.Frame_Frame$parseV8_closure_parseJsLocation.prototype = {
     call$2($location, member) {
@@ -82143,7 +82107,7 @@
       columnMatch = t1[3];
       return new A.Frame(uri, line, columnMatch != null ? A.int_parse(columnMatch, _null, _null) : _null, member);
     },
-    $signature: 561
+    $signature: 562
   };
   A.Frame_Frame$_parseFirefoxEval_closure.prototype = {
     call$0() {
@@ -82170,7 +82134,7 @@
       line = A.int_parse(t1, _null, _null);
       return new A.Frame(uri, line, _null, member.length === 0 || member === "anonymous" ? "<fn>" : member);
     },
-    $signature: 21
+    $signature: 26
   };
   A.Frame_Frame$parseFirefox_closure.prototype = {
     call$0() {
@@ -82250,7 +82214,7 @@
       }
       return new A.UnparsedFrame(A._Uri__Uri(_null, "unparsed", _null, _null), t1);
     },
-    $signature: 21
+    $signature: 26
   };
   A.Frame_Frame$parseFriendly_closure.prototype = {
     call$0() {
@@ -82298,7 +82262,7 @@
         return A.ioore(t1, 4);
       return new A.Frame(uri, line, column, t1[4]);
     },
-    $signature: 21
+    $signature: 26
   };
   A.LazyTrace.prototype = {
     get$_lazy_trace$_trace() {
@@ -82336,7 +82300,7 @@
     call$0() {
       return A.Trace_Trace$parse(this.trace.toString$0(0));
     },
-    $signature: 562
+    $signature: 563
   };
   A.Trace__parseVM_closure.prototype = {
     call$1(line) {
@@ -82977,153 +82941,153 @@
     _instance_1_i(_, "get$contains", "contains$1", 10);
     _instance_1_i(A._CastIterableBase.prototype, "get$contains", "contains$1", 10);
     _static_1(A, "_js_helper___stringIdentity$closure", "_stringIdentity", 6);
-    _static_1(A, "async__AsyncRun__scheduleImmediateJsOverride$closure", "_AsyncRun__scheduleImmediateJsOverride", 51);
-    _static_1(A, "async__AsyncRun__scheduleImmediateWithSetImmediate$closure", "_AsyncRun__scheduleImmediateWithSetImmediate", 51);
-    _static_1(A, "async__AsyncRun__scheduleImmediateWithTimer$closure", "_AsyncRun__scheduleImmediateWithTimer", 51);
+    _static_1(A, "async__AsyncRun__scheduleImmediateJsOverride$closure", "_AsyncRun__scheduleImmediateJsOverride", 66);
+    _static_1(A, "async__AsyncRun__scheduleImmediateWithSetImmediate$closure", "_AsyncRun__scheduleImmediateWithSetImmediate", 66);
+    _static_1(A, "async__AsyncRun__scheduleImmediateWithTimer$closure", "_AsyncRun__scheduleImmediateWithTimer", 66);
     _static_0(A, "async___startMicrotaskLoop$closure", "_startMicrotaskLoop", 0);
     _static_1(A, "async___nullDataHandler$closure", "_nullDataHandler", 39);
-    _static_2(A, "async___nullErrorHandler$closure", "_nullErrorHandler", 13);
+    _static_2(A, "async___nullErrorHandler$closure", "_nullErrorHandler", 12);
     _static_0(A, "async___nullDoneHandler$closure", "_nullDoneHandler", 0);
-    _static(A, "async___rootHandleUncaughtError$closure", 5, null, ["call$5"], ["_rootHandleUncaughtError"], 565, 0);
+    _static(A, "async___rootHandleUncaughtError$closure", 5, null, ["call$5"], ["_rootHandleUncaughtError"], 566, 0);
     _static(A, "async___rootRun$closure", 4, null, ["call$1$4", "call$4"], ["_rootRun", function($self, $parent, zone, f) {
       return A._rootRun($self, $parent, zone, f, type$.dynamic);
-    }], 566, 1);
+    }], 567, 1);
     _static(A, "async___rootRunUnary$closure", 5, null, ["call$2$5", "call$5"], ["_rootRunUnary", function($self, $parent, zone, f, arg) {
       var t1 = type$.dynamic;
       return A._rootRunUnary($self, $parent, zone, f, arg, t1, t1);
-    }], 567, 1);
+    }], 568, 1);
     _static(A, "async___rootRunBinary$closure", 6, null, ["call$3$6", "call$6"], ["_rootRunBinary", function($self, $parent, zone, f, arg1, arg2) {
       var t1 = type$.dynamic;
       return A._rootRunBinary($self, $parent, zone, f, arg1, arg2, t1, t1, t1);
-    }], 568, 1);
+    }], 569, 1);
     _static(A, "async___rootRegisterCallback$closure", 4, null, ["call$1$4", "call$4"], ["_rootRegisterCallback", function($self, $parent, zone, f) {
       return A._rootRegisterCallback($self, $parent, zone, f, type$.dynamic);
-    }], 569, 0);
+    }], 570, 0);
     _static(A, "async___rootRegisterUnaryCallback$closure", 4, null, ["call$2$4", "call$4"], ["_rootRegisterUnaryCallback", function($self, $parent, zone, f) {
       var t1 = type$.dynamic;
       return A._rootRegisterUnaryCallback($self, $parent, zone, f, t1, t1);
-    }], 570, 0);
+    }], 571, 0);
     _static(A, "async___rootRegisterBinaryCallback$closure", 4, null, ["call$3$4", "call$4"], ["_rootRegisterBinaryCallback", function($self, $parent, zone, f) {
       var t1 = type$.dynamic;
       return A._rootRegisterBinaryCallback($self, $parent, zone, f, t1, t1, t1);
-    }], 571, 0);
-    _static(A, "async___rootErrorCallback$closure", 5, null, ["call$5"], ["_rootErrorCallback"], 572, 0);
-    _static(A, "async___rootScheduleMicrotask$closure", 4, null, ["call$4"], ["_rootScheduleMicrotask"], 573, 0);
-    _static(A, "async___rootCreateTimer$closure", 5, null, ["call$5"], ["_rootCreateTimer"], 574, 0);
-    _static(A, "async___rootCreatePeriodicTimer$closure", 5, null, ["call$5"], ["_rootCreatePeriodicTimer"], 575, 0);
-    _static(A, "async___rootPrint$closure", 4, null, ["call$4"], ["_rootPrint"], 576, 0);
-    _static_1(A, "async___printToZone$closure", "_printToZone", 100);
-    _static(A, "async___rootFork$closure", 5, null, ["call$5"], ["_rootFork"], 577, 0);
+    }], 572, 0);
+    _static(A, "async___rootErrorCallback$closure", 5, null, ["call$5"], ["_rootErrorCallback"], 573, 0);
+    _static(A, "async___rootScheduleMicrotask$closure", 4, null, ["call$4"], ["_rootScheduleMicrotask"], 574, 0);
+    _static(A, "async___rootCreateTimer$closure", 5, null, ["call$5"], ["_rootCreateTimer"], 575, 0);
+    _static(A, "async___rootCreatePeriodicTimer$closure", 5, null, ["call$5"], ["_rootCreatePeriodicTimer"], 576, 0);
+    _static(A, "async___rootPrint$closure", 4, null, ["call$4"], ["_rootPrint"], 577, 0);
+    _static_1(A, "async___printToZone$closure", "_printToZone", 103);
+    _static(A, "async___rootFork$closure", 5, null, ["call$5"], ["_rootFork"], 578, 0);
     _instance_0_u(_ = A._BroadcastSubscription.prototype, "get$_onPause", "_onPause$0", 0);
     _instance_0_u(_, "get$_onResume", "_onResume$0", 0);
     _instance(A._Completer.prototype, "get$completeError", 0, 1, function() {
       return [null];
-    }, ["call$2", "call$1"], ["completeError$2", "completeError$1"], 22, 0, 0);
-    _instance_2_u(A._Future.prototype, "get$_completeError", "_completeError$2", 13);
+    }, ["call$2", "call$1"], ["completeError$2", "completeError$1"], 21, 0, 0);
+    _instance_2_u(A._Future.prototype, "get$_completeError", "_completeError$2", 12);
     _instance_1_i(_ = A._StreamController.prototype, "get$add", "add$1", 4);
     _instance(_, "get$addError", 0, 1, function() {
       return [null];
-    }, ["call$2", "call$1"], ["addError$2", "addError$1"], 22, 0, 0);
+    }, ["call$2", "call$1"], ["addError$2", "addError$1"], 21, 0, 0);
     _instance_1_u(_, "get$_async$_add", "_async$_add$1", 4);
-    _instance_2_u(_, "get$_addError", "_addError$2", 13);
+    _instance_2_u(_, "get$_addError", "_addError$2", 12);
     _instance_0_u(_, "get$_close", "_close$0", 0);
     _instance_0_u(_ = A._ControllerSubscription.prototype, "get$_onPause", "_onPause$0", 0);
     _instance_0_u(_, "get$_onResume", "_onResume$0", 0);
     _instance_1_i(_ = A._StreamSinkWrapper.prototype, "get$add", "add$1", 4);
     _instance(_, "get$addError", 0, 1, function() {
       return [null];
-    }, ["call$2", "call$1"], ["addError$2", "addError$1"], 22, 0, 0);
+    }, ["call$2", "call$1"], ["addError$2", "addError$1"], 21, 0, 0);
     _instance_0_u(_, "get$close", "close$0", 38);
-    _instance(_ = A._BufferingStreamSubscription.prototype, "get$pause", 0, 0, null, ["call$1", "call$0"], ["pause$1", "pause$0"], 125, 0, 0);
+    _instance(_ = A._BufferingStreamSubscription.prototype, "get$pause", 0, 0, null, ["call$1", "call$0"], ["pause$1", "pause$0"], 126, 0, 0);
     _instance_0_u(_, "get$resume", "resume$0", 0);
     _instance_0_u(_, "get$cancel", "cancel$0", 38);
     _instance_0_u(_, "get$_onPause", "_onPause$0", 0);
     _instance_0_u(_, "get$_onResume", "_onResume$0", 0);
-    _instance(_ = A._DoneStreamSubscription.prototype, "get$pause", 0, 0, null, ["call$1", "call$0"], ["pause$1", "pause$0"], 125, 0, 0);
+    _instance(_ = A._DoneStreamSubscription.prototype, "get$pause", 0, 0, null, ["call$1", "call$0"], ["pause$1", "pause$0"], 126, 0, 0);
     _instance_0_u(_, "get$resume", "resume$0", 0);
     _instance_0_u(_, "get$cancel", "cancel$0", 38);
     _instance_0_u(_, "get$_onMicrotask", "_onMicrotask$0", 0);
     _instance_1_u(_ = A._StreamIterator.prototype, "get$_onData", "_onData$1", 4);
-    _instance_2_u(_, "get$_onError", "_onError$2", 13);
+    _instance_2_u(_, "get$_onError", "_onError$2", 12);
     _instance_0_u(_, "get$_onDone", "_onDone$0", 0);
     _instance_1_u(_ = A._MultiStreamController.prototype, "get$addSync", "addSync$1", 4);
     _instance(_, "get$addErrorSync", 0, 1, function() {
       return [null];
-    }, ["call$2", "call$1"], ["addErrorSync$2", "addErrorSync$1"], 22, 0, 0);
+    }, ["call$2", "call$1"], ["addErrorSync$2", "addErrorSync$1"], 21, 0, 0);
     _instance_0_u(_, "get$closeSync", "closeSync$0", 0);
     _instance_0_u(_ = A._ForwardingStreamSubscription.prototype, "get$_onPause", "_onPause$0", 0);
     _instance_0_u(_, "get$_onResume", "_onResume$0", 0);
     _instance_1_u(_, "get$_handleData", "_handleData$1", 4);
-    _instance_2_u(_, "get$_handleError", "_handleError$2", 581);
+    _instance_2_u(_, "get$_handleError", "_handleError$2", 582);
     _instance_0_u(_, "get$_handleDone", "_handleDone$0", 0);
-    _static_2(A, "collection___defaultEquals$closure", "_defaultEquals", 52);
-    _static_1(A, "collection___defaultHashCode$closure", "_defaultHashCode", 56);
+    _static_2(A, "collection___defaultEquals$closure", "_defaultEquals", 56);
+    _static_1(A, "collection___defaultHashCode$closure", "_defaultHashCode", 57);
     _static_2(A, "collection_ListBase__compareAny$closure", "ListBase__compareAny", 124);
     _instance_1_i(A._LinkedHashSet.prototype, "get$remove", "remove$1", 10);
     _instance_1_i(A.ListBase.prototype, "get$contains", "contains$1", 10);
-    _static_1(A, "convert___defaultToEncodable$closure", "_defaultToEncodable", 127);
+    _static_1(A, "convert___defaultToEncodable$closure", "_defaultToEncodable", 52);
     _instance_1_i(_ = A._ByteCallbackSink.prototype, "get$add", "add$1", 4);
     _instance_0_u(_, "get$close", "close$0", 0);
-    _static_1(A, "core__identityHashCode$closure", "identityHashCode", 56);
+    _static_1(A, "core__identityHashCode$closure", "identityHashCode", 57);
     _static(A, "core_int_parse$closure", 1, function() {
       return {onError: null, radix: null};
     }, ["call$3$onError$radix", "call$1", "call$2$onError"], ["int_parse", function(source) {
       return A.int_parse(source, null, null);
     }, function(source, onError) {
       return A.int_parse(source, onError, null);
-    }], 578, 0);
-    _static_2(A, "core__identical$closure", "identical", 52);
+    }], 579, 0);
+    _static_2(A, "core__identical$closure", "identical", 56);
     _static_1(A, "core__print$closure", "print", 4);
     _static_1(A, "core_Uri_decodeComponent$closure", "Uri_decodeComponent", 6);
     _instance_1_i(A.Iterable.prototype, "get$contains", "contains$1", 10);
     _static(A, "math__max$closure", 2, null, ["call$1$2", "call$2"], ["max", function(a, b) {
       return A.max(a, b, type$.num);
-    }], 579, 1);
-    _static_1(A, "math__sqrt$closure", "sqrt", 12);
-    _static_1(A, "math__sin$closure", "sin", 12);
-    _static_1(A, "math__cos$closure", "cos", 12);
-    _static_1(A, "math__tan$closure", "tan", 12);
-    _static_1(A, "math__acos$closure", "acos", 12);
-    _static_1(A, "math__asin$closure", "asin", 12);
-    _static_1(A, "math__atan$closure", "atan", 12);
-    _instance(_ = A.DelegatingStreamSubscription.prototype, "get$pause", 0, 0, null, ["call$1", "call$0"], ["pause$1", "pause$0"], 115, 0, 0);
+    }], 580, 1);
+    _static_1(A, "math__sqrt$closure", "sqrt", 15);
+    _static_1(A, "math__sin$closure", "sin", 15);
+    _static_1(A, "math__cos$closure", "cos", 15);
+    _static_1(A, "math__tan$closure", "tan", 15);
+    _static_1(A, "math__acos$closure", "acos", 15);
+    _static_1(A, "math__asin$closure", "asin", 15);
+    _static_1(A, "math__atan$closure", "atan", 15);
+    _instance(_ = A.DelegatingStreamSubscription.prototype, "get$pause", 0, 0, null, ["call$1", "call$0"], ["pause$1", "pause$0"], 117, 0, 0);
     _instance_0_u(_, "get$resume", "resume$0", 0);
     _instance_0_u(_, "get$cancel", "cancel$0", 38);
     _instance_0_u(_ = A.StreamSplitter.prototype, "get$_onListen", "_onListen$0", 0);
     _instance_0_u(_, "get$_stream_splitter$_onPause", "_stream_splitter$_onPause$0", 0);
     _instance_0_u(_, "get$_stream_splitter$_onResume", "_stream_splitter$_onResume$0", 0);
     _instance_1_u(_, "get$_stream_splitter$_onData", "_stream_splitter$_onData$1", 4);
-    _instance_2_u(_, "get$_stream_splitter$_onError", "_stream_splitter$_onError$2", 13);
+    _instance_2_u(_, "get$_stream_splitter$_onError", "_stream_splitter$_onError$2", 12);
     _instance_0_u(_, "get$_stream_splitter$_onDone", "_stream_splitter$_onDone$0", 0);
-    _instance_2_u(_ = A.DefaultEquality.prototype, "get$equals", "equals$2", 52);
-    _instance_1_u(_, "get$hash", "hash$1", 56);
+    _instance_2_u(_ = A.DefaultEquality.prototype, "get$equals", "equals$2", 56);
+    _instance_1_u(_, "get$hash", "hash$1", 57);
     _instance_1_u(_, "get$isValidKey", "isValidKey$1", 10);
     _instance_1_u(A.DriftClient.prototype, "get$_handleRequest", "_handleRequest$1", 197);
     _instance_1_u(A.DriftCommunication.prototype, "get$_communication$_handleMessage", "_communication$_handleMessage$1", 4);
-    _instance_1_u(A.DriftProtocol.prototype, "get$_decodeDbValue", "_decodeDbValue$1", 35);
-    _instance_1_u(A.WebProtocol.prototype, "get$_web_protocol$_decodeDbValue", "_web_protocol$_decodeDbValue$1", 35);
-    _static_1(A, "delegates___defaultSavepoint$closure", "_defaultSavepoint", 61);
-    _static_1(A, "delegates___defaultRelease$closure", "_defaultRelease", 61);
-    _static_1(A, "delegates___defaultRollbackToSavepoint$closure", "_defaultRollbackToSavepoint", 61);
-    _instance_1_u(A.AnyUpdateQuery.prototype, "get$matches", "matches$1", 95);
-    _instance_1_u(A.MultipleUpdateQuery.prototype, "get$matches", "matches$1", 95);
+    _instance_1_u(A.DriftProtocol.prototype, "get$_decodeDbValue", "_decodeDbValue$1", 37);
+    _instance_1_u(A.WebProtocol.prototype, "get$_web_protocol$_decodeDbValue", "_web_protocol$_decodeDbValue$1", 37);
+    _static_1(A, "delegates___defaultSavepoint$closure", "_defaultSavepoint", 60);
+    _static_1(A, "delegates___defaultRelease$closure", "_defaultRelease", 60);
+    _static_1(A, "delegates___defaultRollbackToSavepoint$closure", "_defaultRollbackToSavepoint", 60);
+    _instance_1_u(A.AnyUpdateQuery.prototype, "get$matches", "matches$1", 96);
+    _instance_1_u(A.MultipleUpdateQuery.prototype, "get$matches", "matches$1", 96);
     _instance_1_u(A.GenerationContext.prototype, "get$identifier", "identifier$1", 6);
     _instance_1_u(A.CustomSelectStatement.prototype, "get$_mapDbResponse", "_mapDbResponse$1", 220);
     _instance_1_u(A.SimpleSelectStatement.prototype, "get$_mapResponse", "_mapResponse$1", "List<2>/(List<Map<String,Object?>>)");
-    _static_1(A, "native_functions___pow$closure", "_pow", 92);
-    _static_1(A, "native_functions___regexpImpl$closure", "_regexpImpl", 582);
-    _static_1(A, "native_functions___containsImpl$closure", "_containsImpl", 583);
+    _static_1(A, "native_functions___pow$closure", "_pow", 93);
+    _static_1(A, "native_functions___regexpImpl$closure", "_regexpImpl", 583);
+    _static_1(A, "native_functions___containsImpl$closure", "_containsImpl", 584);
     _instance_1_u(A.BroadcastStreamQueryStore.prototype, "get$_handleMessage", "_handleMessage$1", 8);
     _instance_2_u(A._DriftWorker.prototype, "get$send", "send$2", 287);
-    _static_1(A, "protocol_WasmInitializationMessage___read_tearOff$closure", "WasmInitializationMessage___read_tearOff", 584);
+    _static_1(A, "protocol_WasmInitializationMessage___read_tearOff$closure", "WasmInitializationMessage___read_tearOff", 585);
     _static_1(A, "case_insensitive_map_CaseInsensitiveMap__canonicalizer$closure", "CaseInsensitiveMap__canonicalizer", 6);
-    _static_1(A, "crdt_types__RdfObjectComparison_forRdfObject$closure", "_RdfObjectComparison_forRdfObject", 585);
-    _static_1(A, "crdt_types___expandIdentifiedValues$closure", "_expandIdentifiedValues", 586);
-    _static_0(A, "hlc_service__defaultPhysicalTimestampFactory$closure", "defaultPhysicalTimestampFactory", 587);
+    _static_1(A, "crdt_types__RdfObjectComparison_forRdfObject$closure", "_RdfObjectComparison_forRdfObject", 586);
+    _static_1(A, "crdt_types___expandIdentifiedValues$closure", "_expandIdentifiedValues", 587);
+    _static_0(A, "hlc_service__defaultPhysicalTimestampFactory$closure", "defaultPhysicalTimestampFactory", 588);
     _instance_2_u(_ = A.IndexDiscovery.prototype, "get$_loadAndParseFullIndex", "_loadAndParseFullIndex$2", 160);
     _instance_2_u(_, "get$_loadAndParseTemplate", "_loadAndParseTemplate$2", 161);
-    _static_1(A, "resource_locator_LocalResourceLocator_isLocalIri$closure", "LocalResourceLocator_isLocalIri", 37);
-    _static_1(A, "rdf_extensions__IriTermExtensions__iriToDebugString$closure", "IriTermExtensions__iriToDebugString", 15);
+    _static_1(A, "resource_locator_LocalResourceLocator_isLocalIri$closure", "LocalResourceLocator_isLocalIri", 30);
+    _static_1(A, "rdf_extensions__IriTermExtensions__iriToDebugString$closure", "IriTermExtensions__iriToDebugString", 11);
     _instance_1_u(A.SyncFunction.prototype, "get$$call", "call$1", 288);
     _instance(A.$SyncIrisTable.prototype, "get$map", 1, 1, function() {
       return {tablePrefix: null};
@@ -83153,62 +83117,63 @@
       return {tablePrefix: null};
     }, ["call$2$tablePrefix", "call$1"], ["map$2$tablePrefix", "map$1"], 334, 0, 0);
     _instance_0_u(A.SolidBackend.prototype, "get$_authStateChanged", "_authStateChanged$0", 0);
+    _static_1(A, "js_interop_utils___deepConvertJsObject$closure", "_deepConvertJsObject", 52);
     _static_0(A, "logging_setup__setupWorkerLogging$closure", "setupWorkerLogging", 0);
-    _static(A, "brainpoolp160r1_ECCurve_brainpoolp160r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp160r1__make"], 588, 0);
-    _static(A, "brainpoolp160t1_ECCurve_brainpoolp160t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp160t1__make"], 589, 0);
-    _static(A, "brainpoolp192r1_ECCurve_brainpoolp192r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp192r1__make"], 590, 0);
-    _static(A, "brainpoolp192t1_ECCurve_brainpoolp192t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp192t1__make"], 591, 0);
-    _static(A, "brainpoolp224r1_ECCurve_brainpoolp224r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp224r1__make"], 592, 0);
-    _static(A, "brainpoolp224t1_ECCurve_brainpoolp224t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp224t1__make"], 593, 0);
-    _static(A, "brainpoolp256r1_ECCurve_brainpoolp256r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp256r1__make"], 594, 0);
-    _static(A, "brainpoolp256t1_ECCurve_brainpoolp256t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp256t1__make"], 595, 0);
-    _static(A, "brainpoolp320r1_ECCurve_brainpoolp320r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp320r1__make"], 596, 0);
-    _static(A, "brainpoolp320t1_ECCurve_brainpoolp320t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp320t1__make"], 597, 0);
-    _static(A, "brainpoolp384r1_ECCurve_brainpoolp384r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp384r1__make"], 598, 0);
-    _static(A, "brainpoolp384t1_ECCurve_brainpoolp384t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp384t1__make"], 599, 0);
-    _static(A, "brainpoolp512r1_ECCurve_brainpoolp512r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp512r1__make"], 600, 0);
-    _static(A, "brainpoolp512t1_ECCurve_brainpoolp512t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp512t1__make"], 601, 0);
-    _static(A, "gostr3410_2001_cryptopro_a_ECCurve_gostr3410_2001_cryptopro_a__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_a__make"], 602, 0);
-    _static(A, "gostr3410_2001_cryptopro_b_ECCurve_gostr3410_2001_cryptopro_b__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_b__make"], 603, 0);
-    _static(A, "gostr3410_2001_cryptopro_c_ECCurve_gostr3410_2001_cryptopro_c__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_c__make"], 604, 0);
-    _static(A, "gostr3410_2001_cryptopro_xcha_ECCurve_gostr3410_2001_cryptopro_xcha__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_xcha__make"], 605, 0);
-    _static(A, "gostr3410_2001_cryptopro_xchb_ECCurve_gostr3410_2001_cryptopro_xchb__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_xchb__make"], 606, 0);
-    _static(A, "prime192v1_ECCurve_prime192v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v1__make"], 607, 0);
-    _static(A, "prime192v2_ECCurve_prime192v2__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v2__make"], 608, 0);
-    _static(A, "prime192v3_ECCurve_prime192v3__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v3__make"], 609, 0);
-    _static(A, "prime239v1_ECCurve_prime239v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v1__make"], 610, 0);
-    _static(A, "prime239v2_ECCurve_prime239v2__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v2__make"], 611, 0);
-    _static(A, "prime239v3_ECCurve_prime239v3__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v3__make"], 612, 0);
-    _static(A, "prime256v1_ECCurve_prime256v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime256v1__make"], 613, 0);
-    _static(A, "secp112r1_ECCurve_secp112r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp112r1__make"], 614, 0);
-    _static(A, "secp112r2_ECCurve_secp112r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp112r2__make"], 615, 0);
-    _static(A, "secp128r1_ECCurve_secp128r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp128r1__make"], 616, 0);
-    _static(A, "secp128r2_ECCurve_secp128r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp128r2__make"], 617, 0);
-    _static(A, "secp160k1_ECCurve_secp160k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp160k1__make"], 618, 0);
-    _static(A, "secp160r1_ECCurve_secp160r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp160r1__make"], 619, 0);
-    _static(A, "secp160r2_ECCurve_secp160r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp160r2__make"], 620, 0);
-    _static(A, "secp192k1_ECCurve_secp192k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp192k1__make"], 621, 0);
-    _static(A, "secp192r1_ECCurve_secp192r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp192r1__make"], 622, 0);
-    _static(A, "secp224k1_ECCurve_secp224k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp224k1__make"], 623, 0);
-    _static(A, "secp224r1_ECCurve_secp224r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp224r1__make"], 624, 0);
-    _static(A, "secp256k1_ECCurve_secp256k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp256k1__make"], 625, 0);
-    _static(A, "secp256r1_ECCurve_secp256r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp256r1__make"], 626, 0);
-    _static(A, "secp384r1_ECCurve_secp384r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp384r1__make"], 627, 0);
-    _static(A, "secp521r1_ECCurve_secp521r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp521r1__make"], 628, 0);
-    _static(A, "ecc_fp___wNafMultiplier$closure", 3, null, ["call$3"], ["_wNafMultiplier"], 629, 0);
+    _static(A, "brainpoolp160r1_ECCurve_brainpoolp160r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp160r1__make"], 589, 0);
+    _static(A, "brainpoolp160t1_ECCurve_brainpoolp160t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp160t1__make"], 590, 0);
+    _static(A, "brainpoolp192r1_ECCurve_brainpoolp192r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp192r1__make"], 591, 0);
+    _static(A, "brainpoolp192t1_ECCurve_brainpoolp192t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp192t1__make"], 592, 0);
+    _static(A, "brainpoolp224r1_ECCurve_brainpoolp224r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp224r1__make"], 593, 0);
+    _static(A, "brainpoolp224t1_ECCurve_brainpoolp224t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp224t1__make"], 594, 0);
+    _static(A, "brainpoolp256r1_ECCurve_brainpoolp256r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp256r1__make"], 595, 0);
+    _static(A, "brainpoolp256t1_ECCurve_brainpoolp256t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp256t1__make"], 596, 0);
+    _static(A, "brainpoolp320r1_ECCurve_brainpoolp320r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp320r1__make"], 597, 0);
+    _static(A, "brainpoolp320t1_ECCurve_brainpoolp320t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp320t1__make"], 598, 0);
+    _static(A, "brainpoolp384r1_ECCurve_brainpoolp384r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp384r1__make"], 599, 0);
+    _static(A, "brainpoolp384t1_ECCurve_brainpoolp384t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp384t1__make"], 600, 0);
+    _static(A, "brainpoolp512r1_ECCurve_brainpoolp512r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp512r1__make"], 601, 0);
+    _static(A, "brainpoolp512t1_ECCurve_brainpoolp512t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp512t1__make"], 602, 0);
+    _static(A, "gostr3410_2001_cryptopro_a_ECCurve_gostr3410_2001_cryptopro_a__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_a__make"], 603, 0);
+    _static(A, "gostr3410_2001_cryptopro_b_ECCurve_gostr3410_2001_cryptopro_b__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_b__make"], 604, 0);
+    _static(A, "gostr3410_2001_cryptopro_c_ECCurve_gostr3410_2001_cryptopro_c__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_c__make"], 605, 0);
+    _static(A, "gostr3410_2001_cryptopro_xcha_ECCurve_gostr3410_2001_cryptopro_xcha__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_xcha__make"], 606, 0);
+    _static(A, "gostr3410_2001_cryptopro_xchb_ECCurve_gostr3410_2001_cryptopro_xchb__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_xchb__make"], 607, 0);
+    _static(A, "prime192v1_ECCurve_prime192v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v1__make"], 608, 0);
+    _static(A, "prime192v2_ECCurve_prime192v2__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v2__make"], 609, 0);
+    _static(A, "prime192v3_ECCurve_prime192v3__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v3__make"], 610, 0);
+    _static(A, "prime239v1_ECCurve_prime239v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v1__make"], 611, 0);
+    _static(A, "prime239v2_ECCurve_prime239v2__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v2__make"], 612, 0);
+    _static(A, "prime239v3_ECCurve_prime239v3__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v3__make"], 613, 0);
+    _static(A, "prime256v1_ECCurve_prime256v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime256v1__make"], 614, 0);
+    _static(A, "secp112r1_ECCurve_secp112r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp112r1__make"], 615, 0);
+    _static(A, "secp112r2_ECCurve_secp112r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp112r2__make"], 616, 0);
+    _static(A, "secp128r1_ECCurve_secp128r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp128r1__make"], 617, 0);
+    _static(A, "secp128r2_ECCurve_secp128r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp128r2__make"], 618, 0);
+    _static(A, "secp160k1_ECCurve_secp160k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp160k1__make"], 619, 0);
+    _static(A, "secp160r1_ECCurve_secp160r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp160r1__make"], 620, 0);
+    _static(A, "secp160r2_ECCurve_secp160r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp160r2__make"], 621, 0);
+    _static(A, "secp192k1_ECCurve_secp192k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp192k1__make"], 622, 0);
+    _static(A, "secp192r1_ECCurve_secp192r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp192r1__make"], 623, 0);
+    _static(A, "secp224k1_ECCurve_secp224k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp224k1__make"], 624, 0);
+    _static(A, "secp224r1_ECCurve_secp224r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp224r1__make"], 625, 0);
+    _static(A, "secp256k1_ECCurve_secp256k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp256k1__make"], 626, 0);
+    _static(A, "secp256r1_ECCurve_secp256r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp256r1__make"], 627, 0);
+    _static(A, "secp384r1_ECCurve_secp384r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp384r1__make"], 628, 0);
+    _static(A, "secp521r1_ECCurve_secp521r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp521r1__make"], 629, 0);
+    _static(A, "ecc_fp___wNafMultiplier$closure", 3, null, ["call$3"], ["_wNafMultiplier"], 630, 0);
     _static_1(A, "rdf_term_IriTerm___new_tearOff$closure", "IriTerm___new_tearOff", 33);
     _static_1(A, "rdf_term_IriTerm___validated_tearOff$closure", "IriTerm___validated_tearOff", 33);
     _instance_1_u(_ = A._SwitchMapStreamSink.prototype, "get$onData", "onData$1", 4);
-    _instance_2_u(_, "get$onError", "onError$2", 13);
+    _instance_2_u(_, "get$onError", "onError$2", 12);
     _instance_0_u(_, "get$onDone", "onDone$0", 0);
     _instance_1_i(_ = A._EnhancedEventSink.prototype, "get$add", "add$1", 4);
     _instance(_, "get$addError", 0, 1, function() {
       return [null];
-    }, ["call$2", "call$1"], ["addError$2", "addError$1"], 22, 0, 0);
+    }, ["call$2", "call$1"], ["addError$2", "addError$1"], 21, 0, 0);
     _instance_0_u(A.WasmVfs.prototype, "get$close", "close$0", 0);
-    _static_1(A, "sync_channel_MessageSerializer_readEmpty$closure", "MessageSerializer_readEmpty", 630);
-    _static_1(A, "sync_channel_MessageSerializer_readFlags$closure", "MessageSerializer_readFlags", 631);
-    _static_1(A, "sync_channel_MessageSerializer_readNameAndFlags$closure", "MessageSerializer_readNameAndFlags", 632);
+    _static_1(A, "sync_channel_MessageSerializer_readEmpty$closure", "MessageSerializer_readEmpty", 631);
+    _static_1(A, "sync_channel_MessageSerializer_readFlags$closure", "MessageSerializer_readFlags", 632);
+    _static_1(A, "sync_channel_MessageSerializer_readNameAndFlags$closure", "MessageSerializer_readNameAndFlags", 633);
     _instance_0_u(A.AsynchronousIndexedDbFileSystem.prototype, "get$close", "close$0", 0);
     _instance_0_u(A.IndexedDbFileSystem.prototype, "get$close", "close$0", 5);
     _instance_0_u(A._FunctionWorkItem.prototype, "get$run", "run$0", 0);
@@ -83220,16 +83185,16 @@
     _static_1(A, "frame_Frame___parseV8_tearOff$closure", "Frame___parseV8_tearOff", 36);
     _static_1(A, "frame_Frame___parseFirefox_tearOff$closure", "Frame___parseFirefox_tearOff", 36);
     _static_1(A, "frame_Frame___parseFriendly_tearOff$closure", "Frame___parseFriendly_tearOff", 36);
-    _static_1(A, "trace_Trace___parseVM_tearOff$closure", "Trace___parseVM_tearOff", 78);
-    _static_1(A, "trace_Trace___parseFriendly_tearOff$closure", "Trace___parseFriendly_tearOff", 78);
+    _static_1(A, "trace_Trace___parseVM_tearOff$closure", "Trace___parseVM_tearOff", 85);
+    _static_1(A, "trace_Trace___parseFriendly_tearOff$closure", "Trace___parseFriendly_tearOff", 85);
     _instance_0_u(_ = A._EventStreamSubscription.prototype, "get$cancel", "cancel$0", 5);
-    _instance(_, "get$pause", 0, 0, null, ["call$1", "call$0"], ["pause$1", "pause$0"], 115, 0, 0);
+    _instance(_, "get$pause", 0, 0, null, ["call$1", "call$0"], ["pause$1", "pause$0"], 117, 0, 0);
     _instance_0_u(_, "get$resume", "resume$0", 0);
     _static(A, "utils__compareComparable$closure", 2, null, ["call$1$2", "call$2"], ["compareComparable", function(a, b) {
       return A.compareComparable(a, b, type$.Comparable_dynamic);
-    }], 635, 0);
-    _static_1(A, "regex_transform_validation_RegexTransformValidator_validate$closure", "RegexTransformValidator_validate", 636);
-    _static_2(A, "worker__createEngineParams$closure", "createEngineParams", 424);
+    }], 636, 0);
+    _static_1(A, "regex_transform_validation_RegexTransformValidator_validate$closure", "RegexTransformValidator_validate", 637);
+    _static_2(A, "worker__createEngineParams$closure", "createEngineParams", 425);
     _static_1(A, "future___ignore$closure", "_ignore", 4);
   })();
   (function inheritance() {
@@ -83237,7 +83202,7 @@
       _inheritMany = hunkHelpers.inheritMany,
       _inherit = hunkHelpers.inherit;
     _inheritMany(null, [A.Object, A.AbortableStreamedRequest]);
-    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, A.SafeToStringHook, J.ArrayIterator, A._CopyingBytesBuilder, A.Iterable, A.CastIterator, A.Closure, A.Error, A.ListBase, A.SentinelValue, A.ListIterator, A.MappedIterator, A.WhereIterator, A.ExpandIterator, A.TakeIterator, A.SkipIterator, A.SkipWhileIterator, A.EmptyIterator, A.WhereTypeIterator, A.NonNullsIterator, A.IndexedIterator, A.FixedLengthListMixin, A.UnmodifiableListMixin, A.Symbol, A._Record, A.MapView, A.ConstantMap, A._KeysOrValuesOrElementsIterator, A.SetBase, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A.MapBase, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.LinkedHashMapValueIterator, A.LinkedHashMapEntryIterator, A.JSSyntaxRegExp, A._MatchImplementation, A._AllMatchesIterator, A.StringMatch, A._StringAllMatchesIterator, A._Cell, A._InitializedCell, A._UnmodifiableNativeByteBufferView, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A._AsyncAwaitCompleter, A._AsyncStarStreamController, A._IterationMarker, A._SyncStarIterator, A.AsyncError, A.Stream, A._BufferingStreamSubscription, A._BroadcastStreamController, A.TimeoutException, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A.StreamTransformerBase, A._StreamController, A._SyncStreamControllerDispatch, A._AsyncStreamControllerDispatch, A._StreamSinkWrapper, A._AddStreamState, A._DelayedEvent, A._DelayedDone, A._PendingEvents, A._DoneStreamSubscription, A._StreamIterator, A._ZoneFunction, A._ZoneSpecification, A._ZoneDelegate, A._Zone, A._HashMapKeyIterator, A._HashSetIterator, A._LinkedHashSetCell, A._LinkedHashSetIterator, A._LinkedListIterator, A.LinkedListEntry, A._MapBaseValueIterator, A._UnmodifiableMapMixin, A._ListQueueIterator, A._UnmodifiableSetMixin, A.Codec, A.Converter, A._Base64Encoder, A._Base64Decoder, A.ByteConversionSink, A._JsonStringifier, A._JsonPrettyPrintMixin, A._Utf8Encoder, A._Utf8Decoder, A._BigIntImpl, A._BigIntClassic, A._FinalizationRegistryWrapper, A.DateTime, A.Duration, A._Enum, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.IntegerDivisionByZeroException, A.MapEntry, A.Null, A._StringStackTrace, A.StringBuffer, A._Uri, A.UriData, A._SimpleUri, A.Expando, A.ServiceExtensionResponse, A.NullRejectionException, A._JSRandom, A._JSSecureRandom, A.Endian, A.DelegatingStreamSubscription, A.FutureGroup, A.ErrorResult, A.ValueResult, A.StreamQueue, A._NextRequest, A._CancelRequest, A.StreamSplitter, A.CanonicalizedMap, A.DefaultEquality, A.ListEquality, A._UnorderedEquality, A._MapEntry, A.MapEquality, A._QueueList_Object_ListMixin, A.NonGrowableListMixin, A.UnmodifiableMapMixin, A.Digest, A.DigestSink, A.HashSink, A.Expression, A.HasResultSet, A.DriftClient, A.QueryExecutor, A.StreamQueryStore, A.DriftCommunication, A._PendingRequest, A.ConnectionClosedException, A.DriftRemoteException, A.DriftProtocol, A.Message, A.PrimitiveResponsePayload, A.ExecuteQuery, A.RequestCancellation, A.ExecuteBatchedStatement, A.RunNestedExecutorControl, A.EnsureOpen, A.ServerInfo, A.RunBeforeOpen, A.NotifyTablesUpdated, A.SelectResult, A.WebProtocol, A.DriftDatabaseOptions, A.Batch, A.DatabaseConnection, A.DatabaseConnectionUser, A.DriftRuntimeOptions, A.StreamQueryUpdateRules, A.TableUpdate, A.TableUpdateQuery, A.CancellationToken, A.CancellationException, A.DataClass, A.UpdateCompanion, A.Value, A.ValueSerializer, A.VerificationMeta, A.VerificationResult, A.VerificationContext, A.TrackedDatabase, A.DriftServiceExtension, A.InvalidDataException, A.DriftWrappedException, A.CouldNotRollBackException, A.BatchedStatements, A.ArgumentsForBatchedStatement, A.QueryDelegate, A.TransactionDelegate, A.DbVersionDelegate, A.QueryResult, A.QueryInterceptor, A.QueryStreamFetcher, A.StreamKey, A.QueryStream, A._QueryStreamListener, A.Component, A.GenerationContext, A.MigrationStrategy, A.Migrator, A.OpeningDetails, A.TableInfo, A.InsertStatement, A.UpsertClause, A.Selectable, A.SingleTableQueryMixin, A.LimitContainerMixin, A._CustomSelectStatement_Object_Selectable, A.QueryRow, A.TypedResult, A._ResultStructure, A.SqlTypes, A.DriftAny, A.PreparedStatementsCache, A.Lock, A.WasmDatabaseOpener, A._DriftWorker, A._ProbeResult, A.WasmInitializationMessage, A.DriftServerController, A.WasmDatabaseResult, A.BaseClient, A.ClientException, A.BaseRequest, A.BaseResponse, A.MediaType, A.ResponseDriftOptionsMessage, A.ResourceConfigBase, A.ConfigBase, A.ConfigBaseValidator, A.IndexItemConfigBase, A.CrdtIndexConfigBase, A.DocumentIriTemplate, A.SyncEngineConfigValidator, A.ValidationResult, A.ValidationIssue, A.SyncConfigValidationException, A.MetadataStatement, A.MetadataStatementKey, A.MergeResults, A.GRegister, A.LwwRegister, A.Immutable, A.OrSet, A.CrdtMergeContext, A.RemoteCrdtMergeContext, A.CrdtTypeRegistry, A.CrdtDocumentManager, A.HlcService, A.GroupIndexGraphSubscriptionException, A.GroupIndexGraphSubscriptionManager, A.GroupKeyGenerator, A._PropertyExtractor, A.ItemFetchPolicy, A.RegexTransform, A.GroupingProperty, A._ParsedIndexCacheEntry, A._IndexMetadata, A.IndexDiscovery, A.IndexManager, A.ParsedFullIndex, A.ParsedGroupIndexTemplate, A.IndexParser, A.IndexPropertyResolver, A.IndexRdfGenerator, A.RdfGroupExtractor, A.MissingIndexDocument, A.MissingGroupIndex, A.ShardDeterminationResult, A.ShardDeterminer, A.ShardManager, A.ShardingConfig, A.InstallationService, A.LocalDocumentMerger, A.CrdtMetadataResult, A.FrameworkIriGenerator, A._GraphWithLabels, A.IdentifiedBlankNodeParent, A.IdentifiedBlankNode, A.IdentifiedBlankNodes, A.UnidentifiedBlankNodeException, A.UnidentifiedBlankNodeWithContextException, A.IdentifiedBlankNodeBuilder, A.IdentifiedRdfSubject, A.NoOpIriTranslator, A.BaseIriTranslator, A.ResourceLocator, A.PredicateRule, A.DocumentMapping, A.PredicateMapping, A.ClassMapping, A.PredicateMergeRule, A.ClassMergeRules, A.MergeContract, A.DocumentMappingDependencyExtractor, A.MergeContractLoader, A.MetadataGenerator, A.IdTerm, A.HttpFetcher, A.StandardRdfGraphFetcher, A.RecursiveRdfLoader, A.UnsupportedIriException, A.ResourceIdentifier, A.LocalResourceLocator, A.StandardSyncEngine, A.ConcurrentUpdateException, A.RemoteId, A.RemoteDownloadResult, A.RemoteUploadResult, A.IndexEntryWithIri, A.IndexEntriesPage, A.StoredDocument, A.SaveDocumentResult, A.DocumentsResult, A.DocumentMetadata, A.PropertyChange, A.OrganizedStatements, A.MergeObject, A.MergeSubject, A.OrganizedBlankNodeMappings, A.RdfObjectKey, A.OrganizedGraph, A.MergeResult, A.RemoteDocumentMerger, A.IndexSyncSpec, A.ShardSyncSpec, A._DocumentQueueEntry, A.RemoteSyncOrchestrator, A.ShardDocumentGenerator, A.StandardSyncManager, A.SyncFunction, A.AutoSyncConfig, A.SyncState, A.EngineParams, A.LRUCache, A.RdfExpectations, A.LocordaDriftWebOptions, A.LocordaDriftNativeOptions, A.DriftStorage, A.IriBatchLoader, A.DriftIndexEntry, A.SubscribedGroupIndexData, A.IndexEntriesPage0, A.DocumentWithIri, A._$SyncDocumentDaoMixin, A._$SyncPropertyChangeDaoMixin, A._$IndexDaoMixin, A._$RemoteSyncStateDaoMixin, A.SolidBackend, A.SolidClientException, A.NotFoundException, A.SolidClient, A.SolidRemoteStorage, A.SolidProfileParser, A.UpdateAuthMessage, A._WorkerAuthNotifier, A.SolidAuthReceiver, A.WebWorkerSender, A.WorkerChannel, A.WorkerContext, A.WorkerMessage, A.Level, A.LogRecord, A.Logger, A.Context, A._PathDirection, A._PathRelation, A.Style, A.ParsedPath, A.PathException, A.BaseBlockCipher, A.AsymmetricKeyParameter, A.CipherParameters, A.ParametersWithIV, A.RegistryFactoryException, A.ASN1Object, A.ASN1Parser, A.UnsupportedASN1TagException, A.RSAAsymmetricKey, A.RSASignature, A.BaseAsymmetricBlockCipher, A.DesBase, A.BaseAEADBlockCipher, A.BaseDigest, A.ECSignature, A.ECDomainParametersImpl, A.ECFieldElementBase, A.ECPointBase, A.ECCurveBase, A._WNafPreCompInfo, A.BaseKeyDerivator, A.PKCS12ParametersGenerator, A.PKCS5S1ParameterGenerator, A.ECKeyGenerator, A.RSAKeyGenerator, A.BaseMac, A.PaddedBlockCipherImpl, A.BasePadding, A.AutoSeedBlockCtrRandom, A.SecureRandomBase, A.FortunaRandom, A.ECDSASigner, A._RFC6979KCalculator, A._RandomKCalculator, A.PSSSigner, A.RSASigner, A.BaseAEADCipher, A.BaseStreamCipher, A.Platform, A.PlatformException, A._JsBuiltInEntropySource, A._JsNodeEntropySource, A.FactoryConfig, A._RegistryImpl, A.Register64, A.Register64List, A.RdfCore, A.Quad, A.RdfDataset, A.RdfNamedGraph, A.RdfException, A.SourceLocation0, A.RdfGraph, A.RdfTerm, A.Triple, A.IriCompactionSettings, A.CompactIri, A.IriCompactionResult, A.IriCompaction, A.RdfGraphDecoderOptions, A.JsonLdParser, A.RdfGraphEncoderOptions, A._BlankNodeLabelFactoryImpl, A._NoOpBlankNodeCounter, A.CodecNotSupportedException, A.BaseRdfCodecRegistry, A.RdfCodecRegistry, A.IriRelativizationOptions, A.TurtleParser, A.Token, A.TurtleTokenizer, A.RdfNamespaceMappings, A.ForwardingSink, A._EnhancedEventSink, A.JWTAlgorithm, A.JWT, A.JWTKey, A.DpopCredentials, A.SourceFile, A.SourceLocationMixin, A.SourceSpanMixin, A.Highlighter, A._Highlight, A._Line, A.SourceLocation, A.SourceSpanException, A.SqliteException, A.AllowedArgumentCount, A.RawSqliteBindings, A.SqliteResult, A.RawSqliteDatabase, A.RawStatementCompiler, A.RawSqliteStatement, A.RawSqliteContext, A.RawSqliteValue, A.FinalizablePart, A.DatabaseImplementation, A.Sqlite3Implementation, A.CommonPreparedStatement, A.VirtualFileSystem, A.BaseVfsFile, A.Cursor, A._Row_Object_UnmodifiableMapMixin, A._ResultIterator, A.IndexedParameters, A.VfsException, A.Sqlite3Filename, A._CursorReader, A.RequestResponseSynchronizer, A.MessageSerializer, A.Message0, A.AsynchronousIndexedDbFileSystem, A._FileWriteRequest, A._OffsetAndBuffer, A._IndexedDbFile, A.WasmBindings, A._InjectedValues, A.DartCallbacks, A.RegisteredFunctionSet, A.Chain, A.Frame, A.LazyTrace, A.Trace, A.UnparsedFrame, A.StreamChannelMixin, A._GuaranteeSink, A.StreamChannelController, A.StringScanner, A.RNG, A.Uuid, A.EventStreamProvider, A._EventStreamSubscription]);
+    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, A.SafeToStringHook, J.ArrayIterator, A._CopyingBytesBuilder, A.Iterable, A.CastIterator, A.Closure, A.Error, A.ListBase, A.SentinelValue, A.ListIterator, A.MappedIterator, A.WhereIterator, A.ExpandIterator, A.TakeIterator, A.SkipIterator, A.SkipWhileIterator, A.EmptyIterator, A.WhereTypeIterator, A.NonNullsIterator, A.IndexedIterator, A.FixedLengthListMixin, A.UnmodifiableListMixin, A.Symbol, A._Record, A.MapView, A.ConstantMap, A._KeysOrValuesOrElementsIterator, A.SetBase, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A.MapBase, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.LinkedHashMapValueIterator, A.LinkedHashMapEntryIterator, A.JSSyntaxRegExp, A._MatchImplementation, A._AllMatchesIterator, A.StringMatch, A._StringAllMatchesIterator, A._Cell, A._InitializedCell, A._UnmodifiableNativeByteBufferView, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A._AsyncAwaitCompleter, A._AsyncStarStreamController, A._IterationMarker, A._SyncStarIterator, A.AsyncError, A.Stream, A._BufferingStreamSubscription, A._BroadcastStreamController, A.TimeoutException, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A.StreamTransformerBase, A._StreamController, A._SyncStreamControllerDispatch, A._AsyncStreamControllerDispatch, A._StreamSinkWrapper, A._AddStreamState, A._DelayedEvent, A._DelayedDone, A._PendingEvents, A._DoneStreamSubscription, A._StreamIterator, A._ZoneFunction, A._ZoneSpecification, A._ZoneDelegate, A._Zone, A._HashMapKeyIterator, A._HashSetIterator, A._LinkedHashSetCell, A._LinkedHashSetIterator, A._LinkedListIterator, A.LinkedListEntry, A._MapBaseValueIterator, A._UnmodifiableMapMixin, A._ListQueueIterator, A._UnmodifiableSetMixin, A.Codec, A.Converter, A._Base64Encoder, A._Base64Decoder, A.ByteConversionSink, A._JsonStringifier, A._JsonPrettyPrintMixin, A._Utf8Encoder, A._Utf8Decoder, A._BigIntImpl, A._BigIntClassic, A._FinalizationRegistryWrapper, A.DateTime, A.Duration, A._Enum, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.IntegerDivisionByZeroException, A.MapEntry, A.Null, A._StringStackTrace, A.StringBuffer, A._Uri, A.UriData, A._SimpleUri, A.Expando, A.ServiceExtensionResponse, A.NullRejectionException, A._JSRandom, A._JSSecureRandom, A.Endian, A.DelegatingStreamSubscription, A.FutureGroup, A.ErrorResult, A.ValueResult, A.StreamQueue, A._NextRequest, A._CancelRequest, A.StreamSplitter, A.CanonicalizedMap, A.DefaultEquality, A.ListEquality, A._UnorderedEquality, A._MapEntry, A.MapEquality, A._QueueList_Object_ListMixin, A.NonGrowableListMixin, A.UnmodifiableMapMixin, A.Digest, A.DigestSink, A.HashSink, A.Expression, A.HasResultSet, A.DriftClient, A.QueryExecutor, A.StreamQueryStore, A.DriftCommunication, A._PendingRequest, A.ConnectionClosedException, A.DriftRemoteException, A.DriftProtocol, A.Message, A.PrimitiveResponsePayload, A.ExecuteQuery, A.RequestCancellation, A.ExecuteBatchedStatement, A.RunNestedExecutorControl, A.EnsureOpen, A.ServerInfo, A.RunBeforeOpen, A.NotifyTablesUpdated, A.SelectResult, A.WebProtocol, A.DriftDatabaseOptions, A.Batch, A.DatabaseConnection, A.DatabaseConnectionUser, A.DriftRuntimeOptions, A.StreamQueryUpdateRules, A.TableUpdate, A.TableUpdateQuery, A.CancellationToken, A.CancellationException, A.DataClass, A.UpdateCompanion, A.Value, A.ValueSerializer, A.VerificationMeta, A.VerificationResult, A.VerificationContext, A.TrackedDatabase, A.DriftServiceExtension, A.InvalidDataException, A.DriftWrappedException, A.CouldNotRollBackException, A.BatchedStatements, A.ArgumentsForBatchedStatement, A.QueryDelegate, A.TransactionDelegate, A.DbVersionDelegate, A.QueryResult, A.QueryInterceptor, A.QueryStreamFetcher, A.StreamKey, A.QueryStream, A._QueryStreamListener, A.Component, A.GenerationContext, A.MigrationStrategy, A.Migrator, A.OpeningDetails, A.TableInfo, A.InsertStatement, A.UpsertClause, A.Selectable, A.SingleTableQueryMixin, A.LimitContainerMixin, A._CustomSelectStatement_Object_Selectable, A.QueryRow, A.TypedResult, A._ResultStructure, A.SqlTypes, A.DriftAny, A.PreparedStatementsCache, A.Lock, A.WasmDatabaseOpener, A._DriftWorker, A._ProbeResult, A.WasmInitializationMessage, A.DriftServerController, A.WasmDatabaseResult, A.BaseClient, A.ClientException, A.BaseRequest, A.BaseResponse, A.MediaType, A.ResourceConfigBase, A.ConfigBase, A.ConfigBaseValidator, A.IndexItemConfigBase, A.CrdtIndexConfigBase, A.DocumentIriTemplate, A.SyncEngineConfigValidator, A.ValidationResult, A.ValidationIssue, A.SyncConfigValidationException, A.MetadataStatement, A.MetadataStatementKey, A.MergeResults, A.GRegister, A.LwwRegister, A.Immutable, A.OrSet, A.CrdtMergeContext, A.RemoteCrdtMergeContext, A.CrdtTypeRegistry, A.CrdtDocumentManager, A.HlcService, A.GroupIndexGraphSubscriptionException, A.GroupIndexGraphSubscriptionManager, A.GroupKeyGenerator, A._PropertyExtractor, A.ItemFetchPolicy, A.RegexTransform, A.GroupingProperty, A._ParsedIndexCacheEntry, A._IndexMetadata, A.IndexDiscovery, A.IndexManager, A.ParsedFullIndex, A.ParsedGroupIndexTemplate, A.IndexParser, A.IndexPropertyResolver, A.IndexRdfGenerator, A.RdfGroupExtractor, A.MissingIndexDocument, A.MissingGroupIndex, A.ShardDeterminationResult, A.ShardDeterminer, A.ShardManager, A.ShardingConfig, A.InstallationService, A.LocalDocumentMerger, A.CrdtMetadataResult, A.FrameworkIriGenerator, A._GraphWithLabels, A.IdentifiedBlankNodeParent, A.IdentifiedBlankNode, A.IdentifiedBlankNodes, A.UnidentifiedBlankNodeException, A.UnidentifiedBlankNodeWithContextException, A.IdentifiedBlankNodeBuilder, A.IdentifiedRdfSubject, A.NoOpIriTranslator, A.BaseIriTranslator, A.ResourceLocator, A.PredicateRule, A.DocumentMapping, A.PredicateMapping, A.ClassMapping, A.PredicateMergeRule, A.ClassMergeRules, A.MergeContract, A.DocumentMappingDependencyExtractor, A.MergeContractLoader, A.MetadataGenerator, A.IdTerm, A.HttpFetcher, A.StandardRdfGraphFetcher, A.RecursiveRdfLoader, A.UnsupportedIriException, A.ResourceIdentifier, A.LocalResourceLocator, A.StandardSyncEngine, A.ConcurrentUpdateException, A.RemoteId, A.RemoteDownloadResult, A.RemoteUploadResult, A.IndexEntryWithIri, A.IndexEntriesPage, A.StoredDocument, A.SaveDocumentResult, A.DocumentsResult, A.DocumentMetadata, A.PropertyChange, A.OrganizedStatements, A.MergeObject, A.MergeSubject, A.OrganizedBlankNodeMappings, A.RdfObjectKey, A.OrganizedGraph, A.MergeResult, A.RemoteDocumentMerger, A.IndexSyncSpec, A.ShardSyncSpec, A._DocumentQueueEntry, A.RemoteSyncOrchestrator, A.ShardDocumentGenerator, A.StandardSyncManager, A.SyncFunction, A.AutoSyncConfig, A.SyncState, A.EngineParams, A.LRUCache, A.RdfExpectations, A.LocordaDriftWebOptions, A.LocordaDriftNativeOptions, A.DriftStorage, A.IriBatchLoader, A.DriftIndexEntry, A.SubscribedGroupIndexData, A.IndexEntriesPage0, A.DocumentWithIri, A._$SyncDocumentDaoMixin, A._$SyncPropertyChangeDaoMixin, A._$IndexDaoMixin, A._$RemoteSyncStateDaoMixin, A.SolidBackend, A.SolidClientException, A.NotFoundException, A.SolidClient, A.SolidRemoteStorage, A.SolidProfileParser, A.UpdateAuthMessage, A._WorkerAuthNotifier, A.SolidAuthReceiver, A.WebWorkerSender, A.WorkerChannel, A.WorkerContext, A.WorkerMessage, A.Level, A.LogRecord, A.Logger, A.Context, A._PathDirection, A._PathRelation, A.Style, A.ParsedPath, A.PathException, A.BaseBlockCipher, A.AsymmetricKeyParameter, A.CipherParameters, A.ParametersWithIV, A.RegistryFactoryException, A.ASN1Object, A.ASN1Parser, A.UnsupportedASN1TagException, A.RSAAsymmetricKey, A.RSASignature, A.BaseAsymmetricBlockCipher, A.DesBase, A.BaseAEADBlockCipher, A.BaseDigest, A.ECSignature, A.ECDomainParametersImpl, A.ECFieldElementBase, A.ECPointBase, A.ECCurveBase, A._WNafPreCompInfo, A.BaseKeyDerivator, A.PKCS12ParametersGenerator, A.PKCS5S1ParameterGenerator, A.ECKeyGenerator, A.RSAKeyGenerator, A.BaseMac, A.PaddedBlockCipherImpl, A.BasePadding, A.AutoSeedBlockCtrRandom, A.SecureRandomBase, A.FortunaRandom, A.ECDSASigner, A._RFC6979KCalculator, A._RandomKCalculator, A.PSSSigner, A.RSASigner, A.BaseAEADCipher, A.BaseStreamCipher, A.Platform, A.PlatformException, A._JsBuiltInEntropySource, A._JsNodeEntropySource, A.FactoryConfig, A._RegistryImpl, A.Register64, A.Register64List, A.RdfCore, A.Quad, A.RdfDataset, A.RdfNamedGraph, A.RdfException, A.SourceLocation0, A.RdfGraph, A.RdfTerm, A.Triple, A.IriCompactionSettings, A.CompactIri, A.IriCompactionResult, A.IriCompaction, A.RdfGraphDecoderOptions, A.JsonLdParser, A.RdfGraphEncoderOptions, A._BlankNodeLabelFactoryImpl, A._NoOpBlankNodeCounter, A.CodecNotSupportedException, A.BaseRdfCodecRegistry, A.RdfCodecRegistry, A.IriRelativizationOptions, A.TurtleParser, A.Token, A.TurtleTokenizer, A.RdfNamespaceMappings, A.ForwardingSink, A._EnhancedEventSink, A.JWTAlgorithm, A.JWT, A.JWTKey, A.DpopCredentials, A.SourceFile, A.SourceLocationMixin, A.SourceSpanMixin, A.Highlighter, A._Highlight, A._Line, A.SourceLocation, A.SourceSpanException, A.SqliteException, A.AllowedArgumentCount, A.RawSqliteBindings, A.SqliteResult, A.RawSqliteDatabase, A.RawStatementCompiler, A.RawSqliteStatement, A.RawSqliteContext, A.RawSqliteValue, A.FinalizablePart, A.DatabaseImplementation, A.Sqlite3Implementation, A.CommonPreparedStatement, A.VirtualFileSystem, A.BaseVfsFile, A.Cursor, A._Row_Object_UnmodifiableMapMixin, A._ResultIterator, A.IndexedParameters, A.VfsException, A.Sqlite3Filename, A._CursorReader, A.RequestResponseSynchronizer, A.MessageSerializer, A.Message0, A.AsynchronousIndexedDbFileSystem, A._FileWriteRequest, A._OffsetAndBuffer, A._IndexedDbFile, A.WasmBindings, A._InjectedValues, A.DartCallbacks, A.RegisteredFunctionSet, A.Chain, A.Frame, A.LazyTrace, A.Trace, A.UnparsedFrame, A.StreamChannelMixin, A._GuaranteeSink, A.StreamChannelController, A.StringScanner, A.RNG, A.Uuid, A.EventStreamProvider, A._EventStreamSubscription]);
     _inheritMany(J.Interceptor, [J.JSBool, J.JSNull, J.JavaScriptObject, J.JavaScriptBigInt, J.JavaScriptSymbol, J.JSNumber, J.JSString]);
     _inheritMany(J.JavaScriptObject, [J.LegacyJavaScriptObject, J.JSArray, A.NativeByteBuffer, A.NativeTypedData]);
     _inheritMany(J.LegacyJavaScriptObject, [J.PlainJavaScriptObject, J.UnknownJavaScriptObject, J.JavaScriptFunction]);
@@ -83248,13 +83213,13 @@
     _inheritMany(A._CastIterableBase, [A.CastIterable, A.__CastListBase__CastIterableBase_ListMixin]);
     _inherit(A._EfficientLengthCastIterable, A.CastIterable);
     _inherit(A._CastListBase, A.__CastListBase__CastIterableBase_ListMixin);
-    _inheritMany(A.Closure, [A.Closure2Args, A.Closure0Args, A.Instantiation, A.TearOffClosure, A.JsLinkedHashMap_containsValue_closure, A.initHooks_closure, A.initHooks_closure1, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._awaitOnObject_closure, A._asyncStarHelper_closure0, A._SyncBroadcastStreamController__sendData_closure, A._SyncBroadcastStreamController__sendError_closure, A._SyncBroadcastStreamController__sendDone_closure, A.Future_wait_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A._Future_timeout_closure0, A.Stream_pipe_closure, A.Stream_length_closure, A.Stream_first_closure0, A._CustomZone_bindUnaryCallback_closure, A._CustomZone_bindUnaryCallbackGuarded_closure, A._RootZone_bindUnaryCallback_closure, A._RootZone_bindUnaryCallbackGuarded_closure, A._HashMap_values_closure, A._CustomHashMap_closure, A._LinkedCustomHashMap_closure, A.MapBase_entries_closure, A._JsonMap_values_closure, A._BigIntImpl_hashCode_finish, A._BigIntImpl_toDouble_readBits, A.DateTime_parse_parseIntOrZero, A.DateTime_parse_parseMilliAndMicroseconds, A._Uri__makePath_closure, A.jsify__convert, A.promiseToFuture_closure, A.promiseToFuture_closure0, A.dartify_convert, A.FutureGroup_add_closure, A.StreamQueue__ensureListening_closure, A.StreamSplitter__onPause_closure, A.CanonicalizedMap_entries_closure, A.CanonicalizedMap_keys_closure, A.CanonicalizedMap_update_closure, A.CanonicalizedMap_values_closure, A.DriftClient__handleRequest_closure, A._RemoteQueryExecutor_ensureOpen_closure, A._RemoteStreamQueryStore_handleTableUpdates_closure, A._RemoteStreamQueryStore_handleTableUpdates_closure0, A.DriftCommunication_setRequestHandler_closure, A.DriftProtocol_decodePayload_readInt, A.DriftProtocol_decodePayload_readNullableInt, A.WebProtocol__serializeRequest_closure, A.WebProtocol__deserializeRequest_readBatched_closure, A.WebProtocol__deserializeRequest_readBatched_closure0, A.WebProtocol__deserializeRequest_closure, A.WebProtocol__serializeSelectResult_closure, A.WebProtocol__deserializeResponse_closure, A.DatabaseConnectionUser_tableUpdates_closure, A.DatabaseConnectionUser_doWhenOpened_closure, A.DatabaseConnectionUser_customUpdate_closure, A.DatabaseConnectionUser_customInsert_closure, A.DatabaseConnectionUser__customWrite_closure, A.DatabaseConnectionUser__customWrite_closure0, A.DatabaseConnectionUser_customStatement_closure, A.DatabaseConnectionUser_transaction_closure, A.DatabaseConnectionUser_exclusively_closure, A.DatabaseConnectionUser_batch_closure, A.DriftRuntimeOptions_debugPrint_closure, A.DriftRuntimeOptions_debugPrint__closure, A.DriftServiceExtension__handle_closure, A.DriftServiceExtension__handle_closure0, A.DriftServiceExtension__handle_closure1, A.DriftServiceExtension__handle_closure2, A.DriftServiceExtension_registerIfNeeded__closure0, A.QueryResult_asMap_closure, A.StreamQueryStore_updatesForSync_closure, A.StreamQueryStore_updatesForSync_closure0, A.QueryStream__stream_closure, A.QueryStream__onListenOrResume_closure, A.QueryStream_fetchAndEmitData_closure, A.MultipleUpdateQuery_matches_closure, A.GeneratedColumn_constraintIsAlways_closure, A.InsertStatement_insert_closure, A.InsertStatement_insertOnConflictUpdate_closure, A.Query__writeInto_writeWithSpace, A.CustomSelectStatement__mapArgs_closure, A.CustomSelectStatement__executeRaw_closure, A.CustomSelectStatement__mapDbResponse_closure, A.SimpleSelectStatement__getRaw_closure, A.SimpleSelectStatement_orderBy_closure, A.JoinedSelectStatement__getRaw_closure, A.JoinedSelectStatement__mapWithStructure_closure, A.JoinedSelectStatement__mapResponse_closure, A.UpdateStatement__performQuery_closure, A.EnableNativeFunctions_useNativeFunctions_closure, A._unaryNumFunction_closure, A.MapAndAwait_mapAsyncAndAwait_closure, A.AsyncMapPerSubscription_asyncMapPerSubscription_closure, A.AsyncMapPerSubscription_asyncMapPerSubscription_closure_onData, A.Lock_synchronized_closure, A.WebPortToChannel_channel_closure, A.WebPortToChannel_channel_closure0, A._readMessages_closure, A._readMessages__closure, A._extension_0_get_nextNoError_closure, A.SharedWorkerCompatibilityResult_SharedWorkerCompatibilityResult$fromJsPayload_asBoolean, A.WasmDatabase_open_closure, A.WasmDatabase_open_closure0, A.RetryClient_send_closure, A.RetryClient_send_closure0, A.BaseRequest_closure0, A.BrowserClient_send_closure0, A._readBody_closure, A._readBody_closure0, A.ByteStream_toBytes_closure, A.MediaType_toString__closure, A.expectQuotedString_closure, A.DriftNativeOptionsReceiver_receiver_closure, A.ConfigBaseValidator__validateIndexConfigurations_closure, A.IndexItemData_IndexItemData$fromJson_closure, A.IndexItemData_toJson_closure, A.GroupIndexData_GroupIndexData$fromJson_closure, A.GroupIndexData_toJson_closure, A.DocumentIriTemplate_DocumentIriTemplate$fromJson_closure, A.ResourceConfigData_getIndexByName_closure, A.ResourceConfigData_toJson_closure, A.SyncEngineConfig_allIndicesInOrder_closure, A.SyncEngineConfig_allIndicesInOrder__closure, A.SyncEngineConfig_SyncEngineConfig$fromJson_closure, A.SyncEngineConfig_toJson_closure, A.SyncEngineConfig_getResourceConfig_closure, A.SyncEngineConfigValidator__baseValidator_closure, A.MergeResults_join__closure, A._RdfObjectComparison__max_closure, A._RdfObjectComparison__max_closure1, A._RdfObjectComparison__max_closure3, A.LwwRegister_remoteMerge_closure, A.addInlineTriples_closure, A.addInlineTriples_closure0, A.Immutable_remoteMerge_closure, A.OrSet_remoteMerge_closure, A.OrSet_localValueChange_closure, A.OrSet_localValueChange_closure0, A.OrSet_localValueChange_closure1, A.OrSet_localValueChange__closure, A.OrSet_localValueChange___closure, A._findStatementTriplesToRemove_closure, A._findStatementTriplesToRemove_closure0, A._findStatementTriplesToRemove_closure1, A._findStatementTriplesToRemove_closure2, A._handleIdenticalClocksTriples_closure, A._handleIdenticalClocksTriples_closure0, A._handleIdenticalClocksTriples_closure1, A._handleIdenticalClocksTriples_closure2, A._handleIdenticalClocksTriples_closure3, A._handleIdenticalClocksTriples_closure4, A._handleIdenticalClocksTriples_closure5, A._handleIdenticalClocksTriples_closure6, A._handleBothEmptyClocksTriples_closure, A._handleBothEmptyClocksTriples_closure0, A.objectsIfSubjectNonNull_closure, A._constructCrdtDocument_closure, A._constructCrdtDocument_closure0, A.HlcService__extractCrdtClock_closure, A.HlcService__extractCrdtClock_closure0, A.HlcService__getOurTime_closure, A.HlcService__getOurTime_closure0, A.HlcService__incrementClock_closure0, A.GroupKeyGenerator__extractAllValuesForProperty_closure, A.GroupKeyGenerator__generateCartesianProduct_closure, A.ItemFetchPolicy_fromMap_closure, A.PrefetchFiltered_toMap_closure, A.GroupingProperty_GroupingProperty$fromJson_closure, A.GroupingProperty_toJson_closure, A.IndexDiscovery__initializeWatches_closure, A.IndexDiscovery__initializeWatches_closure1, A.IndexDiscovery__updateIndexMetadataCache_closure0, A.IndexDiscovery__removeIndexFromCache_closure, A.IndexDiscovery__isConfiguredResourceType_closure, A.IndexDiscovery_discoverGroupIndexTemplate_closure, A.IndexManager__generateGroupIndex_closure, A.IndexManager__updateShardIndexEntries_closure, A.IndexManager__updateShardIndexEntries__closure, A.IndexManager__extractHeaderProperties_closure, A.IndexParser__parseGroupingProperties_closure, A.IndexParser__parseGroupingProperty_closure, A.IndexRdfGenerator_generateGroupIndexTemplate_closure, A.IndexRdfGenerator_generateGroupIndexTemplateIri_closure0, A.IndexRdfGenerator_generateGroupIndexTemplateIri__closure, A.IndexRdfGenerator__generateIndexedProperties_closure, A.RdfGroupExtractor_closure, A.RdfGroupExtractor__applyReplacement_closure, A.ShardDeterminer_calculateShards_closure, A.LocalDocumentMerger_replaceInDocument_closure, A.LocalDocumentMerger_replaceInDocument_closure0, A.LocalDocumentMerger__getIdentifiedSubjects_closure, A.LocalDocumentMerger__generateCrdtMetadataForChanges_closure, A.LocalDocumentMerger__valueEquals_closure, A.collectClassMappings_closure, A.collectClassMappings_closure0, A.mergeClassMappingGroups_closure, A.mergeClassMappingGroups_closure1, A.mergeClassMappingGroups__closure, A.collectPredicateMappings_closure, A.collectPredicateMappings_closure0, A.mergePredicateMappingGroups_closure, A.FrameworkIriGenerator_generateSimpleCanonicalIri_closure, A._buildIdentificationGraphWithLabels_processNode, A.IdentifiedBlankNode_hashCode_closure, A.IdentifiedBlankNode_operator$eq_closure, A.UnidentifiedBlankNodeWithContextException_toString_closure, A.UnidentifiedBlankNodeWithContextException_toString_closure0, A.IdentifiedBlankNodeBuilder_computeCanonicalBlankNodes_closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure1, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes__closure0, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure3, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure4, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes__closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes___closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes___closure0, A._sortByDependencies_closure, A._addIdentifiedBlankNodes_closure, A._addIdentifiedBlankNodes_closure0, A._addIdentifiedBlankNodes_closure1, A._addIdentifiedBlankNodes__closure, A.IdentifiedBlankNodeSubject_operator$eq_closure, A.BaseIriTranslator_translateGraphToInternal_closure, A.BaseIriTranslator_translateGraphToExternal_closure, A.ClassMergeRules__computeIdentifyingPredicates_closure, A.ClassMergeRules__computeIdentifyingPredicates_closure0, A.ClassMergeRules__computeNonIdentifyingPredicates_closure, A.ClassMergeRules__computeNonIdentifyingPredicates_closure0, A.MergeContract__computeIdentifyingPredicates_closure, A.MergeContract__computeIdentifyingPredicates_closure0, A.MergeContract_getIdentifyingPredicates_closure, A.CachingMergeContractLoader__cacheKey_closure, A.CachingMergeContractLoader_load_closure, A.MergeContractLoader_getMergedGovernanceIris_closure, A.StandardMergeContractLoader_load_closure, A.StandardMergeContractLoader_load_closure0, A.StandardMergeContractLoader_load_closure1, A.StandardMergeContractLoader_load_closure2, A.StandardMergeContractLoader__parseDocumentMapping_closure, A.StandardMergeContractLoader__parseDocumentMapping_closure0, A.StandardMergeContractLoader__parseDocumentMapping_closure1, A.StandardMergeContractLoader__parseDocumentMapping_closure2, A.StandardMergeContractLoader__parseDocumentMapping_closure3, A.StandardMergeContractLoader__parseDocumentMapping_closure4, A.StandardMergeContractLoader__parseDocumentMapping_closure5, A.StandardMergeContractLoader__parseDocumentMapping_closure6, A.StandardMergeContractLoader__parseDocumentMapping_closure7, A.StandardMergeContractLoader__parseClassMappings_closure, A.StandardMergeContractLoader__parseClassMappings_closure0, A.StandardMergeContractLoader__parseClassMappings_closure1, A.StandardMergeContractLoader__parseClassMappings_closure2, A.StandardMergeContractLoader__parseClassMappings_closure3, A.StandardMergeContractLoader__parsePredicateMapping_closure, A.StandardMergeContractLoader__parsePredicateMapping_closure0, A.StandardMergeContractLoader__parsePredicateMapping_closure1, A.StandardMergeContractLoader__parsePredicateMapping_closure2, A.MetadataGenerator__createPropertyValueMetadata_closure, A.MetadataGenerator__createPropertyValueMetadata__closure, A.MetadataGenerator__createPropertyValueMetadata___closure, A.RecursiveRdfLoader__loadRecursivelySingle_closure, A.RecursiveRdfLoader__loadRecursivelyMulti_closure, A.RdfGraphExtensions_getMultiValueObjectList_closure, A.RdfGraphExtensions_getMultiValueObjects_closure, A.RdfGraphExtensions_traverseListObjects_closure0, A.RdfGraphIterableExtensions_mergeGraphs_closure, A.StandardSyncEngine_create_closure, A.StandardSyncEngine_hydrateStream_closure, A.StandardSyncEngine__doHydrateIndexEntryStream_closure, A.StandardSyncEngine__doHydrateIndexEntryStream_closure0, A.StandardSyncEngine__hydrateRootResourceStream_closure, A.OrganizedStatements$__closure, A.OrganizedStatements$___closure, A.OrganizedStatements_OrganizedStatements$fromGraph_closure1, A.OrganizedStatements_getAllStatementsForSubject_closure, A.OrganizedStatements_getAllStatementsForSubject_closure0, A.OrganizedStatements_getStatement_closure, A.OrganizedStatements_getStatement__closure, A.OrganizedStatements_getStatement_closure0, A.MergeObject_createMergeObjects_closure, A.MergeObject_createMergeObjects_closure0, A.MergeObject_createMergeObjects_closure1, A.MergeSubject_createMergeSubjects_closure, A.OrganizedBlankNodeMappings_blankNodeIdentifiers_closure, A.IdentifiedBlankNodeKey_operator$eq_closure, A.OrganizedGraph_maxPhysicalTime_closure, A.OrganizedGraph_allSubjectKeys_closure, A.RemoteDocumentMerger__mergeSubjectsAndProperties_closure, A.RemoteDocumentMerger__buildResultDocument_closure, A.RemoteDocumentMerger__buildResultDocument_closure0, A.RemoteDocumentMerger__buildResultDocument__closure3, A.RemoteDocumentMerger__buildResultDocument_closure1, A.RemoteDocumentMerger__buildResultDocument__closure0, A.RemoteDocumentMerger__buildResultDocument__closure1, A.RemoteDocumentMerger__buildResultDocument__closure2, A.RemoteDocumentMerger__buildResultDocument_closure2, A.RemoteDocumentMerger__buildResultDocument__closure, A.RemoteDocumentMerger__convertToTriples_closure, A.RemoteDocumentMerger__convertToTriples__closure, A.RemoteDocumentMerger__convertToTriples__closure0, A.RemoteSyncOrchestrator_sync_closure, A.RemoteSyncOrchestrator__syncIndexDocuments_closure, A.RemoteSyncOrchestrator__syncIndexDocuments_closure0, A.RemoteSyncOrchestrator__syncIndexDocuments_closure1, A.RemoteSyncOrchestrator__syncIndexDocuments_closure2, A.RemoteSyncOrchestrator__buildShardSyncSpecs_closure, A.RemoteSyncOrchestrator__buildShardSyncSpecs_closure0, A.RemoteSyncOrchestrator__buildDocumentQueue_closure0, A.RemoteSyncOrchestrator__buildDocumentQueue_closure1, A.RemoteSyncOrchestrator__matchesFilter_closure, A.RemoteSyncOrchestrator__matchesFilter_closure0, A.RemoteSyncOrchestrator__getFinalEntrySet_closure, A.RemoteSyncOrchestrator__findForeignIndices_closure, A.RemoteSyncOrchestrator__findForeignIndices_closure0, A.RemoteSyncOrchestrator__syncShard__closure, A.RemoteSyncOrchestrator__syncShard__closure0, A.RemoteSyncOrchestrator__syncShard__closure2, A.ShardDocumentGenerator__syncShardAttempt_closure0, A.ShardDocumentGenerator__syncShardAttempt_closure, A.StandardSyncManager__setupAutoSync_closure, A.StandardSyncManager_enableAutoSync_closure, A.buildEffectiveConfig_closure, A.DriftStorage_watchDocumentsModifiedSince_closure, A.DriftStorage_getSettings_closure, A.DriftStorage_getIndexEntries_closure, A.DriftStorage_getIndexEntries_closure0, A.DriftStorage_watchIndexEntries_closure, A.DriftStorage_watchIndexEntries_closure0, A.DriftStorage_watchIndexEntries__closure, A.DriftStorage_getSubscribedGroupIndices_closure, A.DriftStorage_watchSubscribedGroupIndexIris_closure, A.DriftStorage_ensureIndexSetVersion_closure, A.DriftStorage_getIndexIrisForVersion_closure, A.DriftStorage_getActiveIndexEntriesForShard_closure, A.DriftStorage_getShardsToUpdate_closure, A.DriftStorage_getForeignIndexShardsToSync_closure, A.DriftStorage__convertToStoredDocuments_closure, A.IriBatchLoader_getIrisBatch_closure, A.IriBatchLoader_getOrCreateIriIdsBatch_closure, A.IriBatchLoader__getExistingIriIds_closure, A.SyncDocumentDao_saveDocument_closure, A.SyncDocumentDao_saveDocument_closure0, A.SyncDocumentDao_saveDocument_closure1, A.SyncDocumentDao_getDocument_closure, A.SyncDocumentDao_getDocument_closure0, A.SyncDocumentDao_getDocumentsModifiedSince_closure, A.SyncDocumentDao_getDocumentsModifiedSince_closure0, A.SyncDocumentDao_watchDocumentsModifiedSince_closure, A.SyncDocumentDao_watchDocumentsModifiedSince_closure0, A.SyncDocumentDao__convertDocumentsWithIris_closure0, A.SyncDocumentDao__convertDocumentsWithIris_closure, A.SyncPropertyChangeDao_recordPropertyChangesBatch_closure0, A.SyncPropertyChangeDao_recordPropertyChangesBatch_closure, A.SyncPropertyChangeDao_recordPropertyChangesBatch_closure1, A.IndexDao_getIndexEntries_closure, A.IndexDao_getIndexEntries_closure0, A.IndexDao_getIndexEntries_closure1, A.IndexDao_getIndexEntries_closure3, A.IndexDao_getIndexEntries_closure2, A.IndexDao_watchIndexEntries_closure, A.IndexDao_watchIndexEntries_closure0, A.IndexDao_watchIndexEntries_closure2, A.IndexDao_watchIndexEntries__closure, A.IndexDao_watchIndexEntries__closure0, A.IndexDao_watchIndexEntries__closure3, A.IndexDao_watchIndexEntries__closure2, A.IndexDao_watchSubscribedGroupIndexIds_closure, A.IndexDao_watchSubscribedGroupIndexIds_closure0, A.IndexDao_watchSubscribedGroupIndexIds__closure, A.IndexDao_getSubscribedGroupIndices_closure, A.IndexDao_ensureIndexIdSetVersion_closure, A.IndexDao_getIndexIriIdsForVersion_closure, A.IndexDao_getActiveIndexEntriesForShard_closure, A.IndexDao_getShardsToUpdate_closure, A.RemoteSyncStateDao_getOrCreateRemoteId_closure, A.RemoteSyncStateDao_getRemoteLastSyncTimestamp_closure, A.RemoteSyncStateDao_updateRemoteLastSyncTimestamp_closure, A.RemoteSyncStateDao_getETag_closure, A.SyncDatabase_migration_closure, A.SyncDatabase_migration_closure0, A._createRetryClient_closure, A._createRetryClient_closure1, A.SolidRemoteStorage_closure, A.SolidRemoteStorage_isAvailable_closure, A.SolidRemoteStorage_isAvailable_closure0, A.SolidAuthReceiver_closure, A.startWebWorkerLoop_closure, A.startWebWorkerLoop__closure0, A._handleWorkerMessage_closure, A.WorkerContext_setSyncSystem_closure, A.WorkerContext__handleHydrateStream_closure, A.WorkerContext__handleHydrateStream__closure, A.WorkerContext__handleHydrateStream__closure0, A.HydrationBatchMessage_toJson_closure, A.HydrationBatchMessage_toJson_closure0, A.HydrationBatchMessage_HydrationBatchMessage$fromJson_closure, A.HydrationBatchMessage_HydrationBatchMessage$fromJson_closure0, A.SyncTriggerRequest_SyncTriggerRequest$fromJson_closure, A.GetSyncStateResponse_GetSyncStateResponse$fromJson_closure, A.SyncStateUpdateMessage_SyncStateUpdateMessage$fromJson_closure, A.Context_joinAll_closure, A.Context_split_closure, A._validateArgList_closure, A.WindowsStyle_absolutePathToUri_closure, A._createLogHandler_closure, A._indentStackTrace_closure, A._wNafMultiplier_closure, A.HKDFKeyDerivator__getBlockLengthFromDigest_closure, A._escapeRegExp_closure, A._escapeRegExp_closure0, A.RdfDataset_namedGraphs_closure, A.RdfDataset__buildDefaultGraph_closure, A.RdfDataset__buildDefaultGraph_closure0, A.RdfDataset__buildNamedGraphs_closure, A.RdfDataset_operator$eq_closure, A.RdfDataset_hashCode_closure, A.RdfGraph_withoutTriples_closure, A.RdfGraph_subjects_closure, A.RdfGraph_predicates_closure, A.RdfGraph_predicates_closure0, A.RdfGraph_findTriples_closure, A.RdfGraph_findTriples_closure0, A.RdfGraph_findTriples_closure1, A.RdfGraph_findTriples_closure2, A.RdfGraph_findTriples_closure3, A.RdfGraph_hasTriples_closure, A.RdfGraph_hasTriples__closure, A.RdfGraph_hasTriples__closure0, A.RdfGraph_hasTriples__closure1, A.RdfGraph_hasTriples__closure2, A.RdfGraph_hasTriples__closure3, A.RdfGraph_hasTriples_closure0, A.RdfGraph_matching_closure, A.IriCompactionResult_compactIri_closure, A.IriCompactionResult_compactIri_closure0, A.IriCompactionResult_compactIri_closure1, A.IriCompaction_compactAllIris_closure0, A.JsonLdParser__addTripleForValue_closure, A.JsonLdEncoder_closure, A.JsonLdEncoder_convert_closure, A.JsonLdEncoder__createNodeObject_closure0, A.JsonLdEncoder__createNodeObject_closure1, A.NQuadsCodec_canParse_closure, A.NQuadsEncoder_encode_closure, A.NQuadsEncoder_encode_closure0, A.NQuadsEncoder_encode__closure, A.NTriplesCodec_canParse_closure, A.TurtleEncoder_closure, A.TurtleEncoder__extractCollection_closure, A.TurtleEncoder__extractCollection_closure0, A.TurtleEncoder__extractCollection_closure1, A.TurtleEncoder__extractCollection_closure2, A.TurtleEncoder__extractCollection_closure4, A.TurtleEncoder__markCollectionNodesAsProcessed_closure, A.TurtleEncoder__writeCollection_closure, A.TurtleEncoder__writeTriples_closure0, A.TurtleEncoder__isPartOfRdfCollection_closure, A.TurtleEncoder__isPartOfRdfCollection_closure0, A.RdfNamespaceMappings__extractDomainPrefix_closure, A.RdfNamespaceMappings__extractDomainPrefix_closure0, A.RdfNamespaceMappings__extractPathPrefix_closure, A.RdfNamespaceMappings__extractPathPrefix_closure0, A.RdfNamespaceMappings__extractPathPrefix_closure1, A.RdfNamespaceMappings__sanitizeComponentForPrefix_closure, A.RdfNamespaceMappings__sanitizeComponentForPrefix_closure0, A._forward_closure_listenToUpstream, A.Highlighter$__closure, A.Highlighter$___closure, A.Highlighter$__closure0, A.Highlighter__collateLines_closure, A.Highlighter__collateLines_closure1, A.Highlighter__collateLines__closure, A.Highlighter_highlight_closure, A.SqliteException_toString_closure, A.disposeFinalizer_closure, A._CursorReader_moveNext_closure, A._CursorReader_moveNext_closure0, A.CompleteIdbRequest_complete_closure, A.CompleteIdbRequest_complete_closure0, A.CompleteOpenIdbRequest_completeOrBlocked_closure, A.CompleteOpenIdbRequest_completeOrBlocked_closure0, A.CompleteOpenIdbRequest_completeOrBlocked_closure1, A.AsynchronousIndexedDbFileSystem_open_closure, A.AsynchronousIndexedDbFileSystem__readFile_closure, A.AsynchronousIndexedDbFileSystem__write_closure, A.SimpleOpfsFileSystem_inDirectory_open, A._InjectedValues_closure, A._InjectedValues_closure0, A._InjectedValues_closure1, A._InjectedValues_closure2, A._InjectedValues_closure3, A._InjectedValues_closure4, A._InjectedValues_closure7, A._InjectedValues_closure8, A._InjectedValues_closure9, A._InjectedValues_closure10, A._InjectedValues_closure17, A._InjectedValues_closure18, A._InjectedValues_closure19, A._InjectedValues_closure20, A._InjectedValues_closure21, A._InjectedValues_closure22, A._InjectedValues_closure23, A._InjectedValues_closure24, A._InjectedValues_closure25, A._InjectedValues_closure26, A._InjectedValues_closure29, A.Chain_Chain$parse_closure, A.Chain_toTrace_closure, A.Chain_toString_closure0, A.Chain_toString__closure0, A.Chain_toString_closure, A.Chain_toString__closure, A.Trace__parseVM_closure, A.Trace$parseV8_closure, A.Trace$parseJSCore_closure, A.Trace$parseFirefox_closure, A.Trace$parseFriendly_closure, A.Trace_toString_closure0, A.Trace_toString_closure, A._EventStreamSubscription_closure, A._EventStreamSubscription_onData_closure]);
-    _inheritMany(A.Closure2Args, [A._CastListBase_sort_closure, A.JsLinkedHashMap_addAll_closure, A.initHooks_closure0, A._awaitOnObject_closure0, A._wrapJsFunctionForAsync_closure, A.Future_wait_handleError, A.FutureExtensions_onError_onError, A._Future__propagateToListeners_handleWhenCompleteCallback_closure0, A._Future_timeout_closure1, A._AddStreamState_makeErrorHandler_closure, A._CustomZone_bindBinaryCallback_closure, A._RootZone_bindBinaryCallback_closure, A.HashMap_HashMap$from_closure, A.LinkedHashMap_LinkedHashMap$from_closure, A.MapBase_mapToString_closure, A._JsonStringifier_writeMap_closure, A._JsonPrettyPrintMixin_writeMap_closure, A._BigIntImpl_hashCode_combine, A.Uri__parseIPv4Address_error, A.Uri_parseIPv6Address_error, A.Uri_parseIPv6Address_parseHex, A.FutureGroup_add_closure0, A.StreamQueue__ensureListening_closure1, A._CancelOnErrorSubscriptionWrapper_onError_closure, A.CanonicalizedMap_addAll_closure, A.CanonicalizedMap_forEach_closure, A._BaseExecutor__runRequest__closure, A.VerificationContext_throwIfInvalid_closure, A.DriftServiceExtension_registerIfNeeded_closure, A.DriftServiceExtension_registerIfNeeded__closure1, A.InsertStatement__writeOnConflict_writeOnConflictConstraint, A.DoUpdate_closure, A.UpdateStatement_writeStartPart_closure, A.WasmInitializationMessage_sendToWorker_closure, A.WasmInitializationMessage_sendToPort_closure, A.BaseRequest_closure, A.MediaType_toString_closure, A.ResourceConfigData_indicesInOrder_closure, A.SyncEngineConfig_resourcesInSyncOrder_closure, A.MetadataStatement_merge_closure1, A.MergeResults_join_closure, A.subjectAndInlineTriples_closure, A._RdfObjectComparison__max_closure0, A._RdfObjectComparison__max_closure2, A._RdfObjectComparison__max_closure4, A._constructCrdtDocument_closure1, A.HlcService__incrementClock_closure, A.GroupKeyGenerator__organizeExtractorsByLevel_closure0, A.IndexDiscovery__initializeWatches_closure0, A.IndexDiscovery__initializeWatches_closure2, A.IndexDiscovery__removeIndexFromCache_closure0, A.IndexDiscovery__loadAndParseFullIndex_closure, A.IndexDiscovery__loadAndParseTemplate_closure, A.IndexParser__parseGroupingProperties_closure0, A.IndexRdfGenerator_generateGroupIndexTemplateIri_closure, A.mergeClassMappingGroups_closure0, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure0, A.MergeContract__classMappingsByPredicate_closure, A.MergeContractLoader_getMergedGovernanceIris_closure0, A.RdfGraphExtensions_traverseListObjects_closure, A.splitDocument_closure, A.StandardSyncEngine__hydrateRootResourceStream_convertResult, A.StandardSyncEngine__hydrateRootResourceStream_convertResult_closure, A.OrganizedStatements_OrganizedStatements$fromGraph__closure, A.OrganizedBlankNodeMappings__buildBlankNodeToCanonicalMap_closure, A.OrganizedGraph_maxPhysicalTime_closure0, A.RemoteDocumentMerger_merge_closure, A.RemoteDocumentMerger__mergeSubjectProperties_closure, A.RemoteSyncOrchestrator__buildDocumentQueue_closure, A.RemoteSyncOrchestrator__findForeignIndices_closure1, A.RemoteSyncOrchestrator__syncShard__closure1, A.buildShardAppData_closure, A.IndexDao_watchIndexEntries__closure1, A._createRetryClient_closure0, A.startWebWorkerLoop__closure3, A.WorkerContext__handleHydrateStream_closure1, A.OAEPEncoding_factoryConfig_closure, A.PKCS1Encoding_factoryConfig_closure, A.CBCBlockCipher_factoryConfig_closure, A.CCMBlockCipher_factoryConfig_closure, A.CFBBlockCipher_factoryConfig_closure, A.CTRBlockCipher_factoryConfig_closure, A.ECBBlockCipher_factoryConfig_closure, A.GCMBlockCipher_factoryConfig_closure, A.GCTRBlockCipher_factoryConfig_closure, A.IGEBlockCipher_factoryConfig_closure, A.OFBBlockCipher_factoryConfig_closure, A.SICBlockCipher_factoryConfig_closure, A.CSHAKEDigest_factoryConfig_closure, A.KeccakDigest_factoryConfig_closure, A.SHA3Digest_factoryConfig_closure, A.SHA512tDigest_factoryConfig_closure, A.SHAKEDigest_factoryConfig_closure, A.ConcatKDFDerivator_factoryConfig_closure, A.HKDFKeyDerivator_factoryConfig_closure, A.PBKDF2KeyDerivator_factoryConfig_closure, A.PKCS12ParametersGenerator_factoryConfig_closure, A.PKCS5S1ParameterGenerator_factoryConfig_closure, A.CBCBlockCipherMac_factoryConfig_closure, A.CMac_factoryConfig_closure, A.HMac_factoryConfig_closure, A.Poly1305_factoryConfig_closure, A.PaddedBlockCipherImpl_factoryConfig_closure, A.AutoSeedBlockCtrRandom_factoryConfig_closure, A.BlockCtrRandom_factoryConfig_closure, A.ECDSASigner_factoryConfig_closure, A.PSSSigner_factoryConfig_closure, A.RSASigner_factoryConfig_closure, A.ChaCha20Engine_factoryConfig_closure, A.ChaCha7539Engine_factoryConfig_closure, A.CTRStreamCipher_factoryConfig_closure, A.EAX_factoryConfig_closure, A.SICStreamCipher_factoryConfig_closure, A.RdfDataset__buildNamedGraphs_closure1, A.RdfGraph__effectiveIndex_closure, A.IriCompaction_compactAllIris_closure, A.TurtleEncoder__writePrefixes_closure, A.TurtleEncoder__writeTriples_closure1, A.TurtleEncoder__writeSubjectGroup_closure0, A._SwitchMapStreamSink_onData_closure, A.Highlighter__collateLines_closure0, A.DatabaseImplementation_createFunction_closure, A.WasmInstance_load_closure, A.WasmInstance_load__closure, A.AsynchronousIndexedDbFileSystem__write_writeBlock, A._InjectedValues_closure5, A._InjectedValues_closure6, A._InjectedValues_closure11, A._InjectedValues_closure12, A._InjectedValues_closure13, A._InjectedValues_closure14, A._InjectedValues_closure15, A._InjectedValues_closure16, A._InjectedValues_closure27, A._InjectedValues_closure28, A.Frame_Frame$parseV8_closure_parseJsLocation]);
+    _inheritMany(A.Closure, [A.Closure2Args, A.Closure0Args, A.Instantiation, A.TearOffClosure, A.JsLinkedHashMap_containsValue_closure, A.initHooks_closure, A.initHooks_closure1, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._awaitOnObject_closure, A._asyncStarHelper_closure0, A._SyncBroadcastStreamController__sendData_closure, A._SyncBroadcastStreamController__sendError_closure, A._SyncBroadcastStreamController__sendDone_closure, A.Future_wait_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A._Future_timeout_closure0, A.Stream_pipe_closure, A.Stream_length_closure, A.Stream_first_closure0, A._CustomZone_bindUnaryCallback_closure, A._CustomZone_bindUnaryCallbackGuarded_closure, A._RootZone_bindUnaryCallback_closure, A._RootZone_bindUnaryCallbackGuarded_closure, A._HashMap_values_closure, A._CustomHashMap_closure, A._LinkedCustomHashMap_closure, A.MapBase_entries_closure, A._JsonMap_values_closure, A._BigIntImpl_hashCode_finish, A._BigIntImpl_toDouble_readBits, A.DateTime_parse_parseIntOrZero, A.DateTime_parse_parseMilliAndMicroseconds, A._Uri__makePath_closure, A.jsify__convert, A.promiseToFuture_closure, A.promiseToFuture_closure0, A.dartify_convert, A.FutureGroup_add_closure, A.StreamQueue__ensureListening_closure, A.StreamSplitter__onPause_closure, A.CanonicalizedMap_entries_closure, A.CanonicalizedMap_keys_closure, A.CanonicalizedMap_update_closure, A.CanonicalizedMap_values_closure, A.DriftClient__handleRequest_closure, A._RemoteQueryExecutor_ensureOpen_closure, A._RemoteStreamQueryStore_handleTableUpdates_closure, A._RemoteStreamQueryStore_handleTableUpdates_closure0, A.DriftCommunication_setRequestHandler_closure, A.DriftProtocol_decodePayload_readInt, A.DriftProtocol_decodePayload_readNullableInt, A.WebProtocol__serializeRequest_closure, A.WebProtocol__deserializeRequest_readBatched_closure, A.WebProtocol__deserializeRequest_readBatched_closure0, A.WebProtocol__deserializeRequest_closure, A.WebProtocol__serializeSelectResult_closure, A.WebProtocol__deserializeResponse_closure, A.DatabaseConnectionUser_tableUpdates_closure, A.DatabaseConnectionUser_doWhenOpened_closure, A.DatabaseConnectionUser_customUpdate_closure, A.DatabaseConnectionUser_customInsert_closure, A.DatabaseConnectionUser__customWrite_closure, A.DatabaseConnectionUser__customWrite_closure0, A.DatabaseConnectionUser_customStatement_closure, A.DatabaseConnectionUser_transaction_closure, A.DatabaseConnectionUser_exclusively_closure, A.DatabaseConnectionUser_batch_closure, A.DriftRuntimeOptions_debugPrint_closure, A.DriftRuntimeOptions_debugPrint__closure, A.DriftServiceExtension__handle_closure, A.DriftServiceExtension__handle_closure0, A.DriftServiceExtension__handle_closure1, A.DriftServiceExtension__handle_closure2, A.DriftServiceExtension_registerIfNeeded__closure0, A.QueryResult_asMap_closure, A.StreamQueryStore_updatesForSync_closure, A.StreamQueryStore_updatesForSync_closure0, A.QueryStream__stream_closure, A.QueryStream__onListenOrResume_closure, A.QueryStream_fetchAndEmitData_closure, A.MultipleUpdateQuery_matches_closure, A.GeneratedColumn_constraintIsAlways_closure, A.InsertStatement_insert_closure, A.InsertStatement_insertOnConflictUpdate_closure, A.Query__writeInto_writeWithSpace, A.CustomSelectStatement__mapArgs_closure, A.CustomSelectStatement__executeRaw_closure, A.CustomSelectStatement__mapDbResponse_closure, A.SimpleSelectStatement__getRaw_closure, A.SimpleSelectStatement_orderBy_closure, A.JoinedSelectStatement__getRaw_closure, A.JoinedSelectStatement__mapWithStructure_closure, A.JoinedSelectStatement__mapResponse_closure, A.UpdateStatement__performQuery_closure, A.EnableNativeFunctions_useNativeFunctions_closure, A._unaryNumFunction_closure, A.MapAndAwait_mapAsyncAndAwait_closure, A.AsyncMapPerSubscription_asyncMapPerSubscription_closure, A.AsyncMapPerSubscription_asyncMapPerSubscription_closure_onData, A.Lock_synchronized_closure, A.WebPortToChannel_channel_closure, A.WebPortToChannel_channel_closure0, A._readMessages_closure, A._readMessages__closure, A._extension_0_get_nextNoError_closure, A.SharedWorkerCompatibilityResult_SharedWorkerCompatibilityResult$fromJsPayload_asBoolean, A.WasmDatabase_open_closure, A.WasmDatabase_open_closure0, A.RetryClient_send_closure, A.RetryClient_send_closure0, A.BaseRequest_closure0, A.BrowserClient_send_closure0, A._readBody_closure, A._readBody_closure0, A.ByteStream_toBytes_closure, A.MediaType_toString__closure, A.expectQuotedString_closure, A.ConfigBaseValidator__validateIndexConfigurations_closure, A.IndexItemData_IndexItemData$fromJson_closure, A.IndexItemData_toJson_closure, A.GroupIndexData_GroupIndexData$fromJson_closure, A.GroupIndexData_toJson_closure, A.DocumentIriTemplate_DocumentIriTemplate$fromJson_closure, A.ResourceConfigData_getIndexByName_closure, A.ResourceConfigData_toJson_closure, A.SyncEngineConfig_allIndicesInOrder_closure, A.SyncEngineConfig_allIndicesInOrder__closure, A.SyncEngineConfig_SyncEngineConfig$fromJson_closure, A.SyncEngineConfig_toJson_closure, A.SyncEngineConfig_getResourceConfig_closure, A.SyncEngineConfigValidator__baseValidator_closure, A.MergeResults_join__closure, A._RdfObjectComparison__max_closure, A._RdfObjectComparison__max_closure1, A._RdfObjectComparison__max_closure3, A.LwwRegister_remoteMerge_closure, A.addInlineTriples_closure, A.addInlineTriples_closure0, A.Immutable_remoteMerge_closure, A.OrSet_remoteMerge_closure, A.OrSet_localValueChange_closure, A.OrSet_localValueChange_closure0, A.OrSet_localValueChange_closure1, A.OrSet_localValueChange__closure, A.OrSet_localValueChange___closure, A._findStatementTriplesToRemove_closure, A._findStatementTriplesToRemove_closure0, A._findStatementTriplesToRemove_closure1, A._findStatementTriplesToRemove_closure2, A._handleIdenticalClocksTriples_closure, A._handleIdenticalClocksTriples_closure0, A._handleIdenticalClocksTriples_closure1, A._handleIdenticalClocksTriples_closure2, A._handleIdenticalClocksTriples_closure3, A._handleIdenticalClocksTriples_closure4, A._handleIdenticalClocksTriples_closure5, A._handleIdenticalClocksTriples_closure6, A._handleBothEmptyClocksTriples_closure, A._handleBothEmptyClocksTriples_closure0, A.objectsIfSubjectNonNull_closure, A._constructCrdtDocument_closure, A._constructCrdtDocument_closure0, A.HlcService__extractCrdtClock_closure, A.HlcService__extractCrdtClock_closure0, A.HlcService__getOurTime_closure, A.HlcService__getOurTime_closure0, A.HlcService__incrementClock_closure0, A.GroupKeyGenerator__extractAllValuesForProperty_closure, A.GroupKeyGenerator__generateCartesianProduct_closure, A.ItemFetchPolicy_fromMap_closure, A.PrefetchFiltered_toMap_closure, A.GroupingProperty_GroupingProperty$fromJson_closure, A.GroupingProperty_toJson_closure, A.IndexDiscovery__initializeWatches_closure, A.IndexDiscovery__initializeWatches_closure1, A.IndexDiscovery__updateIndexMetadataCache_closure0, A.IndexDiscovery__removeIndexFromCache_closure, A.IndexDiscovery__isConfiguredResourceType_closure, A.IndexDiscovery_discoverGroupIndexTemplate_closure, A.IndexManager__generateGroupIndex_closure, A.IndexManager__updateShardIndexEntries_closure, A.IndexManager__updateShardIndexEntries__closure, A.IndexManager__extractHeaderProperties_closure, A.IndexParser__parseGroupingProperties_closure, A.IndexParser__parseGroupingProperty_closure, A.IndexRdfGenerator_generateGroupIndexTemplate_closure, A.IndexRdfGenerator_generateGroupIndexTemplateIri_closure0, A.IndexRdfGenerator_generateGroupIndexTemplateIri__closure, A.IndexRdfGenerator__generateIndexedProperties_closure, A.RdfGroupExtractor_closure, A.RdfGroupExtractor__applyReplacement_closure, A.ShardDeterminer_calculateShards_closure, A.LocalDocumentMerger_replaceInDocument_closure, A.LocalDocumentMerger_replaceInDocument_closure0, A.LocalDocumentMerger__getIdentifiedSubjects_closure, A.LocalDocumentMerger__generateCrdtMetadataForChanges_closure, A.LocalDocumentMerger__valueEquals_closure, A.collectClassMappings_closure, A.collectClassMappings_closure0, A.mergeClassMappingGroups_closure, A.mergeClassMappingGroups_closure1, A.mergeClassMappingGroups__closure, A.collectPredicateMappings_closure, A.collectPredicateMappings_closure0, A.mergePredicateMappingGroups_closure, A.FrameworkIriGenerator_generateSimpleCanonicalIri_closure, A._buildIdentificationGraphWithLabels_processNode, A.IdentifiedBlankNode_hashCode_closure, A.IdentifiedBlankNode_operator$eq_closure, A.UnidentifiedBlankNodeWithContextException_toString_closure, A.UnidentifiedBlankNodeWithContextException_toString_closure0, A.IdentifiedBlankNodeBuilder_computeCanonicalBlankNodes_closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure1, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes__closure0, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure3, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure4, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes__closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes___closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes___closure0, A._sortByDependencies_closure, A._addIdentifiedBlankNodes_closure, A._addIdentifiedBlankNodes_closure0, A._addIdentifiedBlankNodes_closure1, A._addIdentifiedBlankNodes__closure, A.IdentifiedBlankNodeSubject_operator$eq_closure, A.BaseIriTranslator_translateGraphToInternal_closure, A.BaseIriTranslator_translateGraphToExternal_closure, A.ClassMergeRules__computeIdentifyingPredicates_closure, A.ClassMergeRules__computeIdentifyingPredicates_closure0, A.ClassMergeRules__computeNonIdentifyingPredicates_closure, A.ClassMergeRules__computeNonIdentifyingPredicates_closure0, A.MergeContract__computeIdentifyingPredicates_closure, A.MergeContract__computeIdentifyingPredicates_closure0, A.MergeContract_getIdentifyingPredicates_closure, A.CachingMergeContractLoader__cacheKey_closure, A.CachingMergeContractLoader_load_closure, A.MergeContractLoader_getMergedGovernanceIris_closure, A.StandardMergeContractLoader_load_closure, A.StandardMergeContractLoader_load_closure0, A.StandardMergeContractLoader_load_closure1, A.StandardMergeContractLoader_load_closure2, A.StandardMergeContractLoader__parseDocumentMapping_closure, A.StandardMergeContractLoader__parseDocumentMapping_closure0, A.StandardMergeContractLoader__parseDocumentMapping_closure1, A.StandardMergeContractLoader__parseDocumentMapping_closure2, A.StandardMergeContractLoader__parseDocumentMapping_closure3, A.StandardMergeContractLoader__parseDocumentMapping_closure4, A.StandardMergeContractLoader__parseDocumentMapping_closure5, A.StandardMergeContractLoader__parseDocumentMapping_closure6, A.StandardMergeContractLoader__parseDocumentMapping_closure7, A.StandardMergeContractLoader__parseClassMappings_closure, A.StandardMergeContractLoader__parseClassMappings_closure0, A.StandardMergeContractLoader__parseClassMappings_closure1, A.StandardMergeContractLoader__parseClassMappings_closure2, A.StandardMergeContractLoader__parseClassMappings_closure3, A.StandardMergeContractLoader__parsePredicateMapping_closure, A.StandardMergeContractLoader__parsePredicateMapping_closure0, A.StandardMergeContractLoader__parsePredicateMapping_closure1, A.StandardMergeContractLoader__parsePredicateMapping_closure2, A.MetadataGenerator__createPropertyValueMetadata_closure, A.MetadataGenerator__createPropertyValueMetadata__closure, A.MetadataGenerator__createPropertyValueMetadata___closure, A.RecursiveRdfLoader__loadRecursivelySingle_closure, A.RecursiveRdfLoader__loadRecursivelyMulti_closure, A.RdfGraphExtensions_getMultiValueObjectList_closure, A.RdfGraphExtensions_getMultiValueObjects_closure, A.RdfGraphExtensions_traverseListObjects_closure0, A.RdfGraphIterableExtensions_mergeGraphs_closure, A.StandardSyncEngine_create_closure, A.StandardSyncEngine_hydrateStream_closure, A.StandardSyncEngine__doHydrateIndexEntryStream_closure, A.StandardSyncEngine__doHydrateIndexEntryStream_closure0, A.StandardSyncEngine__hydrateRootResourceStream_closure, A.OrganizedStatements$__closure, A.OrganizedStatements$___closure, A.OrganizedStatements_OrganizedStatements$fromGraph_closure1, A.OrganizedStatements_getAllStatementsForSubject_closure, A.OrganizedStatements_getAllStatementsForSubject_closure0, A.OrganizedStatements_getStatement_closure, A.OrganizedStatements_getStatement__closure, A.OrganizedStatements_getStatement_closure0, A.MergeObject_createMergeObjects_closure, A.MergeObject_createMergeObjects_closure0, A.MergeObject_createMergeObjects_closure1, A.MergeSubject_createMergeSubjects_closure, A.OrganizedBlankNodeMappings_blankNodeIdentifiers_closure, A.IdentifiedBlankNodeKey_operator$eq_closure, A.OrganizedGraph_maxPhysicalTime_closure, A.OrganizedGraph_allSubjectKeys_closure, A.RemoteDocumentMerger__mergeSubjectsAndProperties_closure, A.RemoteDocumentMerger__buildResultDocument_closure, A.RemoteDocumentMerger__buildResultDocument_closure0, A.RemoteDocumentMerger__buildResultDocument__closure3, A.RemoteDocumentMerger__buildResultDocument_closure1, A.RemoteDocumentMerger__buildResultDocument__closure0, A.RemoteDocumentMerger__buildResultDocument__closure1, A.RemoteDocumentMerger__buildResultDocument__closure2, A.RemoteDocumentMerger__buildResultDocument_closure2, A.RemoteDocumentMerger__buildResultDocument__closure, A.RemoteDocumentMerger__convertToTriples_closure, A.RemoteDocumentMerger__convertToTriples__closure, A.RemoteDocumentMerger__convertToTriples__closure0, A.RemoteSyncOrchestrator_sync_closure, A.RemoteSyncOrchestrator__syncIndexDocuments_closure, A.RemoteSyncOrchestrator__syncIndexDocuments_closure0, A.RemoteSyncOrchestrator__syncIndexDocuments_closure1, A.RemoteSyncOrchestrator__syncIndexDocuments_closure2, A.RemoteSyncOrchestrator__buildShardSyncSpecs_closure, A.RemoteSyncOrchestrator__buildShardSyncSpecs_closure0, A.RemoteSyncOrchestrator__buildDocumentQueue_closure0, A.RemoteSyncOrchestrator__buildDocumentQueue_closure1, A.RemoteSyncOrchestrator__matchesFilter_closure, A.RemoteSyncOrchestrator__matchesFilter_closure0, A.RemoteSyncOrchestrator__getFinalEntrySet_closure, A.RemoteSyncOrchestrator__findForeignIndices_closure, A.RemoteSyncOrchestrator__findForeignIndices_closure0, A.RemoteSyncOrchestrator__syncShard__closure, A.RemoteSyncOrchestrator__syncShard__closure0, A.RemoteSyncOrchestrator__syncShard__closure2, A.ShardDocumentGenerator__syncShardAttempt_closure0, A.ShardDocumentGenerator__syncShardAttempt_closure, A.StandardSyncManager__setupAutoSync_closure, A.StandardSyncManager_enableAutoSync_closure, A.buildEffectiveConfig_closure, A.DriftStorage_watchDocumentsModifiedSince_closure, A.DriftStorage_getSettings_closure, A.DriftStorage_getIndexEntries_closure, A.DriftStorage_getIndexEntries_closure0, A.DriftStorage_watchIndexEntries_closure, A.DriftStorage_watchIndexEntries_closure0, A.DriftStorage_watchIndexEntries__closure, A.DriftStorage_getSubscribedGroupIndices_closure, A.DriftStorage_watchSubscribedGroupIndexIris_closure, A.DriftStorage_ensureIndexSetVersion_closure, A.DriftStorage_getIndexIrisForVersion_closure, A.DriftStorage_getActiveIndexEntriesForShard_closure, A.DriftStorage_getShardsToUpdate_closure, A.DriftStorage_getForeignIndexShardsToSync_closure, A.DriftStorage__convertToStoredDocuments_closure, A.IriBatchLoader_getIrisBatch_closure, A.IriBatchLoader_getOrCreateIriIdsBatch_closure, A.IriBatchLoader__getExistingIriIds_closure, A.SyncDocumentDao_saveDocument_closure, A.SyncDocumentDao_saveDocument_closure0, A.SyncDocumentDao_saveDocument_closure1, A.SyncDocumentDao_getDocument_closure, A.SyncDocumentDao_getDocument_closure0, A.SyncDocumentDao_getDocumentsModifiedSince_closure, A.SyncDocumentDao_getDocumentsModifiedSince_closure0, A.SyncDocumentDao_watchDocumentsModifiedSince_closure, A.SyncDocumentDao_watchDocumentsModifiedSince_closure0, A.SyncDocumentDao__convertDocumentsWithIris_closure0, A.SyncDocumentDao__convertDocumentsWithIris_closure, A.SyncPropertyChangeDao_recordPropertyChangesBatch_closure0, A.SyncPropertyChangeDao_recordPropertyChangesBatch_closure, A.SyncPropertyChangeDao_recordPropertyChangesBatch_closure1, A.IndexDao_getIndexEntries_closure, A.IndexDao_getIndexEntries_closure0, A.IndexDao_getIndexEntries_closure1, A.IndexDao_getIndexEntries_closure3, A.IndexDao_getIndexEntries_closure2, A.IndexDao_watchIndexEntries_closure, A.IndexDao_watchIndexEntries_closure0, A.IndexDao_watchIndexEntries_closure2, A.IndexDao_watchIndexEntries__closure, A.IndexDao_watchIndexEntries__closure0, A.IndexDao_watchIndexEntries__closure3, A.IndexDao_watchIndexEntries__closure2, A.IndexDao_watchSubscribedGroupIndexIds_closure, A.IndexDao_watchSubscribedGroupIndexIds_closure0, A.IndexDao_watchSubscribedGroupIndexIds__closure, A.IndexDao_getSubscribedGroupIndices_closure, A.IndexDao_ensureIndexIdSetVersion_closure, A.IndexDao_getIndexIriIdsForVersion_closure, A.IndexDao_getActiveIndexEntriesForShard_closure, A.IndexDao_getShardsToUpdate_closure, A.RemoteSyncStateDao_getOrCreateRemoteId_closure, A.RemoteSyncStateDao_getRemoteLastSyncTimestamp_closure, A.RemoteSyncStateDao_updateRemoteLastSyncTimestamp_closure, A.RemoteSyncStateDao_getETag_closure, A.SyncDatabase_migration_closure, A.SyncDatabase_migration_closure0, A._createRetryClient_closure, A._createRetryClient_closure1, A.SolidRemoteStorage_closure, A.SolidRemoteStorage_isAvailable_closure, A.SolidRemoteStorage_isAvailable_closure0, A.SolidAuthReceiver_closure, A.startWebWorkerLoop_closure0, A.startWebWorkerLoop_closure, A.startWebWorkerLoop__closure0, A.WorkerContext_setSyncSystem_closure, A.WorkerContext__handleHydrateStream_closure, A.WorkerContext__handleHydrateStream__closure, A.WorkerContext__handleHydrateStream__closure0, A.HydrationBatchMessage_toJson_closure, A.HydrationBatchMessage_toJson_closure0, A.HydrationBatchMessage_HydrationBatchMessage$fromJson_closure, A.HydrationBatchMessage_HydrationBatchMessage$fromJson_closure0, A.SyncTriggerRequest_SyncTriggerRequest$fromJson_closure, A.GetSyncStateResponse_GetSyncStateResponse$fromJson_closure, A.SyncStateUpdateMessage_SyncStateUpdateMessage$fromJson_closure, A.Context_joinAll_closure, A.Context_split_closure, A._validateArgList_closure, A.WindowsStyle_absolutePathToUri_closure, A._createLogHandler_closure, A._indentStackTrace_closure, A._wNafMultiplier_closure, A.HKDFKeyDerivator__getBlockLengthFromDigest_closure, A._escapeRegExp_closure, A._escapeRegExp_closure0, A.RdfDataset_namedGraphs_closure, A.RdfDataset__buildDefaultGraph_closure, A.RdfDataset__buildDefaultGraph_closure0, A.RdfDataset__buildNamedGraphs_closure, A.RdfDataset_operator$eq_closure, A.RdfDataset_hashCode_closure, A.RdfGraph_withoutTriples_closure, A.RdfGraph_subjects_closure, A.RdfGraph_predicates_closure, A.RdfGraph_predicates_closure0, A.RdfGraph_findTriples_closure, A.RdfGraph_findTriples_closure0, A.RdfGraph_findTriples_closure1, A.RdfGraph_findTriples_closure2, A.RdfGraph_findTriples_closure3, A.RdfGraph_hasTriples_closure, A.RdfGraph_hasTriples__closure, A.RdfGraph_hasTriples__closure0, A.RdfGraph_hasTriples__closure1, A.RdfGraph_hasTriples__closure2, A.RdfGraph_hasTriples__closure3, A.RdfGraph_hasTriples_closure0, A.RdfGraph_matching_closure, A.IriCompactionResult_compactIri_closure, A.IriCompactionResult_compactIri_closure0, A.IriCompactionResult_compactIri_closure1, A.IriCompaction_compactAllIris_closure0, A.JsonLdParser__addTripleForValue_closure, A.JsonLdEncoder_closure, A.JsonLdEncoder_convert_closure, A.JsonLdEncoder__createNodeObject_closure0, A.JsonLdEncoder__createNodeObject_closure1, A.NQuadsCodec_canParse_closure, A.NQuadsEncoder_encode_closure, A.NQuadsEncoder_encode_closure0, A.NQuadsEncoder_encode__closure, A.NTriplesCodec_canParse_closure, A.TurtleEncoder_closure, A.TurtleEncoder__extractCollection_closure, A.TurtleEncoder__extractCollection_closure0, A.TurtleEncoder__extractCollection_closure1, A.TurtleEncoder__extractCollection_closure2, A.TurtleEncoder__extractCollection_closure4, A.TurtleEncoder__markCollectionNodesAsProcessed_closure, A.TurtleEncoder__writeCollection_closure, A.TurtleEncoder__writeTriples_closure0, A.TurtleEncoder__isPartOfRdfCollection_closure, A.TurtleEncoder__isPartOfRdfCollection_closure0, A.RdfNamespaceMappings__extractDomainPrefix_closure, A.RdfNamespaceMappings__extractDomainPrefix_closure0, A.RdfNamespaceMappings__extractPathPrefix_closure, A.RdfNamespaceMappings__extractPathPrefix_closure0, A.RdfNamespaceMappings__extractPathPrefix_closure1, A.RdfNamespaceMappings__sanitizeComponentForPrefix_closure, A.RdfNamespaceMappings__sanitizeComponentForPrefix_closure0, A._forward_closure_listenToUpstream, A.Highlighter$__closure, A.Highlighter$___closure, A.Highlighter$__closure0, A.Highlighter__collateLines_closure, A.Highlighter__collateLines_closure1, A.Highlighter__collateLines__closure, A.Highlighter_highlight_closure, A.SqliteException_toString_closure, A.disposeFinalizer_closure, A._CursorReader_moveNext_closure, A._CursorReader_moveNext_closure0, A.CompleteIdbRequest_complete_closure, A.CompleteIdbRequest_complete_closure0, A.CompleteOpenIdbRequest_completeOrBlocked_closure, A.CompleteOpenIdbRequest_completeOrBlocked_closure0, A.CompleteOpenIdbRequest_completeOrBlocked_closure1, A.AsynchronousIndexedDbFileSystem_open_closure, A.AsynchronousIndexedDbFileSystem__readFile_closure, A.AsynchronousIndexedDbFileSystem__write_closure, A.SimpleOpfsFileSystem_inDirectory_open, A._InjectedValues_closure, A._InjectedValues_closure0, A._InjectedValues_closure1, A._InjectedValues_closure2, A._InjectedValues_closure3, A._InjectedValues_closure4, A._InjectedValues_closure7, A._InjectedValues_closure8, A._InjectedValues_closure9, A._InjectedValues_closure10, A._InjectedValues_closure17, A._InjectedValues_closure18, A._InjectedValues_closure19, A._InjectedValues_closure20, A._InjectedValues_closure21, A._InjectedValues_closure22, A._InjectedValues_closure23, A._InjectedValues_closure24, A._InjectedValues_closure25, A._InjectedValues_closure26, A._InjectedValues_closure29, A.Chain_Chain$parse_closure, A.Chain_toTrace_closure, A.Chain_toString_closure0, A.Chain_toString__closure0, A.Chain_toString_closure, A.Chain_toString__closure, A.Trace__parseVM_closure, A.Trace$parseV8_closure, A.Trace$parseJSCore_closure, A.Trace$parseFirefox_closure, A.Trace$parseFriendly_closure, A.Trace_toString_closure0, A.Trace_toString_closure, A._EventStreamSubscription_closure, A._EventStreamSubscription_onData_closure]);
+    _inheritMany(A.Closure2Args, [A._CastListBase_sort_closure, A.ConstantMap_map_closure, A.JsLinkedHashMap_addAll_closure, A.initHooks_closure0, A._awaitOnObject_closure0, A._wrapJsFunctionForAsync_closure, A.Future_wait_handleError, A.FutureExtensions_onError_onError, A._Future__propagateToListeners_handleWhenCompleteCallback_closure0, A._Future_timeout_closure1, A._AddStreamState_makeErrorHandler_closure, A._CustomZone_bindBinaryCallback_closure, A._RootZone_bindBinaryCallback_closure, A.HashMap_HashMap$from_closure, A.LinkedHashMap_LinkedHashMap$from_closure, A.MapBase_mapToString_closure, A._JsonStringifier_writeMap_closure, A._JsonPrettyPrintMixin_writeMap_closure, A._BigIntImpl_hashCode_combine, A.Uri__parseIPv4Address_error, A.Uri_parseIPv6Address_error, A.Uri_parseIPv6Address_parseHex, A.FutureGroup_add_closure0, A.StreamQueue__ensureListening_closure1, A._CancelOnErrorSubscriptionWrapper_onError_closure, A.CanonicalizedMap_addAll_closure, A.CanonicalizedMap_forEach_closure, A.CanonicalizedMap_map_closure, A._BaseExecutor__runRequest__closure, A.VerificationContext_throwIfInvalid_closure, A.DriftServiceExtension_registerIfNeeded_closure, A.DriftServiceExtension_registerIfNeeded__closure1, A.InsertStatement__writeOnConflict_writeOnConflictConstraint, A.DoUpdate_closure, A.UpdateStatement_writeStartPart_closure, A.WasmInitializationMessage_sendToWorker_closure, A.WasmInitializationMessage_sendToPort_closure, A.BaseRequest_closure, A.MediaType_toString_closure, A.ResourceConfigData_indicesInOrder_closure, A.SyncEngineConfig_resourcesInSyncOrder_closure, A.MetadataStatement_merge_closure1, A.MergeResults_join_closure, A.subjectAndInlineTriples_closure, A._RdfObjectComparison__max_closure0, A._RdfObjectComparison__max_closure2, A._RdfObjectComparison__max_closure4, A._constructCrdtDocument_closure1, A.HlcService__incrementClock_closure, A.GroupKeyGenerator__organizeExtractorsByLevel_closure0, A.IndexDiscovery__initializeWatches_closure0, A.IndexDiscovery__initializeWatches_closure2, A.IndexDiscovery__removeIndexFromCache_closure0, A.IndexDiscovery__loadAndParseFullIndex_closure, A.IndexDiscovery__loadAndParseTemplate_closure, A.IndexParser__parseGroupingProperties_closure0, A.IndexRdfGenerator_generateGroupIndexTemplateIri_closure, A.mergeClassMappingGroups_closure0, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure0, A.MergeContract__classMappingsByPredicate_closure, A.MergeContractLoader_getMergedGovernanceIris_closure0, A.RdfGraphExtensions_traverseListObjects_closure, A.splitDocument_closure, A.StandardSyncEngine__hydrateRootResourceStream_convertResult, A.StandardSyncEngine__hydrateRootResourceStream_convertResult_closure, A.OrganizedStatements_OrganizedStatements$fromGraph__closure, A.OrganizedBlankNodeMappings__buildBlankNodeToCanonicalMap_closure, A.OrganizedGraph_maxPhysicalTime_closure0, A.RemoteDocumentMerger_merge_closure, A.RemoteDocumentMerger__mergeSubjectProperties_closure, A.RemoteSyncOrchestrator__buildDocumentQueue_closure, A.RemoteSyncOrchestrator__findForeignIndices_closure1, A.RemoteSyncOrchestrator__syncShard__closure1, A.buildShardAppData_closure, A.IndexDao_watchIndexEntries__closure1, A._createRetryClient_closure0, A._deepConvertJsObject_closure, A.startWebWorkerLoop__closure3, A.WorkerContext__handleHydrateStream_closure1, A.OAEPEncoding_factoryConfig_closure, A.PKCS1Encoding_factoryConfig_closure, A.CBCBlockCipher_factoryConfig_closure, A.CCMBlockCipher_factoryConfig_closure, A.CFBBlockCipher_factoryConfig_closure, A.CTRBlockCipher_factoryConfig_closure, A.ECBBlockCipher_factoryConfig_closure, A.GCMBlockCipher_factoryConfig_closure, A.GCTRBlockCipher_factoryConfig_closure, A.IGEBlockCipher_factoryConfig_closure, A.OFBBlockCipher_factoryConfig_closure, A.SICBlockCipher_factoryConfig_closure, A.CSHAKEDigest_factoryConfig_closure, A.KeccakDigest_factoryConfig_closure, A.SHA3Digest_factoryConfig_closure, A.SHA512tDigest_factoryConfig_closure, A.SHAKEDigest_factoryConfig_closure, A.ConcatKDFDerivator_factoryConfig_closure, A.HKDFKeyDerivator_factoryConfig_closure, A.PBKDF2KeyDerivator_factoryConfig_closure, A.PKCS12ParametersGenerator_factoryConfig_closure, A.PKCS5S1ParameterGenerator_factoryConfig_closure, A.CBCBlockCipherMac_factoryConfig_closure, A.CMac_factoryConfig_closure, A.HMac_factoryConfig_closure, A.Poly1305_factoryConfig_closure, A.PaddedBlockCipherImpl_factoryConfig_closure, A.AutoSeedBlockCtrRandom_factoryConfig_closure, A.BlockCtrRandom_factoryConfig_closure, A.ECDSASigner_factoryConfig_closure, A.PSSSigner_factoryConfig_closure, A.RSASigner_factoryConfig_closure, A.ChaCha20Engine_factoryConfig_closure, A.ChaCha7539Engine_factoryConfig_closure, A.CTRStreamCipher_factoryConfig_closure, A.EAX_factoryConfig_closure, A.SICStreamCipher_factoryConfig_closure, A.RdfDataset__buildNamedGraphs_closure1, A.RdfGraph__effectiveIndex_closure, A.IriCompaction_compactAllIris_closure, A.TurtleEncoder__writePrefixes_closure, A.TurtleEncoder__writeTriples_closure1, A.TurtleEncoder__writeSubjectGroup_closure0, A._SwitchMapStreamSink_onData_closure, A.Highlighter__collateLines_closure0, A.DatabaseImplementation_createFunction_closure, A.WasmInstance_load_closure, A.WasmInstance_load__closure, A.AsynchronousIndexedDbFileSystem__write_writeBlock, A._InjectedValues_closure5, A._InjectedValues_closure6, A._InjectedValues_closure11, A._InjectedValues_closure12, A._InjectedValues_closure13, A._InjectedValues_closure14, A._InjectedValues_closure15, A._InjectedValues_closure16, A._InjectedValues_closure27, A._InjectedValues_closure28, A.Frame_Frame$parseV8_closure_parseJsLocation]);
     _inherit(A.CastList, A._CastListBase);
     _inheritMany(A.Error, [A.LateError, A.TypeError, A.JsNoSuchMethodError, A.UnknownJsTypeError, A.RuntimeError, A._Error, A.JsonUnsupportedObjectError, A.AssertionError, A.ArgumentError, A.UnsupportedError, A.UnimplementedError, A.StateError, A.ConcurrentModificationError, A.JWTError]);
     _inheritMany(A.ListBase, [A.UnmodifiableListBase, A.ValueList, A.WasmValueList, A.TypedDataBuffer]);
     _inherit(A.CodeUnits, A.UnmodifiableListBase);
-    _inheritMany(A.Closure0Args, [A.nullFuture_closure, A._AsyncRun__scheduleImmediateJsOverride_internalCallback, A._AsyncRun__scheduleImmediateWithSetImmediate_internalCallback, A._TimerImpl_internalCallback, A._TimerImpl$periodic_closure, A._asyncStarHelper_closure, A._AsyncStarStreamController__resumeBody, A._AsyncStarStreamController__resumeBody_closure, A._AsyncStarStreamController_closure0, A._AsyncStarStreamController_closure1, A._AsyncStarStreamController_closure, A._AsyncStarStreamController__closure, A.Future_Future_closure, A.Future_Future$microtask_closure, A.Future_Future$delayed_closure, A._Future__addListener_closure, A._Future__prependListeners_closure, A._Future__chainCoreFuture_closure, A._Future__asyncCompleteWithValue_closure, A._Future__asyncCompleteErrorObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback, A._Future__propagateToListeners_handleValueCallback, A._Future__propagateToListeners_handleError, A._Future_timeout_closure, A.Stream_length_closure0, A.Stream_first_closure, A._StreamController__subscribe_closure, A._StreamController__recordCancel_complete, A._AddStreamState_cancel_closure, A._BufferingStreamSubscription__sendError_sendError, A._BufferingStreamSubscription__sendDone_sendDone, A._PendingEvents_schedule_closure, A._MultiStream_listen_closure, A._cancelAndValue_closure, A._CustomZone_bindCallback_closure, A._CustomZone_bindCallbackGuarded_closure, A._rootHandleError_closure, A._RootZone_bindCallback_closure, A._RootZone_bindCallbackGuarded_closure, A._Utf8Decoder__decoder_closure, A._Utf8Decoder__decoderNonfatal_closure, A._BigIntImpl_toDouble_roundUp, A.StreamQueue__ensureListening_closure0, A.StreamSplitter_split_closure, A._CancelOnErrorSubscriptionWrapper_onError__closure, A.CanonicalizedMap_putIfAbsent_closure, A.CanonicalizedMap_update_closure0, A._BaseExecutor__runRequest_closure, A._RemoteStreamQueryStore_handleTableUpdates_closure1, A.DriftCommunication_closure, A.WebProtocol_deserialize_decodeRequest, A.WebProtocol_deserialize_decodeSuccess, A.WebProtocol__deserializeRequest_readBatched, A.Batch__addSqlAndArguments_closure, A.DatabaseConnectionUser_transaction__closure, A.DatabaseConnectionUser_exclusively__closure, A.GeneratedDatabase_beforeOpen_closure, A.runCancellable_closure, A.DriftServiceExtension__handle_closure3, A.DriftServiceExtension__handle_closure4, A.DriftServiceExtension_registerIfNeeded__closure, A._BaseExecutor__synchronized_closure, A._BaseExecutor_runSelect_closure, A._BaseExecutor_runUpdate_closure, A._BaseExecutor_runInsert_closure, A._BaseExecutor_runCustom_closure, A._BaseExecutor_runBatched_closure, A._StatementBasedTransactionExecutor_ensureOpen_closure, A._StatementBasedTransactionExecutor_ensureOpen_closure0, A.DelegatedDatabase_ensureOpen_closure, A.DelegatedDatabase_close_closure, A._ExclusiveExecutor_ensureOpen_closure, A.StreamQueryStore_markAsClosed_closure, A.QueryStream__stream__closure, A.QueryStream__stream__closure0, A.QueryStream__stream__closure1, A.QueryStream__onCancelOrPause_closure, A.SimpleSelectStatement_watch_closure, A.JoinedSelectStatement_addColumns_closure, A._LazyExpressionMap_operator$index_closure, A.DriftSqlType__dartToDrift_closure, A.MapAndAwait_mapAsyncAndAwait__closure, A.AsyncMapPerSubscription_asyncMapPerSubscription__onData_closure, A.Lock_synchronized_callBlockAndComplete, A.Lock_synchronized_callBlockAndComplete_closure, A.WebPortToChannel_channel_closure1, A._readMessages_closure_stop, A._readMessages__closure0, A.BrowserClient_send_closure, A.MediaType_MediaType$parse_closure, A.DriftNativeOptionsReceiver_receiver_closure0, A.ResourceConfigData_getIndexByName_closure0, A.SyncEngineConfig_getResourceConfig_closure0, A.MetadataStatement_merge_closure, A.MetadataStatement_merge_closure0, A.MergeResults_join__closure0, A.computeMergeInstructions_closure, A.GroupKeyGenerator__organizeExtractorsByLevel_closure, A.IndexDiscovery__updateIndexMetadataCache_closure, A.IndexManager__saveWithRetry_closure, A.InstallationService_create_closure, A.mergeClassMappingGroups__closure0, A.mergePredicateRuleGroups_closure, A._buildIdentificationGraphWithLabels_processNode_closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes__closure1, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure2, A.MergeContract__classMappingsByPredicate__closure, A.splitDocument__closure, A.StandardSyncEngine_save_closure, A.StandardSyncEngine__loadExistingEntriesAsStream_loadEntries, A.OrganizedStatements_OrganizedStatements$fromGraph_closure, A.OrganizedStatements_OrganizedStatements$fromGraph_closure0, A.OrganizedStatements_OrganizedStatements$fromGraph___closure, A.OrganizedStatements_getStatement_closure1, A.OrganizedBlankNodeMappings__buildBlankNodeToCanonicalMap__closure, A.RemoteSyncOrchestrator__syncDocument_closure, A.RemoteSyncOrchestrator__syncShard_closure, A.ShardDocumentGenerator_syncShard_closure, A.ShardDocumentGenerator_generateShardNodes_closure, A.StandardSyncManager__initialize_closure, A.DriftStorage_saveDocument_closure, A.IndexDao_watchIndexEntries_closure1, A.IndexDao__groupResults_closure, A.IndexDao__groupResults_closure0, A.SolidAuthReceiver__requestTokenRefresh_closure, A.startWebWorkerLoop__closure, A.startWebWorkerLoop__closure1, A.startWebWorkerLoop__closure2, A.WorkerContext__handleHydrateStream_closure0, A.SyncTriggerRequest_SyncTriggerRequest$fromJson_closure0, A.GetSyncStateResponse_GetSyncStateResponse$fromJson_closure0, A.SyncStateUpdateMessage_SyncStateUpdateMessage$fromJson_closure0, A.Logger_Logger_closure, A.OAEPEncoding_factoryConfig__closure, A.OAEPEncoding_OAEPEncoding$withSHA1_closure, A.PKCS1Encoding_factoryConfig__closure, A.RSAEngine_factoryConfig_closure, A.AESEngine_factoryConfig_closure, A.DESedeEngine_factoryConfig_closure, A.CBCBlockCipher_factoryConfig__closure, A.CCMBlockCipher_factoryConfig__closure, A.CFBBlockCipher_factoryConfig__closure, A.CTRBlockCipher_factoryConfig__closure, A.ECBBlockCipher_factoryConfig__closure, A.GCMBlockCipher_factoryConfig__closure, A.GCTRBlockCipher_factoryConfig__closure, A.IGEBlockCipher_factoryConfig__closure, A.OFBBlockCipher_factoryConfig__closure, A.SICBlockCipher_factoryConfig__closure, A.RC2Engine_factoryConfig_closure, A.Blake2bDigest_factoryConfig_closure, A.CSHAKEDigest_factoryConfig__closure, A.KeccakDigest_factoryConfig__closure, A.MD2Digest_factoryConfig_closure, A.MD4Digest_factoryConfig_closure, A.MD5Digest_factoryConfig_closure, A.RIPEMD128Digest_factoryConfig_closure, A.RIPEMD160Digest_factoryConfig_closure, A.RIPEMD256Digest_factoryConfig_closure, A.RIPEMD320Digest_factoryConfig_closure, A.SHA1Digest_factoryConfig_closure, A.SHA224Digest_factoryConfig_closure, A.SHA256Digest_factoryConfig_closure, A.SHA3Digest_factoryConfig__closure, A.SHA384Digest_factoryConfig_closure, A.SHA512Digest_factoryConfig_closure, A.SHA512tDigest_factoryConfig__closure, A.SHAKEDigest_factoryConfig__closure, A.SM3Digest_factoryConfig_closure, A.TigerDigest_factoryConfig_closure, A.WhirlpoolDigest_factoryConfig_closure, A.ECCurve_brainpoolp160r1_factoryConfig_closure, A.ECCurve_brainpoolp160t1_factoryConfig_closure, A.ECCurve_brainpoolp192r1_factoryConfig_closure, A.ECCurve_brainpoolp192t1_factoryConfig_closure, A.ECCurve_brainpoolp224r1_factoryConfig_closure, A.ECCurve_brainpoolp224t1_factoryConfig_closure, A.ECCurve_brainpoolp256r1_factoryConfig_closure, A.ECCurve_brainpoolp256t1_factoryConfig_closure, A.ECCurve_brainpoolp320r1_factoryConfig_closure, A.ECCurve_brainpoolp320t1_factoryConfig_closure, A.ECCurve_brainpoolp384r1_factoryConfig_closure, A.ECCurve_brainpoolp384t1_factoryConfig_closure, A.ECCurve_brainpoolp512r1_factoryConfig_closure, A.ECCurve_brainpoolp512t1_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_a_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_b_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_c_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_xcha_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_xchb_factoryConfig_closure, A.ECCurve_prime192v1_factoryConfig_closure, A.ECCurve_prime192v2_factoryConfig_closure, A.ECCurve_prime192v3_factoryConfig_closure, A.ECCurve_prime239v1_factoryConfig_closure, A.ECCurve_prime239v2_factoryConfig_closure, A.ECCurve_prime239v3_factoryConfig_closure, A.ECCurve_prime256v1_factoryConfig_closure, A.ECCurve_secp112r1_factoryConfig_closure, A.ECCurve_secp112r2_factoryConfig_closure, A.ECCurve_secp128r1_factoryConfig_closure, A.ECCurve_secp128r2_factoryConfig_closure, A.ECCurve_secp160k1_factoryConfig_closure, A.ECCurve_secp160r1_factoryConfig_closure, A.ECCurve_secp160r2_factoryConfig_closure, A.ECCurve_secp192k1_factoryConfig_closure, A.ECCurve_secp192r1_factoryConfig_closure, A.ECCurve_secp224k1_factoryConfig_closure, A.ECCurve_secp224r1_factoryConfig_closure, A.ECCurve_secp256k1_factoryConfig_closure, A.ECCurve_secp256r1_factoryConfig_closure, A.ECCurve_secp384r1_factoryConfig_closure, A.ECCurve_secp521r1_factoryConfig_closure, A.Argon2BytesGenerator_factoryConfig_closure, A.ConcatKDFDerivator_factoryConfig__closure, A.ECDHKeyDerivator_factoryConfig_closure, A.HKDFKeyDerivator_factoryConfig__closure, A.PBKDF2KeyDerivator_factoryConfig__closure, A.PKCS12ParametersGenerator_factoryConfig__closure, A.PKCS5S1ParameterGenerator_factoryConfig__closure, A.Scrypt_factoryConfig_closure, A.ECKeyGenerator_factoryConfig_closure, A.RSAKeyGenerator_factoryConfig_closure, A.CBCBlockCipherMac_factoryConfig__closure, A.CMac_factoryConfig__closure, A.HMac_factoryConfig__closure, A.Poly1305_factoryConfig__closure, A.PaddedBlockCipherImpl_factoryConfig__closure, A.ISO7816d4Padding_factoryConfig_closure, A.PKCS7Padding_factoryConfig_closure, A.AutoSeedBlockCtrRandom_factoryConfig__closure, A.AutoSeedBlockCtrRandom_nextUint8_closure, A.AutoSeedBlockCtrRandom_nextBigInteger_closure, A.AutoSeedBlockCtrRandom_nextBytes_closure, A.BlockCtrRandom_factoryConfig__closure, A.FortunaRandom_factoryConfig_closure, A.ECDSASigner_factoryConfig__closure, A.PSSSigner_factoryConfig__closure, A.RSASigner_factoryConfig__closure, A._RegistryImpl__addStaticFactoryConfig_closure, A._RegistryImpl__addDynamicFactoryConfig_closure, A.ChaCha20Engine_factoryConfig__closure, A.ChaCha20Poly1305_factoryConfig_closure, A.ChaCha7539Engine_factoryConfig__closure, A.CTRStreamCipher_factoryConfig__closure, A.EAX_factoryConfig__closure, A.RC4Engine_factoryConfig_closure, A.Salsa20Engine_factoryConfig_closure, A.SICStreamCipher_factoryConfig__closure, A.RdfDataset__buildNamedGraphs_closure0, A.JsonLdParser__getOrCreateBlankNode_closure, A.JsonLdEncoder__groupTriplesBySubject_closure, A.JsonLdEncoder__createNodeObject_closure, A.JsonLdEncoder__renderIri_closure, A.NQuadsDecoder__parseSubject_closure, A.NQuadsDecoder__parseObject_closure, A.NQuadsDecoder__parseGraphName_closure, A.NQuadsEncoder__writeTerm_closure, A.TurtleEncoder__extractCollection_closure3, A.TurtleEncoder__extractCollection_closure5, A.TurtleEncoder__writeTriples_closure, A.TurtleEncoder__writeSubjectGroup_closure, A.TurtleEncoder__writeInlineBlankNode_closure, A._SwitchMapStreamSink_onData_closure0, A._SwitchMapStreamSink_listenToInner_closure, A.SwitchMapStreamTransformer_bind_closure, A._forward_closure, A._forward_closure0, A._forward__listenToUpstream_closure, A._forward__listenToUpstream_closure0, A._forward_closure1, A.Highlighter_closure, A.Highlighter__writeFileStart_closure, A.Highlighter__writeMultilineHighlights_closure, A.Highlighter__writeMultilineHighlights_closure0, A.Highlighter__writeMultilineHighlights_closure1, A.Highlighter__writeMultilineHighlights_closure2, A.Highlighter__writeMultilineHighlights__closure, A.Highlighter__writeMultilineHighlights__closure0, A.Highlighter__writeHighlightedText_closure, A.Highlighter__writeIndicator_closure, A.Highlighter__writeIndicator_closure0, A.Highlighter__writeIndicator_closure1, A.Highlighter__writeSidebar_closure, A._Highlight_closure, A.DatabaseImplementation__prepareInternal_freeIntermediateResults, A.AsynchronousIndexedDbFileSystem_readFully_closure, A._FileWriteRequest__updateBlock_closure, A.IndexedDbFileSystem__startWorkingIfNeeded_closure, A._IndexedDbFile_xTruncate_closure, A._InjectedValues__closure13, A._InjectedValues__closure12, A._InjectedValues__closure11, A._InjectedValues__closure10, A._InjectedValues__closure9, A._InjectedValues__closure8, A._InjectedValues__closure7, A._InjectedValues__closure6, A._InjectedValues__closure5, A._InjectedValues__closure4, A._InjectedValues__closure3, A._InjectedValues__closure2, A._InjectedValues__closure1, A._InjectedValues__closure0, A._InjectedValues__closure, A.Frame_Frame$parseVM_closure, A.Frame_Frame$parseV8_closure, A.Frame_Frame$_parseFirefoxEval_closure, A.Frame_Frame$parseFirefox_closure, A.Frame_Frame$parseFriendly_closure, A.Trace_Trace$from_closure, A.GuaranteeChannel_closure, A.GuaranteeChannel__closure]);
+    _inheritMany(A.Closure0Args, [A.nullFuture_closure, A._AsyncRun__scheduleImmediateJsOverride_internalCallback, A._AsyncRun__scheduleImmediateWithSetImmediate_internalCallback, A._TimerImpl_internalCallback, A._TimerImpl$periodic_closure, A._asyncStarHelper_closure, A._AsyncStarStreamController__resumeBody, A._AsyncStarStreamController__resumeBody_closure, A._AsyncStarStreamController_closure0, A._AsyncStarStreamController_closure1, A._AsyncStarStreamController_closure, A._AsyncStarStreamController__closure, A.Future_Future_closure, A.Future_Future$microtask_closure, A.Future_Future$delayed_closure, A._Future__addListener_closure, A._Future__prependListeners_closure, A._Future__chainCoreFuture_closure, A._Future__asyncCompleteWithValue_closure, A._Future__asyncCompleteErrorObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback, A._Future__propagateToListeners_handleValueCallback, A._Future__propagateToListeners_handleError, A._Future_timeout_closure, A.Stream_length_closure0, A.Stream_first_closure, A._StreamController__subscribe_closure, A._StreamController__recordCancel_complete, A._AddStreamState_cancel_closure, A._BufferingStreamSubscription__sendError_sendError, A._BufferingStreamSubscription__sendDone_sendDone, A._PendingEvents_schedule_closure, A._MultiStream_listen_closure, A._cancelAndValue_closure, A._CustomZone_bindCallback_closure, A._CustomZone_bindCallbackGuarded_closure, A._rootHandleError_closure, A._RootZone_bindCallback_closure, A._RootZone_bindCallbackGuarded_closure, A._Utf8Decoder__decoder_closure, A._Utf8Decoder__decoderNonfatal_closure, A._BigIntImpl_toDouble_roundUp, A.StreamQueue__ensureListening_closure0, A.StreamSplitter_split_closure, A._CancelOnErrorSubscriptionWrapper_onError__closure, A.CanonicalizedMap_putIfAbsent_closure, A.CanonicalizedMap_update_closure0, A._BaseExecutor__runRequest_closure, A._RemoteStreamQueryStore_handleTableUpdates_closure1, A.DriftCommunication_closure, A.WebProtocol_deserialize_decodeRequest, A.WebProtocol_deserialize_decodeSuccess, A.WebProtocol__deserializeRequest_readBatched, A.Batch__addSqlAndArguments_closure, A.DatabaseConnectionUser_transaction__closure, A.DatabaseConnectionUser_exclusively__closure, A.GeneratedDatabase_beforeOpen_closure, A.runCancellable_closure, A.DriftServiceExtension__handle_closure3, A.DriftServiceExtension__handle_closure4, A.DriftServiceExtension_registerIfNeeded__closure, A._BaseExecutor__synchronized_closure, A._BaseExecutor_runSelect_closure, A._BaseExecutor_runUpdate_closure, A._BaseExecutor_runInsert_closure, A._BaseExecutor_runCustom_closure, A._BaseExecutor_runBatched_closure, A._StatementBasedTransactionExecutor_ensureOpen_closure, A._StatementBasedTransactionExecutor_ensureOpen_closure0, A.DelegatedDatabase_ensureOpen_closure, A.DelegatedDatabase_close_closure, A._ExclusiveExecutor_ensureOpen_closure, A.StreamQueryStore_markAsClosed_closure, A.QueryStream__stream__closure, A.QueryStream__stream__closure0, A.QueryStream__stream__closure1, A.QueryStream__onCancelOrPause_closure, A.SimpleSelectStatement_watch_closure, A.JoinedSelectStatement_addColumns_closure, A._LazyExpressionMap_operator$index_closure, A.DriftSqlType__dartToDrift_closure, A.MapAndAwait_mapAsyncAndAwait__closure, A.AsyncMapPerSubscription_asyncMapPerSubscription__onData_closure, A.Lock_synchronized_callBlockAndComplete, A.Lock_synchronized_callBlockAndComplete_closure, A.WebPortToChannel_channel_closure1, A._readMessages_closure_stop, A._readMessages__closure0, A.BrowserClient_send_closure, A.MediaType_MediaType$parse_closure, A.ResourceConfigData_getIndexByName_closure0, A.SyncEngineConfig_getResourceConfig_closure0, A.MetadataStatement_merge_closure, A.MetadataStatement_merge_closure0, A.MergeResults_join__closure0, A.computeMergeInstructions_closure, A.GroupKeyGenerator__organizeExtractorsByLevel_closure, A.IndexDiscovery__updateIndexMetadataCache_closure, A.IndexManager__saveWithRetry_closure, A.InstallationService_create_closure, A.mergeClassMappingGroups__closure0, A.mergePredicateRuleGroups_closure, A._buildIdentificationGraphWithLabels_processNode_closure, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes__closure1, A.IdentifiedBlankNodeBuilder_computeIdentifiedBlankNodes_closure2, A.MergeContract__classMappingsByPredicate__closure, A.splitDocument__closure, A.StandardSyncEngine_save_closure, A.StandardSyncEngine__loadExistingEntriesAsStream_loadEntries, A.OrganizedStatements_OrganizedStatements$fromGraph_closure, A.OrganizedStatements_OrganizedStatements$fromGraph_closure0, A.OrganizedStatements_OrganizedStatements$fromGraph___closure, A.OrganizedStatements_getStatement_closure1, A.OrganizedBlankNodeMappings__buildBlankNodeToCanonicalMap__closure, A.RemoteSyncOrchestrator__syncDocument_closure, A.RemoteSyncOrchestrator__syncShard_closure, A.ShardDocumentGenerator_syncShard_closure, A.ShardDocumentGenerator_generateShardNodes_closure, A.StandardSyncManager__initialize_closure, A.DriftStorage_saveDocument_closure, A.IndexDao_watchIndexEntries_closure1, A.IndexDao__groupResults_closure, A.IndexDao__groupResults_closure0, A.SolidAuthReceiver__requestTokenRefresh_closure, A.startWebWorkerLoop__closure, A.startWebWorkerLoop__closure1, A.startWebWorkerLoop__closure2, A.WorkerContext__handleHydrateStream_closure0, A.SyncTriggerRequest_SyncTriggerRequest$fromJson_closure0, A.GetSyncStateResponse_GetSyncStateResponse$fromJson_closure0, A.SyncStateUpdateMessage_SyncStateUpdateMessage$fromJson_closure0, A.Logger_Logger_closure, A.OAEPEncoding_factoryConfig__closure, A.OAEPEncoding_OAEPEncoding$withSHA1_closure, A.PKCS1Encoding_factoryConfig__closure, A.RSAEngine_factoryConfig_closure, A.AESEngine_factoryConfig_closure, A.DESedeEngine_factoryConfig_closure, A.CBCBlockCipher_factoryConfig__closure, A.CCMBlockCipher_factoryConfig__closure, A.CFBBlockCipher_factoryConfig__closure, A.CTRBlockCipher_factoryConfig__closure, A.ECBBlockCipher_factoryConfig__closure, A.GCMBlockCipher_factoryConfig__closure, A.GCTRBlockCipher_factoryConfig__closure, A.IGEBlockCipher_factoryConfig__closure, A.OFBBlockCipher_factoryConfig__closure, A.SICBlockCipher_factoryConfig__closure, A.RC2Engine_factoryConfig_closure, A.Blake2bDigest_factoryConfig_closure, A.CSHAKEDigest_factoryConfig__closure, A.KeccakDigest_factoryConfig__closure, A.MD2Digest_factoryConfig_closure, A.MD4Digest_factoryConfig_closure, A.MD5Digest_factoryConfig_closure, A.RIPEMD128Digest_factoryConfig_closure, A.RIPEMD160Digest_factoryConfig_closure, A.RIPEMD256Digest_factoryConfig_closure, A.RIPEMD320Digest_factoryConfig_closure, A.SHA1Digest_factoryConfig_closure, A.SHA224Digest_factoryConfig_closure, A.SHA256Digest_factoryConfig_closure, A.SHA3Digest_factoryConfig__closure, A.SHA384Digest_factoryConfig_closure, A.SHA512Digest_factoryConfig_closure, A.SHA512tDigest_factoryConfig__closure, A.SHAKEDigest_factoryConfig__closure, A.SM3Digest_factoryConfig_closure, A.TigerDigest_factoryConfig_closure, A.WhirlpoolDigest_factoryConfig_closure, A.ECCurve_brainpoolp160r1_factoryConfig_closure, A.ECCurve_brainpoolp160t1_factoryConfig_closure, A.ECCurve_brainpoolp192r1_factoryConfig_closure, A.ECCurve_brainpoolp192t1_factoryConfig_closure, A.ECCurve_brainpoolp224r1_factoryConfig_closure, A.ECCurve_brainpoolp224t1_factoryConfig_closure, A.ECCurve_brainpoolp256r1_factoryConfig_closure, A.ECCurve_brainpoolp256t1_factoryConfig_closure, A.ECCurve_brainpoolp320r1_factoryConfig_closure, A.ECCurve_brainpoolp320t1_factoryConfig_closure, A.ECCurve_brainpoolp384r1_factoryConfig_closure, A.ECCurve_brainpoolp384t1_factoryConfig_closure, A.ECCurve_brainpoolp512r1_factoryConfig_closure, A.ECCurve_brainpoolp512t1_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_a_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_b_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_c_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_xcha_factoryConfig_closure, A.ECCurve_gostr3410_2001_cryptopro_xchb_factoryConfig_closure, A.ECCurve_prime192v1_factoryConfig_closure, A.ECCurve_prime192v2_factoryConfig_closure, A.ECCurve_prime192v3_factoryConfig_closure, A.ECCurve_prime239v1_factoryConfig_closure, A.ECCurve_prime239v2_factoryConfig_closure, A.ECCurve_prime239v3_factoryConfig_closure, A.ECCurve_prime256v1_factoryConfig_closure, A.ECCurve_secp112r1_factoryConfig_closure, A.ECCurve_secp112r2_factoryConfig_closure, A.ECCurve_secp128r1_factoryConfig_closure, A.ECCurve_secp128r2_factoryConfig_closure, A.ECCurve_secp160k1_factoryConfig_closure, A.ECCurve_secp160r1_factoryConfig_closure, A.ECCurve_secp160r2_factoryConfig_closure, A.ECCurve_secp192k1_factoryConfig_closure, A.ECCurve_secp192r1_factoryConfig_closure, A.ECCurve_secp224k1_factoryConfig_closure, A.ECCurve_secp224r1_factoryConfig_closure, A.ECCurve_secp256k1_factoryConfig_closure, A.ECCurve_secp256r1_factoryConfig_closure, A.ECCurve_secp384r1_factoryConfig_closure, A.ECCurve_secp521r1_factoryConfig_closure, A.Argon2BytesGenerator_factoryConfig_closure, A.ConcatKDFDerivator_factoryConfig__closure, A.ECDHKeyDerivator_factoryConfig_closure, A.HKDFKeyDerivator_factoryConfig__closure, A.PBKDF2KeyDerivator_factoryConfig__closure, A.PKCS12ParametersGenerator_factoryConfig__closure, A.PKCS5S1ParameterGenerator_factoryConfig__closure, A.Scrypt_factoryConfig_closure, A.ECKeyGenerator_factoryConfig_closure, A.RSAKeyGenerator_factoryConfig_closure, A.CBCBlockCipherMac_factoryConfig__closure, A.CMac_factoryConfig__closure, A.HMac_factoryConfig__closure, A.Poly1305_factoryConfig__closure, A.PaddedBlockCipherImpl_factoryConfig__closure, A.ISO7816d4Padding_factoryConfig_closure, A.PKCS7Padding_factoryConfig_closure, A.AutoSeedBlockCtrRandom_factoryConfig__closure, A.AutoSeedBlockCtrRandom_nextUint8_closure, A.AutoSeedBlockCtrRandom_nextBigInteger_closure, A.AutoSeedBlockCtrRandom_nextBytes_closure, A.BlockCtrRandom_factoryConfig__closure, A.FortunaRandom_factoryConfig_closure, A.ECDSASigner_factoryConfig__closure, A.PSSSigner_factoryConfig__closure, A.RSASigner_factoryConfig__closure, A._RegistryImpl__addStaticFactoryConfig_closure, A._RegistryImpl__addDynamicFactoryConfig_closure, A.ChaCha20Engine_factoryConfig__closure, A.ChaCha20Poly1305_factoryConfig_closure, A.ChaCha7539Engine_factoryConfig__closure, A.CTRStreamCipher_factoryConfig__closure, A.EAX_factoryConfig__closure, A.RC4Engine_factoryConfig_closure, A.Salsa20Engine_factoryConfig_closure, A.SICStreamCipher_factoryConfig__closure, A.RdfDataset__buildNamedGraphs_closure0, A.JsonLdParser__getOrCreateBlankNode_closure, A.JsonLdEncoder__groupTriplesBySubject_closure, A.JsonLdEncoder__createNodeObject_closure, A.JsonLdEncoder__renderIri_closure, A.NQuadsDecoder__parseSubject_closure, A.NQuadsDecoder__parseObject_closure, A.NQuadsDecoder__parseGraphName_closure, A.NQuadsEncoder__writeTerm_closure, A.TurtleEncoder__extractCollection_closure3, A.TurtleEncoder__extractCollection_closure5, A.TurtleEncoder__writeTriples_closure, A.TurtleEncoder__writeSubjectGroup_closure, A.TurtleEncoder__writeInlineBlankNode_closure, A._SwitchMapStreamSink_onData_closure0, A._SwitchMapStreamSink_listenToInner_closure, A.SwitchMapStreamTransformer_bind_closure, A._forward_closure, A._forward_closure0, A._forward__listenToUpstream_closure, A._forward__listenToUpstream_closure0, A._forward_closure1, A.Highlighter_closure, A.Highlighter__writeFileStart_closure, A.Highlighter__writeMultilineHighlights_closure, A.Highlighter__writeMultilineHighlights_closure0, A.Highlighter__writeMultilineHighlights_closure1, A.Highlighter__writeMultilineHighlights_closure2, A.Highlighter__writeMultilineHighlights__closure, A.Highlighter__writeMultilineHighlights__closure0, A.Highlighter__writeHighlightedText_closure, A.Highlighter__writeIndicator_closure, A.Highlighter__writeIndicator_closure0, A.Highlighter__writeIndicator_closure1, A.Highlighter__writeSidebar_closure, A._Highlight_closure, A.DatabaseImplementation__prepareInternal_freeIntermediateResults, A.AsynchronousIndexedDbFileSystem_readFully_closure, A._FileWriteRequest__updateBlock_closure, A.IndexedDbFileSystem__startWorkingIfNeeded_closure, A._IndexedDbFile_xTruncate_closure, A._InjectedValues__closure13, A._InjectedValues__closure12, A._InjectedValues__closure11, A._InjectedValues__closure10, A._InjectedValues__closure9, A._InjectedValues__closure8, A._InjectedValues__closure7, A._InjectedValues__closure6, A._InjectedValues__closure5, A._InjectedValues__closure4, A._InjectedValues__closure3, A._InjectedValues__closure2, A._InjectedValues__closure1, A._InjectedValues__closure0, A._InjectedValues__closure, A.Frame_Frame$parseVM_closure, A.Frame_Frame$parseV8_closure, A.Frame_Frame$_parseFirefoxEval_closure, A.Frame_Frame$parseFirefox_closure, A.Frame_Frame$parseFriendly_closure, A.Trace_Trace$from_closure, A.GuaranteeChannel_closure, A.GuaranteeChannel__closure]);
     _inheritMany(A.EfficientLengthIterable, [A.ListIterable, A.EmptyIterable, A.LinkedHashMapKeysIterable, A.LinkedHashMapValuesIterable, A.LinkedHashMapEntriesIterable, A._HashMapKeyIterable, A._MapBaseValueIterable]);
     _inheritMany(A.ListIterable, [A.SubListIterable, A.MappedListIterable, A.ReversedListIterable, A.ListQueue, A._JsonMapKeyIterable]);
     _inherit(A.EfficientLengthMappedIterable, A.MappedIterable);
@@ -83549,7 +83514,7 @@
     typeUniverse: {eC: new Map(), tR: {}, eT: {}, tPV: {}, sEA: []},
     mangledGlobalNames: {int: "int", double: "double", num: "num", String: "String", bool: "bool", Null: "Null", List: "List", Object: "Object", Map: "Map", JSObject: "JSObject"},
     mangledNames: {},
-    types: ["~()", "bool(Triple)", "bool(String)", "Null()", "~(Object?)", "Future<~>()", "String(String)", "int(int,int)", "~(JSObject)", "RdfObject(Triple)", "bool(Object?)", "Expression<bool>($SyncDocumentsTable)", "double(num)", "~(Object,StackTrace)", "Null(Object,StackTrace)", "String(IriTerm)", "Future<Null>()", "Null(@)", "TraversalDecision(Triple,int)", "bool(RdfObject)", "0&()", "Frame()", "~(Object[StackTrace?])", "Triple(RdfObject)", "Null(int)", "int()", "int(int)", "bool(ValidationResult)", "BlankNodeTerm()", "RdfSubject(Triple)", "String(Match)", "Null(JSObject)", "String()", "IriTerm(String)", "List<Triple>(List<Triple>)", "Object?(Object?)", "Frame(String)", "bool(IriTerm)", "Future<@>()", "~(@)", "List<Triple>()", "String(Triple)", "Null(@,@)", "List<RdfObject>()", "bool(_IndexMetadata)", "Expression<bool>($IndexEntriesTable)", "~(Object?,Object?)", "bool(ResourceConfigData)", "Set<RdfObject>()", "Null(int,int,int)", "Triple(Triple)", "~(~())", "bool(Object?,Object?)", "RdfPredicate(PredicateMergeRule)", "List<Triple>(RdfSubject)", "Future<List<Map<String,Object?>>>(QueryExecutor)", "int(Object?)", "IndexEntryWithIri(DriftIndexEntry)", "bool(PredicateMergeRule)", "List<Triple>(RdfGraph)", "bool(_Highlight)", "String(int)", "int(int,int,int)", "SyncTrigger()", "Iterable<Triple>(RdfSubject)", "Future<+appData,crdtDocument,currentCursor,documentIri,missingGroupIndices,physicalTime,previousCursor,resourceIri,updatedAt(RdfGraph,RdfGraph,String,IriTerm,List<MissingGroupIndex>,int,String?,RdfSubject,int)?>()", "Expression<bool>($RemoteSettingsTable)", "int(IndexEntry)", "bool(SyncTrigger)", "bool(@)", "bool(IndexEntryWithIri)", "~(List<IndexEntryWithIri>)", "RdfPredicate(Triple)", "RdfGraph(RdfSubject)", "Object(RdfObject)", "Iterable<Triple>(BlankNodeTerm)", "DocumentMapping(+(DocumentMapping,ValidationResult))", "ValidationResult(+(DocumentMapping,ValidationResult))", "Trace(String)", "bool(RdfSubject)", "+(PredicateRule?,ValidationResult)(RdfSubject)", "PredicateRule?(+(PredicateRule?,ValidationResult))", "ValidationResult(+(PredicateRule?,ValidationResult))", "RdfObjectKey(RdfObject)", "int(IriTerm,IriTerm)", "~(List<int>)", "List<Triple>(+(RdfSubject,RdfGraph))", "IriTerm(ResourceConfigData)", "int(GroupingProperty,GroupingProperty)", "IriTerm(_DocumentQueueEntry)", "~(JSObject?,List<JSObject>?)", "~(Timer)", "num?(List<Object?>)", "Future<int>(QueryExecutor)", "Expression<bool>($SyncIrisTable)", "bool(TableUpdate)", "Future<int>()", "OrderingTerm($SyncDocumentsTable)", "~(Set<TableUpdate>)", "OrderingTerm($IndexEntriesTable)", "~(String)", "DriftIndexEntry(IndexEntry)", "Expression<bool>($IndexIriIdSetVersionsTable)", "@(Variable<Object>)", "+(String,String)(+(IriTerm,RdfGraph))", "Map<String,String>(+(String,String))", "+(String,String)(@)", "bool(String,String)", "List<DocumentMapping>(DocumentMapping)", "SHA1Digest()", "Uint8List()", "bool(Quad)", "List<Triple>?(RdfPredicate)", "int?(int)", "bool(Object)", "~([Future<@>?])", "int(int,int,int,int,int)", "int(String?)", "int(int,int,int,int)", "int(int,int,int,JavaScriptBigInt)", "@()", "int(Frame)", "String(Frame)", "~(@,@)", "int(@,@)", "~([Future<~>?])", "@(String)", "@(@)", "Future<int>(QueryExecutor,String,List<@>)", "Map<RdfPredicate,List<ClassMergeRules>>(Map<RdfPredicate,List<ClassMergeRules>>,MapEntry<IriTerm,ClassMergeRules>)", "+(RdfObject,DateTime)(RdfObject)", "+(RdfObject,DateTime)(+(RdfObject,DateTime),+(RdfObject,DateTime))", "+(RdfObject,String)(RdfObject)", "+(RdfObject,String)(+(RdfObject,String),+(RdfObject,String))", "Future<~>(QueryExecutor)", "Future<~>(@)", "@(@,String)", "String?(RegExpMatch)", "Iterable<+(RdfSubject,RdfGraph)>(RdfObject)", "~(VerificationMeta,VerificationResult)", "Triple(Object)", "bool(TrackedDatabase)", "Null(@,StackTrace)", "SelectResult(List<QueryRow>)", "int(~)", "Future<@>(@)", "MergeInstruction()", "Future<ServiceExtensionResponse>(String,Map<String,String>)", "Future<Object?>()", "+(RdfSubject,RdfGraph)(RdfSubject)", "bool(+(RdfSubject,RdfGraph))", "RdfGraph(+(RdfSubject,RdfGraph))", "+ours,theirs(List<+(RdfSubject,RdfGraph)>,List<+(RdfSubject,RdfGraph)>)(+ours,theirs(List<+(RdfSubject,RdfGraph)>,List<+(RdfSubject,RdfGraph)>),+(RdfSubject,RdfGraph))", "~(List<String>)", "List<_PropertyExtractor>()", "int(_PropertyExtractor,_PropertyExtractor)", "RdfObject(@)", "Map<String,@>(RdfObject)", "RegexTransform(@)", "Map<String,@>(RegexTransform)", "Future<FullIndexData?>(IriTerm,ShardDeterminationMode)", "Future<GroupIndexData?>(IriTerm,ShardDeterminationMode)", "ServiceExtensionResponse(Object?)", "ServiceExtensionResponse(Object?,StackTrace)", "Set<_IndexMetadata>()", "Future<QueryResult>()", "bool(IriTerm,Set<_IndexMetadata>)", "FullIndexData?(RdfGraph,IriTerm)", "GroupIndexData?(RdfGraph,IriTerm)", "~(int,@)", "Triple(IriTerm)", "Iterable<Triple>(MapEntry<IriTerm,List<RdfObject>>)", "GroupingProperty?(RdfSubject)", "Future<bool>()", "RegexTransform(RdfSubject)", "RdfObject(RegexTransform)", "String(GroupingProperty)", "String(RegexTransform)", "+(BlankNodeTerm,RdfGraph)(IriTerm)", "RegExp(RegexTransform)", "Map<String,@>(List<Object?>)", "IdentifiedRdfSubject?(RdfSubject)", "Set<TableUpdate>(Set<TableUpdate>)", "bool(Set<TableUpdate>)", "Map<IriTerm,ClassMapping>(DocumentMapping)", "Iterable<ClassMapping>(Map<IriTerm,ClassMapping>)", "Map<IriTerm,List<ClassMapping>>(Map<IriTerm,List<ClassMapping>>,ClassMapping)", "List<ClassMapping>()", "ClassMapping(MapEntry<IriTerm,List<ClassMapping>>)", "Map<RdfPredicate,PredicateRule>(ClassMapping)", "List<PredicateMapping>(DocumentMapping)", "Map<RdfPredicate,PredicateRule>(PredicateMapping)", "PredicateRule()", "Iterable<Triple>(IdentifiedBlankNode)", "Null(QueryExecutor)", "int(MapEntry<RdfPredicate,List<RdfObject>>)", "bool(MapEntry<RdfPredicate,List<RdfObject>>)", "ResponsePayload?/(Request0)", "IriTerm(IdentifiedBlankNode)", "Map<BlankNodeTerm,List<Triple>>(Map<BlankNodeTerm,List<Triple>>,Triple)", "bool(TableUpdateQuery)", "Iterable<BlankNodeTerm>(List<IdentifiedBlankNode>)", "Set<BlankNodeTerm>(IdentifiedBlankNode)", "List<BlankNodeTerm>()", "List<String>(IdentifiedBlankNode)", "bool(IdentifiedBlankNode)", "BlankNodeTerm(IdentifiedBlankNode)", "bool(BlankNodeTerm)", "List<IdentifiedBlankNode>(Triple)", "IdentifiedBlankNode(IdentifiedBlankNode)", "~(GenerationContext)", "Null(~)", "~(List<Column<Object>>?,Expression<bool>?)", "List<ClassMergeRules>()", "bool(RdfPredicate)", "Future<MergeContract>(@)", "List<IriTerm>(RdfGraph)", "+(List<IriTerm>,Set<IriTerm>)(+(List<IriTerm>,Set<IriTerm>),List<IriTerm>)", "+(DocumentMapping,ValidationResult)(IriTerm)", "~(Component?)", "List<QueryRow>(List<Map<String,Object?>>)", "Null(Object?,StackTrace)", "+(PredicateMapping?,ValidationResult)(RdfSubject)", "PredicateMapping?(+(PredicateMapping?,ValidationResult))", "ValidationResult(+(PredicateMapping?,ValidationResult))", "QueryRow(Map<String,Object?>)", "+(DocumentMapping,ValidationResult)(RdfSubject)", "Future<List<Map<String,Object?>>>()", "bool(PrimitiveResponsePayload)", "bool(GeneratedColumn<Object>)", "bool(MapEntry<RdfSubject,ValidationResult>)", "Iterable<+(IriTerm,RdfGraph)>(IriTerm)", "+(IriTerm,RdfGraph)(RdfObject?)", "IriTerm(IriTerm)", "Future<~>(IriTerm)", "IriTerm?()", "RemoteSyncOrchestrator(RemoteStorage)", "Stream<+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)>(Set<IriTerm>)", "bool(List<IndexEntryWithIri>)", "+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)(List<IndexEntryWithIri>)", "+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)(List<StoredDocument>,String?)", "+(List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)(+(List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>),StoredDocument)", "+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)(DocumentsResult)", "Iterable<MapEntry<MetadataStatementKey,MetadataStatement>>(MetadataStatement)", "MapEntry<MetadataStatementKey,MetadataStatement>(MetadataStatementKey)", "Set<+(RdfSubject,RdfGraph)>()", "Set<MetadataStatementKey>()", "MetadataStatement(MapEntry<MetadataStatementKey,Set<+(RdfSubject,RdfGraph)>>)", "Map<RdfPredicate,Set<RdfObject>>(Map<RdfPredicate,Set<RdfObject>>,+(RdfSubject,RdfGraph))", "bool(MapEntry<MetadataStatementKey,MetadataStatement>)", "MetadataStatement(MapEntry<MetadataStatementKey,MetadataStatement>)", "Iterable<MetadataStatement?>(RdfSubject)", "MetadataStatement?(RdfObject)", "bool(MetadataStatement?)", "Future<TypedResult>(Map<String,Object?>)", "MergeObject(RdfObjectKey)", "MergeSubject(RdfObjectKey)", "Iterable<IriTerm>(Iterable<IriTerm>)", "Map<BlankNodeTerm,Set<IriTerm>>(Map<BlankNodeTerm,Set<IriTerm>>,Triple)", "Set<IriTerm>()", "int(+(int,int))", "RdfObjectKey(RdfSubject)", "Object?()", "MergeResults(MergeSubject)", "Iterable<Triple>(MapEntry<BlankNodeTerm,List<IriTerm>>)", "List<Triple>(IriTerm)", "Iterable<+(RdfSubject,RdfGraph)>(MetadataStatement)", "~(String,Expression<Object>)", "Iterable<Triple>(Iterable<+(RdfSubject,RdfGraph)>)", "Map<Type,DriftSqlType<Object>>()", "Iterable<Triple>(MapEntry<RdfPredicate,Iterable<RdfObject>>)", "Iterable<RdfObject>(RdfObject)", "int(List<Object?>)", "FullIndexSync(FullIndexData)", "FullIndexSync(+(IriTerm,IriTerm,ItemFetchPolicy))", "IriTerm(IndexSyncSpec)", "FullShardSync(IriTerm)", "PartialShardSync(MapEntry<IriTerm,Map<IriTerm,String>>)", "MapEntry<IriTerm,String>(IriTerm,+(String,Set<RdfObject>?))", "_DocumentQueueEntry(MapEntry<IriTerm,String>)", "_DocumentQueueEntry(IriTerm)", "_Future<@>?()", "PartialIndexSync(MapEntry<IriTerm,Map<IriTerm,Map<IriTerm,String>>>)", "int(PartialIndexSync)", "Future<~>(Request0)", "RdfGraph(RdfGraph)", "Null(~())", "~(Object?,List<JSObject>?)", "Future<~>(DateTime)", "Future<SaveDocumentResult>()", "DocumentsResult(List<DocumentWithIri>)", "Expression<bool>($SyncSettingsTable)", "~(MultiStreamController<WasmInitializationMessage>)", "List<IndexEntryWithIri>(List<DriftIndexEntry>)", "+(IriTerm,IriTerm,ItemFetchPolicy)(SubscribedGroupIndexData)", "WasmInitializationMessage(WasmInitializationMessage)", "+indexIri,maxPhysicalClock,resourceTypeIri,shardIri(IriTerm,int,IriTerm,IriTerm)(+indexIri,maxPhysicalClock,resourceTypeIri,shardIri(String,int,String,String))", "StoredDocument(DocumentWithIri)", "Request0()", "bool(int)", "bool(WasmStorageImplementation)", "int(WasmStorageImplementation)", "int(SyncDocument)", "DocumentWithIri(SyncDocument)", "List<String>(PropertyChange)", "SyncPropertyChangesCompanion(PropertyChange)", "Null(Batch)", "SuccessResponse()", "ExecuteBatchedStatement()", "int(String)", "Null(String,String[Object?])", "Future<~>(List<IndexEntry>)", "bool(IndexEntry)", "Expression<bool>($GroupIndexSubscriptionsTable)", "Set<int>(List<GroupIndexSubscription>)", "int(GroupIndexSubscription)", "SubscribedGroupIndexData(TypedResult)", "MediaType()", "DriftIndexEntry(TypedResult)", "+indexIri,maxPhysicalClock,resourceTypeIri,shardIri(String,int,String,String)(QueryRow)", "Map<String,Map<String,String>>()", "Map<String,String>()", "~(String,String)", "Expression<bool>($RemoteSyncStateTable)", "Future<~>(Migrator)", "Future<~>(Migrator,int,int)", "SyncIri(Map<String,@>{tablePrefix:String?})", "SyncDocument(Map<String,@>{tablePrefix:String?})", "SyncPropertyChange(Map<String,@>{tablePrefix:String?})", "SyncSetting(Map<String,@>{tablePrefix:String?})", "IndexEntry(Map<String,@>{tablePrefix:String?})", "GroupIndexSubscription(Map<String,@>{tablePrefix:String?})", "IndexIriIdSetVersion(Map<String,@>{tablePrefix:String?})", "RemoteSetting(Map<String,@>{tablePrefix:String?})", "RemoteSyncStateData(Map<String,@>{tablePrefix:String?})", "bool(BaseResponse)", "bool(Object,StackTrace)", "Duration(int)", "Null(String?)", "WorkerContext?()", "~(WorkerContext)", "bool()", "~(SyncState)", "~(+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>))", "List<Object?>(JSArray<Object?>)", "TableUpdate(Object?)", "int(GroupingProperty)", "IriTerm(@)", "~(String,int)", "Logger()", "String(String?)", "~(LogRecord)", "OAEPEncoding()(String,Match)", "OAEPEncoding()", "GroupingProperty(@)", "PKCS1Encoding()(String,Match)", "PKCS1Encoding()", "RSAEngine()", "AESEngine()", "DESedeEngine()", "CBCBlockCipher()(String,Match)", "CBCBlockCipher()", "CCMBlockCipher()(String,Match)", "CCMBlockCipher()", "CFBBlockCipher()(String,Match)", "CFBBlockCipher()", "CTRBlockCipher()(String,Match)", "CTRBlockCipher()", "ECBBlockCipher()(String,Match)", "ECBBlockCipher()", "GCMBlockCipher()(String,Match)", "GCMBlockCipher()", "GCTRBlockCipher()(String,Match)", "GCTRBlockCipher()", "IGEBlockCipher()(String,Match)", "IGEBlockCipher()", "OFBBlockCipher()(String,Match)", "OFBBlockCipher()", "SICBlockCipher()(String,Match)", "SICBlockCipher()", "RC2Engine()", "Blake2bDigest()", "CSHAKEDigest()(String,Match)", "CSHAKEDigest()", "KeccakDigest()(String,Match)", "KeccakDigest()", "MD2Digest()", "MD4Digest()", "MD5Digest()", "RIPEMD128Digest()", "RIPEMD160Digest()", "RIPEMD256Digest()", "RIPEMD320Digest()", "SHA224Digest()", "SHA256Digest()", "SHA3Digest()(String,Match)", "SHA3Digest()", "SHA384Digest()", "SHA512Digest()", "SHA512tDigest()(String,Match)", "SHA512tDigest()", "SHAKEDigest()(String,Match)", "SHAKEDigest()", "SM3Digest()", "TigerDigest()", "WhirlpoolDigest()", "ECCurve_brainpoolp160r1()", "ECCurve_brainpoolp160t1()", "ECCurve_brainpoolp192r1()", "ECCurve_brainpoolp192t1()", "ECCurve_brainpoolp224r1()", "ECCurve_brainpoolp224t1()", "ECCurve_brainpoolp256r1()", "ECCurve_brainpoolp256t1()", "ECCurve_brainpoolp320r1()", "ECCurve_brainpoolp320t1()", "ECCurve_brainpoolp384r1()", "ECCurve_brainpoolp384t1()", "ECCurve_brainpoolp512r1()", "ECCurve_brainpoolp512t1()", "ECCurve_gostr3410_2001_cryptopro_a()", "ECCurve_gostr3410_2001_cryptopro_b()", "ECCurve_gostr3410_2001_cryptopro_c()", "ECCurve_gostr3410_2001_cryptopro_xcha()", "Future<EngineParams>(SyncEngineConfig,WorkerContext)", "ECCurve_prime192v1()", "ECCurve_prime192v2()", "ECCurve_prime192v3()", "ECCurve_prime239v1()", "ECCurve_prime239v2()", "ECCurve_prime239v3()", "ECCurve_prime256v1()", "ECCurve_secp112r1()", "ECCurve_secp112r2()", "ECCurve_secp128r1()", "ECCurve_secp128r2()", "ECCurve_secp160k1()", "ECCurve_secp160r1()", "ECCurve_secp160r2()", "ECCurve_secp192k1()", "ECCurve_secp192r1()", "ECCurve_secp224k1()", "ECCurve_secp224r1()", "ECCurve_secp256k1()", "ECCurve_secp256r1()", "ECCurve_secp384r1()", "ECCurve_secp521r1()", "ECPoint(ECPoint?)", "Argon2BytesGenerator()", "ConcatKDFDerivator()(String,Match)", "ConcatKDFDerivator()", "ECDHKeyDerivator()", "HKDFKeyDerivator()(String,Match)", "HKDFKeyDerivator()", "bool(MapEntry<String,int>)", "PBKDF2KeyDerivator()(String,Match)", "PBKDF2KeyDerivator()", "PKCS12ParametersGenerator()(String,Match)", "PKCS12ParametersGenerator()", "PKCS5S1ParameterGenerator()(String,Match)", "PKCS5S1ParameterGenerator()", "Scrypt()", "ECKeyGenerator()", "RSAKeyGenerator()", "CBCBlockCipherMac()(String,Match)", "CBCBlockCipherMac()", "CMac()(String,Match)", "CMac()", "HMac()(String,Match)", "HMac()", "Poly1305()(String,Match)", "Poly1305()", "PaddedBlockCipherImpl()(String,Match)", "PaddedBlockCipherImpl()", "ISO7816d4Padding()", "PKCS7Padding()", "AutoSeedBlockCtrRandom()(String,Match)", "AutoSeedBlockCtrRandom()", "BigInt()", "Map<String,@>(GroupingProperty)", "BlockCtrRandom()(String,Match)", "BlockCtrRandom()", "FortunaRandom()", "ECDSASigner()(String,Match)", "ECDSASigner()", "PSSSigner()(String,Match)", "PSSSigner()", "RSASigner()(String,Match)", "RSASigner()", "Map<String,@()>()", "Set<DynamicFactoryConfig>()", "ChaCha20Engine()(String,Match)", "ChaCha20Engine()", "ChaCha20Poly1305()", "ChaCha7539Engine()(String,Match)", "ChaCha7539Engine()", "CTRStreamCipher()(String,Match)", "CTRStreamCipher()", "EAX()(String,Match)", "EAX()", "RC4Engine()", "Salsa20Engine()", "SICStreamCipher()(String,Match)", "SICStreamCipher()", "RdfNamedGraph(MapEntry<RdfGraphName,RdfGraph>)", "String(RegExpMatch)", "Triple(Quad)", "MapEntry<RdfGraphName,RdfGraph>(RdfGraphName,List<Triple>)", "bool(MapEntry<RdfGraphName,RdfGraph>)", "int(MapEntry<RdfGraphName,RdfGraph>)", "Map<RdfSubject,Map<RdfPredicate,List<Triple>>>(Map<RdfSubject,Map<RdfPredicate,List<Triple>>>,Triple)", "Iterable<RdfPredicate>(Map<RdfPredicate,List<Triple>>)", "int(CrdtIndexData,CrdtIndexData)", "bool(CrdtIndexData)", "bool(List<Triple>?)", "List<Triple>(List<Triple>?)", "bool(MapEntry<+(IriTerm,IriRole),CompactIri>)", "IriRole(MapEntry<+(IriTerm,IriRole),CompactIri>)", "String(IriRole)", "List<+(IriTerm,IriRole)>(Triple)", "Map<String,@>(MapEntry<RdfSubject,List<Triple>>)", "String(RdfObject)", "@(RdfObject)", "Iterable<String>(RdfNamedGraph)", "int(MapEntry<String,String>,MapEntry<String,String>)", "int(RdfSubject,RdfSubject)", "int(RdfPredicate,RdfPredicate)", "~([~])", "String?()", "int(_Line)", "Map<String,@>(CrdtIndexData)", "Object(_Line)", "Object(_Highlight)", "int(_Highlight,_Highlight)", "List<_Line>(MapEntry<Object,List<_Highlight>>)", "SourceSpanWithContext()", "String(Object?)", "~(RawSqliteContext,List<RawSqliteValue>)", "~(FinalizablePart)", "~(String,Map<String,Object?>)", "~(String,Object?)", "JSObject(JSObject?)", "Future<~>(int,Uint8List)", "Future<~>(int)", "Future<JSObject>(String)", "int(ResourceConfigData,ResourceConfigData)", "Iterable<+(CrdtIndexData,IriTerm)>(ResourceConfigData)", "+(CrdtIndexData,IriTerm)(CrdtIndexData)", "ResourceConfigData(@)", "Null(int,int)", "Map<String,@>(ResourceConfigData)", "int(int,JavaScriptBigInt)", "~(MultiStreamController<Set<TableUpdate>>)", "Null(int,int,int,int,JavaScriptBigInt)", "Null(JavaScriptBigInt,int)", "List<Frame>(Trace)", "int(Trace)", "String(ResourceConfigBase)", "String(Trace)", "~(String,int?)", "MapEntry<RdfPredicate,Iterable<RdfObject>>(RdfPredicate,Set<RdfObject>)", "Frame(String,String)", "Trace()", "MergeResults(MergeResults,MergeResults)", "MetadataStatement(MetadataStatement)", "~(Zone?,ZoneDelegate?,Zone,Object,StackTrace)", "0^(Zone?,ZoneDelegate?,Zone,0^())<Object?>", "0^(Zone?,ZoneDelegate?,Zone,0^(1^),1^)<Object?,Object?>", "0^(Zone?,ZoneDelegate?,Zone,0^(1^,2^),1^,2^)<Object?,Object?,Object?>", "0^()(Zone,ZoneDelegate,Zone,0^())<Object?>", "0^(1^)(Zone,ZoneDelegate,Zone,0^(1^))<Object?,Object?>", "0^(1^,2^)(Zone,ZoneDelegate,Zone,0^(1^,2^))<Object?,Object?,Object?>", "AsyncError?(Zone,ZoneDelegate,Zone,Object,StackTrace?)", "~(Zone?,ZoneDelegate?,Zone,~())", "Timer(Zone,ZoneDelegate,Zone,Duration,~())", "Timer(Zone,ZoneDelegate,Zone,Duration,~(Timer))", "~(Zone,ZoneDelegate,Zone,String)", "Zone(Zone?,ZoneDelegate?,Zone,ZoneSpecification?,Map<Object?,Object?>?)", "int(String{onError:int(String)?,radix:int?})", "0^(0^,0^)<num>", "MetadataStatement()", "~(@,StackTrace)", "bool?(List<Object?>)", "bool(List<@>)", "WasmInitializationMessage(JSObject)", "_RdfObjectComparison(RdfObject)", "List<RdfObject>(@)", "DateTime()", "ECCurve_brainpoolp160r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp160t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp192r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp192t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp224r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp224t1(String,ECCurve0,ECPoint0,BigInt,BigInt?,List<int>?)", "ECCurve_brainpoolp256r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp256t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp320r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp320t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp384r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp384t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp512r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp512t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_a(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_b(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_c(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_xcha(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_xchb(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_prime192v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime192v2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime192v3(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v3(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime256v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp112r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp112r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp128r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp128r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp160k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp160r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp160r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp192k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp192r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp224k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp224r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp256k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp256r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp384r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp521r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECPointBase?(ECPointBase,BigInt?,PreCompInfo?)", "EmptyMessage(MessageSerializer)", "Flags(MessageSerializer)", "NameAndInt32Flags(MessageSerializer)", "+(RdfObject,num)(RdfObject)", "+(RdfObject,num)(+(RdfObject,num),+(RdfObject,num))", "int(0^,0^)<Comparable<0^>>", "ValidationResult(RegexTransform)", "ECCurve_gostr3410_2001_cryptopro_xchb()"],
+    types: ["~()", "bool(Triple)", "bool(String)", "Null()", "~(Object?)", "Future<~>()", "String(String)", "int(int,int)", "~(JSObject)", "RdfObject(Triple)", "bool(Object?)", "String(IriTerm)", "~(Object,StackTrace)", "Expression<bool>($SyncDocumentsTable)", "Null(Object,StackTrace)", "double(num)", "Null(@)", "bool(RdfObject)", "Future<Null>()", "TraversalDecision(Triple,int)", "int(int)", "~(Object[StackTrace?])", "Null(int)", "Triple(RdfObject)", "bool(ValidationResult)", "int()", "Frame()", "0&()", "RdfSubject(Triple)", "BlankNodeTerm()", "bool(IriTerm)", "List<RdfObject>()", "Null(JSObject)", "IriTerm(String)", "String()", "List<Triple>(List<Triple>)", "Frame(String)", "Object?(Object?)", "Future<@>()", "~(@)", "List<Triple>()", "Null(@,@)", "String(Triple)", "String(Match)", "bool(_IndexMetadata)", "Expression<bool>($RemoteSettingsTable)", "int(IndexEntry)", "bool(ResourceConfigData)", "Set<RdfObject>()", "~(Object?,Object?)", "Triple(Triple)", "Expression<bool>($IndexEntriesTable)", "@(@)", "int(int,int,int)", "List<Triple>(RdfSubject)", "Future<List<Map<String,Object?>>>(QueryExecutor)", "bool(Object?,Object?)", "int(Object?)", "RdfPredicate(PredicateMergeRule)", "List<Triple>(RdfGraph)", "String(int)", "bool(PredicateMergeRule)", "bool(_Highlight)", "IndexEntryWithIri(DriftIndexEntry)", "Iterable<Triple>(RdfSubject)", "Future<+appData,crdtDocument,currentCursor,documentIri,missingGroupIndices,physicalTime,previousCursor,resourceIri,updatedAt(RdfGraph,RdfGraph,String,IriTerm,List<MissingGroupIndex>,int,String?,RdfSubject,int)?>()", "~(~())", "Null(int,int,int)", "bool(@)", "SyncTrigger()", "bool(SyncTrigger)", "~(List<int>)", "~(List<IndexEntryWithIri>)", "RdfPredicate(Triple)", "RdfGraph(RdfSubject)", "Object(RdfObject)", "DocumentMapping(+(DocumentMapping,ValidationResult))", "ValidationResult(+(DocumentMapping,ValidationResult))", "Iterable<Triple>(BlankNodeTerm)", "bool(RdfSubject)", "+(PredicateRule?,ValidationResult)(RdfSubject)", "PredicateRule?(+(PredicateRule?,ValidationResult))", "ValidationResult(+(PredicateRule?,ValidationResult))", "RdfObjectKey(RdfObject)", "int(IriTerm,IriTerm)", "Trace(String)", "List<Triple>(+(RdfSubject,RdfGraph))", "IriTerm(ResourceConfigData)", "bool(IndexEntryWithIri)", "IriTerm(_DocumentQueueEntry)", "int(GroupingProperty,GroupingProperty)", "~(Timer)", "~(JSObject?,List<JSObject>?)", "num?(List<Object?>)", "Expression<bool>($SyncIrisTable)", "Future<int>(QueryExecutor)", "bool(TableUpdate)", "OrderingTerm($SyncDocumentsTable)", "Future<int>()", "OrderingTerm($IndexEntriesTable)", "~(Set<TableUpdate>)", "DriftIndexEntry(IndexEntry)", "Expression<bool>($IndexIriIdSetVersionsTable)", "~(String)", "+(String,String)(+(IriTerm,RdfGraph))", "Map<String,String>(+(String,String))", "+(String,String)(@)", "bool(String,String)", "List<DocumentMapping>(DocumentMapping)", "SHA1Digest()", "Uint8List()", "bool(Quad)", "List<Triple>?(RdfPredicate)", "Future<int>(QueryExecutor,String,List<@>)", "int?(int)", "bool(Object)", "int(int,int,int,int,int)", "~([Future<@>?])", "int(int,int,int,int)", "int(int,int,int,JavaScriptBigInt)", "int(String?)", "int(Frame)", "String(Frame)", "@()", "int(@,@)", "~(@,@)", "~([Future<~>?])", "@(String)", "@(Variable<Object>)", "List<ClassMergeRules>()", "+(RdfObject,DateTime)(RdfObject)", "+(RdfObject,DateTime)(+(RdfObject,DateTime),+(RdfObject,DateTime))", "+(RdfObject,String)(RdfObject)", "+(RdfObject,String)(+(RdfObject,String),+(RdfObject,String))", "Future<~>(QueryExecutor)", "Future<~>(@)", "@(@,String)", "String?(RegExpMatch)", "Iterable<+(RdfSubject,RdfGraph)>(RdfObject)", "~(VerificationMeta,VerificationResult)", "Triple(Object)", "bool(TrackedDatabase)", "Null(@,StackTrace)", "SelectResult(List<QueryRow>)", "int(~)", "Future<@>(@)", "MergeInstruction()", "Future<ServiceExtensionResponse>(String,Map<String,String>)", "Future<Object?>()", "+(RdfSubject,RdfGraph)(RdfSubject)", "bool(+(RdfSubject,RdfGraph))", "RdfGraph(+(RdfSubject,RdfGraph))", "+ours,theirs(List<+(RdfSubject,RdfGraph)>,List<+(RdfSubject,RdfGraph)>)(+ours,theirs(List<+(RdfSubject,RdfGraph)>,List<+(RdfSubject,RdfGraph)>),+(RdfSubject,RdfGraph))", "~(List<String>)", "List<_PropertyExtractor>()", "int(_PropertyExtractor,_PropertyExtractor)", "RdfObject(@)", "Map<String,@>(RdfObject)", "RegexTransform(@)", "Map<String,@>(RegexTransform)", "Future<FullIndexData?>(IriTerm,ShardDeterminationMode)", "Future<GroupIndexData?>(IriTerm,ShardDeterminationMode)", "ServiceExtensionResponse(Object?)", "ServiceExtensionResponse(Object?,StackTrace)", "Set<_IndexMetadata>()", "Future<QueryResult>()", "bool(IriTerm,Set<_IndexMetadata>)", "FullIndexData?(RdfGraph,IriTerm)", "GroupIndexData?(RdfGraph,IriTerm)", "~(int,@)", "Triple(IriTerm)", "Iterable<Triple>(MapEntry<IriTerm,List<RdfObject>>)", "GroupingProperty?(RdfSubject)", "Future<bool>()", "RegexTransform(RdfSubject)", "RdfObject(RegexTransform)", "String(GroupingProperty)", "String(RegexTransform)", "+(BlankNodeTerm,RdfGraph)(IriTerm)", "RegExp(RegexTransform)", "Map<String,@>(List<Object?>)", "IdentifiedRdfSubject?(RdfSubject)", "Set<TableUpdate>(Set<TableUpdate>)", "bool(Set<TableUpdate>)", "Map<IriTerm,ClassMapping>(DocumentMapping)", "Iterable<ClassMapping>(Map<IriTerm,ClassMapping>)", "Map<IriTerm,List<ClassMapping>>(Map<IriTerm,List<ClassMapping>>,ClassMapping)", "List<ClassMapping>()", "ClassMapping(MapEntry<IriTerm,List<ClassMapping>>)", "Map<RdfPredicate,PredicateRule>(ClassMapping)", "List<PredicateMapping>(DocumentMapping)", "Map<RdfPredicate,PredicateRule>(PredicateMapping)", "PredicateRule()", "Iterable<Triple>(IdentifiedBlankNode)", "Null(QueryExecutor)", "int(MapEntry<RdfPredicate,List<RdfObject>>)", "bool(MapEntry<RdfPredicate,List<RdfObject>>)", "ResponsePayload?/(Request0)", "IriTerm(IdentifiedBlankNode)", "Map<BlankNodeTerm,List<Triple>>(Map<BlankNodeTerm,List<Triple>>,Triple)", "bool(TableUpdateQuery)", "Iterable<BlankNodeTerm>(List<IdentifiedBlankNode>)", "Set<BlankNodeTerm>(IdentifiedBlankNode)", "List<BlankNodeTerm>()", "List<String>(IdentifiedBlankNode)", "bool(IdentifiedBlankNode)", "BlankNodeTerm(IdentifiedBlankNode)", "bool(BlankNodeTerm)", "List<IdentifiedBlankNode>(Triple)", "IdentifiedBlankNode(IdentifiedBlankNode)", "~(GenerationContext)", "Null(~)", "Map<RdfPredicate,List<ClassMergeRules>>(Map<RdfPredicate,List<ClassMergeRules>>,MapEntry<IriTerm,ClassMergeRules>)", "~(List<Column<Object>>?,Expression<bool>?)", "bool(RdfPredicate)", "Future<MergeContract>(@)", "List<IriTerm>(RdfGraph)", "+(List<IriTerm>,Set<IriTerm>)(+(List<IriTerm>,Set<IriTerm>),List<IriTerm>)", "+(DocumentMapping,ValidationResult)(IriTerm)", "~(Component?)", "List<QueryRow>(List<Map<String,Object?>>)", "Null(Object?,StackTrace)", "+(PredicateMapping?,ValidationResult)(RdfSubject)", "PredicateMapping?(+(PredicateMapping?,ValidationResult))", "ValidationResult(+(PredicateMapping?,ValidationResult))", "QueryRow(Map<String,Object?>)", "+(DocumentMapping,ValidationResult)(RdfSubject)", "Future<List<Map<String,Object?>>>()", "bool(PrimitiveResponsePayload)", "bool(GeneratedColumn<Object>)", "bool(MapEntry<RdfSubject,ValidationResult>)", "Iterable<+(IriTerm,RdfGraph)>(IriTerm)", "+(IriTerm,RdfGraph)(RdfObject?)", "IriTerm(IriTerm)", "Future<~>(IriTerm)", "IriTerm?()", "RemoteSyncOrchestrator(RemoteStorage)", "Stream<+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)>(Set<IriTerm>)", "bool(List<IndexEntryWithIri>)", "+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)(List<IndexEntryWithIri>)", "+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)(List<StoredDocument>,String?)", "+(List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)(+(List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>),StoredDocument)", "+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>)(DocumentsResult)", "Iterable<MapEntry<MetadataStatementKey,MetadataStatement>>(MetadataStatement)", "MapEntry<MetadataStatementKey,MetadataStatement>(MetadataStatementKey)", "Set<+(RdfSubject,RdfGraph)>()", "Set<MetadataStatementKey>()", "MetadataStatement(MapEntry<MetadataStatementKey,Set<+(RdfSubject,RdfGraph)>>)", "Map<RdfPredicate,Set<RdfObject>>(Map<RdfPredicate,Set<RdfObject>>,+(RdfSubject,RdfGraph))", "bool(MapEntry<MetadataStatementKey,MetadataStatement>)", "MetadataStatement(MapEntry<MetadataStatementKey,MetadataStatement>)", "Iterable<MetadataStatement?>(RdfSubject)", "MetadataStatement?(RdfObject)", "bool(MetadataStatement?)", "Future<TypedResult>(Map<String,Object?>)", "MergeObject(RdfObjectKey)", "MergeSubject(RdfObjectKey)", "Iterable<IriTerm>(Iterable<IriTerm>)", "Map<BlankNodeTerm,Set<IriTerm>>(Map<BlankNodeTerm,Set<IriTerm>>,Triple)", "Set<IriTerm>()", "int(+(int,int))", "RdfObjectKey(RdfSubject)", "Object?()", "MergeResults(MergeSubject)", "Iterable<Triple>(MapEntry<BlankNodeTerm,List<IriTerm>>)", "List<Triple>(IriTerm)", "Iterable<+(RdfSubject,RdfGraph)>(MetadataStatement)", "~(String,Expression<Object>)", "Iterable<Triple>(Iterable<+(RdfSubject,RdfGraph)>)", "Map<Type,DriftSqlType<Object>>()", "Iterable<Triple>(MapEntry<RdfPredicate,Iterable<RdfObject>>)", "Iterable<RdfObject>(RdfObject)", "int(List<Object?>)", "FullIndexSync(FullIndexData)", "FullIndexSync(+(IriTerm,IriTerm,ItemFetchPolicy))", "IriTerm(IndexSyncSpec)", "FullShardSync(IriTerm)", "PartialShardSync(MapEntry<IriTerm,Map<IriTerm,String>>)", "MapEntry<IriTerm,String>(IriTerm,+(String,Set<RdfObject>?))", "_DocumentQueueEntry(MapEntry<IriTerm,String>)", "_DocumentQueueEntry(IriTerm)", "_Future<@>?()", "PartialIndexSync(MapEntry<IriTerm,Map<IriTerm,Map<IriTerm,String>>>)", "int(PartialIndexSync)", "Future<~>(Request0)", "RdfGraph(RdfGraph)", "Null(~())", "~(Object?,List<JSObject>?)", "Future<~>(DateTime)", "Future<SaveDocumentResult>()", "DocumentsResult(List<DocumentWithIri>)", "Expression<bool>($SyncSettingsTable)", "~(MultiStreamController<WasmInitializationMessage>)", "List<IndexEntryWithIri>(List<DriftIndexEntry>)", "+(IriTerm,IriTerm,ItemFetchPolicy)(SubscribedGroupIndexData)", "WasmInitializationMessage(WasmInitializationMessage)", "+indexIri,maxPhysicalClock,resourceTypeIri,shardIri(IriTerm,int,IriTerm,IriTerm)(+indexIri,maxPhysicalClock,resourceTypeIri,shardIri(String,int,String,String))", "StoredDocument(DocumentWithIri)", "Request0()", "bool(int)", "bool(WasmStorageImplementation)", "int(WasmStorageImplementation)", "int(SyncDocument)", "DocumentWithIri(SyncDocument)", "List<String>(PropertyChange)", "SyncPropertyChangesCompanion(PropertyChange)", "Null(Batch)", "SuccessResponse()", "ExecuteBatchedStatement()", "int(String)", "Null(String,String[Object?])", "Future<~>(List<IndexEntry>)", "bool(IndexEntry)", "Expression<bool>($GroupIndexSubscriptionsTable)", "Set<int>(List<GroupIndexSubscription>)", "int(GroupIndexSubscription)", "SubscribedGroupIndexData(TypedResult)", "MediaType()", "DriftIndexEntry(TypedResult)", "+indexIri,maxPhysicalClock,resourceTypeIri,shardIri(String,int,String,String)(QueryRow)", "Map<String,Map<String,String>>()", "Map<String,String>()", "~(String,String)", "Expression<bool>($RemoteSyncStateTable)", "Future<~>(Migrator)", "Future<~>(Migrator,int,int)", "SyncIri(Map<String,@>{tablePrefix:String?})", "SyncDocument(Map<String,@>{tablePrefix:String?})", "SyncPropertyChange(Map<String,@>{tablePrefix:String?})", "SyncSetting(Map<String,@>{tablePrefix:String?})", "IndexEntry(Map<String,@>{tablePrefix:String?})", "GroupIndexSubscription(Map<String,@>{tablePrefix:String?})", "IndexIriIdSetVersion(Map<String,@>{tablePrefix:String?})", "RemoteSetting(Map<String,@>{tablePrefix:String?})", "RemoteSyncStateData(Map<String,@>{tablePrefix:String?})", "bool(BaseResponse)", "bool(Object,StackTrace)", "Duration(int)", "Null(String?)", "MapEntry<String,@>(@,@)", "WorkerContext?()", "~(WorkerContext)", "bool()", "~(SyncState)", "~(+cursor,deletions,updates(String?,List<+(IriTerm,RdfGraph)>,List<+(IriTerm,RdfGraph)>))", "List<Object?>(JSArray<Object?>)", "int(GroupingProperty)", "IriTerm(@)", "TableUpdate(Object?)", "GroupingProperty(@)", "Logger()", "String(String?)", "~(LogRecord)", "OAEPEncoding()(String,Match)", "OAEPEncoding()", "Map<String,@>(GroupingProperty)", "PKCS1Encoding()(String,Match)", "PKCS1Encoding()", "RSAEngine()", "AESEngine()", "DESedeEngine()", "CBCBlockCipher()(String,Match)", "CBCBlockCipher()", "CCMBlockCipher()(String,Match)", "CCMBlockCipher()", "CFBBlockCipher()(String,Match)", "CFBBlockCipher()", "CTRBlockCipher()(String,Match)", "CTRBlockCipher()", "ECBBlockCipher()(String,Match)", "ECBBlockCipher()", "GCMBlockCipher()(String,Match)", "GCMBlockCipher()", "GCTRBlockCipher()(String,Match)", "GCTRBlockCipher()", "IGEBlockCipher()(String,Match)", "IGEBlockCipher()", "OFBBlockCipher()(String,Match)", "OFBBlockCipher()", "SICBlockCipher()(String,Match)", "SICBlockCipher()", "RC2Engine()", "Blake2bDigest()", "CSHAKEDigest()(String,Match)", "CSHAKEDigest()", "KeccakDigest()(String,Match)", "KeccakDigest()", "MD2Digest()", "MD4Digest()", "MD5Digest()", "RIPEMD128Digest()", "RIPEMD160Digest()", "RIPEMD256Digest()", "RIPEMD320Digest()", "SHA224Digest()", "SHA256Digest()", "SHA3Digest()(String,Match)", "SHA3Digest()", "SHA384Digest()", "SHA512Digest()", "SHA512tDigest()(String,Match)", "SHA512tDigest()", "SHAKEDigest()(String,Match)", "SHAKEDigest()", "SM3Digest()", "TigerDigest()", "WhirlpoolDigest()", "ECCurve_brainpoolp160r1()", "ECCurve_brainpoolp160t1()", "ECCurve_brainpoolp192r1()", "ECCurve_brainpoolp192t1()", "ECCurve_brainpoolp224r1()", "ECCurve_brainpoolp224t1()", "ECCurve_brainpoolp256r1()", "ECCurve_brainpoolp256t1()", "ECCurve_brainpoolp320r1()", "ECCurve_brainpoolp320t1()", "ECCurve_brainpoolp384r1()", "ECCurve_brainpoolp384t1()", "ECCurve_brainpoolp512r1()", "ECCurve_brainpoolp512t1()", "ECCurve_gostr3410_2001_cryptopro_a()", "ECCurve_gostr3410_2001_cryptopro_b()", "ECCurve_gostr3410_2001_cryptopro_c()", "ECCurve_gostr3410_2001_cryptopro_xcha()", "Future<EngineParams>(SyncEngineConfig,WorkerContext)", "ECCurve_prime192v1()", "ECCurve_prime192v2()", "ECCurve_prime192v3()", "ECCurve_prime239v1()", "ECCurve_prime239v2()", "ECCurve_prime239v3()", "ECCurve_prime256v1()", "ECCurve_secp112r1()", "ECCurve_secp112r2()", "ECCurve_secp128r1()", "ECCurve_secp128r2()", "ECCurve_secp160k1()", "ECCurve_secp160r1()", "ECCurve_secp160r2()", "ECCurve_secp192k1()", "ECCurve_secp192r1()", "ECCurve_secp224k1()", "ECCurve_secp224r1()", "ECCurve_secp256k1()", "ECCurve_secp256r1()", "ECCurve_secp384r1()", "ECCurve_secp521r1()", "ECPoint(ECPoint?)", "Argon2BytesGenerator()", "ConcatKDFDerivator()(String,Match)", "ConcatKDFDerivator()", "ECDHKeyDerivator()", "HKDFKeyDerivator()(String,Match)", "HKDFKeyDerivator()", "bool(MapEntry<String,int>)", "PBKDF2KeyDerivator()(String,Match)", "PBKDF2KeyDerivator()", "PKCS12ParametersGenerator()(String,Match)", "PKCS12ParametersGenerator()", "PKCS5S1ParameterGenerator()(String,Match)", "PKCS5S1ParameterGenerator()", "Scrypt()", "ECKeyGenerator()", "RSAKeyGenerator()", "CBCBlockCipherMac()(String,Match)", "CBCBlockCipherMac()", "CMac()(String,Match)", "CMac()", "HMac()(String,Match)", "HMac()", "Poly1305()(String,Match)", "Poly1305()", "PaddedBlockCipherImpl()(String,Match)", "PaddedBlockCipherImpl()", "ISO7816d4Padding()", "PKCS7Padding()", "AutoSeedBlockCtrRandom()(String,Match)", "AutoSeedBlockCtrRandom()", "BigInt()", "String(RegExpMatch)", "BlockCtrRandom()(String,Match)", "BlockCtrRandom()", "FortunaRandom()", "ECDSASigner()(String,Match)", "ECDSASigner()", "PSSSigner()(String,Match)", "PSSSigner()", "RSASigner()(String,Match)", "RSASigner()", "Map<String,@()>()", "Set<DynamicFactoryConfig>()", "ChaCha20Engine()(String,Match)", "ChaCha20Engine()", "ChaCha20Poly1305()", "ChaCha7539Engine()(String,Match)", "ChaCha7539Engine()", "CTRStreamCipher()(String,Match)", "CTRStreamCipher()", "EAX()(String,Match)", "EAX()", "RC4Engine()", "Salsa20Engine()", "SICStreamCipher()(String,Match)", "SICStreamCipher()", "RdfNamedGraph(MapEntry<RdfGraphName,RdfGraph>)", "int(CrdtIndexData,CrdtIndexData)", "Triple(Quad)", "MapEntry<RdfGraphName,RdfGraph>(RdfGraphName,List<Triple>)", "bool(MapEntry<RdfGraphName,RdfGraph>)", "int(MapEntry<RdfGraphName,RdfGraph>)", "Map<RdfSubject,Map<RdfPredicate,List<Triple>>>(Map<RdfSubject,Map<RdfPredicate,List<Triple>>>,Triple)", "Iterable<RdfPredicate>(Map<RdfPredicate,List<Triple>>)", "bool(CrdtIndexData)", "~(String,int)", "bool(List<Triple>?)", "List<Triple>(List<Triple>?)", "bool(MapEntry<+(IriTerm,IriRole),CompactIri>)", "IriRole(MapEntry<+(IriTerm,IriRole),CompactIri>)", "String(IriRole)", "List<+(IriTerm,IriRole)>(Triple)", "Map<String,@>(MapEntry<RdfSubject,List<Triple>>)", "String(RdfObject)", "@(RdfObject)", "Iterable<String>(RdfNamedGraph)", "int(MapEntry<String,String>,MapEntry<String,String>)", "int(RdfSubject,RdfSubject)", "int(RdfPredicate,RdfPredicate)", "~([~])", "String?()", "int(_Line)", "Map<String,@>(CrdtIndexData)", "Object(_Line)", "Object(_Highlight)", "int(_Highlight,_Highlight)", "List<_Line>(MapEntry<Object,List<_Highlight>>)", "SourceSpanWithContext()", "String(Object?)", "~(RawSqliteContext,List<RawSqliteValue>)", "~(FinalizablePart)", "~(String,Map<String,Object?>)", "~(String,Object?)", "JSObject(JSObject?)", "Future<~>(int,Uint8List)", "Future<~>(int)", "Future<JSObject>(String)", "int(ResourceConfigData,ResourceConfigData)", "Iterable<+(CrdtIndexData,IriTerm)>(ResourceConfigData)", "+(CrdtIndexData,IriTerm)(CrdtIndexData)", "ResourceConfigData(@)", "Null(int,int)", "Map<String,@>(ResourceConfigData)", "int(int,JavaScriptBigInt)", "~(MultiStreamController<Set<TableUpdate>>)", "Null(int,int,int,int,JavaScriptBigInt)", "Null(JavaScriptBigInt,int)", "List<Frame>(Trace)", "int(Trace)", "String(ResourceConfigBase)", "String(Trace)", "~(String,int?)", "MapEntry<RdfPredicate,Iterable<RdfObject>>(RdfPredicate,Set<RdfObject>)", "Frame(String,String)", "Trace()", "MergeResults(MergeResults,MergeResults)", "MetadataStatement(MetadataStatement)", "~(Zone?,ZoneDelegate?,Zone,Object,StackTrace)", "0^(Zone?,ZoneDelegate?,Zone,0^())<Object?>", "0^(Zone?,ZoneDelegate?,Zone,0^(1^),1^)<Object?,Object?>", "0^(Zone?,ZoneDelegate?,Zone,0^(1^,2^),1^,2^)<Object?,Object?,Object?>", "0^()(Zone,ZoneDelegate,Zone,0^())<Object?>", "0^(1^)(Zone,ZoneDelegate,Zone,0^(1^))<Object?,Object?>", "0^(1^,2^)(Zone,ZoneDelegate,Zone,0^(1^,2^))<Object?,Object?,Object?>", "AsyncError?(Zone,ZoneDelegate,Zone,Object,StackTrace?)", "~(Zone?,ZoneDelegate?,Zone,~())", "Timer(Zone,ZoneDelegate,Zone,Duration,~())", "Timer(Zone,ZoneDelegate,Zone,Duration,~(Timer))", "~(Zone,ZoneDelegate,Zone,String)", "Zone(Zone?,ZoneDelegate?,Zone,ZoneSpecification?,Map<Object?,Object?>?)", "int(String{onError:int(String)?,radix:int?})", "0^(0^,0^)<num>", "MetadataStatement()", "~(@,StackTrace)", "bool?(List<Object?>)", "bool(List<@>)", "WasmInitializationMessage(JSObject)", "_RdfObjectComparison(RdfObject)", "List<RdfObject>(@)", "DateTime()", "ECCurve_brainpoolp160r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp160t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp192r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp192t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp224r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp224t1(String,ECCurve0,ECPoint0,BigInt,BigInt?,List<int>?)", "ECCurve_brainpoolp256r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp256t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp320r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp320t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp384r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp384t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp512r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp512t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_a(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_b(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_c(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_xcha(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_xchb(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_prime192v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime192v2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime192v3(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v3(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime256v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp112r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp112r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp128r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp128r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp160k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp160r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp160r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp192k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp192r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp224k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp224r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp256k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp256r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp384r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp521r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECPointBase?(ECPointBase,BigInt?,PreCompInfo?)", "EmptyMessage(MessageSerializer)", "Flags(MessageSerializer)", "NameAndInt32Flags(MessageSerializer)", "+(RdfObject,num)(RdfObject)", "+(RdfObject,num)(+(RdfObject,num),+(RdfObject,num))", "int(0^,0^)<Comparable<0^>>", "ValidationResult(RegexTransform)", "ECCurve_gostr3410_2001_cryptopro_xchb()"],
     interceptorsByTag: null,
     leafTags: null,
     arrayRti: Symbol("$ti"),
@@ -83999,6 +83964,7 @@
       MapEntry_RdfGraphName_RdfGraph: findType("MapEntry<RdfGraphName,RdfGraph>"),
       MapEntry_RdfSubject_ValidationResult: findType("MapEntry<RdfSubject,ValidationResult>"),
       MapEntry_String_String: findType("MapEntry<String,String>"),
+      MapEntry_String_dynamic: findType("MapEntry<String,@>"),
       MapEntry_String_int: findType("MapEntry<String,int>"),
       MapEntry_of_BlankNodeTerm_and_List_IdentifiedBlankNode: findType("MapEntry<BlankNodeTerm,List<IdentifiedBlankNode>>"),
       MapEntry_of_BlankNodeTerm_and_List_IriTerm: findType("MapEntry<BlankNodeTerm,List<IriTerm>>"),
@@ -84287,7 +84253,6 @@
       Zone: findType("Zone"),
       _AsyncCompleter_DpopCredentials: findType("_AsyncCompleter<DpopCredentials>"),
       _AsyncCompleter_List_dynamic: findType("_AsyncCompleter<List<@>>"),
-      _AsyncCompleter_LocordaDriftNativeOptions: findType("_AsyncCompleter<LocordaDriftNativeOptions>"),
       _AsyncCompleter_ServerInfo: findType("_AsyncCompleter<ServerInfo>"),
       _AsyncCompleter_Uint8List: findType("_AsyncCompleter<Uint8List>"),
       _AsyncCompleter_bool: findType("_AsyncCompleter<bool>"),
@@ -84301,7 +84266,6 @@
       _Future_DpopCredentials: findType("_Future<DpopCredentials>"),
       _Future_JSObject: findType("_Future<JSObject>"),
       _Future_List_dynamic: findType("_Future<List<@>>"),
-      _Future_LocordaDriftNativeOptions: findType("_Future<LocordaDriftNativeOptions>"),
       _Future_MergeContract: findType("_Future<MergeContract>"),
       _Future_ServerInfo: findType("_Future<ServerInfo>"),
       _Future_Uint8List: findType("_Future<Uint8List>"),
@@ -84659,7 +84623,6 @@
     B.DriftSqlType_7 = new A.DriftSqlType(7, "any", A.findType("DriftSqlType<DriftAny>"));
     B.Duration_0 = new A.Duration(0);
     B.Duration_10000000 = new A.Duration(10000000);
-    B.Duration_5000000 = new A.Duration(5000000);
     B.ExpectationSeverity_1 = new A.ExpectationSeverity(1, "major");
     B.ExpectationSeverity_2 = new A.ExpectationSeverity(2, "critical");
     B.FormatException_IWx = new A.FormatException("Unknown tag", null, null);
@@ -85529,14 +85492,13 @@
     _lazyFinal($, "_quotedPair", "$get$_quotedPair", () => A.RegExp_RegExp("\\\\(.)", true, false, false, false));
     _lazyFinal($, "nonToken", "$get$nonToken", () => A.RegExp_RegExp('[()<>@,;:"\\\\/\\[\\]?={} \\t\\x00-\\x1F\\x7F]', true, false, false, false));
     _lazyFinal($, "whitespace", "$get$whitespace", () => A.RegExp_RegExp("(?:" + $.$get$_lws().pattern + ")*", true, false, false, false));
-    _lazyFinal($, "_log", "$get$_log7", () => A.Logger_Logger("DriftNativeOptionsReceiver"));
-    _lazyFinal($, "_log0", "$get$_log26", () => A.Logger_Logger("CrdtTypes"));
+    _lazyFinal($, "_log", "$get$_log25", () => A.Logger_Logger("CrdtTypes"));
     _lazyFinal($, "_coreStatementPredicates", "$get$_coreStatementPredicates", () => A.LinkedHashSet_LinkedHashSet$_literal([B.IriTerm_f2r, B.IriTerm_Rrd, B.IriTerm_uIa, B.IriTerm_A0M], type$.IriTerm));
-    _lazyFinal($, "_log1", "$get$_log14", () => A.Logger_Logger("CrdtDocumentManager"));
+    _lazyFinal($, "_log0", "$get$_log13", () => A.Logger_Logger("CrdtDocumentManager"));
     _lazyFinal($, "_defaultManagedDocumentLevelPredicates", "$get$_defaultManagedDocumentLevelPredicates", () => A.LinkedHashSet_LinkedHashSet$_literal([B.IriTerm_f2r, B.IriTerm_rMf, B.IriTerm_qP4, B.IriTerm_k42, B.IriTerm_oP6, B.IriTerm_BM8, B.IriTerm_jPP0, B.IriTerm_jPP, B.IriTerm_LFR, B.IriTerm_KR1], type$.IriTerm));
     _lazyFinal($, "FilesystemSafety__safePattern", "$get$FilesystemSafety__safePattern", () => A.RegExp_RegExp("^[a-z0-9._-]+$", true, false, false, false));
-    _lazyFinal($, "_log2", "$get$_log16", () => A.Logger_Logger("IndexDiscovery"));
-    _lazyFinal($, "_log3", "$get$_log13", () => A.Logger_Logger("IndexManager"));
+    _lazyFinal($, "_log1", "$get$_log15", () => A.Logger_Logger("IndexDiscovery"));
+    _lazyFinal($, "_log2", "$get$_log12", () => A.Logger_Logger("IndexManager"));
     _lazyFinal($, "RegexTransformValidator__alternationPattern", "$get$RegexTransformValidator__alternationPattern", () => A.RegExp_RegExp("\\|", true, false, false, false));
     _lazyFinal($, "RegexTransformValidator__namedCharClassPattern", "$get$RegexTransformValidator__namedCharClassPattern", () => A.RegExp_RegExp("\\[:[a-z]+:\\]", true, false, false, false));
     _lazyFinal($, "RegexTransformValidator__anyBracePattern", "$get$RegexTransformValidator__anyBracePattern", () => A.RegExp_RegExp("\\$\\{([^}]*)\\}", true, false, false, false));
@@ -85544,26 +85506,26 @@
     _lazyFinal($, "RegexTransformValidator__emptyBracesPattern", "$get$RegexTransformValidator__emptyBracesPattern", () => A.RegExp_RegExp("\\$\\{\\}", true, false, false, false));
     _lazyFinal($, "RegexTransformValidator__specialChars", "$get$RegexTransformValidator__specialChars", () => A.LinkedHashSet_LinkedHashSet$_literal([".", "^", "$", "[", "]", "(", ")", "{", "}", "*", "+", "?", "\\"], type$.String));
     _lazyFinal($, "RegexTransformValidator__alphanumPattern", "$get$RegexTransformValidator__alphanumPattern", () => A.RegExp_RegExp("[a-zA-Z0-9]", true, false, false, false));
-    _lazyFinal($, "_log4", "$get$_log15", () => A.Logger_Logger("ShardDeterminer"));
-    _lazyFinal($, "_log5", "$get$_log21", () => A.Logger_Logger("LocalDocumentMerger"));
-    _lazyFinal($, "_log6", "$get$_log22", () => A.Logger_Logger("IdentifiedBlankNodeBuilder"));
-    _lazyFinal($, "_log7", "$get$_log12", () => A.Logger_Logger("IriTranslator"));
-    _lazyFinal($, "_log8", "$get$_log17", () => A.Logger_Logger("merge_contract"));
-    _lazyFinal($, "_log9", "$get$_log23", () => A.Logger_Logger("MergeContractLoader"));
+    _lazyFinal($, "_log3", "$get$_log14", () => A.Logger_Logger("ShardDeterminer"));
+    _lazyFinal($, "_log4", "$get$_log20", () => A.Logger_Logger("LocalDocumentMerger"));
+    _lazyFinal($, "_log5", "$get$_log21", () => A.Logger_Logger("IdentifiedBlankNodeBuilder"));
+    _lazyFinal($, "_log6", "$get$_log11", () => A.Logger_Logger("IriTranslator"));
+    _lazyFinal($, "_log7", "$get$_log16", () => A.Logger_Logger("merge_contract"));
+    _lazyFinal($, "_log8", "$get$_log22", () => A.Logger_Logger("MergeContractLoader"));
     _lazyFinal($, "IriTermExtensions__debugStringCache", "$get$IriTermExtensions__debugStringCache", () => A.LRUCache$(100, type$.IriTerm, type$.String));
-    _lazyFinal($, "_log10", "$get$_log11", () => A.Logger_Logger("StandardSyncEngine"));
-    _lazyFinal($, "_log11", "$get$_log27", () => A.Logger_Logger("RemoteDocumentMerger"));
-    _lazyFinal($, "_log12", "$get$_log25", () => A.Logger_Logger("RemoteDocumentMerger"));
-    _lazyFinal($, "_log13", "$get$_log24", () => A.Logger_Logger("RemoteSyncOrchestrator"));
-    _lazyFinal($, "_log14", "$get$_log20", () => A.Logger_Logger("ShardDocumentGenerator"));
-    _lazyFinal($, "_log15", "$get$_log10", () => A.Logger_Logger("StandardSyncManager"));
-    _lazyFinal($, "_log16", "$get$_log19", () => A.Logger_Logger("SyncFunction"));
+    _lazyFinal($, "_log9", "$get$_log10", () => A.Logger_Logger("StandardSyncEngine"));
+    _lazyFinal($, "_log10", "$get$_log26", () => A.Logger_Logger("RemoteDocumentMerger"));
+    _lazyFinal($, "_log11", "$get$_log24", () => A.Logger_Logger("RemoteDocumentMerger"));
+    _lazyFinal($, "_log12", "$get$_log23", () => A.Logger_Logger("RemoteSyncOrchestrator"));
+    _lazyFinal($, "_log13", "$get$_log19", () => A.Logger_Logger("ShardDocumentGenerator"));
+    _lazyFinal($, "_log14", "$get$_log9", () => A.Logger_Logger("StandardSyncManager"));
+    _lazyFinal($, "_log15", "$get$_log18", () => A.Logger_Logger("SyncFunction"));
     _lazyFinal($, "indexIndexItemConfig", "$get$indexIndexItemConfig", () => A.IndexItemData$(A.LinkedHashSet_LinkedHashSet$_literal([B.IriTerm_lKz], type$.IriTerm)));
-    _lazyFinal($, "_log17", "$get$_log18", () => A.Logger_Logger("RetryUtil"));
-    _lazyFinal($, "_log18", "$get$_log", () => A.Logger_Logger("SolidRemoteStorage"));
-    _lazyFinal($, "_log19", "$get$_log0", () => A.Logger_Logger("solid.profile"));
-    _lazyFinal($, "_log20", "$get$_log8", () => A.Logger_Logger("WebWorkerEntryPoint"));
-    _lazyFinal($, "_log21", "$get$_log9", () => A.Logger_Logger("WorkerEntryPoint"));
+    _lazyFinal($, "_log16", "$get$_log17", () => A.Logger_Logger("RetryUtil"));
+    _lazyFinal($, "_log17", "$get$_log", () => A.Logger_Logger("SolidRemoteStorage"));
+    _lazyFinal($, "_log18", "$get$_log0", () => A.Logger_Logger("solid.profile"));
+    _lazyFinal($, "_log19", "$get$_log7", () => A.Logger_Logger("WebWorkerEntryPoint"));
+    _lazyFinal($, "_log20", "$get$_log8", () => A.Logger_Logger("WorkerEntryPoint"));
     _lazyFinal($, "Logger_root", "$get$Logger_root", () => A.Logger_Logger(""));
     _lazyFinal($, "windows", "$get$windows", () => A.Context_Context(null, $.$get$Style_windows()));
     _lazyFinal($, "url", "$get$url", () => A.Context_Context(null, $.$get$Style_url()));
@@ -85768,7 +85730,7 @@
     _lazyFinal($, "RC4Engine_factoryConfig", "$get$RC4Engine_factoryConfig", () => A.StaticFactoryConfig$(B.Type_StreamCipher_lwl, "RC4", new A.RC4Engine_factoryConfig_closure()));
     _lazyFinal($, "Salsa20Engine_factoryConfig", "$get$Salsa20Engine_factoryConfig", () => A.StaticFactoryConfig$(B.Type_StreamCipher_lwl, "Salsa20", new A.Salsa20Engine_factoryConfig_closure()));
     _lazyFinal($, "SICStreamCipher_factoryConfig", "$get$SICStreamCipher_factoryConfig", () => A.DynamicFactoryConfig$suffix(B.Type_StreamCipher_lwl, "/SIC", new A.SICStreamCipher_factoryConfig_closure()));
-    _lazyFinal($, "_log22", "$get$_log2", () => A.Logger_Logger("rdf_core.iri_compaction"));
+    _lazyFinal($, "_log21", "$get$_log2", () => A.Logger_Logger("rdf_core.iri_compaction"));
     _lazyFinal($, "allowedCompactionTypesAll", "$get$allowedCompactionTypesAll", () => {
       var t2, _i,
         t1 = A.LinkedHashMap_LinkedHashMap$_empty(type$.IriRole, type$.Set_IriCompactionType);
@@ -85776,12 +85738,12 @@
         t1.$indexSet(0, B.List_Uwk[_i], A.LinkedHashSet_LinkedHashSet$of(B.List_JhD, t2));
       return t1;
     });
-    _lazyFinal($, "_log23", "$get$_log3", () => A.Logger_Logger("rdf.jsonld"));
-    _lazyFinal($, "_log24", "$get$_log1", () => A.Logger_Logger("rdf.jsonld"));
+    _lazyFinal($, "_log22", "$get$_log3", () => A.Logger_Logger("rdf.jsonld"));
+    _lazyFinal($, "_log23", "$get$_log1", () => A.Logger_Logger("rdf.jsonld"));
     _lazyFinal($, "turtle", "$get$turtle", () => A.TurtleCodec$(B.C_TurtleDecoderOptions, B.TurtleEncoderOptions_ics, A.rdf_term_IriTerm___validated_tearOff$closure(), null));
-    _lazyFinal($, "_log25", "$get$_log5", () => A.Logger_Logger("rdf.turtle"));
-    _lazyFinal($, "_log26", "$get$_log4", () => A.Logger_Logger("rdf.turtle"));
-    _lazyFinal($, "_log27", "$get$_log6", () => A.Logger_Logger("rdf.turtle"));
+    _lazyFinal($, "_log24", "$get$_log5", () => A.Logger_Logger("rdf.turtle"));
+    _lazyFinal($, "_log25", "$get$_log4", () => A.Logger_Logger("rdf.turtle"));
+    _lazyFinal($, "_log26", "$get$_log6", () => A.Logger_Logger("rdf.turtle"));
     _lazyFinal($, "TurtleTokenizer__isDigitRegExp", "$get$TurtleTokenizer__isDigitRegExp", () => A.RegExp_RegExp("[0-9]", true, false, false, false));
     _lazyFinal($, "TurtleTokenizer__isNameStartCharRegExp", "$get$TurtleTokenizer__isNameStartCharRegExp", () => A.RegExp_RegExp("[a-zA-Z_:]", true, false, false, false));
     _lazyFinal($, "TurtleTokenizer__isNameCharRegExp", "$get$TurtleTokenizer__isNameCharRegExp", () => A.RegExp_RegExp("[a-zA-Z0-9_\\-]", true, false, false, false));
