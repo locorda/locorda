@@ -28,9 +28,9 @@ The project is organized as a monorepo with the following packages:
 - `locorda_solid_ui` - Flutter UI components including login forms and sync status widgets
 - `locorda_drift` - Drift (SQLite) storage backend implementation
 
-## 🛑 MANDATORY: Ask Before ANY Code Edit
+## 🛑 MANDATORY: Ask Before Code Edits (With Exceptions)
 
-**CRITICAL WORKFLOW RULE - NO EXCEPTIONS**
+**CRITICAL WORKFLOW RULE**
 
 Before editing any file in the repository:
 
@@ -40,19 +40,27 @@ Before editing any file in the repository:
 4. ⏸️ **WAIT for: "yes"/"approve"/"do it"**
 5. ✅ Then (and only then) use edit tools
 
-**Applies to everything:**
-- Bug fixes, refactoring, features, tests, docs
-- "Obvious" changes, "small" fixes, optimizations
-- ANY file modification in the repo
+**Exception**: When the user gives a **direct, specific instruction** for exactly what to do:
+- ✅ "Translate this document to English" → Just do it
+- ✅ "Fix the typo in line 42" → Just do it
+- ✅ "Add logging here" (with specific location) → Just do it
+- ❌ "The code has a bug" → Ask first (solution unclear)
+- ❌ "Improve performance" → Ask first (approach unclear)
+
+**Applies to everything else:**
+- Bug fixes where solution is not explicitly specified
+- Refactoring, optimizations, features
+- ANY file modification where approach is not crystal clear
 
 **Enforcement checklist:**
 ```
-□ Did I ask explicitly?
+□ Is this a direct instruction with clear action?
+  → YES: Proceed
+  → NO: Ask first
+□ Did I ask explicitly when unsure?
 □ Did user approve explicitly?
-□ If NO → STOP, ask first
+□ If NO to either → STOP, ask first
 ```
-
-**No exceptions. Ever.**
 
 ## Key Architecture Concepts
 

@@ -544,7 +544,7 @@ class SyncStateUpdateMessage extends WorkerMessage {
 
 /// Helper to deserialize messages from JSON
 WorkerMessage deserializeMessage(Map<String, dynamic> json) {
-  final type = json['type'] as String;
+  final type = json['type'] as String?;
 
   return switch (type) {
     'SaveRequest' => SaveRequest.fromJson(json),
@@ -566,6 +566,7 @@ WorkerMessage deserializeMessage(Map<String, dynamic> json) {
     'GetSyncStateRequest' => GetSyncStateRequest.fromJson(json),
     'GetSyncStateResponse' => GetSyncStateResponse.fromJson(json),
     'SyncStateUpdateMessage' => SyncStateUpdateMessage.fromJson(json),
+    null => throw ArgumentError('Message type is missing in JSON: $json'),
     _ => throw ArgumentError('Unknown message type: $type'),
   };
 }

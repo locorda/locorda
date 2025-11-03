@@ -6,9 +6,9 @@
 
 **⚠️ Critical**: Specification in `spec/` is outdated. Implementation has diverged significantly. **Always prioritize actual code over spec documentation**.
 
-## 🛑 MANDATORY: Ask Before ANY Code Edit
+## 🛑 MANDATORY: Ask Before Code Edits (With Exceptions)
 
-**CRITICAL WORKFLOW RULE - NO EXCEPTIONS**
+**CRITICAL WORKFLOW RULE**
 
 Before calling `replace_string_in_file`, `create_file`, or any edit tool, you MUST:
 
@@ -18,21 +18,30 @@ Before calling `replace_string_in_file`, `create_file`, or any edit tool, you MU
 4. ⏸️ **WAIT for explicit approval** (user says: "yes"/"approve"/"do it")
 5. ✅ Only THEN edit the file
 
-**This applies to ALL edits:**
-- ✗ Bug fixes → Ask first
-- ✗ Refactoring/optimization → Ask first
-- ✗ New features → Ask first
-- ✗ Test changes → Ask first
-- ✗ "Obvious" fixes → Ask first
-- ✗ Documentation updates → Ask first
+**Exception**: When the user gives a **direct, specific instruction** for exactly what to do:
+- ✅ "Translate this document to English" → Just do it
+- ✅ "Rename variable X to Y" → Just do it
+- ✅ "Add parameter Z to function F" → Just do it
+- ❌ "The code has a bug" → Ask first (solution unclear)
+- ❌ "Improve performance" → Ask first (approach unclear)
+
+**This applies to everything else:**
+- ✗ Bug fixes where solution is not explicitly specified → Ask first
+- ✗ Refactoring/optimization without clear direction → Ask first
+- ✗ New features without specific implementation → Ask first
+- ✗ Test changes where approach unclear → Ask first
+- ✗ "Obvious" fixes where action not specified → Ask first
 
 **No rationalizations allowed:**
-- "This is just a small fix" → Still ask
+- "This is just a small fix" → Still ask (unless explicitly instructed)
 - "The user will obviously want this" → Still ask
 - "I already explained the solution" ≠ "I have permission to implement"
 
 **Checklist before editing:**
 ```
+□ Is this a direct instruction with clear action?
+  → YES: Proceed
+  → NO: Continue checklist
 □ Have I explicitly asked: "Shall I implement this change?"
 □ Has the user replied: "yes"/"approve"/"do it"?
 □ If NO to either → STOP and ask first
