@@ -16156,7 +16156,7 @@
         _s7_0 = "success",
         _s5_ = "error",
         _s9_0 = "indexName",
-        type = A._asString(json.$index(0, "type"));
+        type = A._asStringQ(json.$index(0, "type"));
       $label0$0: {
         if ("SaveRequest" === type) {
           t1 = A._asString(json.$index(0, _s9_));
@@ -16237,6 +16237,8 @@
           t1 = A.SyncStateUpdateMessage_SyncStateUpdateMessage$fromJson(json);
           break $label0$0;
         }
+        if (type == null)
+          A.throwExpression(A.ArgumentError$("Message type is missing in JSON: " + json.toString$0(0), null));
         t1 = A.throwExpression(A.ArgumentError$("Unknown message type: " + type, null));
       }
       return t1;
@@ -22094,7 +22096,7 @@
       return index + 3;
     },
     main() {
-      A.print("Personal Notes App Worker starting... 5");
+      A.print("Personal Notes App Worker starting... 6");
       A.workerMain(A.worker__createEngineParams$closure(), A.logging_setup__setupWorkerLogging$closure());
     },
     createEngineParams(config, context) {
@@ -50783,14 +50785,6 @@
               // Function start
               t1 = $.$get$_log24();
               t1.log$4(B.Level_FINE_500, "Merging document " + $.$get$IriTermExtensions__debugStringCache().putIfAbsent$2(documentIri, A.rdf_extensions__IriTermExtensions__iriToDebugString$closure()), null, null);
-              if (remoteGraph == null) {
-                t1.log$4(B.Level_FINE_500, "Remote is null - keeping local", null, null);
-                localGraph.toString;
-                $async$returnValue = new A.MergeResult(localGraph);
-                // goto return
-                $async$goto = 1;
-                break;
-              }
               if (localGraph == null) {
                 t1.log$4(B.Level_FINE_500, "Local is null - accepting remote", null, null);
                 $async$returnValue = new A.MergeResult(remoteGraph);
@@ -51323,45 +51317,36 @@
             case 8:
               // returning from await.
               loadedLocalDocument = $async$result;
-              $async$goto = loadedLocalDocument != null ? 9 : 11;
-              break;
-            case 9:
-              // then
+              if (loadedLocalDocument == null) {
+                t1.log$4(B.Level_FINE_500, "Local " + debugName + " has no changes since last sync", null, null);
+                $async$returnValue = null;
+                // goto return
+                $async$goto = 1;
+                break;
+              }
               t1 = loadedLocalDocument.document;
               documentToUpload.set$finalLocalValue(t1);
               $async$temp1 = mergeContract;
-              $async$goto = 12;
+              $async$goto = 9;
               return A._asyncAwait($async$self._remote_sync_orchestrator$_mergeContractLoader.load$1(A.RdfGraphExtensions_getListObjects(t1, documentIri, B.IriTerm_k42, type$.IriTerm)), $async$_downloadAndMerge$3$debugName);
-            case 12:
+            case 9:
               // returning from await.
               $async$temp1.set$finalLocalValue($async$result);
-              // goto join
-              $async$goto = 10;
-              break;
-            case 11:
-              // else
-              t1.log$4(B.Level_FINE_500, "Local " + debugName + " has no changes since last sync", null, null);
-            case 10:
-              // join
-              $async$returnValue = null;
-              // goto return
-              $async$goto = 1;
-              break;
               // goto join
               $async$goto = 6;
               break;
             case 7:
               // else
               t1 = downloadResult.graph;
-              $async$goto = t1 != null ? 13 : 15;
+              $async$goto = t1 != null ? 10 : 12;
               break;
-            case 13:
+            case 10:
               // then
               t2 = $.$get$_log23();
               t2.log$4(B.Level_FINE_500, debugName + " changed remotely", null, null);
-              $async$goto = 16;
+              $async$goto = 13;
               return A._asyncAwait($async$self._getLocalDocumentWithMetadata$1(documentIri), $async$_downloadAndMerge$3$debugName);
-            case 16:
+            case 13:
               // returning from await.
               loadedLocalDocument = $async$result;
               localDocument = loadedLocalDocument == null ? null : loadedLocalDocument.document;
@@ -51372,34 +51357,41 @@
               t4.push(t1);
               governanceIris = t3.getMergedGovernanceIris$2(t4, documentIri);
               $async$temp1 = mergeContract;
-              $async$goto = 17;
+              $async$goto = 14;
               return A._asyncAwait(t3.load$1(governanceIris), $async$_downloadAndMerge$3$debugName);
-            case 17:
+            case 14:
               // returning from await.
               $async$temp1.set$finalLocalValue($async$result);
-              $async$goto = 18;
+              $async$goto = 15;
               return A._asyncAwait($async$self._merger.merge$4$documentIri$localGraph$mergeContract$remoteGraph(documentIri, localDocument, mergeContract._readLocal$0(), t1), $async$_downloadAndMerge$3$debugName);
-            case 18:
+            case 15:
               // returning from await.
               t3 = $async$result.mergedGraph;
               actualGovernanceIris = A.RdfGraphExtensions_getListObjects(t3, documentIri, B.IriTerm_k42, type$.IriTerm);
               if (!new A.ListEquality(type$.ListEquality_dynamic).equals$2(actualGovernanceIris, governanceIris))
                 t2.log$4(B.Level_SEVERE_1000, "Governance IRIs mismatch after merge for " + debugName + ". Expected: " + A.S(governanceIris) + ", Found: " + A.S(actualGovernanceIris), null, null);
+              if (t1.$eq(0, t3)) {
+                t2.log$4(B.Level_FINEST_300, "No changes after merging " + debugName, null, null);
+                $async$returnValue = null;
+                // goto return
+                $async$goto = 1;
+                break;
+              }
               documentToUpload.set$finalLocalValue(t3);
               // goto join
-              $async$goto = 14;
+              $async$goto = 11;
               break;
-            case 15:
+            case 12:
               // else
-              t2 = $.$get$_log23();
-              t2.log$4(B.Level_FINE_500, debugName + " not found remotely (404)", null, null);
-              $async$goto = 19;
+              t1 = $.$get$_log23();
+              t1.log$4(B.Level_FINE_500, debugName + " not found remotely (404)", null, null);
+              $async$goto = 16;
               return A._asyncAwait($async$self._getLocalDocumentWithMetadata$1(documentIri), $async$_downloadAndMerge$3$debugName);
-            case 19:
+            case 16:
               // returning from await.
               loadedLocalDocument = $async$result;
               if (loadedLocalDocument == null) {
-                t2.log$4(B.Level_WARNING_900, debugName + " was found neither remotely nor locally, will skip", null, null);
+                t1.log$4(B.Level_WARNING_900, debugName + " was found neither remotely nor locally, will skip", null, null);
                 $async$returnValue = null;
                 // goto return
                 $async$goto = 1;
@@ -51407,21 +51399,22 @@
               }
               documentToUpload.set$finalLocalValue(loadedLocalDocument.document);
               $async$temp1 = mergeContract;
-              $async$goto = 20;
+              $async$goto = 17;
               return A._asyncAwait($async$self._remote_sync_orchestrator$_mergeContractLoader.load$1(A.RdfGraphExtensions_getListObjects(type$.RdfGraph._as(documentToUpload._readLocal$0()), documentIri, B.IriTerm_k42, type$.IriTerm)), $async$_downloadAndMerge$3$debugName);
-            case 20:
+            case 17:
               // returning from await.
               $async$temp1.set$finalLocalValue($async$result);
-            case 14:
+            case 11:
               // join
             case 6:
               // join
-              t2 = documentToUpload._readLocal$0();
-              t3 = loadedLocalDocument == null;
-              t4 = t3 ? null : loadedLocalDocument.document;
+              t1 = documentToUpload._readLocal$0();
+              t2 = loadedLocalDocument == null;
+              t3 = t2 ? null : loadedLocalDocument.document;
+              t4 = downloadResult.graph;
               t5 = mergeContract._readLocal$0();
               t6 = downloadResult.etag;
-              $async$returnValue = new A._Record_6_etag_localUpdatedAt_mergeContract_mergedDocument_originalLocalDocument_originalRemoteDocument([t6, t3 ? null : loadedLocalDocument.metadata.updatedAt, t5, t2, t4, t1]);
+              $async$returnValue = new A._Record_6_etag_localUpdatedAt_mergeContract_mergedDocument_originalLocalDocument_originalRemoteDocument([t6, t2 ? null : loadedLocalDocument.metadata.updatedAt, t5, t1, t3, t4]);
               // goto return
               $async$goto = 1;
               break;
@@ -84820,6 +84813,7 @@
     B.Latin1Encoder_255 = new A.Latin1Encoder(255);
     B.Level_ALL_0 = new A.Level("ALL", 0);
     B.Level_FINER_400 = new A.Level("FINER", 400);
+    B.Level_FINEST_300 = new A.Level("FINEST", 300);
     B.Level_FINE_500 = new A.Level("FINE", 500);
     B.Level_INFO_800 = new A.Level("INFO", 800);
     B.Level_SEVERE_1000 = new A.Level("SEVERE", 1000);
