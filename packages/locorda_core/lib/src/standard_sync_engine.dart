@@ -58,20 +58,22 @@ class StandardSyncEngine implements SyncEngine {
   final SyncManager _syncManager;
   final PhysicalTimestampFactory _physicalTimestampFactory;
   final IndexRdfGenerator _indexRdfGenerator;
+  final List<Future<void> Function()> _closeFunctions;
 
   /// Access the sync manager for manual sync triggering and status monitoring.
   SyncManager get syncManager => _syncManager;
 
-  StandardSyncEngine._({
-    required Storage storage,
-    required IndexManager indexManager,
-    required SyncEngineConfig config,
-    required ResourceLocator resourceLocator,
-    required CrdtDocumentManager crdtDocumentManager,
-    required IndexRdfGenerator indexRdfGenerator,
-    required PhysicalTimestampFactory physicalTimestampFactory,
-    required SyncManager syncManager,
-  })  : _storage = storage,
+  StandardSyncEngine._(
+      {required Storage storage,
+      required IndexManager indexManager,
+      required SyncEngineConfig config,
+      required ResourceLocator resourceLocator,
+      required CrdtDocumentManager crdtDocumentManager,
+      required IndexRdfGenerator indexRdfGenerator,
+      required PhysicalTimestampFactory physicalTimestampFactory,
+      required SyncManager syncManager,
+      List<Future<void> Function()> closeFunctions = const []})
+      : _storage = storage,
         _indexManager = indexManager,
         _config = config,
         _groupIndexManager = GroupIndexGraphSubscriptionManager(
@@ -84,7 +86,8 @@ class StandardSyncEngine implements SyncEngine {
         _crdtDocumentManager = crdtDocumentManager,
         _syncManager = syncManager,
         _indexRdfGenerator = indexRdfGenerator,
-        _physicalTimestampFactory = physicalTimestampFactory;
+        _physicalTimestampFactory = physicalTimestampFactory,
+        _closeFunctions = closeFunctions;
 
   /// Set up the CRDT sync system with resource-focused configuration.
   ///
@@ -216,8 +219,10 @@ class StandardSyncEngine implements SyncEngine {
       indexManager: indexManager,
     );
     final remoteSyncOrchestratorFactory =
-        (RemoteStorage remoteStorage) => RemoteSyncOrchestrator(
-              remoteStorage: remoteStorage,
+        (RemoteSyncStorage remoteSyncStorage, RemoteId remoteId) =>
+            RemoteSyncOrchestrator(
+              remoteSyncStorage: remoteSyncStorage,
+              remoteId: remoteId,
               storage: storage,
               merger: remoteDocumentMerger,
               config: config,
@@ -234,6 +239,7 @@ class StandardSyncEngine implements SyncEngine {
     final syncManager = StandardSyncManager(
         syncFunction: SyncFunction(
           storage: storage,
+          config: config,
           shardDocumentGenerator: shardDocumentGenerator,
           backends: backends,
           remoteSyncOrchestratorFactory: remoteSyncOrchestratorFactory,
@@ -249,7 +255,8 @@ class StandardSyncEngine implements SyncEngine {
         crdtDocumentManager: crdtDocumentManager,
         indexRdfGenerator: indexRdfGenerator,
         physicalTimestampFactory: timestampFactory,
-        syncManager: syncManager);
+        syncManager: syncManager,
+        closeFunctions: backends.map((b) => b.dispose).toList());
 
     // installation documents might be organized in indices, so we need to use graph sync instead of crdtDocumentManager directly
     await installationService.ensureDocumentSaved(sync);
@@ -860,5 +867,8 @@ Check with https://g.co/gemini/share/60e9b2d3036e for the details
   Future<void> close() async {
     await _syncManager.dispose();
     await _crdtDocumentManager.close();
+    for (final func in _closeFunctions) {
+      await func();
+    }
   }
 }

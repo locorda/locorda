@@ -41,6 +41,11 @@ class InMemoryBackend implements Backend {
 
   @override
   List<InMemoryRemoteStorage> get remotes => _remotes;
+
+  @override
+  Future<void> dispose() async {
+    // No resources to clean up for in-memory backend
+  }
 }
 
 /// In-memory implementation of RemoteStorage for testing.
@@ -62,12 +67,57 @@ class InMemoryRemoteStorage implements RemoteStorage {
   InMemoryRemoteStorage(this.remoteId);
 
   @override
+  Future<bool> isAvailable() async {
+    // In-memory storage is always available
+    return true;
+  }
+
+  @override
+  Future<RemoteSyncStorage> createSyncStorage(SyncEngineConfig config) async {
+    // In-memory backend needs no initialization, just wrap access
+    return InMemorySyncStorage(this);
+  }
+
+  /// Generate a new unique ETag
+  String _generateETag() {
+    return '"etag-${++_etagCounter}"';
+  }
+
+  /// Clear all stored documents (for testing)
+  void clear() {
+    _documents.clear();
+    _etagCounter = 0;
+  }
+
+  Map<String, _StoredDocument> get documents => _documents;
+
+  /// Check if document exists (for testing)
+  bool hasDocument(IriTerm documentIri) {
+    return _documents.containsKey(documentIri.value);
+  }
+
+  /// Get stored ETag for document (for testing)
+  String? getETag(IriTerm documentIri) {
+    return _documents[documentIri.value]?.etag;
+  }
+}
+
+/// Per-sync-session storage for in-memory backend.
+///
+/// Lightweight wrapper around [InMemoryRemoteStorage] providing upload/download
+/// access during sync operations.
+class InMemorySyncStorage implements RemoteSyncStorage {
+  final InMemoryRemoteStorage _storage;
+
+  InMemorySyncStorage(this._storage);
+
+  @override
   Future<RemoteDownloadResult> download(IriTerm documentIri,
       {String? ifNoneMatch}) async {
     _logger.fine(
         'Downloading document: ${documentIri.debug}, ifNoneMatch:$ifNoneMatch');
     final iri = documentIri.value;
-    final stored = _documents[iri];
+    final stored = _storage._documents[iri];
 
     // Document doesn't exist
     if (stored == null) {
@@ -102,7 +152,7 @@ class InMemoryRemoteStorage implements RemoteStorage {
     _logger.fine(
         'Uploading document: ${documentIri.debug}, ifMatch:$ifMatch, graph size: ${graph.triples.length}');
     final iri = documentIri.value;
-    final stored = _documents[iri];
+    final stored = _storage._documents[iri];
 
     // ifMatch: null → If-None-Match: * (create only)
     if (ifMatch == null) {
@@ -114,8 +164,8 @@ class InMemoryRemoteStorage implements RemoteStorage {
       }
 
       // Create new document with new ETag
-      final newEtag = _generateETag();
-      _documents[iri] = _StoredDocument(graph: graph, etag: newEtag);
+      final newEtag = _storage._generateETag();
+      _storage._documents[iri] = _StoredDocument(graph: graph, etag: newEtag);
       _logger.fine('Document created: ${documentIri.debug}, etag:$newEtag');
       return RemoteUploadResult.success(newEtag);
     }
@@ -136,15 +186,20 @@ class InMemoryRemoteStorage implements RemoteStorage {
     }
 
     // Update document with new ETag
-    final newEtag = _generateETag();
-    _documents[iri] = _StoredDocument(graph: graph, etag: newEtag);
+    final newEtag = _storage._generateETag();
+    _storage._documents[iri] = _StoredDocument(graph: graph, etag: newEtag);
     _logger.fine('Document updated: ${documentIri.debug}, new etag:$newEtag');
     return RemoteUploadResult.success(newEtag);
   }
 
+  @override
+  Future<void> finalizeSync() async {
+    // In-memory backend needs no finalization
+  }
+
   Future<void> delete(IriTerm documentIri, {String? ifMatch}) async {
     final iri = documentIri.value;
-    final stored = _documents[iri];
+    final stored = _storage._documents[iri];
 
     // If document doesn't exist, delete is idempotent (no-op)
     if (stored == null) {
@@ -157,36 +212,7 @@ class InMemoryRemoteStorage implements RemoteStorage {
     }
 
     // Delete document
-    _documents.remove(iri);
-  }
-
-  @override
-  Future<bool> isAvailable() async {
-    // In-memory storage is always available
-    return true;
-  }
-
-  /// Generate a new unique ETag
-  String _generateETag() {
-    return '"etag-${++_etagCounter}"';
-  }
-
-  /// Clear all stored documents (for testing)
-  void clear() {
-    _documents.clear();
-    _etagCounter = 0;
-  }
-
-  Map<String, _StoredDocument> get documents => _documents;
-
-  /// Check if document exists (for testing)
-  bool hasDocument(IriTerm documentIri) {
-    return _documents.containsKey(documentIri.value);
-  }
-
-  /// Get stored ETag for document (for testing)
-  String? getETag(IriTerm documentIri) {
-    return _documents[documentIri.value]?.etag;
+    _storage._documents.remove(iri);
   }
 }
 

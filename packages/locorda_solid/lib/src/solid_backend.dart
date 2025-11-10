@@ -109,7 +109,8 @@ class SolidBackend implements Backend {
     }
   }
 
-  void dispose() {
+  @override
+  Future<void> dispose() async {
     _authProvider.isAuthenticatedNotifier.removeListener(_authStateChanged);
   }
 
@@ -437,42 +438,73 @@ class SolidResourceLocator extends ResourceLocator {
 class SolidRemoteStorage implements RemoteStorage {
   final String webId;
   final SolidClient _client;
+  final IriTermFactory _iriTermFactory;
   final SolidProfileParser _profileParser = SolidProfileParser();
-  late final Future _initFuture;
-  late final String _podUrl;
-  late final IriTranslator _iriTranslator;
+  late final Future<String> _podUrlFuture;
 
   SolidRemoteStorage(
       {required this.webId,
       required SolidClient client,
       required IriTermFactory iriTermFactory})
-      : _client = client {
-    _initFuture = resolvePodUrl(webId).then((podUrl) {
-      if (podUrl == null) {
-        throw StateError('Could not resolve Pod URL for WebID: $webId');
-      }
-
-      _podUrl = podUrl.endsWith('/') ? podUrl : '$podUrl/';
-      _iriTranslator = BaseIriTranslator(
-          internalResourceLocator:
-              LocalResourceLocator(iriTermFactory: iriTermFactory),
-          externalResourceLocator: SolidResourceLocator(
-              iriTermFactory: iriTermFactory, podBaseUrl: _podUrl));
-    });
+      : _client = client,
+        _iriTermFactory = iriTermFactory {
+    _podUrlFuture = _resolvePodUrl(webId);
   }
 
-  Future<String?> resolvePodUrl(String webId) async {
+  Future<String> _resolvePodUrl(String webId) async {
     final profile = await _client.download(webId, requiresAuth: true);
     if (profile.graph == null) {
       throw StateError('Profile document is empty for WebID: $webId');
     }
-    return _profileParser.parseStorageUrl(webId, profile.graph!);
+    final podUrl = await _profileParser.parseStorageUrl(webId, profile.graph!);
+    if (podUrl == null) {
+      throw StateError('Could not resolve Pod URL for WebID: $webId');
+    }
+    return podUrl.endsWith('/') ? podUrl : '$podUrl/';
   }
+
+  @override
+  Future<bool> isAvailable() {
+    // TODO: implement availability check, maybe by using some API to
+    // check for online/offline status or similar.
+    return _podUrlFuture.then((_) => true).catchError((_) => false);
+  }
+
+  @override
+  RemoteId get remoteId => RemoteId("solid", webId);
+
+  @override
+  Future<RemoteSyncStorage> createSyncStorage(SyncEngineConfig config) async {
+    // Solid uses Type Index pattern - no backend-specific setup needed
+    // Type registrations are handled by the application via Solid Type Index
+    final podUrl = await _podUrlFuture; // Ensure Pod URL is resolved
+
+    final iriTranslator = BaseIriTranslator(
+        internalResourceLocator:
+            LocalResourceLocator(iriTermFactory: _iriTermFactory),
+        externalResourceLocator: SolidResourceLocator(
+            iriTermFactory: _iriTermFactory, podBaseUrl: podUrl));
+
+    return SolidSyncStorage(client: _client, iriTranslator: iriTranslator);
+  }
+}
+
+/// Per-sync-session storage for Solid backend.
+///
+/// Caches the IRI translator to avoid rebuilding it on every upload/download.
+class SolidSyncStorage implements RemoteSyncStorage {
+  final SolidClient _client;
+  final IriTranslator _iriTranslator;
+
+  SolidSyncStorage({
+    required SolidClient client,
+    required IriTranslator iriTranslator,
+  })  : _client = client,
+        _iriTranslator = iriTranslator;
 
   @override
   Future<RemoteDownloadResult> download(IriTerm documentIri,
       {String? ifNoneMatch}) async {
-    await _initFuture;
     final podDocumentIri = _iriTranslator.internalToExternal(documentIri);
     final result = await _client.download(podDocumentIri.value,
         requiresAuth: true, ifNoneMatch: ifNoneMatch);
@@ -488,22 +520,16 @@ class SolidRemoteStorage implements RemoteStorage {
   }
 
   @override
-  Future<bool> isAvailable() {
-    // TODO: implement availability check, maybe by using some API to
-    // check for online/offline status or similar.
-    return _initFuture.then((_) => true).catchError((_) => false);
-  }
-
-  @override
-  RemoteId get remoteId => RemoteId("solid", webId);
-
-  @override
   Future<RemoteUploadResult> upload(IriTerm documentIri, RdfGraph graph,
       {String? ifMatch}) async {
-    await _initFuture;
     final podDocumentIri = _iriTranslator.internalToExternal(documentIri);
     final translatedGraph = _iriTranslator.translateGraphToExternal(graph);
     return await _client.upload(podDocumentIri.value, translatedGraph,
         requiresAuth: true, ifMatch: ifMatch);
+  }
+
+  @override
+  Future<void> finalizeSync() async {
+    // No cleanup needed for Solid backend
   }
 }

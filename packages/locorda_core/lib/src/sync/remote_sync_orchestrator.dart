@@ -143,7 +143,8 @@ final class _DocumentQueueEntry {
 /// Assumes Phase 0 (Sync Preparation) has already been completed by
 /// _ensureShardDocumentsAreUpToDate, which materialized shard state in DB.
 class RemoteSyncOrchestrator {
-  final RemoteStorage _remoteStorage;
+  final RemoteSyncStorage _remoteSyncStorage;
+  final RemoteId _remoteId;
   final Storage _storage;
   final RemoteDocumentMerger _merger;
   final SyncEngineConfig _config;
@@ -156,7 +157,8 @@ class RemoteSyncOrchestrator {
   final ShardDocumentGenerator _shardDocumentGenerator;
   final PhysicalTimestampFactory _physicalTimestampFactory;
   RemoteSyncOrchestrator({
-    required RemoteStorage remoteStorage,
+    required RemoteSyncStorage remoteSyncStorage,
+    required RemoteId remoteId,
     required Storage storage,
     required RemoteDocumentMerger merger,
     required SyncEngineConfig config,
@@ -168,7 +170,8 @@ class RemoteSyncOrchestrator {
     required LocalDocumentMerger localDocumentMerger,
     required ShardDocumentGenerator shardDocumentGenerator,
     required PhysicalTimestampFactory physicalTimestampFactory,
-  })  : _remoteStorage = remoteStorage,
+  })  : _remoteSyncStorage = remoteSyncStorage,
+        _remoteId = remoteId,
         _storage = storage,
         _merger = merger,
         _config = config,
@@ -306,11 +309,11 @@ class RemoteSyncOrchestrator {
   }) async {
     // 1. Conditional GET
     final cachedETag = await _storage.getRemoteETag(
-      _remoteStorage.remoteId,
+      _remoteId,
       documentIri,
     );
 
-    final downloadResult = await _remoteStorage.download(
+    final downloadResult = await _remoteSyncStorage.download(
       documentIri,
       ifNoneMatch: cachedETag,
     );
@@ -494,7 +497,7 @@ class RemoteSyncOrchestrator {
     required DateTime syncTime,
     String debugName = '',
   }) async {
-    final uploadResult = await _remoteStorage.upload(
+    final uploadResult = await _remoteSyncStorage.upload(
       documentIri,
       documentToUpload,
       ifMatch: etag,
@@ -538,7 +541,7 @@ class RemoteSyncOrchestrator {
     // we need to update the stored ETag for future conditional requests.
     // Success - cache new ETag
     await _storage.setRemoteETag(
-      _remoteStorage.remoteId,
+      _remoteId,
       documentIri,
       mergedETag,
     );
@@ -745,8 +748,7 @@ class RemoteSyncOrchestrator {
     required Set<IriTerm> configuredIndexIris,
   }) async {
     // Get last sync timestamp to find dirty entries
-    final lastSync =
-        await _storage.getLastRemoteSyncTimestamp(_remoteStorage.remoteId);
+    final lastSync = await _storage.getLastRemoteSyncTimestamp(_remoteId);
 
     // Query for foreign index shards
     // This finds indices (not in configured set) with:

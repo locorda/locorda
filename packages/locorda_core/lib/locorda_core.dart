@@ -52,6 +52,9 @@ export 'src/generated/_index.dart'
         AlgoOR_Set,
         CrdtClientInstallation,
         CrdtClockEntry,
+        Gdrive,
+        GdriveTypeIndex,
+        GdriveTypeMapping,
         Idx,
         IdxFullIndex,
         IdxGroupIndex,
@@ -98,7 +101,14 @@ export 'src/mapping/resource_locator.dart'
 export 'src/mapping/iri_translator.dart'
     show IriTranslator, BaseIriTranslator, NoOpIriTranslator;
 export 'src/storage/remote_id.dart' show RemoteId;
-export 'src/storage/remote_storage.dart' show RemoteStorage;
+export 'src/storage/remote_storage.dart'
+    show
+        RemoteStorage,
+        RemoteSyncStorage,
+        RemoteUploadResult,
+        SuccessUploadResult,
+        ConflictUploadResult,
+        RemoteDownloadResult;
 export 'src/storage/storage_interface.dart'
     show
         Storage,
