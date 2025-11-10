@@ -2,6 +2,21 @@
 
 **Locorda** — the rope that connects and weaves local data together.
 
+> **⚠️ PROJECT UNDER CRITICAL ASSESSMENT**
+>
+> **IMPORTANT:** This project is currently undergoing a fundamental reassessment of its direction and viability. Active development is paused while critical questions about the architecture and approach are being evaluated.
+>
+> **Assessment Status:**
+> - 🔴 **Project continuation decision pending** - See [STATUS.md](STATUS.md) for informal assessment
+> - 🔴 **Specification outdated** - Implementation has diverged significantly from documented spec
+> - 🔴 **Not recommended for production use** - Architecture under review
+>
+> **For Current Status:**
+> - **Informal assessment**: [STATUS.md](STATUS.md) - Critical reflections and analysis
+> - **Formal decision record**: [ADR-0004](packages/locorda/docs/adrs/0004-project-assessment-and-future-direction.md) - Project assessment ADR
+>
+> If you're interested in this project's goals or considering similar work, please review the status documents first.
+
 > **⚠️ EARLY EXPERIMENTAL VERSION - SPECIFICATION OUTDATED**
 >
 > **WARNING:** This specification represents an **early experimental design** that has been **superseded during actual implementation** of the locorda libraries. The documented architecture, algorithms, and APIs **do not reflect the current implementation** and require significant updates.
