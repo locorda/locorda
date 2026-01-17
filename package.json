@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "npm run verify-examples && astro build",
+    "build:no-verify": "astro build",
     "preview": "astro preview",
+    "verify-examples": "./verify-examples.sh",
     "astro": "astro"
   },
   "dependencies": {

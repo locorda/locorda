@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout 
+	title="Impressum - Locorda" 
+	description="Legal information and contact details"
+>
+	<div class="legal-page">
+		<div class="container">
+			<h1>Impressum</h1>
+			
+			<p class="legal-intro">
+				Information according to § 5 TMG (German Telemedia Act)
+			</p>
+			
+			<div class="legal-section">
+				<h2>Contact</h2>
+				<p>
+					Klas Kalaß<br/>
+					Övern Block 1d<br/>
+					22337 Hamburg<br/>
+					Germany
+				</p>
+				
+				<p>
+					<strong>Email:</strong> <a href="mailto:habbatical@gmail.com">habbatical@gmail.com</a><br/>
+					<strong>Phone:</strong> +49 1577 1567 115
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>Responsible for Content</h2>
+				<p>
+					Klas Kalaß (address as above)
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>Liability for Content</h2>
+				<p>
+					As a service provider, we are responsible for our own content on these pages in accordance with § 7 para.1 TMG. However, according to §§ 8 to 10 TMG, we are not obligated to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity.
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>Liability for Links</h2>
+				<p>
+					Our website contains links to external third-party websites over whose content we have no influence. Therefore, we cannot assume any liability for this third-party content. The respective provider or operator of the pages is always responsible for the content of the linked pages.
+				</p>
+			</div>
+		</div>
+	</div>
+</BaseLayout>
+
+<style>
+	.legal-page {
+		padding: 4rem 2rem;
+		min-height: 60vh;
+	}
+	
+	.legal-page .container {
+		max-width: 800px;
+	}
+	
+	.legal-page h1 {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+		color: #1e293b;
+	}
+	
+	.legal-intro {
+		color: #64748b;
+		font-size: 1.1rem;
+		margin-bottom: 3rem;
+	}
+	
+	.legal-section {
+		margin-bottom: 2.5rem;
+	}
+	
+	.legal-section h2 {
+		font-size: 1.5rem;
+		color: #334155;
+		margin-bottom: 1rem;
+	}
+	
+	.legal-section p {
+		line-height: 1.8;
+		color: #475569;
+		margin-bottom: 1rem;
+	}
+	
+	.legal-section a {
+		color: #2563eb;
+		text-decoration: none;
+	}
+	
+	.legal-section a:hover {
+		text-decoration: underline;
+	}
+</style>

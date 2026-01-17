@@ -1,0 +1,164 @@
+---
+---
+
+<footer class="site-footer">
+	<div class="footer-content">
+		<div class="footer-section">
+			<div class="footer-logo">
+				<img src="/logos/locorda-letter-o.svg" alt="Locorda Logo" />
+				<h3>Locorda</h3>
+			</div>
+			<p>Libraries for powerful apps that respect user data ownership.</p>
+			<p class="footer-tagline">Built with ❤️ for the decentralized web</p>
+		</div>
+		
+		<div class="footer-section">
+			<h4>Projects</h4>
+			<ul>
+				<li><a href="/rdf/">RDF Libraries</a></li>
+				<li><a href="/vocabularies/">Vocabularies</a></li>
+				<li><a href="/sync-engine/">Sync Engine</a></li>
+			</ul>
+		</div>
+		
+		<div class="footer-section">
+			<h4>Documentation</h4>
+			<ul>
+				<li><a href="/docs/rdf/">RDF Docs</a></li>
+				<li><a href="/docs/vocabularies/">Vocabulary Docs</a></li>
+			</ul>
+		</div>
+		
+		<div class="footer-section">
+			<h4>Community</h4>
+			<ul>
+				<li><a href="https://github.com/locorda" target="_blank" rel="noopener">GitHub</a></li>
+				<li><a href="https://github.com/locorda/rdf/discussions" target="_blank" rel="noopener">Discussions</a></li>
+				<li><a href="https://github.com/locorda/rdf/issues" target="_blank" rel="noopener">Issues</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<div class="footer-bottom">
+		<p>© 2026 Klas Kalaß. MIT License.</p>
+		<p class="footer-legal-links">
+			<a href="/impressum/">Impressum</a> · <a href="/privacy/">Privacy Policy</a>
+		</p>
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		background: #0f172a;
+		color: #cbd5e1;
+		padding: 4rem 2rem 2rem;
+		margin-top: 6rem;
+	}
+	
+	.footer-content {
+		max-width: 1400px;
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: 2fr repeat(3, 1fr);
+		gap: 3rem;
+		margin-bottom: 3rem;
+	}
+	
+	.footer-logo {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+	}
+	
+	.footer-logo img {
+		width: 32px;
+		height: 32px;
+	}
+	
+	.footer-section h3 {
+		background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+		font-size: 1.5rem;
+		margin-bottom: 0;
+	}
+	
+	.footer-section h4 {
+		color: #f8fafc;
+		font-size: 1rem;
+		margin-bottom: 1rem;
+		font-weight: 600;
+	}
+	
+	.footer-section p {
+		color: #94a3b8;
+		line-height: 1.6;
+		margin-bottom: 0.5rem;
+	}
+	
+	.footer-tagline {
+		font-style: italic;
+		color: #64748b;
+	}
+	
+	.footer-section ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	
+	.footer-section li {
+		margin-bottom: 0.5rem;
+	}
+	
+	.footer-section a {
+		color: #94a3b8;
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+	
+	.footer-section a:hover {
+		color: #60a5fa;
+	}
+	
+	.footer-bottom {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding-top: 2rem;
+		border-top: 1px solid #334155;
+		text-align: center;
+	}
+	
+	.footer-bottom p {
+		color: #64748b;
+		margin: 0.5rem 0;
+		font-size: 0.875rem;
+	}
+	
+	.footer-legal-links {
+		font-size: 0.75rem;
+	}
+	
+	.footer-legal-links a {
+		color: #64748b;
+		text-decoration: none;
+	}
+	
+	.footer-legal-links a:hover {
+		color: #94a3b8;
+		text-decoration: underline;
+	}
+	
+	@media (max-width: 768px) {
+		.footer-content {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+		
+		.site-footer {
+			padding: 3rem 1rem 1.5rem;
+		}
+	}
+</style>

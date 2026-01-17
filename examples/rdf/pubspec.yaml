@@ -1,0 +1,14 @@
+name: locorda_website_examples
+description: Verified code examples for locorda.dev website
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  locorda_rdf_core:
+    path: ../../../rdf/packages/locorda_rdf_core
+
+dev_dependencies:
+  test: ^1.24.0

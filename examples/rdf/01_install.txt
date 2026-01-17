@@ -1,0 +1,1 @@
+dart pub add locorda_rdf_core

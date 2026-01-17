@@ -1,0 +1,362 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { Code } from 'astro:components';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, '../../../examples/rdf');
+
+const installCode = await readFile(join(examplesDir, '01_install.txt'), 'utf-8');
+const parseCode = await readFile(join(examplesDir, '02_parse_turtle.dart'), 'utf-8');
+const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-8');
+---
+
+<BaseLayout 
+	title="RDF Core - Locorda" 
+	description="Parse, serialize, and query RDF graphs in Dart. W3C RDF 1.1 compliant core library."
+	activeNav="rdf"
+>
+	<div class="hero-gradient">
+		<div class="container">
+			<div class="hero-content">
+				<h1>RDF Core</h1>
+				<p class="hero-description">
+					Parse, serialize, and query RDF graphs and datasets.<br/>
+					W3C RDF 1.1 compliant core library for Dart.
+				</p>
+				
+				<div class="hero-cta">
+					<a href="https://pub.dev/packages/locorda_rdf_core" target="_blank" rel="noopener" class="cta-primary">View on pub.dev</a>
+					<a href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_core" target="_blank" rel="noopener" class="cta-secondary">GitHub</a>
+				</div>
+			</div>
+			
+			<div class="blob blob-1"></div>
+			<div class="blob blob-2"></div>
+		</div>
+	</div>
+
+	<section id="getting-started" class="section getting-started-section">
+		<div class="container">
+			<h2>Getting Started</h2>
+			
+			<div class="install-steps">
+				<div class="install-step">
+					<h3>1. Install the package</h3>
+					<Code code={installCode} lang="bash" />
+				</div>
+				
+				<div class="install-step">
+					<h3>2. Parse RDF formats</h3>
+					<Code code={parseCode} lang="dart" />
+				</div>
+				
+				<div class="install-step">
+					<h3>3. Query and manipulate</h3>
+					<Code code={queryCode} lang="dart" />
+					<div class="try-online">
+						<a 
+							href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_core/example"
+							target="_blank" 
+							rel="noopener noreferrer"
+							class="try-button"
+						>
+							View full examples on GitHub →
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="section features-section">
+		<div class="container">
+			<h2>Features</h2>
+			
+			<div class="features-grid">
+				<div class="feature-card">
+					<div class="feature-icon">📄</div>
+					<h3>Multiple Formats</h3>
+					<p>Parse and serialize Turtle, N-Triples, N-Quads, and JSON-LD. W3C RDF 1.1 compliant.</p>
+				</div>
+				
+				<div class="feature-card">
+					<div class="feature-icon">🔍</div>
+					<h3>Query API</h3>
+					<p>Find triples with subject, predicate, or object filters. Immutable graph operations.</p>
+				</div>
+				
+				<div class="feature-card">
+					<div class="feature-icon">📊</div>
+					<h3>Datasets</h3>
+					<p>Work with named graphs and datasets. Full quad support for N-Quads.</p>
+				</div>
+				
+				<div class="feature-card">
+					<div class="feature-icon">⚡</div>
+					<h3>Zero Dependencies</h3>
+					<p>No external dependencies except logging. Clean, maintainable code.</p>
+				</div>
+				
+				<div class="feature-card">
+					<div class="feature-icon">🔷</div>
+					<h3>Type-Safe</h3>
+					<p>Strongly-typed Dart APIs with full IDE support and autocompletion.</p>
+				</div>
+				
+				<div class="feature-card">
+					<div class="feature-icon">🧪</div>
+					<h3>Well Tested</h3>
+					<p>Comprehensive test coverage. Battle-tested parsers and serializers.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="section cta-section">
+		<div class="container">
+			<h2>Ready to Start?</h2>
+			<p class="cta-description">
+				Read the documentation or explore other RDF packages.
+			</p>
+			<div class="cta-buttons">
+				<a href="/docs/rdf/core/" class="cta-primary">Read the Docs</a>
+				<a href="/rdf/" class="cta-secondary">← Back to RDF Overview</a>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	/* Hero Section */
+	.hero-gradient {
+		position: relative;
+		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #0891b2 100%);
+		padding: 4rem 0;
+		overflow: hidden;
+		margin-bottom: 4rem;
+	}
+	
+	.hero-content {
+		position: relative;
+		z-index: 10;
+		text-align: center;
+		color: white;
+		max-width: 800px;
+		margin: 0 auto;
+	}
+	
+	.hero-content h1 {
+		color: white;
+		font-size: 3rem;
+		margin-bottom: 1.5rem;
+	}
+	
+	.hero-description {
+		font-size: 1.25rem;
+		line-height: 1.6;
+		margin-bottom: 2rem;
+		opacity: 0.95;
+	}
+	
+	.hero-cta {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	
+	.cta-primary {
+		background: white;
+		color: #2563eb;
+		padding: 1rem 2rem;
+		border-radius: 0.5rem;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.2s;
+	}
+	
+	.cta-primary:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+	}
+	
+	.cta-secondary {
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		padding: 1rem 2rem;
+		border-radius: 0.5rem;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.2s;
+		backdrop-filter: blur(10px);
+	}
+	
+	.cta-secondary:hover {
+		background: rgba(255, 255, 255, 0.2);
+		border-color: rgba(255, 255, 255, 0.5);
+	}
+	
+	/* Animated blobs */
+	.blob {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(60px);
+		opacity: 0.7;
+		animation: float 20s infinite;
+	}
+	
+	.blob-1 {
+		width: 500px;
+		height: 500px;
+		background: rgba(37, 99, 235, 0.4);
+		top: -200px;
+		left: -100px;
+		animation-delay: 0s;
+	}
+	
+	.blob-2 {
+		width: 400px;
+		height: 400px;
+		background: rgba(124, 58, 237, 0.4);
+		top: 100px;
+		right: -100px;
+		animation-delay: 7s;
+	}
+	
+	@keyframes float {
+		0%, 100% { transform: translate(0, 0) scale(1); }
+		33% { transform: translate(30px, -30px) scale(1.1); }
+		66% { transform: translate(-20px, 20px) scale(0.9); }
+	}
+	
+	/* Sections */
+	.section {
+		padding: 4rem 0;
+	}
+	
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 2rem;
+	}
+	
+	.section h2 {
+		text-align: center;
+		font-size: 2.5rem;
+		color: #1e293b;
+		margin-bottom: 3rem;
+	}
+	
+	/* Getting Started */
+	.getting-started-section {
+		background: #f8fafc;
+	}
+	
+	.install-steps {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		margin-top: 3rem;
+	}
+	
+	.install-step h3 {
+		color: #334155;
+		margin-bottom: 1rem;
+	}
+	
+	.install-step pre {
+		background: #1e293b;
+		color: #e2e8f0;
+		padding: 1.5rem;
+		border-radius: 0.5rem;
+		overflow-x: auto;
+		font-size: 0.9rem;
+		line-height: 1.6;
+	}
+	
+	.try-online {
+		margin-top: 1rem;
+		text-align: right;
+	}
+	
+	.try-button {
+		display: inline-block;
+		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+		color: white;
+		padding: 0.75rem 1.5rem;
+		border-radius: 0.5rem;
+		font-weight: 600;
+		font-size: 0.9rem;
+		text-decoration: none;
+		transition: all 0.2s;
+		box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+	}
+	
+	.try-button:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+	}
+	
+	/* Features */
+	.features-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 2rem;
+	}
+	
+	.feature-card {
+		background: white;
+		padding: 2rem;
+		border-radius: 0.75rem;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		transition: all 0.2s;
+	}
+	
+	.feature-card:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+	}
+	
+	.feature-icon {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+	}
+	
+	.feature-card h3 {
+		color: #1e293b;
+		margin-bottom: 0.75rem;
+	}
+	
+	.feature-card p {
+		color: #64748b;
+		line-height: 1.6;
+	}
+	
+	/* CTA Section */
+	.cta-section {
+		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+		color: white;
+		text-align: center;
+	}
+	
+	.cta-section h2 {
+		color: white;
+	}
+	
+	.cta-description {
+		font-size: 1.125rem;
+		margin-bottom: 2rem;
+		opacity: 0.95;
+	}
+	
+	.cta-buttons {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+</style>

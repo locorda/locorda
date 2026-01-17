@@ -1,0 +1,594 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout 
+	title="Locorda" 
+	description="Libraries for powerful apps that respect user data ownership"
+>
+	<div class="hero-gradient">
+		<div class="container">
+			<div class="hero-content">
+				<div class="hero-title">
+					<img src="/logos/locorda-letter-o-light.svg" alt="Locorda Logo" class="hero-logo" />
+					<h1>Locorda</h1>
+				</div>
+				
+				<p class="hero-description">
+					Dart libraries for applications that are <strong>powerful</strong> <em>and</em> <strong>privacy-preserving</strong>.<br/>
+					Cloud-synced capabilities without sacrificing data ownership.
+				</p>
+				
+				<div class="hero-cta">
+					<a href="/rdf/" class="cta-primary">Explore RDF Libraries →</a>
+					<a href="#vision" class="cta-secondary">Our Vision</a>
+				</div>
+			</div>
+			
+			<div class="blob blob-1"></div>
+			<div class="blob blob-2"></div>
+			<div class="blob blob-3"></div>
+		</div>
+	</div>
+	
+	<section class="section">
+		<div class="container">
+			<h2>The RDF Ecosystem</h2>
+			
+			<p class="section-lead">
+				A complete, type-safe toolkit for working with RDF and Linked Data in Dart.
+			</p>
+			
+			<div class="cards-grid">
+				<div class="card card-large">
+					<h3>Core Libraries</h3>
+					<p><strong>Parse, serialize, and query RDF data</strong></p>
+					<ul class="feature-list">
+						<li>🔷 <strong>Turtle, N-Triples, N-Quads, JSON-LD</strong> - All standard formats</li>
+						<li>🔷 <strong>RdfGraph & RdfDataset</strong> - Powerful graph operations</li>
+						<li>🔷 <strong>Zero dependencies</strong> - Except logging</li>
+						<li>🔷 <strong>W3C RDF 1.1 compliant</strong> - Standards-based</li>
+					</ul>
+
+					<a href="/rdf/#core" class="card-link">Explore Core →</a>
+				</div>
+				
+				<div class="card">
+					<h3>Object Mapper</h3>
+					<p><strong>Annotate classes, get RDF for free</strong></p>
+					<p>Bidirectional mapping with code generation. Define your model once, serialize to any RDF format.</p>
+
+					<a href="/rdf/#mapper" class="card-link">Learn more →</a>
+				</div>
+				
+				<div class="card">
+					<h3>Type-Safe Vocabularies</h3>
+					<p><strong>Never typo a property again</strong></p>
+					<p>Schema.org, FOAF, Dublin Core as Dart constants. IDE autocompletion included.</p>
+
+					<a href="/vocabularies/" class="card-link">Explore →</a>
+				</div>
+				
+				<div class="card">
+					<h3>Canonicalization</h3>
+					<p><strong>RDF-CANON & isomorphism</strong></p>
+					<p>Canonical serialization and graph comparison.</p>
+			</div>
+			
+			<div class="card">
+				<h3>RDF/XML Support</h3>
+				<p><strong>Legacy format support</strong></p>
+				<p>Full RDF/XML encoder and decoder.</p>
+			</div>
+			
+			<div class="card">
+				<h3>Vocabulary Generator</h3>
+				<p><strong>Create your own</strong></p>
+				<p>Generate Dart constants from any RDF ontology.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+	<section id="vision" class="section vision-section">
+		<div class="container">
+			<div class="vision-personal">
+				<img src="https://github.com/kkalass.png" alt="Klas Kalaß" class="vision-avatar" />
+				<div class="vision-personal-text">
+					<h2>The Vision</h2>
+					<p class="vision-byline">by Klas Kalaß</p>
+				</div>
+			</div>
+			
+			<p class="vision-intro">
+				<strong>RDF and Linked Data enable applications that respect user ownership.</strong>
+			</p>
+			
+			<p class="vision-problem">
+				Most applications today lock your data in proprietary formats and vendor-controlled servers. RDF's open standards and semantic structure make it possible to build differently: apps where <strong>you</strong> control where data lives, who accesses it, and how it connects across applications.
+			</p>
+			
+			<p class="vision-question">
+				<strong>What becomes possible?</strong>
+			</p>
+			
+			<div class="vision-principles">
+				<div class="principle">
+					<h3>🔐 User-Owned Data</h3>
+					<p>Data lives where <strong>you</strong> choose—your pod, your server, your rules. Not locked in vendor databases.</p>
+				</div>
+				
+				<div class="principle">
+					<h3>🔗 Semantic Interoperability</h3>
+					<p>RDF's graph structure lets applications share and link data meaningfully, without tight coupling or data loss.</p>
+				</div>
+				
+				<div class="principle">
+					<h3>🌐 Standards-Based</h3>
+					<p>Built on W3C standards (RDF 1.1, Turtle, JSON-LD) for long-term interoperability and vendor independence.</p>
+				</div>
+				
+				<div class="principle">
+					<h3>⚡ Developer-Friendly</h3>
+					<p>Type-safe APIs, code generation, and excellent IDE support. Semantic web development shouldn't be painful.</p>
+				</div>
+			</div>
+			
+			<p class="vision-inspiration">
+				These RDF libraries power real experiments in user-owned computing, including an <a href="/sync-engine/"><strong>alpha sync engine</strong></a> combining CRDTs with RDF for conflict-free synchronization to SOLID pods, cloud services, and other backends. Drawing inspiration from <a href="https://solidproject.org/" target="_blank" rel="noopener"><strong>SOLID's vision</strong></a> of decentralized, user-controlled data. The goal: cloud-synced apps that are easy to build and delightful to use—without sacrificing data ownership.
+			</p>
+		</div>
+	</section>
+	
+	<section class="section">
+		<div class="container">
+			<h2>Quick Start</h2>
+			
+			<div class="code-examples">
+				<div class="code-example">
+					<h3>Parse any RDF format</h3>
+					<pre><code>dart pub add locorda_rdf_core
+
+import 'package:locorda_rdf_core/core.dart';
+
+final graph = turtle.decode('''
+  @prefix schema: &lt;http://schema.org/> .
+  <#alice> a schema:Person ; schema:name "Alice" .
+''');
+
+print(jsonldGraph.encode(graph));  // Convert to JSON-LD</code></pre>
+				</div>
+				
+				<div class="code-example">
+					<h3>Type-safe vocabulary access</h3>
+					<pre><code>dart pub add locorda_rdf_terms_schema
+
+import 'package:locorda_rdf_terms_schema/schema.dart';
+
+// No more string typos!
+final nameProperty = SchemaPerson.name;  // IDE autocomplete ✨
+final emailProperty = SchemaPerson.email;</code></pre>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+	<section class="section future-section">
+		<div class="container">
+			<h2>What's Next</h2>
+			
+			<div class="cards-grid cards-grid-2">
+				<div class="card">
+					<span class="status-badge status-warning">⚠️ Alpha - Under Assessment</span>
+					<h3>🔄 Sync Engine</h3>
+				<p><strong>Offline-first Flutter sync (Alpha)</strong></p>
+				<p>CRDT-based synchronization for Flutter apps with various backends (SOLID pods, cloud services).</p>
+				<div class="card">
+					<span class="status-badge status-info">🚧 In Development</span>
+					<h3>💬 Chat Essence</h3>
+				<p><strong>Matrix Chat Browser with AI Insights</strong></p>
+				<p>Explore Matrix conversations with LLM-generated summaries, topic extraction, and daily/weekly briefings.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	/* Hero Section */
+	.hero-gradient {
+		position: relative;
+		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #0891b2 100%);
+		padding: 6rem 0;
+		overflow: hidden;
+		margin-bottom: 4rem;
+	}
+	
+	.hero-content {
+		position: relative;
+		z-index: 10;
+		text-align: center;
+		color: white;
+	}
+	
+	.hero-title {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+	
+	.hero-logo {
+		width: 80px;
+		height: 80px;
+	}
+	
+	.hero-content h1 {
+		color: white;
+		margin-bottom: 0;
+	}
+	
+	.hero-description {
+		font-size: 1.5rem;
+		line-height: 1.6;
+		color: #e0e7ff;
+		margin-bottom: 2.5rem;
+		font-weight: 300;
+	}
+	
+	.hero-description strong {
+		font-weight: 700;
+		color: #ffffff;
+	}
+	
+	.hero-description em {
+		font-style: normal;
+		color: #a5b4fc;
+	}
+	
+	.hero-cta {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	
+	.cta-primary,
+	.cta-secondary {
+		display: inline-block;
+		padding: 1rem 2.5rem;
+		border-radius: 0.75rem;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.2s ease;
+		font-size: 1.125rem;
+	}
+	
+	.cta-primary {
+		background: white;
+		color: #1e40af;
+		box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+	}
+	
+	.cta-primary:hover {
+		background: #e0e7ff;
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+	}
+	
+	.cta-secondary {
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		backdrop-filter: blur(10px);
+	}
+	
+	.cta-secondary:hover {
+		background: rgba(255, 255, 255, 0.2);
+		border-color: rgba(255, 255, 255, 0.5);
+		transform: translateY(-2px);
+	}
+	
+	/* Animated Blobs */
+	.blob {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(60px);
+		opacity: 0.7;
+		animation: float 25s infinite;
+		mix-blend-mode: screen;
+	}
+	
+	.blob-1 {
+		width: 600px;
+		height: 600px;
+		background: radial-gradient(circle, #22d3ee 0%, transparent 60%);
+		top: -15%;
+		left: -15%;
+		animation-delay: 0s;
+	}
+	
+	.blob-2 {
+		width: 500px;
+		height: 500px;
+		background: radial-gradient(circle, #c084fc 0%, transparent 60%);
+		bottom: -15%;
+		right: -15%;
+		animation-delay: -8s;
+	}
+	
+	.blob-3 {
+		width: 450px;
+		height: 450px;
+		background: radial-gradient(circle, #818cf8 0%, transparent 60%);
+		top: 40%;
+		left: 60%;
+		animation-delay: -16s;
+	}
+	
+	@keyframes float {
+		0%, 100% {
+			transform: translate(0, 0) scale(1);
+		}
+		25% {
+			transform: translate(80px, -60px) scale(1.15);
+		}
+		50% {
+			transform: translate(-50px, 70px) scale(0.85);
+		}
+		75% {
+			transform: translate(60px, 40px) scale(1.1);
+		}
+	}
+	
+	/* Section Styling */
+	.section h2 {
+		text-align: center;
+		margin-bottom: 1rem;
+	}
+	
+	.section-lead {
+		font-size: 1.25rem;
+		line-height: 1.6;
+		color: #64748b;
+		text-align: center;
+		max-width: 800px;
+		margin: 0 auto 3rem;
+	}
+	
+	/* Cards Grid */
+	.cards-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1.5rem;
+		margin-top: 2rem;
+	}
+	
+	.cards-grid-2 {
+		grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+	}
+	
+	.card {
+		background: white;
+		border: 1px solid #e2e8f0;
+		border-radius: 1rem;
+		padding: 2rem;
+		transition: all 0.2s ease;
+	}
+	
+	.card:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15);
+		border-color: #3b82f6;
+	}
+	
+	.card-large {
+		grid-column: span 2;
+	}
+	
+	@media (max-width: 768px) {
+		.card-large {
+			grid-column: span 1;
+		}
+	}
+	
+	.card h3 {
+		margin-bottom: 1rem;
+		color: #0f172a;
+	}
+	
+	.card p {
+		color: #64748b;
+		line-height: 1.6;
+		margin-bottom: 1rem;
+	}
+	
+	.feature-list {
+		list-style: none;
+		margin: 1.5rem 0;
+	}
+	
+	.feature-list li {
+		color: #475569;
+		line-height: 1.8;
+		margin-bottom: 0.5rem;
+	}
+	
+	.card-link {
+		display: inline-block;
+		color: #3b82f6;
+		font-weight: 600;
+		margin-top: 1rem;
+		transition: color 0.2s;
+	}
+	
+	.card-link:hover {
+		color: #1e40af;
+	}
+	
+	/* Status Badges */
+	.status-badge {
+		display: inline-block;
+		padding: 0.25rem 0.75rem;
+		border-radius: 9999px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+		color: white;
+		margin-bottom: 1rem;
+	}
+	
+	.status-badge.status-warning {
+		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+	}
+	
+	.status-badge.status-info {
+		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+	}
+	
+	/* Vision Section */
+	.vision-section {
+		background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+		border-radius: 1.5rem;
+		padding: 4rem 2rem;
+		margin: 4rem auto;
+	}
+	
+	.vision-personal {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.5rem;
+		margin-bottom: 2rem;
+	}
+	
+	.vision-avatar {
+		width: 80px;
+		height: 80px;
+		border-radius: 50%;
+		border: 3px solid #3b82f6;
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+	}
+	
+	.vision-personal-text {
+		text-align: left;
+	}
+	
+	.vision-personal-text h2 {
+		margin-bottom: 0.25rem;
+		text-align: left;
+	}
+	
+	.vision-byline {
+		color: #64748b;
+		font-size: 1.125rem;
+		margin: 0;
+	}
+	
+	.vision-intro,
+	.vision-problem,
+	.vision-question {
+		text-align: center;
+		font-size: 1.25rem;
+		max-width: 700px;
+		margin: 0 auto 1.5rem;
+		color: #475569;
+		line-height: 1.6;
+	}
+	
+	.vision-intro strong,
+	.vision-question strong {
+		color: #0f172a;
+	}
+	
+	.vision-principles {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 2rem;
+		margin: 3rem 0;
+	}
+	
+	.principle h3 {
+		font-size: 1.25rem;
+		margin-bottom: 0.75rem;
+		color: #0f172a;
+	}
+	
+	.principle p {
+		color: #64748b;
+		line-height: 1.6;
+	}
+	
+	.vision-inspiration {
+		text-align: center;
+		font-size: 1.125rem;
+		margin-top: 2rem;
+		color: #64748b;
+		font-style: italic;
+	}
+	
+	.vision-inspiration strong {
+		color: #3b82f6;
+		font-weight: 600;
+	}
+	
+	/* Code Examples */
+	.code-examples {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+		gap: 2rem;
+		margin-top: 2rem;
+	}
+	
+	.code-example {
+		background: #0f172a;
+		border-radius: 1rem;
+		padding: 1.5rem;
+		overflow-x: auto;
+	}
+	
+	.code-example h3 {
+		color: #e0e7ff;
+		font-size: 1rem;
+		margin-bottom: 1rem;
+	}
+	
+	.code-example pre {
+		margin: 0;
+	}
+	
+	.code-example code {
+		color: #e0e7ff;
+		font-size: 0.875rem;
+		line-height: 1.6;
+	}
+	
+	/* Future Section */
+	.future-section {
+		background: linear-gradient(135deg, #fef3c7 0%, #fef08a 100%);
+		border-radius: 1.5rem;
+		padding: 4rem 2rem;
+	}
+	
+	@media (max-width: 768px) {
+		.hero-gradient {
+			padding: 4rem 0;
+		}
+		
+		.hero-description {
+			font-size: 1.125rem;
+		}
+		
+		.cards-grid,
+		.cards-grid-2,
+		.code-examples {
+			grid-template-columns: 1fr;
+		}
+		
+		.vision-section,
+		.future-section {
+			padding: 3rem 1.5rem;
+		}
+	}
+</style>

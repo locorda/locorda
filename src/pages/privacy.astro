@@ -1,0 +1,172 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout 
+	title="Privacy Policy - Locorda" 
+	description="Privacy policy and data protection information"
+>
+	<div class="legal-page">
+		<div class="container">
+			<h1>Privacy Policy</h1>
+			
+			<p class="legal-intro">
+				Last updated: January 17, 2026
+			</p>
+			
+			<div class="legal-section">
+				<h2>1. Overview</h2>
+				<p>
+					This website (locorda.dev) is a static site that provides documentation and information about open-source software libraries. We are committed to protecting your privacy and being transparent about data collection.
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>2. Data Controller</h2>
+				<p>
+					Klas Kalaß<br/>
+					Övern Block 1d<br/>
+					22337 Hamburg<br/>
+					Germany<br/>
+					Email: <a href="mailto:habbatical@gmail.com">habbatical@gmail.com</a>
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>3. Data Collection</h2>
+				
+				<h3>3.1 Server Logs (GitHub Pages)</h3>
+				<p>
+					This website is hosted on GitHub Pages. GitHub may collect and store technical information in server logs, including:
+				</p>
+				<ul>
+					<li>IP addresses</li>
+					<li>Browser type and version</li>
+					<li>Referring website</li>
+					<li>Date and time of access</li>
+					<li>Pages visited</li>
+				</ul>
+				<p>
+					This data is collected by GitHub as the hosting provider and is subject to <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">GitHub's Privacy Policy</a>. We do not have direct access to these server logs.
+				</p>
+				
+				<h3>3.2 No Cookies or Tracking</h3>
+				<p>
+					This website does not use cookies, analytics tools, or any client-side tracking mechanisms. We do not collect, store, or process any personal information directly.
+				</p>
+				
+				<h3>3.3 External Links</h3>
+				<p>
+					Our website contains links to external websites (GitHub, SOLID Project, etc.). When you click these links, you leave our website and are subject to the privacy policies of those external sites. We have no control over and assume no responsibility for the privacy practices of third-party sites.
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>4. Your Rights (GDPR)</h2>
+				<p>
+					Under the General Data Protection Regulation (GDPR), you have the following rights:
+				</p>
+				<ul>
+					<li><strong>Right of access:</strong> You can request information about personal data we process about you.</li>
+					<li><strong>Right to rectification:</strong> You can request correction of inaccurate personal data.</li>
+					<li><strong>Right to erasure:</strong> You can request deletion of your personal data.</li>
+					<li><strong>Right to restriction:</strong> You can request restriction of processing.</li>
+					<li><strong>Right to data portability:</strong> You can request your data in a structured, machine-readable format.</li>
+					<li><strong>Right to object:</strong> You can object to processing of your personal data.</li>
+				</ul>
+				<p>
+					Since we do not directly collect or store personal data on this website, these rights primarily apply to any data collected by GitHub Pages. For questions about your data, please contact us at <a href="mailto:habbatical@gmail.com">habbatical@gmail.com</a>.
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>5. Data Security</h2>
+				<p>
+					This website is served over HTTPS to ensure secure transmission of data. GitHub Pages provides infrastructure security for hosting.
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>6. Changes to This Policy</h2>
+				<p>
+					We may update this privacy policy from time to time. The "Last updated" date at the top of this page indicates when the policy was last revised. We encourage you to review this policy periodically.
+				</p>
+			</div>
+			
+			<div class="legal-section">
+				<h2>7. Contact</h2>
+				<p>
+					If you have questions about this privacy policy or our data practices, please contact:<br/>
+					<a href="mailto:habbatical@gmail.com">habbatical@gmail.com</a>
+				</p>
+			</div>
+		</div>
+	</div>
+</BaseLayout>
+
+<style>
+	.legal-page {
+		padding: 4rem 2rem;
+		min-height: 60vh;
+	}
+	
+	.legal-page .container {
+		max-width: 800px;
+	}
+	
+	.legal-page h1 {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+		color: #1e293b;
+	}
+	
+	.legal-intro {
+		color: #64748b;
+		font-size: 1.1rem;
+		margin-bottom: 3rem;
+	}
+	
+	.legal-section {
+		margin-bottom: 2.5rem;
+	}
+	
+	.legal-section h2 {
+		font-size: 1.5rem;
+		color: #334155;
+		margin-bottom: 1rem;
+		margin-top: 2rem;
+	}
+	
+	.legal-section h3 {
+		font-size: 1.2rem;
+		color: #475569;
+		margin-bottom: 0.75rem;
+		margin-top: 1.5rem;
+	}
+	
+	.legal-section p {
+		line-height: 1.8;
+		color: #475569;
+		margin-bottom: 1rem;
+	}
+	
+	.legal-section ul {
+		margin-left: 1.5rem;
+		margin-bottom: 1rem;
+	}
+	
+	.legal-section li {
+		line-height: 1.8;
+		color: #475569;
+		margin-bottom: 0.5rem;
+	}
+	
+	.legal-section a {
+		color: #2563eb;
+		text-decoration: none;
+	}
+	
+	.legal-section a:hover {
+		text-decoration: underline;
+	}
+</style>

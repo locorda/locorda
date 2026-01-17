@@ -1,0 +1,487 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="RDF Libraries for Dart - Locorda"
+	description="Complete, type-safe RDF toolkit for Dart. Parse, serialize, query, and map RDF data with W3C-compliant libraries."
+	activeNav="rdf">
+	<div class="hero-gradient">
+		<div class="container">
+			<div class="hero-content">
+				<div class="hero-title">
+					<img src="/logos/locorda-letter-o-light.svg" alt="Locorda Logo" class="hero-logo" />
+					<h1>RDF for Dart</h1>
+				</div>
+
+				<p class="hero-description">
+					Complete toolkit for working with RDF and Linked Data in Dart.<br />
+					Parse common RDF formats, map to objects, query graphs and more — all fully type-save and documented.
+				</p>
+
+				<div class="hero-cta">
+					<a href="#everything-you-need" class="cta-primary">Explore Packages →</a>
+
+				</div>
+			</div>
+
+			<div class="blob blob-1"></div>
+			<div class="blob blob-2"></div>
+			<div class="blob blob-3"></div>
+		</div>
+	</div>
+
+	<section class="section" id="everything-you-need">
+		<div class="container">
+			<h2>Everything You Need</h2>
+
+			<div class="features-grid">
+				<a href="/rdf/core/" class="feature-card-link">
+					<div class="feature-card">
+						<div class="feature-card-header">
+							<div class="feature-icon">🔷</div>
+							<h3>Core Library</h3>
+						</div>
+						<p class="package-name">locorda_rdf_core</p>
+						<p>Parse and serialize Turtle, N-Triples, N-Quads, JSON-LD. Query graphs and work with datasets. The
+							foundation for all RDF work.</p>
+
+					</div>
+				</a>
+
+				<a href="https://pub.dev/packages/locorda_rdf_mapper" target="_blank" rel="noopener" class="feature-card-link">
+					<div class="feature-card">
+						<div class="feature-card-header">
+							<div class="feature-icon">🎯</div>
+							<h3>Object Mapping</h3>
+						</div>
+						<p class="package-name">locorda_rdf_mapper</p>
+						<p>Annotate your Dart classes, get bidirectional RDF mapping for free. Code generation handles all the
+							complexity.</p>
+
+					</div>
+				</a>
+
+				<a href="https://pub.dev/packages/locorda_rdf_canonicalization" target="_blank" rel="noopener"
+					class="feature-card-link">
+					<div class="feature-card">
+						<div class="feature-card-header">
+							<div class="feature-icon">🔐</div>
+						<h3>RDF Canon</h3>
+						</div>
+						<p class="package-name">locorda_rdf_canonicalization</p>
+						<p>RDF-CANON support for canonical serialization and reliable graph comparison.</p>
+
+					</div>
+				</a>
+
+				<a href="https://pub.dev/packages/locorda_rdf_xml" target="_blank" rel="noopener" class="feature-card-link">
+					<div class="feature-card">
+						<div class="feature-card-header">
+							<div class="feature-icon">📄</div>
+							<h3>RDF/XML Support</h3>
+						</div>
+						<p class="package-name">locorda_rdf_xml</p>
+						<p>Full RDF/XML encoder and decoder for legacy format support. Integrate with older RDF systems and
+							datasets.</p>
+
+					</div>
+				</a>
+
+				<a href="/vocabularies/" class="feature-card-link">
+					<div class="feature-card">
+						<div class="feature-card-header">
+							<div class="feature-icon">📚</div>
+							<h3>Vocabularies</h3>
+						</div>
+						<p class="package-name">locorda_rdf_terms</p>
+						<p>Type-safe vocabulary constants for Schema.org, FOAF, Dublin Core and more. Never typo a property URI
+							again.</p>
+
+					</div>
+				</a>
+			</div>
+	</section>
+
+	<section class="section why-section">
+		<div class="container">
+			<h2>Why Locorda RDF?</h2>
+
+			<div class="why-grid">
+				<div class="why-card">
+					<h3>Standards-Based</h3>
+					<p>Full W3C RDF 1.1 compliance. Interoperate with any RDF tool or dataset. Future-proof your semantic data.
+					</p>
+				</div>
+
+				<div class="why-card">
+					<h3>Developer Experience</h3>
+					<p>Designed for Dart developers, not Java ports. Idiomatic APIs, excellent error messages, comprehensive
+						documentation.</p>
+				</div>
+
+				<div class="why-card">
+					<h3>Type-Safe</h3>
+					<p>Strongly-typed Dart APIs with full IDE support and autocompletion. Catch errors at compile time, not
+						runtime.</p>
+				</div>
+
+				<div class="why-card">
+					<h3>Production Ready</h3>
+					<p>Battle-tested parsers, extensive test coverage, clear semantic versioning. Ready for your production
+						applications.</p>
+				</div>
+
+				<div class="why-card">
+					<h3>Extensible</h3>
+					<p>Add custom serializers, create vocabularies from any ontology, extend with your own RDF tooling.</p>
+				</div>
+
+				<div class="why-card">
+					<h3>MIT Licensed</h3>
+					<p>Free and open source. Use in any project, commercial or personal. Active development and community support.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="section cta-section">
+		<div class="container">
+			<h2>Ready to Build with RDF?</h2>
+			<p class="cta-description">
+				Join the developers using Locorda RDF to build semantic applications in Dart and Flutter.
+			</p>
+			<div class="cta-buttons">
+				<a href="https://github.com/locorda/rdf" target="_blank" rel="noopener" class="cta-primary">View on GitHub</a>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	/* Hero Section - reuse from main page */
+	.hero-gradient {
+		position: relative;
+		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #0891b2 100%);
+		padding: 6rem 0;
+		overflow: hidden;
+		margin-bottom: 4rem;
+	}
+	
+	.hero-content {
+		position: relative;
+		z-index: 10;
+		text-align: center;
+		color: white;
+	}
+	
+	.hero-title {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+	
+	.hero-logo {
+		width: 80px;
+		height: 80px;
+	}
+	
+	.hero-content h1 {
+		color: white;
+		margin-bottom: 0;
+	}
+	
+	.hero-description {
+		font-size: 1.5rem;
+		line-height: 1.6;
+		color: #e0e7ff;
+		margin-bottom: 2.5rem;
+		font-weight: 300;
+	}
+	
+	.hero-cta {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	
+	.cta-primary {
+		background: white;
+		color: #2563eb;
+		padding: 1rem 2rem;
+		border-radius: 0.5rem;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.2s;
+	}
+	
+	.cta-primary:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+	}
+	
+	.cta-secondary {
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		padding: 1rem 2rem;
+		border-radius: 0.5rem;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.2s;
+		backdrop-filter: blur(10px);
+	}
+	
+	.cta-secondary:hover {
+		background: rgba(255, 255, 255, 0.2);
+		border-color: rgba(255, 255, 255, 0.5);
+	}
+	
+	/* Animated blobs */
+	.blob {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(60px);
+		opacity: 0.7;
+		animation: float 20s infinite;
+	}
+	
+	.blob-1 {
+		width: 500px;
+		height: 500px;
+		background: rgba(37, 99, 235, 0.4);
+		top: -200px;
+		left: -100px;
+		animation-delay: 0s;
+	}
+	
+	.blob-2 {
+		width: 400px;
+		height: 400px;
+		background: rgba(124, 58, 237, 0.4);
+		top: 100px;
+		right: -100px;
+		animation-delay: 7s;
+	}
+	
+	.blob-3 {
+		width: 450px;
+		height: 450px;
+		background: rgba(8, 145, 178, 0.4);
+		bottom: -150px;
+		left: 50%;
+		transform: translateX(-50%);
+		animation-delay: 14s;
+	}
+	
+	@keyframes float {
+		0%, 100% { transform: translate(0, 0) scale(1); }
+		33% { transform: translate(30px, -30px) scale(1.1); }
+		66% { transform: translate(-20px, 20px) scale(0.9); }
+	}
+	
+	/* Features Grid */
+	.features-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 2rem;
+		margin-top: 3rem;
+	}
+	
+	.feature-card-link {
+		text-decoration: none;
+		color: inherit;
+		display: block;
+	}
+	
+	.feature-card {
+		background: white;
+		border: 1px solid #e2e8f0;
+		border-radius: 0.75rem;
+		padding: 2rem;
+		transition: all 0.3s;
+		height: 100%;
+	}
+	
+	.feature-card-link:hover .feature-card {
+		transform: translateY(-4px);
+		box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+		border-color: #2563eb;
+	}
+	
+	.feature-card-header {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 0.75rem;
+	}
+	
+	.feature-icon {
+		font-size: 2.5rem;
+		flex-shrink: 0;
+	}
+	
+	.feature-card h3 {
+		color: #1e293b;
+		margin-bottom: 0;
+	}
+	
+	.package-name {
+		font-size: 0.85rem;
+		color: #94a3b8;
+		font-family: 'Courier New', monospace;
+		margin-bottom: 0.75rem !important;
+	}
+	
+	.feature-card p {
+		color: #64748b;
+		line-height: 1.6;
+		margin-bottom: 1rem;
+	}
+	
+	.card-links {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+	
+	.card-link-item {
+		color: #2563eb;
+		font-weight: 500;
+		font-size: 0.9rem;
+		padding: 0.25rem 0;
+		border-bottom: 2px solid transparent;
+		text-decoration: none;
+		transition: border-color 0.2s;
+	}
+	
+	a.card-link-item:hover {
+		border-color: #2563eb;
+	}
+	
+	/* Why Section */
+	.why-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 2rem;
+		margin-top: 3rem;
+	}
+	
+	.why-card {
+		text-align: center;
+		padding: 2rem;
+	}
+	
+	.why-card h3 {
+		color: #1e293b;
+		margin-bottom: 1rem;
+	}
+	
+	.why-card p {
+		color: #64748b;
+		line-height: 1.6;
+	}
+	
+	/* Packages Section */
+	.packages-section {
+		background: #f8fafc;
+	}
+	
+	.packages-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1.5rem;
+		margin-top: 3rem;
+	}
+	
+	.package-card {
+		background: white;
+		border: 1px solid #e2e8f0;
+		border-radius: 0.75rem;
+		padding: 1.5rem;
+	}
+	
+	.package-card h3 {
+		color: #2563eb;
+		margin-bottom: 0.75rem;
+		font-family: 'Courier New', monospace;
+		font-size: 1rem;
+	}
+	
+	.package-desc {
+		color: #64748b;
+		line-height: 1.6;
+		margin-bottom: 1rem;
+		font-size: 0.9rem;
+	}
+	
+	.package-links {
+		display: flex;
+		gap: 1rem;
+	}
+	
+	.package-links a {
+		color: #2563eb;
+		text-decoration: none;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+	
+	.package-links a:hover {
+		text-decoration: underline;
+	}
+	
+	/* CTA Section */
+	.cta-section {
+		text-align: center;
+		padding: 4rem 2rem;
+	}
+	
+	.cta-section h2 {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+	}
+	
+	.cta-description {
+		font-size: 1.25rem;
+		color: #64748b;
+		margin-bottom: 2rem;
+	}
+	
+	.cta-buttons {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	
+	/* Responsive */
+	@media (max-width: 768px) {
+		.hero-gradient {
+			padding: 4rem 1rem;
+		}
+		
+		.hero-title {
+			flex-direction: column;
+			gap: 1rem;
+		}
+		
+		.hero-logo {
+			width: 60px;
+			height: 60px;
+		}
+		
+		.hero-description {
+			font-size: 1.2rem;
+		}
+		
+		.features-grid,
+		.why-grid,
+		.packages-list {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

@@ -1,49 +1,117 @@
-# Starlight Starter Kit: Basics
+# Locorda Website
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+Official website for the Locorda project - RDF libraries and tools for Dart and Flutter.
+
+🌐 **Live:** [locorda.dev](https://locorda.dev)
+
+## Tech Stack
+
+- **Astro 5.16** - Static site generator
+- **Starlight** - Documentation theme (for `/docs/` only)
+- **Custom Pages** - Marketing pages with gradient design
+
+## Project Structure
 
 ```
-npm create astro@latest -- --template starlight
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
-```
-.
-├── public/
+locorda/
+├── examples/
+│   └── rdf/                    # Verified code examples
+│       ├── 01_install.txt      # Installation command
+│       ├── 02_parse_turtle.dart # Dart example
+│       ├── 03_query_graph.dart # Dart example
+│       └── test/               # Automated tests
 ├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+│   ├── components/             # Header, Footer, etc.
+│   ├── layouts/                # BaseLayout for pages
+│   ├── pages/
+│   │   ├── index.astro         # Homepage
+│   │   ├── rdf.astro           # RDF marketing page
+│   │   ├── impressum.astro     # Legal (German)
+│   │   └── privacy.astro       # Privacy policy
+│   └── content/docs/           # Starlight docs
+├── public/logos/               # SVG logos
+└── verify-examples.sh          # Test script
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+## Development
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+```bash
+# Install dependencies
+npm install
 
-Static assets, like favicons, can be placed in the `public/` directory.
+# Start dev server
+npm run dev
 
-## 🧞 Commands
+# Verify code examples
+npm run verify-examples
 
-All commands are run from the root of the project, from a terminal:
+# Build (includes example verification)
+npm run build
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+# Build without verification
+npm run build:no-verify
 
-## 👀 Want to learn more?
+# Preview production build
+npm run preview
+```
 
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+## Code Examples
+
+**CRITICAL:** All code on the website must come from verified files in `examples/`.
+
+### Adding New Examples
+
+1. Create Dart file in `examples/rdf/`
+2. Add test in `examples/rdf/test/`
+3. Verify: `cd examples/rdf && dart test`
+4. Update `src/pages/rdf.astro` to read the file
+5. Test build: `npm run build`
+
+### Testing Workflow
+
+```bash
+# Test examples locally
+cd examples/rdf
+dart pub get
+dart test
+
+# Or from root
+npm run verify-examples
+```
+
+## CI/CD
+
+GitHub Actions automatically:
+1. Runs `dart test` on all examples
+2. Only builds website if examples pass
+3. Deploys to GitHub Pages
+
+See [.github/workflows/verify-build.yml](../.github/workflows/verify-build.yml)
+
+## Content Guidelines
+
+- Code examples must be sourced from `examples/` (never invent syntax)
+- Use actual locorda_rdf_core APIs
+- RdfGraph is immutable - use `withTriple()` or `withTriples()`, not `add()`
+- Query with `findTriples()` (returns triples) or `matching()` (returns graph)
+- Always check [locorda_rdf_core README](../rdf/packages/locorda_rdf_core/README.md) for API details
+- Test before committing
+
+See [.github/copilot-instructions.md](../.github/copilot-instructions.md) for detailed guidelines.
+
+## Architecture
+
+- **Marketing pages** (`/`, `/rdf/`, `/impressum/`, `/privacy/`) - Custom Astro pages with BaseLayout
+- **Documentation** (`/docs/*`) - Starlight theme with separate styling
+- **Examples** - Read at build time from `examples/rdf/`
+- **Assets** - Logos in `public/logos/`, gradient blobs via CSS
+
+## Legal
+
+- Impressum (German law requirement)
+- Privacy Policy (GDPR compliant)
+- MIT License
+
+---
+
+Built with ❤️ for the decentralized web.
