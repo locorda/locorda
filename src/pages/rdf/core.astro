@@ -12,6 +12,24 @@ const examplesDir = join(__dirname, '../../../examples/rdf');
 const installCode = await readFile(join(examplesDir, '01_install.txt'), 'utf-8');
 const parseCode = await readFile(join(examplesDir, '02_parse_turtle.dart'), 'utf-8');
 const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-8');
+const datasetCode = await readFile(join(examplesDir, '04_dataset_quads.dart'), 'utf-8');
+const jsonldCode = await readFile(join(examplesDir, '05_jsonld.dart'), 'utf-8');
+const createGraphCode = await readFile(join(examplesDir, '06_create_graph.dart'), 'utf-8');
+const mergeQueryCode = await readFile(join(examplesDir, '07_merge_query.dart'), 'utf-8');
+const rdfcoreContentTypesCode = await readFile(join(examplesDir, '08_rdfcore_contenttypes.dart'), 'utf-8');
+const customCodecsCode = await readFile(join(examplesDir, '09_custom_codecs.dart'), 'utf-8');
+
+const primaryCta = { 
+	text: "View on pub.dev", 
+	href: "https://pub.dev/packages/locorda_rdf_core", 
+	external: true 
+};
+
+const secondaryCta = { 
+	text: "GitHub", 
+	href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_core", 
+	external: true 
+};
 ---
 
 <BaseLayout 
@@ -22,38 +40,96 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 	<Hero 
 		title="RDF Core"
 		description="Parse, serialize, and query RDF graphs and datasets.<br/>W3C RDF 1.1 compliant core library for Dart."
-		primaryCta={{ text: "View on pub.dev", href: "https://pub.dev/packages/locorda_rdf_core", external: true }}
-		secondaryCta={{ text: "GitHub", href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_core", external: true }}
+		primaryCta={primaryCta}
+		secondaryCta={secondaryCta}
 	/>
 
 	<section id="getting-started" class="section getting-started-section">
 		<div class="container">
 			<h2>Getting Started</h2>
 			
-			<div class="install-steps">
-				<div class="install-step">
-					<h3>1. Install the package</h3>
-					<Code code={installCode} lang="bash" />
+			<div class="install-section">
+				<h3>Install the package</h3>
+				<Code code={installCode} lang="bash" />
+			</div>
+			
+			<div class="tabs-container">
+				<div class="tabs-header">
+					<button class="tab-button active" data-tab="parse">Parse RDF</button>
+					<button class="tab-button" data-tab="query">Query & Manipulate</button>
+					<button class="tab-button" data-tab="dataset">Datasets & Quads</button>
+					<button class="tab-button" data-tab="jsonld">JSON-LD</button>
+					<button class="tab-button" data-tab="create">Create Graphs</button>
+					<button class="tab-button" data-tab="merge">Merge & Query</button>
+					<button class="tab-button" data-tab="rdfcore">RdfCore API</button>
+					<button class="tab-button" data-tab="codecs">Custom Codecs</button>
 				</div>
 				
-				<div class="install-step">
-					<h3>2. Parse RDF formats</h3>
-					<Code code={parseCode} lang="dart" />
-				</div>
-				
-				<div class="install-step">
-					<h3>3. Query and manipulate</h3>
-					<Code code={queryCode} lang="dart" />
-					<div class="try-online">
-						<a 
-							href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_core/example"
-							target="_blank" 
-							rel="noopener noreferrer"
-							class="try-button"
-						>
-							View full examples on GitHub →
-						</a>
+				<div class="tabs-content">
+					<div class="tab-panel active" data-tab="parse">
+						<Code code={parseCode} lang="dart" />
 					</div>
+					
+					<div class="tab-panel" data-tab="query">
+						<Code code={queryCode} lang="dart" />
+					</div>
+					
+					<div class="tab-panel" data-tab="dataset">
+						<Code code={datasetCode} lang="dart" />
+					</div>
+					
+					<div class="tab-panel" data-tab="jsonld">
+						<Code code={jsonldCode} lang="dart" />
+					</div>
+					
+					<div class="tab-panel" data-tab="create">
+						<Code code={createGraphCode} lang="dart" />
+					</div>
+					
+					<div class="tab-panel" data-tab="merge">
+						<Code code={mergeQueryCode} lang="dart" />
+					</div>
+					
+					<div class="tab-panel" data-tab="rdfcore">
+						<Code code={rdfcoreContentTypesCode} lang="dart" />
+					</div>
+					
+					<div class="tab-panel" data-tab="codecs">
+						<Code code={customCodecsCode} lang="dart" />
+					</div>
+				</div>
+			</div>
+			
+			<div class="github-link">
+				<a 
+					href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_core/example"
+					target="_blank" 
+					rel="noopener noreferrer"
+				>
+					View more examples on GitHub →
+				</a>
+			</div>
+		</div>
+	</section>
+	
+	<section class="section use-cases-section">
+		<div class="container">
+			<h2>What Can You Build?</h2>
+			
+			<div class="card-grid">
+				<div class="card">
+					<h3>🗄️ Knowledge Graphs</h3>
+					<p>Build semantic knowledge bases with typed relationships. Perfect for domain modeling, ontologies, and linked data applications.</p>
+				</div>
+				
+				<div class="card">
+					<h3>🔄 Data Integration</h3>
+					<p>Merge data from multiple sources into a unified graph. Transform between formats (Turtle ↔ JSON-LD ↔ N-Triples) seamlessly.</p>
+				</div>
+				
+				<div class="card">
+					<h3>� In-Memory Graph Queries</h3>
+					<p>Graph queries with O(1) subject lookups. Automatic indexing makes complex queries efficient for datasets that fit in RAM.</p>
 				</div>
 			</div>
 		</div>
@@ -61,44 +137,85 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 
 	<section class="section features-section">
 		<div class="container">
-			<h2>Features</h2>
+			<h2>Key Features</h2>
 			
-			<div class="features-grid">
-				<div class="feature-card">
-					<div class="feature-icon">📄</div>
-					<h3>Multiple Formats</h3>
+			<div class="card-grid">
+				<div class="card">
+					<h3><span class="card-icon">⚡</span> Automatic Performance Optimization</h3>
+					<p>Lazy indexing provides <strong>O(1) subject-based queries</strong> with zero memory cost until first use. Queries benefit from transparent performance improvements.</p>
+				</div>
+				
+				<div class="card">
+					<h3><span class="card-icon">🎯</span> Developer-Friendly API</h3>
+					<p>Global convenience variables (<code>turtle</code>, <code>jsonld</code>, <code>ntriples</code>) make parsing trivial. Fluent APIs for graph composition and chaining.</p>
+				</div>
+				
+				<div class="card">
+					<h3><span class="card-icon">📄</span> Multiple Formats</h3>
 					<p>Parse and serialize Turtle, N-Triples, N-Quads, and JSON-LD. W3C RDF 1.1 compliant.</p>
 				</div>
 				
-				<div class="feature-card">
-					<div class="feature-icon">🔍</div>
-					<h3>Query API</h3>
-					<p>Find triples with subject, predicate, or object filters. Immutable graph operations.</p>
+				<div class="card">
+					<h3><span class="card-icon">📊</span> Full Dataset Support</h3>
+					<p>Work with named graphs and datasets. Complete quad support for N-Quads with RDF 1.1 Dataset compliance.</p>
 				</div>
 				
-				<div class="feature-card">
-					<div class="feature-icon">📊</div>
-					<h3>Datasets</h3>
-					<p>Work with named graphs and datasets. Full quad support for N-Quads.</p>
+				<div class="card">
+					<h3><span class="card-icon">🔷</span> Type-Safe</h3>
+					<p>Strongly-typed Dart APIs with full IDE support and autocompletion. Catch errors at compile time.</p>
 				</div>
 				
-				<div class="feature-card">
-					<div class="feature-icon">⚡</div>
-					<h3>Zero Dependencies</h3>
-					<p>No external dependencies except logging. Clean, maintainable code.</p>
+				<div class="card">
+					<h3><span class="card-icon">⚙️</span> Zero Dependencies</h3>
+					<p>No external dependencies except logging. Clean, maintainable codebase.</p>
 				</div>
+			</div>
+		</div>
+	</section>
+	
+	<section class="section ecosystem-section">
+		<div class="container">
+			<h2>Complete RDF Ecosystem</h2>
+			<p class="ecosystem-intro">
+				locorda_rdf_core is the foundation of a complete RDF toolkit. Combine it with companion packages for advanced functionality:
+			</p>
+			
+			<div class="card-grid">
+				<a href="https://pub.dev/packages/locorda_rdf_mapper" target="_blank" rel="noopener" class="card-link">
+					<div class="card">
+						<h3><span class="card-icon">🎯</span> Object Mapper</h3>
+						<p class="package-name">locorda_rdf_mapper</p>
+						<p>Bidirectional mapping between Dart objects and RDF. Define your model once, serialize to any format.</p>
+					</div>
+				</a>
 				
-				<div class="feature-card">
-					<div class="feature-icon">🔷</div>
-					<h3>Type-Safe</h3>
-					<p>Strongly-typed Dart APIs with full IDE support and autocompletion.</p>
-				</div>
+				<a href="https://pub.dev/packages/locorda_rdf_terms" target="_blank" rel="noopener" class="card-link">
+					<div class="card">
+						<h3><span class="card-icon">📚</span> Vocabularies</h3>
+						<p class="package-name">locorda_rdf_terms</p>
+						<p>Type-safe constants for Schema.org, FOAF, Dublin Core and more. Never typo a property URI again.</p>
+					</div>
+				</a>
 				
-				<div class="feature-card">
-					<div class="feature-icon">🧪</div>
-					<h3>Well Tested</h3>
-					<p>Comprehensive test coverage. Battle-tested parsers and serializers.</p>
-				</div>
+				<a href="https://pub.dev/packages/locorda_rdf_canonicalization" target="_blank" rel="noopener" class="card-link">
+					<div class="card">
+						<h3><span class="card-icon">🔐</span> Canonicalization</h3>
+						<p class="package-name">locorda_rdf_canonicalization</p>
+						<p>RDF-CANON support for canonical serialization and reliable graph comparison.</p>
+					</div>
+				</a>
+				
+				<a href="https://pub.dev/packages/locorda_rdf_xml" target="_blank" rel="noopener" class="card-link">
+					<div class="card">
+						<h3><span class="card-icon">📄</span> RDF/XML Support</h3>
+						<p class="package-name">locorda_rdf_xml</p>
+						<p>Full RDF/XML encoder and decoder for legacy format support and integration with older systems.</p>
+					</div>
+				</a>
+			</div>
+			
+			<div class="ecosystem-cta">
+				<a href="/rdf/" class="btn-secondary">Explore All Packages →</a>
 			</div>
 		</div>
 	</section>
@@ -143,9 +260,110 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 		color: #1e293b;
 	}
 	
+	.section p {
+		line-height: 1.7;
+	}
+	
+	code {
+		background: #f1f5f9;
+		padding: 0.2rem 0.4rem;
+		border-radius: 0.25rem;
+		font-size: 0.9em;
+		color: #e11d48;
+	}
+	
 	/* Getting Started */
 	.getting-started-section {
 		background: #f8fafc;
+	}
+	
+	.install-section {
+		margin-top: 2rem;
+		background: white;
+		padding: 2rem;
+		border-radius: 0.75rem;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	}
+	
+	.install-section h3 {
+		color: #334155;
+		margin-bottom: 1rem;
+		font-size: 1.25rem;
+	}
+	
+	.tabs-container {
+		margin-top: 2rem;
+	}
+	
+	.tabs-header {
+		display: flex;
+		gap: 0.25rem;
+		border-bottom: 2px solid #e2e8f0;
+		margin-bottom: 0;
+		overflow-x: auto;
+		scrollbar-width: thin;
+	}
+	
+	.tab-button {
+		background: transparent;
+		border: none;
+		padding: 0.75rem 1rem;
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: #64748b;
+		cursor: pointer;
+		position: relative;
+		transition: all 0.2s;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -2px;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+	
+	.tab-button:hover {
+		color: #3b82f6;
+		background: #f8fafc;
+	}
+	
+	.tab-button.active {
+		color: #3b82f6;
+		border-bottom-color: #3b82f6;
+	}
+	
+	.tabs-content {
+		background: white;
+		border-radius: 0 0.75rem 0.75rem 0.75rem;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+		overflow: hidden;
+	}
+	
+	.tab-panel {
+		display: none;
+		padding: 2rem;
+	}
+	
+	.tab-panel.active {
+		display: block;
+		animation: fadeIn 0.3s ease-in-out;
+	}
+	
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+	
+	.tab-panel pre {
+		background: #1e293b;
+		color: #e2e8f0;
+		padding: 1.5rem;
+		border-radius: 0.5rem;
+		overflow-x: auto;
+		font-size: 0.9rem;
+		line-height: 1.6;
 	}
 	
 	.install-steps {
@@ -170,62 +388,50 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 		line-height: 1.6;
 	}
 	
-	.try-online {
-		margin-top: 1rem;
-		text-align: right;
+	.github-link {
+		text-align: center;
+		margin-top: 2rem;
+		padding-top: 2rem;
+		border-top: 1px solid #e2e8f0;
 	}
 	
-	.try-button {
-		display: inline-block;
-		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-		color: white;
-		padding: 0.75rem 1.5rem;
-		border-radius: 0.5rem;
-		font-weight: 600;
-		font-size: 0.9rem;
+	.github-link a {
+		color: #64748b;
 		text-decoration: none;
-		transition: all 0.2s;
-		box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+		font-weight: 500;
+		transition: color 0.2s;
 	}
 	
-	.try-button:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+	.github-link a:hover {
+		color: #2563eb;
+	}
+	
+	/* Use Cases */
+	.use-cases-section {
+		background: #f8fafc;
 	}
 	
 	/* Features */
-	.features-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 2rem;
-	}
-	
-	.feature-card {
+	.features-section {
 		background: white;
-		padding: 2rem;
-		border-radius: 0.75rem;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		transition: all 0.2s;
 	}
 	
-	.feature-card:hover {
-		transform: translateY(-4px);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+	/* Ecosystem */
+	.ecosystem-section {
+		background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
 	}
 	
-	.feature-icon {
-		font-size: 2.5rem;
-		margin-bottom: 1rem;
-	}
-	
-	.feature-card h3 {
-		color: #1e293b;
-		margin-bottom: 0.75rem;
-	}
-	
-	.feature-card p {
+	.ecosystem-intro {
+		text-align: center;
+		font-size: 1.125rem;
 		color: #64748b;
-		line-height: 1.6;
+		max-width: 700px;
+		margin: 0 auto 3rem;
+	}
+	
+	.ecosystem-cta {
+		text-align: center;
+		margin-top: 3rem;
 	}
 	
 	/* CTA Section */
@@ -252,3 +458,27 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 		flex-wrap: wrap;
 	}
 </style>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const tabButtons = document.querySelectorAll('.tab-button');
+		const tabPanels = document.querySelectorAll('.tab-panel');
+		
+		tabButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				const targetTab = button.dataset.tab;
+				
+				// Remove active class from all buttons and panels
+				tabButtons.forEach(btn => btn.classList.remove('active'));
+				tabPanels.forEach(panel => panel.classList.remove('active'));
+				
+				// Add active class to clicked button and corresponding panel
+				button.classList.add('active');
+				const targetPanel = document.querySelector(`.tab-panel[data-tab="${targetTab}"]`);
+				if (targetPanel) {
+					targetPanel.classList.add('active');
+				}
+			});
+		});
+	});
+</script>

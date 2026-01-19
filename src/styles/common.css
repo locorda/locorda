@@ -94,9 +94,71 @@
 }
 
 /* Section Styles */
+.section {
+	padding: 4rem 0;
+}
+
 .section h2 {
 	text-align: center;
-	margin-bottom: 2rem;
+	font-size: 2.5rem;
+	color: #1e293b;
+	margin-bottom: 3rem;
+}
+
+/* Common Grid Layouts */
+.card-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 2rem;
+	margin-top: 2rem;
+}
+
+/* Common Card Styles */
+.card {
+	background: white;
+	padding: 2rem;
+	border-radius: 0.75rem;
+	border: 1px solid #e2e8f0;
+	transition: all 0.2s;
+}
+
+.card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+	border-color: #3b82f6;
+}
+
+.card h3 {
+	color: #1e293b;
+	margin-bottom: 0.75rem;
+	font-size: 1.125rem;
+	display: flex;
+	align-items: flex-start;
+}
+
+.card p {
+	color: #64748b;
+	line-height: 1.6;
+}
+
+.card-icon {
+	font-size: 1.5rem;
+	margin-right: 0.5rem;
+	flex-shrink: 0;
+}
+
+.package-name {
+	font-family: 'Fira Code', 'Courier New', monospace;
+	font-size: 0.875rem;
+	color: #3b82f6;
+	margin-bottom: 0.75rem;
+}
+
+/* Card as link */
+.card-link {
+	text-decoration: none;
+	color: inherit;
+	display: block;
 }
 
 /* Button Styles */
