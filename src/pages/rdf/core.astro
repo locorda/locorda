@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Hero from '../../components/Hero.astro';
-import { Code } from 'astro:components';
+import CodeBlock from '../../components/CodeBlock.astro';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -55,7 +55,7 @@ const secondaryCta = {
 			
 			<div class="install-section">
 				<h3>Install the package</h3>
-				<Code code={installCode} lang="bash" />
+				<CodeBlock code={installCode} lang="bash" />
 			</div>
 			
 			<div class="tabs-container">
@@ -72,35 +72,35 @@ const secondaryCta = {
 				
 				<div class="tabs-content">
 					<div class="tab-panel active" data-tab="parse">
-						<Code code={parseCode} lang="dart" />
+						<CodeBlock code={parseCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="query">
-						<Code code={queryCode} lang="dart" />
+						<CodeBlock code={queryCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="dataset">
-						<Code code={datasetCode} lang="dart" />
+						<CodeBlock code={datasetCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="jsonld">
-						<Code code={jsonldCode} lang="dart" />
+						<CodeBlock code={jsonldCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="create">
-						<Code code={createGraphCode} lang="dart" />
+						<CodeBlock code={createGraphCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="merge">
-						<Code code={mergeQueryCode} lang="dart" />
+						<CodeBlock code={mergeQueryCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="rdfcore">
-						<Code code={rdfcoreContentTypesCode} lang="dart" />
+						<CodeBlock code={rdfcoreContentTypesCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="codecs">
-						<Code code={customCodecsCode} lang="dart" />
+						<CodeBlock code={customCodecsCode} lang="dart" />
 					</div>
 				</div>
 			</div>
