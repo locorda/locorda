@@ -1,18 +1,39 @@
 ---
+interface BreadcrumbItem {
+	label: string;
+	href?: string;
+}
+
 interface Props {
 	title: string;
 	description: string;
 	showLogo?: boolean;
 	primaryCta?: { text: string; href: string; external?: boolean };
 	secondaryCta?: { text: string; href: string; external?: boolean };
+	breadcrumbs?: BreadcrumbItem[];
 }
 
-const { title, description, showLogo = true, primaryCta, secondaryCta } = Astro.props;
+const { title, description, showLogo = true, primaryCta, secondaryCta, breadcrumbs } = Astro.props;
 ---
 
 <div class="hero-gradient">
 	<div class="container">
 		<div class="hero-content">
+			{breadcrumbs && (
+				<nav class="hero-breadcrumbs" aria-label="Breadcrumb">
+					{breadcrumbs.map((item, index) => (
+						<span>
+							{item.href ? (
+								<a href={item.href}>{item.label}</a>
+							) : (
+								<span class="current">{item.label}</span>
+							)}
+							{index < breadcrumbs.length - 1 && <span class="separator" aria-hidden="true">›</span>}
+						</span>
+					))}
+				</nav>
+			)}
+			
 			<div class="hero-title">
 				{showLogo && <img src="/logo-light.svg" alt="Locorda Logo" class="hero-logo" />}
 				<h1>{title}</h1>

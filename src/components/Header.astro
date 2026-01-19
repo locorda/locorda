@@ -10,12 +10,96 @@ const { activeNav } = Astro.props;
 		</a>
 		
 		<nav class="main-nav">
-			<a href="/rdf/" class:list={['nav-link', { active: activeNav === 'rdf' }]}>
-				RDF Libraries
-			</a>
-			<a href="/vocabularies/" class:list={['nav-link', { active: activeNav === 'vocabularies' }]}>
-				Vocabularies
-			</a>
+			<div class="nav-dropdown">
+				<a href="/rdf/" class:list={['nav-link', { active: activeNav === 'rdf' }]}>
+					RDF Libraries
+					<svg class="dropdown-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+						<path d="M6 8L2 4h8L6 8z"/>
+					</svg>
+				</a>
+				<div class="dropdown-menu">
+					<a href="/rdf/core/" class="dropdown-item">
+						<span class="dropdown-emoji">🔷</span>
+						<div>
+							<div class="dropdown-title">Core</div>
+							<div class="dropdown-desc">Parse & query RDF graphs</div>
+						</div>
+					</a>
+					<a href="/rdf/mapper/" class="dropdown-item">
+						<span class="dropdown-emoji">🎯</span>
+						<div>
+							<div class="dropdown-title">Mapper</div>
+							<div class="dropdown-desc">Object-RDF mapping</div>
+						</div>
+					</a>
+					<a href="/rdf/terms/" class="dropdown-item">
+						<span class="dropdown-emoji">📚</span>
+						<div>
+							<div class="dropdown-title">Terms</div>
+							<div class="dropdown-desc">Vocabulary constants</div>
+						</div>
+					</a>
+					<a href="/rdf/canonicalization/" class="dropdown-item">
+						<span class="dropdown-emoji">🔐</span>
+						<div>
+							<div class="dropdown-title">Canonicalization</div>
+							<div class="dropdown-desc">RDF-CANON support</div>
+						</div>
+					</a>
+					<a href="/rdf/xml/" class="dropdown-item">
+						<span class="dropdown-emoji">📄</span>
+						<div>
+							<div class="dropdown-title">RDF/XML</div>
+							<div class="dropdown-desc">XML format support</div>
+						</div>
+					</a>
+				</div>
+			</div>
+			<div class="nav-dropdown">
+				<a href="/vocabularies/" class:list={['nav-link', { active: activeNav === 'vocabularies' }]}>
+					Vocabularies
+					<svg class="dropdown-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+						<path d="M6 8L2 4h8L6 8z"/>
+					</svg>
+				</a>
+				<div class="dropdown-menu">
+					<a href="/vocabularies/generator/" class="dropdown-item">
+						<span class="dropdown-emoji">⚙️</span>
+						<div>
+							<div class="dropdown-title">Generator</div>
+							<div class="dropdown-desc">Generate vocabulary constants</div>
+						</div>
+					</a>
+					<a href="/vocabularies/core/" class="dropdown-item">
+						<span class="dropdown-emoji">🔷</span>
+						<div>
+							<div class="dropdown-title">Core</div>
+							<div class="dropdown-desc">Core RDF vocabularies</div>
+						</div>
+					</a>
+					<a href="/vocabularies/common/" class="dropdown-item">
+						<span class="dropdown-emoji">📦</span>
+						<div>
+							<div class="dropdown-title">Common</div>
+							<div class="dropdown-desc">Common vocabularies</div>
+						</div>
+					</a>
+					<a href="/vocabularies/schema/" class="dropdown-item">
+						<span class="dropdown-emoji">🏷️</span>
+						<div>
+							<div class="dropdown-title">Schema.org</div>
+							<div class="dropdown-desc">Schema.org vocabulary</div>
+						</div>
+					</a>
+					<a href="/vocabularies/schema-http/" class="dropdown-item">
+						<span class="dropdown-emoji">🌐</span>
+						<div>
+							<div class="dropdown-title">Schema.org (HTTP)</div>
+							<div class="dropdown-desc">HTTP-based Schema.org</div>
+						</div>
+					</a>
+				</div>
+			</div>
 			<a href="/sync-engine/" class:list={['nav-link', { active: activeNav === 'sync' }]}>
 				Sync Engine
 			</a>
@@ -87,6 +171,81 @@ const { activeNav } = Astro.props;
 		gap: 2rem;
 		flex: 1;
 		justify-content: center;
+	}
+	
+	/* Dropdown Navigation */
+	.nav-dropdown {
+		position: relative;
+	}
+	
+	.nav-dropdown .nav-link {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	
+	.dropdown-icon {
+		transition: transform 0.2s;
+		opacity: 0.6;
+	}
+	
+	.nav-dropdown:hover .dropdown-icon {
+		transform: rotate(180deg);
+	}
+	
+	.dropdown-menu {
+		position: absolute;
+		top: calc(100% + 1rem);
+		left: 50%;
+		transform: translateX(-50%);
+		background: white;
+		border-radius: 0.75rem;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+		border: 1px solid #e2e8f0;
+		min-width: 280px;
+		padding: 0.5rem;
+		opacity: 0;
+		visibility: hidden;
+		transition: all 0.2s ease;
+		z-index: 1000;
+	}
+	
+	.nav-dropdown:hover .dropdown-menu {
+		opacity: 1;
+		visibility: visible;
+		top: calc(100% + 0.5rem);
+	}
+	
+	.dropdown-item {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		border-radius: 0.5rem;
+		text-decoration: none;
+		color: inherit;
+		transition: all 0.2s;
+	}
+	
+	.dropdown-item:hover {
+		background: #f8fafc;
+	}
+	
+	.dropdown-emoji {
+		font-size: 1.5rem;
+		flex-shrink: 0;
+	}
+	
+	.dropdown-title {
+		font-weight: 600;
+		color: #1e293b;
+		font-size: 0.95rem;
+	}
+	
+	.dropdown-desc {
+		font-size: 0.8rem;
+		color: #64748b;
+		margin-top: 0.125rem;
 	}
 	
 	.nav-link {

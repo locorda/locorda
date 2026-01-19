@@ -4,7 +4,7 @@
 .hero-gradient {
 	position: relative;
 	background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #0891b2 100%);
-	padding: 6rem 0;
+	padding: 4rem 0 6rem 0;
 	overflow: hidden;
 	margin-bottom: 3rem;
 }
@@ -14,6 +14,38 @@
 	z-index: 10;
 	text-align: center;
 	color: white;
+}
+
+/* Hero Breadcrumbs */
+.hero-breadcrumbs {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	margin-bottom: 2rem;
+	font-size: 0.875rem;
+	opacity: 0.9;
+}
+
+.hero-breadcrumbs a {
+	color: rgba(255, 255, 255, 0.9);
+	text-decoration: none;
+	transition: all 0.2s;
+}
+
+.hero-breadcrumbs a:hover {
+	color: white;
+	text-decoration: underline;
+}
+
+.hero-breadcrumbs .current {
+	color: white;
+	font-weight: 500;
+}
+
+.hero-breadcrumbs .separator {
+	color: rgba(255, 255, 255, 0.6);
+	margin: 0 0.25rem;
 }
 
 .hero-title {
