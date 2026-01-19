@@ -1,9 +1,10 @@
 ---
+import type { CodeLanguage } from 'astro';
 import { Code } from 'astro:components';
 
 interface Props {
 	code: string;
-	lang: string;
+	lang: CodeLanguage;
 }
 
 const { code, lang } = Astro.props;
@@ -82,11 +83,13 @@ const { code, lang } = Astro.props;
 
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
-		const copyButtons = document.querySelectorAll('.copy-button');
+		const copyButtons = document.querySelectorAll<HTMLButtonElement>('.copy-button');
 		
 		copyButtons.forEach(button => {
 			button.addEventListener('click', async () => {
 				const code = button.dataset.code;
+				if (!code) return;
+				
 				const copyIcon = button.querySelector('.copy-icon');
 				const checkIcon = button.querySelector('.check-icon');
 				
@@ -95,14 +98,14 @@ const { code, lang } = Astro.props;
 					
 					// Show success state
 					button.classList.add('copied');
-					copyIcon.classList.add('hidden');
-					checkIcon.classList.remove('hidden');
+					copyIcon?.classList.add('hidden');
+					checkIcon?.classList.remove('hidden');
 					
 					// Reset after 2 seconds
 					setTimeout(() => {
 						button.classList.remove('copied');
-						copyIcon.classList.remove('hidden');
-						checkIcon.classList.add('hidden');
+						copyIcon?.classList.remove('hidden');
+						checkIcon?.classList.add('hidden');
 					}, 2000);
 				} catch (err) {
 					console.error('Failed to copy code:', err);
