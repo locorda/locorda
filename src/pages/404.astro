@@ -1,0 +1,192 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout 
+	title="404 - Page Not Found" 
+	description="The page you are looking for does not exist"
+>
+	<div class="error-page">
+		<div class="container">
+			<div class="error-content">
+				<div class="error-visual">
+					<div class="blob blob-1"></div>
+					<div class="blob blob-2"></div>
+					<div class="error-number">404</div>
+				</div>
+				
+				<h1>Page Not Found</h1>
+				<p class="error-description">
+					The page you're looking for doesn't exist or has been moved.
+				</p>
+				
+				<div class="error-actions">
+					<a href="/" class="btn-primary">Go Home</a>
+				</div>
+				
+				<div class="error-links">
+					<h2>Popular Pages</h2>
+					<ul>
+						<li><a href="/rdf/">RDF Libraries</a></li>
+						<li><a href="/vocabularies/">Vocabularies</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</BaseLayout>
+
+<style>
+	.error-page {
+		min-height: calc(100vh - 200px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4rem 0;
+		background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+	}
+	
+	.error-content {
+		text-align: center;
+		max-width: 600px;
+		margin: 0 auto;
+	}
+	
+	.error-visual {
+		position: relative;
+		margin-bottom: 2rem;
+		height: 200px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	.error-number {
+		font-size: 8rem;
+		font-weight: 900;
+		background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+		letter-spacing: -0.04em;
+		position: relative;
+		z-index: 2;
+	}
+	
+	/* Page-specific blob positioning */
+	.blob.blob-1 {
+		width: 300px;
+		height: 300px;
+		background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		animation-delay: 0s;
+	}
+	
+	.blob.blob-2 {
+		width: 200px;
+		height: 200px;
+		background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		animation-delay: -5s;
+	}
+	
+	.error-content h1 {
+		font-size: 2.5rem;
+		font-weight: 800;
+		margin-bottom: 1rem;
+		color: #0f172a;
+	}
+	
+	.error-description {
+		font-size: 1.25rem;
+		color: #64748b;
+		margin-bottom: 2.5rem;
+		line-height: 1.6;
+	}
+	
+	.error-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+		margin-bottom: 3rem;
+	}
+	
+	.error-links {
+		padding-top: 2rem;
+		border-top: 1px solid #e2e8f0;
+	}
+	
+	.error-links h2 {
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: #0f172a;
+		margin-bottom: 1rem;
+	}
+	
+	.error-links ul {
+		list-style: none;
+		display: flex;
+		gap: 1.5rem;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	
+	.error-links li {
+		margin: 0;
+	}
+	
+	.error-links a {
+		color: #3b82f6;
+		font-weight: 500;
+		text-decoration: none;
+		transition: color 0.2s ease;
+	}
+	
+	.error-links a:hover {
+		color: #8b5cf6;
+		text-decoration: underline;
+	}
+	
+	@media (max-width: 768px) {
+		.error-number {
+			font-size: 5rem;
+		}
+		
+		.error-visual {
+			height: 150px;
+		}
+		
+		.blob.blob-1 {
+			width: 200px;
+			height: 200px;
+		}
+		
+		.blob.blob-2 {
+			width: 140px;
+			height: 140px;
+		}
+		
+		.error-content h1 {
+			font-size: 2rem;
+		}
+		
+		.error-description {
+			font-size: 1.125rem;
+		}
+		
+		.error-actions {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		
+		.error-links ul {
+			flex-direction: column;
+			align-items: center;
+		}
+	}
+</style>

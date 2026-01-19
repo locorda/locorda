@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
 import { Code } from 'astro:components';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -18,25 +19,12 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 	description="Parse, serialize, and query RDF graphs in Dart. W3C RDF 1.1 compliant core library."
 	activeNav="rdf"
 >
-	<div class="hero-gradient">
-		<div class="container">
-			<div class="hero-content">
-				<h1>RDF Core</h1>
-				<p class="hero-description">
-					Parse, serialize, and query RDF graphs and datasets.<br/>
-					W3C RDF 1.1 compliant core library for Dart.
-				</p>
-				
-				<div class="hero-cta">
-					<a href="https://pub.dev/packages/locorda_rdf_core" target="_blank" rel="noopener" class="cta-primary">View on pub.dev</a>
-					<a href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_core" target="_blank" rel="noopener" class="cta-secondary">GitHub</a>
-				</div>
-			</div>
-			
-			<div class="blob blob-1"></div>
-			<div class="blob blob-2"></div>
-		</div>
-	</div>
+	<Hero 
+		title="RDF Core"
+		description="Parse, serialize, and query RDF graphs and datasets.<br/>W3C RDF 1.1 compliant core library for Dart."
+		primaryCta={{ text: "View on pub.dev", href: "https://pub.dev/packages/locorda_rdf_core", external: true }}
+		secondaryCta={{ text: "GitHub", href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_core", external: true }}
+	/>
 
 	<section id="getting-started" class="section getting-started-section">
 		<div class="container">
@@ -130,89 +118,11 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 </BaseLayout>
 
 <style>
-	/* Hero Section */
-	.hero-gradient {
-		position: relative;
-		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #0891b2 100%);
-		padding: 4rem 0;
-		overflow: hidden;
-		margin-bottom: 4rem;
-	}
-	
-	.hero-content {
-		position: relative;
-		z-index: 10;
-		text-align: center;
-		color: white;
-		max-width: 800px;
-		margin: 0 auto;
-	}
-	
-	.hero-content h1 {
-		color: white;
-		font-size: 3rem;
-		margin-bottom: 1.5rem;
-	}
-	
-	.hero-description {
-		font-size: 1.25rem;
-		line-height: 1.6;
-		margin-bottom: 2rem;
-		opacity: 0.95;
-	}
-	
-	.hero-cta {
-		display: flex;
-		gap: 1rem;
-		justify-content: center;
-		flex-wrap: wrap;
-	}
-	
-	.cta-primary {
-		background: white;
-		color: #2563eb;
-		padding: 1rem 2rem;
-		border-radius: 0.5rem;
-		font-weight: 600;
-		text-decoration: none;
-		transition: all 0.2s;
-	}
-	
-	.cta-primary:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-	}
-	
-	.cta-secondary {
-		background: rgba(255, 255, 255, 0.1);
-		color: white;
-		padding: 1rem 2rem;
-		border-radius: 0.5rem;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		font-weight: 600;
-		text-decoration: none;
-		transition: all 0.2s;
-		backdrop-filter: blur(10px);
-	}
-	
-	.cta-secondary:hover {
-		background: rgba(255, 255, 255, 0.2);
-		border-color: rgba(255, 255, 255, 0.5);
-	}
-	
-	/* Animated blobs */
-	.blob {
-		position: absolute;
-		border-radius: 50%;
-		filter: blur(60px);
-		opacity: 0.7;
-		animation: float 20s infinite;
-	}
-	
+	/* Page-specific blob positioning */
 	.blob-1 {
 		width: 500px;
 		height: 500px;
-		background: rgba(37, 99, 235, 0.4);
+		background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
 		top: -200px;
 		left: -100px;
 		animation-delay: 0s;
@@ -221,16 +131,10 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 	.blob-2 {
 		width: 400px;
 		height: 400px;
-		background: rgba(124, 58, 237, 0.4);
+		background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
 		top: 100px;
 		right: -100px;
 		animation-delay: 7s;
-	}
-	
-	@keyframes float {
-		0%, 100% { transform: translate(0, 0) scale(1); }
-		33% { transform: translate(30px, -30px) scale(1.1); }
-		66% { transform: translate(-20px, 20px) scale(0.9); }
 	}
 	
 	/* Sections */
@@ -245,10 +149,9 @@ const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-
 	}
 	
 	.section h2 {
-		text-align: center;
 		font-size: 2.5rem;
 		color: #1e293b;
-		margin-bottom: 3rem;
+	}
 	}
 	
 	/* Getting Started */
