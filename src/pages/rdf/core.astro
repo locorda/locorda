@@ -11,13 +11,12 @@ const examplesDir = join(__dirname, '../../../examples/rdf');
 
 const installCode = await readFile(join(examplesDir, '01_install.txt'), 'utf-8');
 const parseCode = await readFile(join(examplesDir, '02_parse_turtle.dart'), 'utf-8');
-const queryCode = await readFile(join(examplesDir, '03_query_graph.dart'), 'utf-8');
+const createGraphsCode = await readFile(join(examplesDir, '03_create_graphs.dart'), 'utf-8');
 const datasetCode = await readFile(join(examplesDir, '04_dataset_quads.dart'), 'utf-8');
-const jsonldCode = await readFile(join(examplesDir, '05_jsonld.dart'), 'utf-8');
-const createGraphCode = await readFile(join(examplesDir, '06_create_graph.dart'), 'utf-8');
-const mergeQueryCode = await readFile(join(examplesDir, '07_merge_query.dart'), 'utf-8');
-const rdfcoreContentTypesCode = await readFile(join(examplesDir, '08_rdfcore_contenttypes.dart'), 'utf-8');
-const customCodecsCode = await readFile(join(examplesDir, '09_custom_codecs.dart'), 'utf-8');
+const queryUpdateCode = await readFile(join(examplesDir, '05_query_update.dart'), 'utf-8');
+const jsonldCode = await readFile(join(examplesDir, '06_jsonld.dart'), 'utf-8');
+const contentTypesCode = await readFile(join(examplesDir, '07_content_types.dart'), 'utf-8');
+const extensionsCode = await readFile(join(examplesDir, '08_extensions.dart'), 'utf-8');
 
 const primaryCta = { 
 	text: "View on pub.dev", 
@@ -61,13 +60,12 @@ const secondaryCta = {
 			<div class="tabs-container">
 				<div class="tabs-header">
 					<button class="tab-button active" data-tab="parse">Parse RDF</button>
-					<button class="tab-button" data-tab="query">Query & Manipulate</button>
-					<button class="tab-button" data-tab="dataset">Datasets & Quads</button>
-					<button class="tab-button" data-tab="jsonld">JSON-LD</button>
 					<button class="tab-button" data-tab="create">Create Graphs</button>
-					<button class="tab-button" data-tab="merge">Merge & Query</button>
-					<button class="tab-button" data-tab="rdfcore">RdfCore API</button>
-					<button class="tab-button" data-tab="codecs">Custom Codecs</button>
+					<button class="tab-button" data-tab="dataset">Datasets & Quads</button>
+					<button class="tab-button" data-tab="query">Query & Update</button>
+					<button class="tab-button" data-tab="jsonld">JSON-LD</button>
+					<button class="tab-button" data-tab="contenttypes">Content Types</button>
+					<button class="tab-button" data-tab="extensions">Extensions</button>
 				</div>
 				
 				<div class="tabs-content">
@@ -75,32 +73,28 @@ const secondaryCta = {
 						<CodeBlock code={parseCode} lang="dart" />
 					</div>
 					
-					<div class="tab-panel" data-tab="query">
-						<CodeBlock code={queryCode} lang="dart" />
+					<div class="tab-panel" data-tab="create">
+						<CodeBlock code={createGraphsCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="dataset">
 						<CodeBlock code={datasetCode} lang="dart" />
 					</div>
 					
+					<div class="tab-panel" data-tab="query">
+						<CodeBlock code={queryUpdateCode} lang="dart" />
+					</div>
+					
 					<div class="tab-panel" data-tab="jsonld">
 						<CodeBlock code={jsonldCode} lang="dart" />
 					</div>
 					
-					<div class="tab-panel" data-tab="create">
-						<CodeBlock code={createGraphCode} lang="dart" />
+					<div class="tab-panel" data-tab="contenttypes">
+						<CodeBlock code={contentTypesCode} lang="dart" />
 					</div>
 					
-					<div class="tab-panel" data-tab="merge">
-						<CodeBlock code={mergeQueryCode} lang="dart" />
-					</div>
-					
-					<div class="tab-panel" data-tab="rdfcore">
-						<CodeBlock code={rdfcoreContentTypesCode} lang="dart" />
-					</div>
-					
-					<div class="tab-panel" data-tab="codecs">
-						<CodeBlock code={customCodecsCode} lang="dart" />
+					<div class="tab-panel" data-tab="extensions">
+						<CodeBlock code={extensionsCode} lang="dart" />
 					</div>
 				</div>
 			</div>
