@@ -178,49 +178,50 @@ const secondaryCta = {
 		</div>
 	</section>
 	
-	<section class="section ecosystem-section">
+	<section class="section solutions-section">
 		<div class="container">
-			<h2>Complete RDF Ecosystem</h2>
-			<p class="ecosystem-intro">
-				locorda_rdf_core is the foundation of a complete RDF toolkit. Combine it with companion packages for advanced functionality:
-			</p>
+			<h2>Yeah fine, but:</h2>
 			
-			<div class="card-grid">
-				<a href="https://pub.dev/packages/locorda_rdf_mapper" target="_blank" rel="noopener" class="card-link">
-					<div class="card">
-						<h3><span class="card-icon">🎯</span> Object Mapper</h3>
-						<p class="package-name">locorda_rdf_mapper</p>
-						<p>Bidirectional mapping between Dart objects and RDF. Define your model once, serialize to any format.</p>
+			<div class="solutions-grid">
+				<div class="solution-card">
+					<div class="problem">
+						<h3>💭 "I don't like <code>RdfGraph</code>, I want to work with my own classes"</h3>
 					</div>
-				</a>
+					<div class="solution">
+						<p><strong>→ Use <a href="/docs/rdf/mapper/" class="inline-link">mapper</a></strong> (annotations + generator)</p>
+						<p class="detail">Define your domain model with annotations. The generator creates bidirectional mappings between your classes and RDF.</p>
+					</div>
+				</div>
 				
-				<a href="https://pub.dev/packages/locorda_rdf_terms" target="_blank" rel="noopener" class="card-link">
-					<div class="card">
-						<h3><span class="card-icon">📚</span> Vocabularies</h3>
-						<p class="package-name">locorda_rdf_terms</p>
-						<p>Type-safe constants for Schema.org, FOAF, Dublin Core and more. Never typo a property URI again.</p>
+				<div class="solution-card">
+					<div class="problem">
+						<h3>📄 "Do you support XML?"</h3>
 					</div>
-				</a>
+					<div class="solution">
+						<p><strong>→ Yes, via <a href="/docs/rdf/xml/" class="inline-link">xml</a></strong></p>
+						<p class="detail">Full RDF/XML encoder and decoder for legacy format support and interoperability with older systems.</p>
+					</div>
+				</div>
 				
-				<a href="https://pub.dev/packages/locorda_rdf_canonicalization" target="_blank" rel="noopener" class="card-link">
-					<div class="card">
-						<h3><span class="card-icon">🔐</span> Canonicalization</h3>
-						<p class="package-name">locorda_rdf_canonicalization</p>
-						<p>RDF-CANON support for canonical serialization and reliable graph comparison.</p>
+				<div class="solution-card">
+					<div class="problem">
+						<h3>😩 "Typing IRIs is hell"</h3>
 					</div>
-				</a>
+					<div class="solution">
+						<p><strong>→ Use <a href="/docs/rdf/terms-core/" class="inline-link">terms</a> and <a href="/vocabularies/terms/" class="inline-link">vocabularies</a></strong></p>
+						<p class="detail">Type-safe constants for Schema.org, FOAF, Dublin Core, and more. Never typo a property URI again.</p>
+					</div>
+				</div>
 				
-				<a href="https://pub.dev/packages/locorda_rdf_xml" target="_blank" rel="noopener" class="card-link">
-					<div class="card">
-						<h3><span class="card-icon">📄</span> RDF/XML Support</h3>
-						<p class="package-name">locorda_rdf_xml</p>
-						<p>Full RDF/XML encoder and decoder for legacy format support and integration with older systems.</p>
+				<div class="solution-card">
+					<div class="problem">
+						<h3>🔐 "Can you canonicalize?"</h3>
 					</div>
-				</a>
-			</div>
-			
-			<div class="ecosystem-cta">
-				<a href="/rdf/" class="btn-secondary">Explore All Packages →</a>
+					<div class="solution">
+						<p><strong>→ Yes, <a href="/docs/rdf/canonicalization/" class="inline-link">canonicalization</a></strong></p>
+						<p class="detail">RDF-CANON (RDFC-1.0) support for canonical serialization, reliable graph comparison, and cryptographic signing.</p>
+					</div>
+				</div>
 			</div>
 		</div>
 	</section>
@@ -421,12 +422,12 @@ const secondaryCta = {
 		background: white;
 	}
 	
-	/* Ecosystem */
-	.ecosystem-section {
+	/* Solutions */
+	.solutions-section {
 		background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
 	}
 	
-	.ecosystem-intro {
+	.solutions-intro {
 		text-align: center;
 		font-size: 1.125rem;
 		color: #64748b;
@@ -434,9 +435,64 @@ const secondaryCta = {
 		margin: 0 auto 3rem;
 	}
 	
-	.ecosystem-cta {
-		text-align: center;
-		margin-top: 3rem;
+	.solutions-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+		gap: 2rem;
+		margin-top: 2rem;
+	}
+	
+	.solution-card {
+		background: white;
+		border-radius: 0.75rem;
+		padding: 2rem;
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+		transition: transform 0.2s, box-shadow 0.2s;
+	}
+	
+	.solution-card:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+	}
+	
+	.problem h3 {
+		font-size: 1.1rem;
+		color: #475569;
+		margin-bottom: 1rem;
+		font-weight: 500;
+	}
+	
+	.solution {
+		border-top: 2px solid #e2e8f0;
+		padding-top: 1rem;
+	}
+	
+	.solution p {
+		margin-bottom: 0.5rem;
+		line-height: 1.6;
+	}
+	
+	.solution strong {
+		color: #1e293b;
+		font-size: 1.05rem;
+	}
+	
+	.solution .detail {
+		color: #64748b;
+		font-size: 0.95rem;
+		margin-top: 0.5rem;
+	}
+	
+	.inline-link {
+		color: #3b82f6;
+		text-decoration: none;
+		font-weight: 500;
+		transition: color 0.2s;
+	}
+	
+	.inline-link:hover {
+		color: #2563eb;
+		text-decoration: underline;
 	}
 	
 	/* CTA Section */
