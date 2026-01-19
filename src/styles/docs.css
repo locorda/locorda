@@ -39,7 +39,6 @@
   --sl-color-bg-sidebar: #1a2332;
 }
 
-/* Override Starlight's dark background */
 body {
   background: var(--sl-color-bg) !important;
 }

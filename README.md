@@ -7,7 +7,6 @@ Official website for the Locorda project - RDF libraries and tools for Dart and 
 ## Tech Stack
 
 - **Astro 5.16** - Static site generator
-- **Starlight** - Documentation theme (for `/docs/` only)
 - **Custom Pages** - Marketing pages with gradient design
 
 ## Project Structure
@@ -28,7 +27,6 @@ locorda/
 │   │   ├── rdf.astro           # RDF marketing page
 │   │   ├── impressum.astro     # Legal (German)
 │   │   └── privacy.astro       # Privacy policy
-│   └── content/docs/           # Starlight docs
 ├── public/logos/               # SVG logos
 └── verify-examples.sh          # Test script
 ```
@@ -102,7 +100,6 @@ See [.github/copilot-instructions.md](../.github/copilot-instructions.md) for de
 ## Architecture
 
 - **Marketing pages** (`/`, `/rdf/`, `/impressum/`, `/privacy/`) - Custom Astro pages with BaseLayout
-- **Documentation** (`/docs/*`) - Starlight theme with separate styling
 - **Examples** - Read at build time from `examples/rdf/`
 - **Assets** - Logos in `public/logos/`, gradient blobs via CSS
 

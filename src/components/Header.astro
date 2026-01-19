@@ -56,42 +56,42 @@ const { activeNav } = Astro.props;
 				</div>
 			</div>
 			<div class="nav-dropdown">
-				<a href="/vocabularies/" class:list={['nav-link', { active: activeNav === 'vocabularies' }]}>
+				<a href="/rdf-vocabularies/" class:list={['nav-link', { active: activeNav === 'vocabularies' }]}>
 					Vocabularies
 					<svg class="dropdown-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
 						<path d="M6 8L2 4h8L6 8z"/>
 					</svg>
 				</a>
 				<div class="dropdown-menu">
-					<a href="/vocabularies/generator/" class="dropdown-item">
+					<a href="/rdf-vocabularies/generator/" class="dropdown-item">
 						<span class="dropdown-emoji">⚙️</span>
 						<div>
 							<div class="dropdown-title">Generator</div>
 							<div class="dropdown-desc">Generate vocabulary constants</div>
 						</div>
 					</a>
-					<a href="/vocabularies/core/" class="dropdown-item">
+					<a href="/rdf-vocabularies/core/" class="dropdown-item">
 						<span class="dropdown-emoji">🔷</span>
 						<div>
 							<div class="dropdown-title">Core</div>
 							<div class="dropdown-desc">Core RDF vocabularies</div>
 						</div>
 					</a>
-					<a href="/vocabularies/common/" class="dropdown-item">
+					<a href="/rdf-vocabularies/common/" class="dropdown-item">
 						<span class="dropdown-emoji">📦</span>
 						<div>
 							<div class="dropdown-title">Common</div>
 							<div class="dropdown-desc">Common vocabularies</div>
 						</div>
 					</a>
-					<a href="/vocabularies/schema/" class="dropdown-item">
+					<a href="/rdf-vocabularies/schema/" class="dropdown-item">
 						<span class="dropdown-emoji">🏷️</span>
 						<div>
 							<div class="dropdown-title">Schema.org</div>
 							<div class="dropdown-desc">Schema.org vocabulary</div>
 						</div>
 					</a>
-					<a href="/vocabularies/schema-http/" class="dropdown-item">
+					<a href="/rdf-vocabularies/schema-http/" class="dropdown-item">
 						<span class="dropdown-emoji">🌐</span>
 						<div>
 							<div class="dropdown-title">Schema.org (HTTP)</div>
@@ -102,9 +102,6 @@ const { activeNav } = Astro.props;
 			</div>
 			<a href="/sync-engine/" class:list={['nav-link', { active: activeNav === 'sync' }]}>
 				Sync Engine
-			</a>
-			<a href="/docs/rdf/" class="nav-link">
-				Docs
 			</a>
 		</nav>
 		
