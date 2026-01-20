@@ -39,9 +39,7 @@ jobs:
 
       - name: Verify RDF examples
         run: |
-          cd examples/rdf
-          dart pub get
-          dart test
+          ./verify-examples.sh
 
       - name: Build website
         run: npm run build:no-verify
