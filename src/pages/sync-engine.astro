@@ -1,0 +1,1021 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+
+const primaryCta = {
+  text: "View on GitHub",
+  href: "https://github.com/locorda/sync-engine",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "Read Specification",
+  href: "https://github.com/locorda/sync-engine/blob/main/spec/docs/ARCHITECTURE.md",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="Sync Engine - Locorda"
+  description="Offline-first synchronization for Flutter apps. Connect user storage (Google Drive, Solid Pods) with simple clicks. No database required."
+  activeNav="sync"
+>
+  <Hero
+    title="Sync Engine"
+    description="Offline-first synchronization without the complexity.<br/>Annotate your domain classes, connect user storage, done."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[{ label: "Home", href: "/" }, { label: "Sync Engine" }]}
+  />
+
+  <section class="section status-section">
+    <div class="container">
+      <div class="status-banner">
+        <div class="status-icon">⚠️</div>
+        <div class="status-content">
+          <h3>Alpha Stage - Under Assessment</h3>
+          <p>
+            A proof of concept is working, but <strong
+              >transmission time for documents to/from pods currently takes too
+              long</strong
+            >. The project is currently being evaluated to determine if this is
+            a fundamental limitation or a solvable optimization challenge.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section vision-section">
+    <div class="container">
+      <h2>The Vision</h2>
+      <p class="section-intro">
+        What if building offline-first, cloud-synced apps was as simple as
+        annotating your domain classes?
+      </p>
+
+      <div class="vision-grid">
+        <div class="vision-card">
+          <div class="vision-number">1</div>
+          <h3>Annotate Your Classes</h3>
+          <p>
+            Use RDF mapper and CRDT annotations on your domain models. Define
+            conflict resolution strategies right in your code.
+          </p>
+          <CodeBlock
+            code={`@LcrdRootResource(PersonalNotesVocab.NotesCategory)
+class Category {
+  @RdfIriPart()
+  final String id;
+
+  /// Last writer wins on conflicts
+  @RdfProperty(SchemaCreativeWork.name)
+  @CrdtLwwRegister()
+  final String name;
+
+  /// Immutable - can't be changed after creation
+  @RdfProperty(SchemaCreativeWork.dateCreated)
+  @CrdtImmutable()
+  final DateTime createdAt;
+
+  /// Preserve unmapped triples for interoperability
+  @RdfUnmappedTriples(globalUnmapped: true)
+  final RdfGraph other;
+
+  Category({
+    required this.id,
+    required this.name,
+    DateTime? createdAt,
+    RdfGraph? other,
+  }) : createdAt = createdAt ?? DateTime.now(),
+       other = other ?? RdfGraph();
+}`}
+            lang="dart"
+          />
+        </div>
+
+        <div class="vision-card">
+          <div class="vision-number">2</div>
+          <h3>Connect User Storage</h3>
+          <p>
+            Use our pre-built UI widgets. Users connect their Google Drive,
+            Solid Pod, or other storage with simple clicks.
+          </p>
+          <div class="widget-preview">
+            <div class="widget-mockup">
+              <div class="widget-header">Connect Your Storage</div>
+              <div class="widget-options">
+                <div class="storage-option">
+                  <span class="storage-icon">📁</span>
+                  <span>Google Drive</span>
+                </div>
+                <div class="storage-option">
+                  <span class="storage-icon">🔒</span>
+                  <span>Solid Pod</span>
+                </div>
+                <div class="storage-option">
+                  <span class="storage-icon">☁️</span>
+                  <span>Dropbox</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vision-card">
+          <div class="vision-number">3</div>
+          <h3>Sync Automatically</h3>
+          <p>
+            That's it. Your app is now fully synchronized across all devices,
+            using the user's own storage as the cloud backend.
+          </p>
+          <div class="sync-visualization">
+            <div class="device">📱</div>
+            <div class="sync-arrows">↔️</div>
+            <div class="cloud">☁️</div>
+            <div class="sync-arrows">↔️</div>
+            <div class="device">💻</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Key Features</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>
+            <span class="card-icon">🔄</span> Conflict-Free Synchronization
+          </h3>
+          <p>
+            State-based CRDT algorithms ensure safe collaboration without
+            coordination. Multiple devices can edit simultaneously without data
+            loss.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🌐</span> Semantic Interoperability</h3>
+          <p>
+            All data stored as clean, standard RDF for maximum compatibility.
+            Your data remains accessible and interoperable.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📱</span> Offline-First</h3>
+          <p>
+            Full offline functionality with automatic sync when connectivity is
+            available. Your app works everywhere.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔒</span> Privacy-Preserving</h3>
+          <p>
+            User data stays in their own storage. No vendor lock-in, no
+            centralized database, complete data ownership.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Performance at Scale</h3>
+          <p>
+            Flexible indexing and fetch strategies handle datasets from 100 to
+            100,000+ resources with smart sharding.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Not a Database</h3>
+          <p>
+            Store your domain instances however you like. The sync engine only
+            handles synchronization, not storage architecture.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section architecture-section">
+    <div class="container">
+      <h2>Architecture Overview</h2>
+      <p class="section-intro">
+        A 4-layer architecture designed for both simplicity and power
+      </p>
+
+      <div class="architecture-layers">
+        <div class="layer">
+          <div class="layer-number">1</div>
+          <div class="layer-content">
+            <h3>Data Resource Layer</h3>
+            <p>Clean RDF resources using standard vocabularies</p>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-number">2</div>
+          <div class="layer-content">
+            <h3>Merge Contract Layer</h3>
+            <p>Public CRDT rules for conflict resolution</p>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-number">3</div>
+          <div class="layer-content">
+            <h3>Indexing Layer</h3>
+            <p>Efficient change detection and performance optimization</p>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-number">4</div>
+          <div class="layer-content">
+            <h3>Sync Strategy Layer</h3>
+            <p>Application-specific performance trade-offs</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="architecture-example">
+        <h3>Real-World Output</h3>
+        <p style="color: #64748b; margin-bottom: 1rem;">
+          This is the actual output from the example application running on a
+          Solid Pod. Notice the generated IRIs and the metadata required for
+          synchronization. Once the performance is optimized, we can look into
+          generating a more readable IRI (and prefix) for the resources.
+        </p>
+        <CodeBlock
+          code={`@prefix category_1762183405043_136175: <https://experiments2.solidcommunity.net/data/aHR0cHM6Ly9sb2NvcmRhLmRldi9leGFtcGxlL3BlcnNvbmFsX25vdGVzX2FwcC92b2NhYnVsYXJ5L3BlcnNvbmFsLW5vdGVzI05vdGVzQ2F0ZWdvcnk=/category_1762183405043_136175#> .
+@prefix cm: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
+@prefix data: <https://experiments2.solidcommunity.net/data/aHR0cHM6Ly9sb2NvcmRhLmRldi9leGFtcGxlL3BlcnNvbmFsX25vdGVzX2FwcC92b2NhYnVsYXJ5L3BlcnNvbmFsLW5vdGVzI05vdGVzQ2F0ZWdvcnk=/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix idx: <https://w3id.org/solid-crdt-sync/vocab/idx#> .
+@prefix mappings: <https://locorda.dev/example/personal_notes_app/mappings/> .
+@prefix pn: <https://locorda.dev/example/personal_notes_app/vocabulary/personal-notes#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <https://schema.org/> .
+@prefix smm10v: <https://experiments2.solidcommunity.net/indices/aHR0cHM6Ly93M2lkLm9yZy9zb2xpZC1jcmR0LXN5bmMvdm9jYWIvaWR4I1NoYXJk/index-full-0d7e421f/shard-mod-md5-1-0-v1_0_0#> .
+@prefix sync: <https://w3id.org/solid-crdt-sync/vocab/sync#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+data:category_1762183405043_136175 a sync:ManagedDocument;
+    foaf:primaryTopic category_1762183405043_136175:it;
+    cm:clockHash "d66831f16d25da5c5169b148c9fdeb65";
+    cm:createdAt "2025-11-03T15:23:25.160620Z"^^xsd:dateTime;
+    cm:hasClockEntry category_1762183405043_136175:lcrd-clk-md5-fe24422ab1fb1e0d69d127bd0c3fd78a;
+    idx:belongsToIndexShard smm10v:shard;
+    sync:hasBlankNodeMapping category_1762183405043_136175:lcrd-ibn-md5-3c7f9db5b14024d37f19f8dd09ec7c84;
+    sync:isGovernedBy (mappings:category-v1.ttl);
+    sync:managedResourceType pn:NotesCategory .
+
+category_1762183405043_136175:it a pn:NotesCategory;
+    pn:archived false;
+    pn:displaySettings _:b1;
+    schema:dateCreated "2025-11-03T15:23:25.043734Z"^^xsd:dateTime;
+    schema:dateModified "2025-11-03T15:23:25.043738Z"^^xsd:dateTime;
+    schema:name "Rot" .
+
+category_1762183405043_136175:lcrd-clk-md5-fe24422ab1fb1e0d69d127bd0c3fd78a cm:logicalTime 1;
+    cm:physicalTime 1762183405159 .
+
+category_1762183405043_136175:lcrd-ibn-md5-3c7f9db5b14024d37f19f8dd09ec7c84 sync:blankNode _:b1 .
+
+_:b1 pn:categoryColor "red" .`}
+          lang="turtle"
+        />
+        <p style="color: #64748b; margin-top: 1rem; font-size: 0.9rem;">
+          You can see the complexity typically hidden from the developer: clock
+          vectors for conflict resolution, index shard references, and blank
+          node mappings - all handled automatically by the sync engine.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section use-cases-section">
+    <div class="container">
+      <h2>What Can You Build?</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>📝 Note-Taking Apps</h3>
+          <p>
+            Sync notes across devices using the user's Google Drive or Solid
+            Pod. No backend infrastructure needed.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>✅ Task Managers</h3>
+          <p>
+            Collaborative task lists that sync conflict-free. Each user's data
+            stays in their own storage.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>📚 Knowledge Bases</h3>
+          <p>
+            Personal wikis and knowledge graphs that sync seamlessly across
+            devices while preserving semantic structure.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🎨 Creative Tools</h3>
+          <p>
+            Design apps, recipe managers, or any domain-specific tool with
+            built-in sync and data ownership.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section standards-section">
+    <div class="container">
+      <h2>Standards Alignment</h2>
+      <p class="section-intro">
+        Built on open standards for long-term interoperability
+      </p>
+
+      <div class="standards-grid">
+        <a
+          href="https://www.w3.org/community/crdt4rdf/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>W3C CRDT for RDF</h3>
+          <p>Community Group working on CRDT-RDF integration</p>
+        </a>
+
+        <a
+          href="https://www.w3.org/RDF/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>RDF & Linked Data</h3>
+          <p>W3C standards for semantic web and data interoperability</p>
+        </a>
+
+        <a
+          href="https://solidproject.org/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>Solid Protocol</h3>
+          <p>Decentralized data ownership and access control</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section project-scope-section">
+    <div class="container">
+      <h2>Project Scope</h2>
+
+      <div class="scope-grid">
+        <div class="scope-card">
+          <h3>📋 Specification</h3>
+          <p>
+            Complete architectural documentation for building CRDT-enabled
+            applications with passive storage backends across any programming
+            language.
+          </p>
+          <ul>
+            <li>Complete CRDT-RDF architecture with formal vocabulary</li>
+            <li>Language-agnostic design patterns</li>
+            <li>Performance analysis and optimization strategies</li>
+            <li>
+              Interoperability contracts for cross-application compatibility
+            </li>
+          </ul>
+          <div
+            class="implementation-status"
+            style="background: #fef3c7; border-color: #f59e0b;"
+          >
+            <span
+              class="status-badge"
+              style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"
+              >⚠️ Outdated</span
+            >
+            <p class="status-note" style="color: #78350f;">
+              The currently published specification is severely outdated. It has
+              significant deviations from the actual implementation, and
+              performance optimization work may cause further changes.
+            </p>
+          </div>
+          <a
+            href="https://github.com/locorda/sync-engine/blob/main/spec/docs/ARCHITECTURE.md"
+            class="scope-link"
+            target="_blank"
+            rel="noopener noreferrer">Read Specification →</a
+          >
+        </div>
+
+        <div class="scope-card">
+          <h3>🛠️ Dart Implementation</h3>
+          <p>
+            A multipackage Dart library that aims to become production-ready for
+            real-world Flutter applications.
+          </p>
+          <ul>
+            <li>Full-featured library for collaborative applications</li>
+            <li>Complete API coverage of specification capabilities</li>
+            <li>Performance-optimized for mobile and web</li>
+            <li>Reference example for other language implementations</li>
+          </ul>
+
+          <a
+            href="https://github.com/locorda/sync-engine/blob/main/IMPLEMENTATION.md"
+            class="scope-link"
+            target="_blank"
+            rel="noopener noreferrer">Implementation Details →</a
+          >
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Get Involved</h2>
+      <p class="cta-description">
+        This project is open source and welcomes contributions from the
+        community.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://github.com/locorda/sync-engine"
+          class="cta-primary"
+          target="_blank"
+          rel="noopener noreferrer">View on GitHub</a
+        >
+        <a href="/" class="cta-secondary">← Back to Home</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Status Section */
+  .status-section {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  }
+
+  .status-banner {
+    display: flex;
+    gap: 1.5rem;
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    border-left: 4px solid #f59e0b;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+  }
+
+  .status-icon {
+    font-size: 3rem;
+    line-height: 1;
+  }
+
+  .status-content h3 {
+    color: #92400e;
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+  }
+
+  .status-content p {
+    color: #78350f;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Vision Section */
+  .vision-section {
+    background: #f8fafc;
+  }
+
+  .section-intro {
+    text-align: center;
+    font-size: 1.25rem;
+    color: #64748b;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    line-height: 1.6;
+  }
+
+  .vision-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .vision-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+  }
+
+  .vision-number {
+    position: absolute;
+    top: -1rem;
+    left: 2rem;
+    width: 3rem;
+    height: 3rem;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  }
+
+  .vision-card h3 {
+    color: #1e293b;
+    margin-bottom: 1rem;
+    margin-top: 1.5rem;
+    font-size: 1.25rem;
+  }
+
+  .vision-card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .widget-preview {
+    margin-top: 1.5rem;
+  }
+
+  .widget-mockup {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+  }
+
+  .widget-header {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .widget-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .storage-option {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .storage-option:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+  }
+
+  .storage-icon {
+    font-size: 1.5rem;
+  }
+
+  .sync-visualization {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 0.75rem;
+  }
+
+  .device,
+  .cloud {
+    font-size: 3rem;
+  }
+
+  .sync-arrows {
+    font-size: 2rem;
+    color: #8b5cf6;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Features Section */
+  .features-section {
+    background: white;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    border: 1px solid #e2e8f0;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #8b5cf6;
+  }
+
+  .card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    font-size: 1.125rem;
+  }
+
+  .card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .card-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+  }
+
+  /* Architecture Section */
+  .architecture-section {
+    background: #f8fafc;
+  }
+
+  .architecture-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .layer {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s;
+  }
+
+  .layer:hover {
+    transform: translateX(8px);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+  }
+
+  .layer-number {
+    width: 3rem;
+    height: 3rem;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .layer-content h3 {
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+    font-size: 1.125rem;
+  }
+
+  .layer-content p {
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .architecture-example {
+    margin-top: 3rem;
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .architecture-example h3 {
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Use Cases Section */
+  .use-cases-section {
+    background: white;
+  }
+
+  /* Standards Section */
+  .standards-section {
+    background: #f8fafc;
+  }
+
+  .standards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .standard-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border: 2px solid transparent;
+  }
+
+  .standard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #8b5cf6;
+  }
+
+  .standard-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+
+  .standard-card p {
+    color: #64748b;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* Challenges Section */
+  .challenges-section {
+    background: white;
+  }
+
+  .challenge-card {
+    background: #fef3c7;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid #f59e0b;
+  }
+
+  .challenge-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .challenge-icon {
+    font-size: 2rem;
+  }
+
+  .challenge-card h3 {
+    color: #92400e;
+    margin: 0;
+  }
+
+  .challenge-card p {
+    color: #78350f;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .challenge-card ul {
+    color: #78350f;
+    line-height: 1.8;
+    margin-left: 1.5rem;
+  }
+
+  .challenge-card li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Project Scope Section */
+  .project-scope-section {
+    background: white;
+  }
+
+  .scope-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .scope-card {
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+  }
+
+  .scope-card h3 {
+    color: #1e293b;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+
+  .scope-card > p {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .scope-card ul {
+    color: #475569;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    margin-left: 1.5rem;
+  }
+
+  .scope-card li {
+    margin-bottom: 0.5rem;
+  }
+
+  .scope-link {
+    display: inline-block;
+    color: #8b5cf6;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .scope-link:hover {
+    color: #7c3aed;
+    text-decoration: underline;
+  }
+
+  .implementation-status {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+  }
+
+  .status-note {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    background: #f8fafc;
+    text-align: center;
+  }
+
+  .cta-description {
+    font-size: 1.125rem;
+    color: #64748b;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cta-primary,
+  .cta-secondary {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 1.125rem;
+  }
+
+  .cta-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  }
+
+  .cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  }
+
+  .cta-secondary {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+  }
+
+  .cta-secondary:hover {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+    transform: translateY(-2px);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .vision-grid,
+    .scope-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .status-banner {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .sync-visualization {
+      flex-wrap: wrap;
+    }
+  }
+
+  /* General Section Styling */
+  .section {
+    padding: 4rem 0;
+  }
+
+  .section h2 {
+    font-size: 2.5rem;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #e11d48;
+  }
+</style>
