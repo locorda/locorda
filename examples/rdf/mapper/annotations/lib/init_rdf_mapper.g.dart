@@ -33,6 +33,9 @@ import 'package:mapper_annotations_examples/map_entries.rdf_mapper.g.dart'
 import 'package:mapper_annotations_examples/property_annotations.dart' as pa;
 import 'package:mapper_annotations_examples/property_annotations.rdf_mapper.g.dart'
     as parmg;
+import 'package:mapper_annotations_examples/rdf_iri_classes.dart' as ric;
+import 'package:mapper_annotations_examples/rdf_iri_classes.rdf_mapper.g.dart'
+    as ricrmg;
 import 'package:mapper_annotations_examples/unmapped_triples.dart' as ut;
 import 'package:mapper_annotations_examples/unmapped_triples.rdf_mapper.g.dart'
     as utrmg;
@@ -67,6 +70,11 @@ RdfMapper initRdfMapper({
     mermg.TranslationEntryMapper(),
   );
   registry.registerMapper<pa.Book>(parmg.BookMapper());
+  registry.registerMapper<ric.ISBN>(ricrmg.ISBNMapper());
+  registry.registerMapper<ric.AbsoluteUri>(ricrmg.AbsoluteUriMapper());
+  registry.registerMapper<ric.CollectionItem>(
+    ricrmg.CollectionItemMapper(baseUriProvider: baseUriProvider),
+  );
   registry.registerMapper<ut.Book>(utrmg.BookMapper());
 
   return rdfMapper;

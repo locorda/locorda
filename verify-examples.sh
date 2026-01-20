@@ -45,5 +45,16 @@ echo "🔍 Mapper Annotations: Running example tests..."
 dart test
 popd
 
+# Verify canonicalization examples
+echo ""
+echo "📦 Canonicalization: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/canonicalization"
+dart pub get
+
+echo ""
+echo "🔍 Canonicalization: Running example tests..."
+dart test
+popd
+
 echo ""
 echo "✅ All examples verified successfully!"

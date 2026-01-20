@@ -1,0 +1,839 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../examples/rdf/canonicalization");
+
+// Load example code from actual files
+const quickStartGraphCode = await readFile(
+  join(examplesDir, "lib/quick_start_graph.dart"),
+  "utf-8",
+);
+const quickStartDatasetCode = await readFile(
+  join(examplesDir, "lib/quick_start_dataset.dart"),
+  "utf-8",
+);
+const performanceCode = await readFile(
+  join(examplesDir, "lib/performance.dart"),
+  "utf-8",
+);
+const installCode = await readFile(
+  join(examplesDir, "01_install.txt"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_canonicalization",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_canonicalization",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="RDF Canonicalization - Locorda"
+  description="Deterministic RDF serialization and semantic equality testing. Implement digital signatures, caching, and reliable graph comparison with W3C-compliant canonicalization."
+  activeNav="rdf"
+>
+  <Hero
+    title="RDF Canonicalization"
+    description="Deterministic serialization and semantic equality testing.<br/>Sign, cache, and compare RDF graphs reliably."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Canonicalization" },
+    ]}
+  />
+
+  <section class="section problem-section">
+    <div class="container">
+      <h2>The Problem</h2>
+      <p class="section-intro">
+        RDF graphs with blank nodes can be serialized in countless different
+        ways while representing the exact same information.
+      </p>
+
+      <div class="problem-demo">
+        <div class="demo-card">
+          <h3>Document 1</h3>
+          <CodeBlock
+            code={`_:alice <foaf:name> "Alice" .
+_:alice <foaf:knows> _:bob .
+_:bob <foaf:name> "Bob" .`}
+            lang="turtle"
+          />
+        </div>
+
+        <div class="demo-card">
+          <h3>Document 2</h3>
+          <CodeBlock
+            code={`_:person1 <foaf:name> "Alice" .
+_:person1 <foaf:knows> _:person2 .
+_:person2 <foaf:name> "Bob" .`}
+            lang="turtle"
+          />
+        </div>
+      </div>
+
+      <div class="problem-explanation">
+        <p>
+          <strong>Same information, different blank node labels.</strong> String comparison
+          fails. Object equality fails. How do you:
+        </p>
+        <ul>
+          <li>Digitally sign RDF data?</li>
+          <li>Use RDF graphs as cache keys?</li>
+          <li>Detect if two graphs are semantically identical?</li>
+          <li>Synchronize RDF data reliably?</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section solution-section">
+    <div class="container">
+      <h2>The Solution</h2>
+      <p class="section-intro">
+        RDF Canonicalization transforms any RDF graph into a single,
+        deterministic representation.
+      </p>
+
+      <div class="solution-demo">
+        <div class="solution-card">
+          <h3>Both Documents Produce Identical Canonical Form</h3>
+          <CodeBlock
+            code={`_:c14n0 <foaf:name> "Alice" .
+_:c14n0 <foaf:knows> _:c14n1 .
+_:c14n1 <foaf:name> "Bob" .`}
+            lang="turtle"
+          />
+          <p class="demo-note">
+            ✓ Deterministic blank node labels<br />
+            ✓ Consistent ordering<br />
+            ✓ Reliable for signatures and comparison
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Install the package</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-button active" data-tab="quickstart"
+            >Quick Start</button
+          >
+          <button class="tab-button" data-tab="dataset">Datasets</button>
+          <button class="tab-button" data-tab="performance">Performance</button>
+        </div>
+
+        <div class="tabs-content">
+          <div class="tab-panel active" data-tab="quickstart">
+            <CodeBlock code={quickStartGraphCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="dataset">
+            <CodeBlock code={quickStartDatasetCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="performance">
+            <CodeBlock code={performanceCode} lang="dart" />
+          </div>
+        </div>
+      </div>
+
+      <div class="github-link">
+        <a
+          href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_canonicalization/example"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View more examples on GitHub →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section use-cases-section">
+    <div class="container">
+      <h2>Use Cases</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>🔐 Digital Signatures</h3>
+          <p>
+            Sign RDF data reliably. Canonical forms ensure the same graph always
+            produces the same signature, regardless of serialization order or
+            blank node labels.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>💾 Caching & Deduplication</h3>
+          <p>
+            Use canonical forms as consistent cache keys. Detect duplicate
+            graphs even when they're serialized differently.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🔄 Data Synchronization</h3>
+          <p>
+            Detect changes in RDF datasets reliably. Compare canonical forms to
+            know if data has actually changed, not just been re-serialized.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>⚖️ Graph Comparison</h3>
+          <p>
+            Test semantic equality between different RDF representations.
+            Isomorphism testing made simple and efficient.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>📋 Compliance</h3>
+          <p>
+            Meet requirements for deterministic RDF serialization. W3C
+            standards-compliant implementation.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🧪 Testing</h3>
+          <p>
+            Write reliable RDF tests. Compare expected and actual graphs
+            semantically, not syntactically.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Key Features</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">📊</span> Graph & Dataset Support</h3>
+          <p>
+            Canonicalize both simple RDF graphs and complex datasets with named
+            graphs. Full support for quads and multiple graph contexts.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Deterministic Blank Nodes</h3>
+          <p>
+            Hash-based blank node labeling algorithm ensures the same graph
+            structure always gets the same blank node identifiers.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Optimized Performance</h3>
+          <p>
+            Efficient algorithms with O(1) equality comparison when using cached
+            canonical forms. Perfect for large-scale graph comparison.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔧</span> Configurable Hashing</h3>
+          <p>
+            Choose between SHA-256 (faster) and SHA-384 (more secure) based on
+            your needs. Custom blank node prefixes supported.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📐</span> Standards Compliant</h3>
+          <p>
+            Implements the W3C RDF Dataset Canonicalization specification.
+            Interoperable with other compliant implementations.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔗</span> Seamless Integration</h3>
+          <p>
+            Works perfectly with locorda_rdf_core. Parse any RDF format,
+            canonicalize, and serialize back to any format.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section api-section">
+    <div class="container">
+      <h2>Core API</h2>
+
+      <div class="api-grid">
+        <div class="api-card">
+          <h3>canonicalize()</h3>
+          <p>Canonicalize an RdfDataset to N-Quads string</p>
+          <CodeBlock
+            code={`final canonical = canonicalize(dataset);`}
+            lang="dart"
+          />
+        </div>
+
+        <div class="api-card">
+          <h3>canonicalizeGraph()</h3>
+          <p>Canonicalize an RdfGraph to N-Quads string</p>
+          <CodeBlock
+            code={`final canonical = canonicalizeGraph(graph);`}
+            lang="dart"
+          />
+        </div>
+
+        <div class="api-card">
+          <h3>isIsomorphic()</h3>
+          <p>Test if two RdfDatasets are semantically equivalent</p>
+          <CodeBlock
+            code={`if (isIsomorphic(dataset1, dataset2)) {
+  print('Semantically identical!');
+}`}
+            lang="dart"
+          />
+        </div>
+
+        <div class="api-card">
+          <h3>CanonicalRdfGraph</h3>
+          <p>Cached canonical representation for efficient comparison</p>
+          <CodeBlock
+            code={`final canonical = CanonicalRdfGraph(graph);
+// O(1) equality comparison
+if (canonical1 == canonical2) { ... }`}
+            lang="dart"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section standards-section">
+    <div class="container">
+      <h2>Standards & Specifications</h2>
+
+      <div class="standards-grid">
+        <a
+          href="https://www.w3.org/TR/rdf-canon/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>RDF Dataset Canonicalization</h3>
+          <p>W3C Specification for RDF canonicalization (RDF-CANON)</p>
+        </a>
+
+        <a
+          href="https://www.w3.org/TR/rdf11-concepts/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>RDF 1.1 Concepts</h3>
+          <p>Core RDF concepts and abstract syntax</p>
+        </a>
+
+        <a
+          href="https://www.w3.org/TR/n-quads/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>N-Quads</h3>
+          <p>Line-based syntax for RDF datasets (canonical output format)</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Canonicalize?</h2>
+      <p class="cta-description">
+        Start using deterministic RDF serialization in your Dart projects.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/packages/locorda_rdf_canonicalization"
+          class="cta-primary"
+          target="_blank"
+          rel="noopener noreferrer">View on pub.dev</a
+        >
+        <a
+          href="https://pub.dev/documentation/locorda_rdf_canonicalization/latest/"
+          class="cta-secondary"
+          target="_blank"
+          rel="noopener noreferrer">Read API Docs</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Problem Section */
+  .problem-section {
+    background: #fef2f2;
+  }
+
+  .problem-demo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .demo-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .demo-card h3 {
+    color: #991b1b;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+  }
+
+  .problem-explanation {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 0.75rem;
+    border-left: 4px solid #dc2626;
+  }
+
+  .problem-explanation p {
+    color: #1e293b;
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .problem-explanation ul {
+    color: #475569;
+    line-height: 1.8;
+    margin-left: 2rem;
+  }
+
+  .problem-explanation li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Solution Section */
+  .solution-section {
+    background: #f0fdf4;
+  }
+
+  .solution-demo {
+    margin-top: 2rem;
+  }
+
+  .solution-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #16a34a;
+  }
+
+  .solution-card h3 {
+    color: #15803d;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+  }
+
+  .demo-note {
+    margin-top: 1.5rem;
+    color: #15803d;
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+
+  /* Getting Started Section */
+  .getting-started-section {
+    background: white;
+  }
+
+  .install-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .install-section h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .tabs-container {
+    margin-top: 2rem;
+  }
+
+  .tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+  }
+
+  .tab-button:hover {
+    color: #1e293b;
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  .tab-button.active {
+    color: white;
+    background: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  }
+
+  .tabs-content {
+    background: white;
+    border-radius: 0 0 0.75rem 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .tab-panel {
+    display: none;
+    padding: 2rem;
+  }
+
+  .tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .github-link {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .github-link a {
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .github-link a:hover {
+    color: #8b5cf6;
+  }
+
+  /* Use Cases Section */
+  .use-cases-section {
+    background: #f8fafc;
+  }
+
+  /* Features Section */
+  .features-section {
+    background: white;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    border: 1px solid #e2e8f0;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #8b5cf6;
+  }
+
+  .card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    font-size: 1.125rem;
+  }
+
+  .card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .card-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+  }
+
+  /* API Section */
+  .api-section {
+    background: #f8fafc;
+  }
+
+  .api-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .api-card {
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s;
+  }
+
+  .api-card:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+  }
+
+  .api-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-family: "Fira Code", "Courier New", monospace;
+    font-size: 1.125rem;
+  }
+
+  .api-card > p {
+    color: #64748b;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+
+  /* Standards Section */
+  .standards-section {
+    background: white;
+  }
+
+  .standards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .standard-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border: 2px solid transparent;
+  }
+
+  .standard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #8b5cf6;
+  }
+
+  .standard-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+
+  .standard-card p {
+    color: #64748b;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    background: #f8fafc;
+    text-align: center;
+  }
+
+  .cta-description {
+    font-size: 1.125rem;
+    color: #64748b;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cta-primary,
+  .cta-secondary {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 1.125rem;
+  }
+
+  .cta-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  }
+
+  .cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  }
+
+  .cta-secondary {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+  }
+
+  .cta-secondary:hover {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+    transform: translateY(-2px);
+  }
+
+  /* General Section Styling */
+  .section {
+    padding: 4rem 0;
+  }
+
+  .section h2 {
+    font-size: 2.5rem;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .section-intro {
+    text-align: center;
+    font-size: 1.25rem;
+    color: #64748b;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #e11d48;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .problem-demo,
+    .api-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  // Tab switching functionality
+  document.addEventListener("DOMContentLoaded", () => {
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const targetTab = button.getAttribute("data-tab");
+
+        // Remove active class from all buttons and panels
+        tabButtons.forEach((btn) => btn.classList.remove("active"));
+        tabPanels.forEach((panel) => panel.classList.remove("active"));
+
+        // Add active class to clicked button and corresponding panel
+        button.classList.add("active");
+        document
+          .querySelector(`.tab-panel[data-tab="${targetTab}"]`)
+          ?.classList.add("active");
+      });
+    });
+  });
+</script>

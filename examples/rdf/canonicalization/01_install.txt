@@ -1,0 +1,2 @@
+dart pub add locorda_rdf_canonicalization
+dart pub add locorda_rdf_core  # For creating RDF graphs

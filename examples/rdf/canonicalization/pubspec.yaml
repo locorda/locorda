@@ -1,0 +1,15 @@
+name: rdf_canonicalization_examples
+description: Examples for locorda_rdf_canonicalization
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  locorda_rdf_core: ^0.11.3
+  locorda_rdf_canonicalization: ^0.11.0
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0
