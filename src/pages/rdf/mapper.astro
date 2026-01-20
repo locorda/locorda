@@ -1,0 +1,869 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../examples/rdf/mapper");
+
+const installCode = await readFile(
+  join(examplesDir, "01_install.txt"),
+  "utf-8",
+);
+const quickStartCode = await readFile(
+  join(examplesDir, "lib/quick_start.dart"),
+  "utf-8",
+);
+const collectionsCode = await readFile(
+  join(examplesDir, "lib/collections.dart"),
+  "utf-8",
+);
+const losslessCode = await readFile(
+  join(examplesDir, "lib/lossless.dart"),
+  "utf-8",
+);
+const advancedCode = await readFile(
+  join(examplesDir, "lib/advanced.dart"),
+  "utf-8",
+);
+const manualCode = await readFile(
+  join(examplesDir, "lib/manual_mapper.dart"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_mapper",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_mapper",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="RDF Mapper - Locorda"
+  description="Object-RDF mapping with zero boilerplate. Bidirectional conversion between Dart objects and RDF graphs."
+  activeNav="rdf"
+>
+  <Hero
+    title="RDF Mapper"
+    description="Object-RDF mapping with zero boilerplate.<br/>Bidirectional conversion between Dart objects and RDF graphs."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Mapper" },
+    ]}
+  />
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Install the packages</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-button active" data-tab="quickstart"
+            >Quick Start</button
+          >
+          <button class="tab-button" data-tab="collections">Collections</button>
+          <button class="tab-button" data-tab="lossless"
+            >Lossless Mapping</button
+          >
+          <button class="tab-button" data-tab="advanced"
+            >Advanced Features</button
+          >
+          <button class="tab-button" data-tab="manual">Manual Mappers</button>
+        </div>
+
+        <div class="tabs-content">
+          <div class="tab-panel active" data-tab="quickstart">
+            <CodeBlock code={quickStartCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="collections">
+            <CodeBlock code={collectionsCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="lossless">
+            <CodeBlock code={losslessCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="advanced">
+            <CodeBlock code={advancedCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="manual">
+            <CodeBlock code={manualCode} lang="dart" />
+          </div>
+        </div>
+      </div>
+
+      <div class="github-link">
+        <a
+          href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_mapper/example"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View more examples on GitHub →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section learn-more-section">
+    <div class="container">
+      <h2>Learn More</h2>
+      <div class="learn-more-grid">
+        <a href="/rdf/mapper/annotations/" class="learn-more-card">
+          <h3>📝 Annotations Reference</h3>
+          <p>
+            Complete guide to all mapping annotations with verified examples.
+          </p>
+        </a>
+
+        <a href="/rdf/mapper/generator/" class="learn-more-card">
+          <h3>⚙️ How Code Generation Works</h3>
+          <p>Understand what gets generated and how it works.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section use-cases-section">
+    <div class="container">
+      <h2>What Can You Build?</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>🗄️ Domain Models → RDF</h3>
+          <p>
+            Map your Dart classes to RDF knowledge graphs. Define once with
+            annotations, serialize to Turtle, JSON-LD and other formats
+            automatically.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🔄 Lossless RDF Pipelines</h3>
+          <p>
+            Build ETL pipelines that preserve all RDF data. Load, transform, and
+            save without losing unmapped triples.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>📦 APIs with RDF Support</h3>
+          <p>
+            Create REST APIs that speak both JSON and RDF. Same domain model,
+            multiple serialization formats.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Key Features</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🔥</span> Zero Boilerplate</h3>
+          <p>
+            Annotate your classes, run <code>build_runner</code>, done. No
+            manual serialization code, no runtime reflection.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔄</span> Bidirectional Mapping</h3>
+          <p>
+            Seamless conversion in both directions: Dart objects ↔ RDF graphs.
+            Type-safe deserialization from any RDF format.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">💎</span> Lossless Round-Trip</h3>
+          <p>
+            <code>@RdfUnmappedTriples</code> preserves unknown properties. Perfect
+            for ETL pipelines and evolving schemas.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📚</span> Rich Collection Support</h3>
+          <p>
+            Lists, Sets, Maps with RDF Lists, Containers (Seq/Bag/Alt), and
+            custom entry types.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Flexible IRI Strategies</h3>
+          <p>
+            URI templates, context variables, fragments, or custom mappers.
+            Generate IRIs dynamically at runtime.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Type-Safe & Fast</h3>
+          <p>
+            Generated code with compile-time guarantees. No runtime overhead,
+            full IDE support.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section solutions-section">
+    <div class="container">
+      <h2>Yeah fine, but:</h2>
+
+      <div class="solutions-grid">
+        <div class="solution-card">
+          <div class="problem">
+            <h3>📄 "I need RDF/XML support"</h3>
+          </div>
+          <div class="solution">
+            <p>
+              <strong
+                >→ Works with mapper! Combine <a
+                  href="/rdf/xml/"
+                  class="inline-link">xml</a
+                > + mapper</strong
+              >
+            </p>
+            <p class="detail">
+              Register the RDF/XML codec with a custom <code>RdfCore</code>,
+              then pass it to your mapper:
+            </p>
+            <CodeBlock
+              code={`initRdfMapper(
+  baseUriProvider: () => 'https://example.org',
+  rdfMapper: RdfMapper(
+    registry: RdfMapperRegistry(),
+    rdfCore: RdfCore.withStandardCodecs(
+      additionalCodecs: [RdfXmlCodec()]
+    )
+  )
+);`}
+              lang="dart"
+            />
+            <p class="detail">
+              Then use <code>contentType: 'application/rdf+xml'</code> in your encodeObject/decodeObject
+              calls. Perfect for legacy format interop.
+            </p>
+          </div>
+        </div>
+
+        <div class="solution-card">
+          <div class="problem">
+            <h3>🏷️ "I need custom property IRIs"</h3>
+          </div>
+          <div class="solution">
+            <p>
+              <strong
+                >→ Use <a href="/rdf/terms-generator/" class="inline-link"
+                  >terms-generator</a
+                ></strong
+              >
+            </p>
+            <p class="detail">
+              Generate type-safe constants for your custom vocabularies. Feed it
+              your ontology, get Dart classes out.
+            </p>
+          </div>
+        </div>
+
+        <div class="solution-card">
+          <div class="problem">
+            <h3>🔐 "I need canonical form"</h3>
+          </div>
+          <div class="solution">
+            <p>
+              <strong
+                >→ Yes, <a href="/rdf/canonicalization/" class="inline-link"
+                  >canonicalization</a
+                ></strong
+              >
+            </p>
+            <p class="detail">
+              RDF-CANON (RDFC-1.0) support for reliable graph comparison and
+              cryptographic signing.
+            </p>
+          </div>
+        </div>
+
+        <div class="solution-card">
+          <div class="problem">
+            <h3>🔧 "I need raw triple control"</h3>
+          </div>
+          <div class="solution">
+            <p>
+              <strong
+                >→ Use <a href="/rdf/core/" class="inline-link">core</a> directly</strong
+              >
+            </p>
+            <p class="detail">
+              Work with triples directly when you need full control. Mapper is
+              built on top of core.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section packages-section">
+    <div class="container">
+      <h2>The Mapper Family</h2>
+      <p class="section-intro">
+        RDF Mapper consists of three packages that work together:
+      </p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>locorda_rdf_mapper</h3>
+          <p>
+            <strong>Runtime system</strong> for mapping between Dart objects and RDF.
+            Provides the base APIs and mapper interfaces.
+          </p>
+          <div class="card-links">
+            <a href="https://pub.dev/packages/locorda_rdf_mapper">pub.dev →</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>locorda_rdf_mapper_annotations</h3>
+          <p>
+            <strong>Annotation system</strong> for declarative mapping. Annotate your
+            classes to define RDF mappings.
+          </p>
+          <div class="card-links">
+            <a
+              href="https://pub.dev/documentation/locorda_rdf_mapper_annotations/latest/"
+              >API Docs →</a
+            >
+            <a href="https://pub.dev/packages/locorda_rdf_mapper_annotations"
+              >pub.dev →</a
+            >
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>locorda_rdf_mapper_generator</h3>
+          <p>
+            <strong>Code generator</strong> for zero-boilerplate mappers. Processes
+            annotations and generates optimized mapping code.
+          </p>
+          <div class="card-links">
+            <a
+              href="https://pub.dev/documentation/locorda_rdf_mapper_generator/latest/"
+              >API Docs →</a
+            >
+            <a href="https://pub.dev/packages/locorda_rdf_mapper_generator"
+              >pub.dev →</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Start?</h2>
+      <p class="cta-description">
+        Read the documentation or explore the API reference.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/documentation/locorda_rdf_mapper/latest/"
+          class="cta-primary">Read the Docs</a
+        >
+        <a href="/rdf/" class="cta-secondary">← Back to RDF Overview</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section troubleshooting-section">
+    <div class="container">
+      <h2>Troubleshooting</h2>
+
+      <div class="troubleshooting-grid">
+        <div class="troubleshooting-card">
+          <div class="issue">
+            <h3>⚠️ Type checks fail / Mapper not found in tests</h3>
+            <p class="issue-description">
+              Your tests fail with "No deserializer found" or type checks fail
+              even though everything looks correct.
+            </p>
+          </div>
+          <div class="cause">
+            <h4>Cause</h4>
+            <p>
+              Using <strong>relative imports</strong> (<code>../lib/</code>)
+              instead of <strong>package imports</strong> in tests creates different
+              Type objects. Dart treats <code>import '../lib/book.dart';</code> and
+              <code>import 'package:myapp/book.dart';</code> as completely different
+              types!
+            </p>
+          </div>
+          <div class="fix">
+            <h4>Fix</h4>
+            <CodeBlock
+              code={`// ❌ DON'T - Relative import
+import '../lib/book.dart';
+
+// ✅ DO - Package import
+import 'package:myapp/book.dart';`}
+              lang="dart"
+            />
+            <p class="fix-note">
+              Always use package imports in tests, examples, and anywhere the
+              generated code might reference your classes.
+            </p>
+            <p
+              class="fix-note"
+              style="margin-top: 1rem; padding: 0.75rem; background: #e0f2fe; border-left: 3px solid #0ea5e9; border-radius: 0.25rem;"
+            >
+              💡 <strong>Tip:</strong> Check the import statements in your generated
+              <code>init_rdf_mapper.g.dart</code> file — they use package imports,
+              so your code needs to use the same style.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Reuse styles from core.astro */
+  .blob-1 {
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    top: -200px;
+    left: -100px;
+    animation-delay: 0s;
+  }
+
+  .blob-2 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%);
+    top: 100px;
+    right: -100px;
+    animation-delay: 7s;
+  }
+
+  .section h2 {
+    font-size: 2.5rem;
+    color: #1e293b;
+  }
+
+  .section p {
+    line-height: 1.7;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #e11d48;
+  }
+
+  .getting-started-section {
+    background: #f8fafc;
+  }
+
+  .install-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .install-section h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .tabs-container {
+    margin-top: 2rem;
+  }
+
+  .tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+  }
+
+  .tab-button:hover {
+    color: #1e293b;
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  .tab-button.active {
+    color: white;
+    background: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  }
+
+  .tabs-content {
+    background: white;
+    border-radius: 0 0 0.75rem 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .tab-panel {
+    display: none;
+    padding: 2rem;
+  }
+
+  .tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .github-link {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .github-link a {
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .github-link a:hover {
+    color: #8b5cf6;
+  }
+
+  .learn-more-section {
+    background: white;
+  }
+
+  .learn-more-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .learn-more-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border: 2px solid transparent;
+  }
+
+  .learn-more-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #8b5cf6;
+  }
+
+  .learn-more-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+  }
+
+  .learn-more-card p {
+    color: #64748b;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .use-cases-section {
+    background: #f8fafc;
+  }
+
+  .features-section {
+    background: white;
+  }
+
+  .solutions-section {
+    background: #f8fafc;
+  }
+
+  .solutions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .solution-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .solution-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .problem h3 {
+    font-size: 1.1rem;
+    color: #475569;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+
+  .solution {
+    border-top: 2px solid #e2e8f0;
+    padding-top: 1rem;
+  }
+
+  .solution p {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+  }
+
+  .solution strong {
+    color: #1e293b;
+    font-size: 1.05rem;
+  }
+
+  .solution .detail {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+  }
+
+  .inline-link {
+    color: #8b5cf6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .inline-link:hover {
+    color: #7c3aed;
+    text-decoration: underline;
+  }
+
+  .packages-section {
+    background: white;
+  }
+
+  .troubleshooting-section {
+    background: #f8fafc;
+  }
+
+  .troubleshooting-grid {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .troubleshooting-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #ef4444;
+  }
+
+  .issue h3 {
+    color: #dc2626;
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+  }
+
+  .issue-description {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+  }
+
+  .cause,
+  .fix {
+    margin-bottom: 1.5rem;
+  }
+
+  .cause h4,
+  .fix h4 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .cause p,
+  .fix p {
+    color: #475569;
+    line-height: 1.6;
+  }
+
+  .fix pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  .fix pre code {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .fix-note {
+    background: #fef3c7;
+    border-left: 3px solid #f59e0b;
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    font-size: 0.95rem;
+    color: #78350f;
+    margin-top: 1rem;
+  }
+
+  .section-intro {
+    text-align: center;
+    font-size: 1.125rem;
+    color: #64748b;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+  }
+
+  .card-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .card-links a {
+    color: #8b5cf6;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+
+  .card-links a:hover {
+    color: #7c3aed;
+    text-decoration: underline;
+  }
+
+  .cta-section {
+    background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+    color: white;
+    text-align: center;
+  }
+
+  .cta-section h2 {
+    color: white;
+  }
+
+  .cta-description {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const tabButtons =
+      document.querySelectorAll<HTMLButtonElement>(".tab-button");
+    const tabPanels = document.querySelectorAll<HTMLDivElement>(".tab-panel");
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const targetTab = button.dataset.tab;
+        if (!targetTab) return;
+
+        tabButtons.forEach((btn) => btn.classList.remove("active"));
+        tabPanels.forEach((panel) => panel.classList.remove("active"));
+
+        button.classList.add("active");
+        const targetPanel = document.querySelector<HTMLDivElement>(
+          `.tab-panel[data-tab="${targetTab}"]`,
+        );
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+  });
+</script>

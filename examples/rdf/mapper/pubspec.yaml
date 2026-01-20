@@ -1,0 +1,20 @@
+name: rdf_mapper_examples
+description: Examples for locorda_rdf_mapper
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  locorda_rdf_core: ^0.11.3
+  locorda_rdf_mapper: ^0.11.3
+  locorda_rdf_mapper_annotations: ^0.11.3
+  locorda_rdf_terms_schema: ^0.11.0
+
+dev_dependencies:
+  build_runner: ^2.10.5
+  lints: ^6.0.0
+  locorda_rdf_mapper_generator: ^0.11.3
+  test: ^1.25.0
+

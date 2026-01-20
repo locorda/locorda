@@ -1,0 +1,375 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Hero from "../../../components/Hero.astro";
+import CodeBlock from "../../../components/CodeBlock.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(
+  __dirname,
+  "../../../../examples/rdf/mapper/annotations/lib",
+);
+
+// Load annotation examples
+const globalResourceCode = await readFile(
+  join(examplesDir, "global_resource.dart"),
+  "utf-8",
+);
+const localResourceCode = await readFile(
+  join(examplesDir, "local_resource.dart"),
+  "utf-8",
+);
+const customLiteralCode = await readFile(
+  join(examplesDir, "custom_literal.dart"),
+  "utf-8",
+);
+const enumMappingCode = await readFile(
+  join(examplesDir, "enum_mapping.dart"),
+  "utf-8",
+);
+const propertyAnnotationsCode = await readFile(
+  join(examplesDir, "property_annotations.dart"),
+  "utf-8",
+);
+const unmappedTriplesCode = await readFile(
+  join(examplesDir, "unmapped_triples.dart"),
+  "utf-8",
+);
+const iriStrategyCode = await readFile(
+  join(examplesDir, "iri_strategy.dart"),
+  "utf-8",
+);
+const collectionsCode = await readFile(
+  join(examplesDir, "collections.dart"),
+  "utf-8",
+);
+const mapEntriesCode = await readFile(
+  join(examplesDir, "map_entries.dart"),
+  "utf-8",
+);
+const rdfIriClassesCode = await readFile(
+  join(examplesDir, "rdf_iri_classes.dart"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_mapper_annotations",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "← Back to Mapper Guide",
+  href: "/rdf/mapper/",
+  external: false,
+};
+---
+
+<BaseLayout
+  title="RDF Mapper Annotations - Locorda"
+  description="Overview of key annotations for declarative RDF mapping in Dart."
+  activeNav="rdf"
+>
+  <Hero
+    title="RDF Mapper Annotations"
+    description="Overview of key annotations for declarative RDF mapping.<br/>Define your mappings, let the generator do the work."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Mapper", href: "/rdf/mapper/" },
+      { label: "Annotations" },
+    ]}
+  />
+
+  <section class="section intro-section">
+    <div class="container">
+      <div class="intro-box">
+        <p>
+          <strong>locorda_rdf_mapper_annotations</strong> provides the annotation
+          system for declarative RDF mapping. Use it with <strong
+            >locorda_rdf_mapper_generator</strong
+          > to automatically generate type-safe mapping code from your annotated classes.
+        </p>
+        <p>
+          This page provides an overview of the most important annotations. For
+          exhaustive documentation, see the
+          <a
+            href="https://pub.dev/documentation/locorda_rdf_mapper_annotations/latest/"
+            target="_blank"
+            rel="noopener noreferrer">API documentation on pub.dev</a
+          >. For getting started and complete examples, visit the <a
+            href="/rdf/mapper/">mapper guide</a
+          >.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section annotations-section">
+    <div class="container">
+      <h2>Class Annotations</h2>
+
+      <div class="annotation-card">
+        <h3>@RdfGlobalResource</h3>
+        <p>For entities with globally unique IRIs (subjects in RDF triples).</p>
+        <CodeBlock code={globalResourceCode} lang="dart" />
+      </div>
+
+      <div class="annotation-card">
+        <h3>@RdfLocalResource</h3>
+        <p>
+          For child entities that exist only in relation to a parent (blank
+          nodes).
+        </p>
+        <CodeBlock code={localResourceCode} lang="dart" />
+      </div>
+
+      <div class="annotation-card">
+        <h3>@RdfLiteral</h3>
+        <p>
+          For classes representing simple values with validation or custom
+          formats.
+        </p>
+        <CodeBlock code={customLiteralCode} lang="dart" />
+      </div>
+
+      <div class="annotation-card">
+        <h3>@RdfIri</h3>
+        <p>
+          For classes and enums representing IRIs: identifiers (ISBN, DOI,
+          URIs), template-based IRI generation, and controlled vocabularies.
+        </p>
+        <CodeBlock code={rdfIriClassesCode} lang="dart" />
+        <p
+          style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;"
+        >
+          <strong>Enum example:</strong> Also works with enums for controlled vocabularies.
+        </p>
+        <CodeBlock code={enumMappingCode} lang="dart" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section property-annotations-section">
+    <div class="container">
+      <h2>Property Annotations</h2>
+
+      <div class="annotation-card">
+        <h3>@RdfProperty</h3>
+        <p>Maps a Dart property to an RDF predicate.</p>
+        <CodeBlock code={propertyAnnotationsCode} lang="dart" />
+      </div>
+
+      <div class="annotation-card">
+        <h3>@RdfUnmappedTriples</h3>
+        <p>Captures unmapped triples for lossless round-trip conversion.</p>
+        <CodeBlock code={unmappedTriplesCode} lang="dart" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section iri-strategies-section">
+    <div class="container">
+      <h2>IRI Strategies</h2>
+      <p class="section-intro">
+        IRI strategies define how object properties are mapped to RDF resource
+        identifiers.
+      </p>
+
+      <div class="annotation-card">
+        <h3>IriStrategy Examples</h3>
+        <p>
+          Template-based strategies with placeholders and runtime context
+          variables.
+        </p>
+        <CodeBlock code={iriStrategyCode} lang="dart" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section collections-section">
+    <div class="container">
+      <h2>Collections Support</h2>
+
+      <div class="annotation-card">
+        <h3>Lists, Sets, and RDF Lists</h3>
+        <p>
+          Automatic handling of Dart collections with RDF-specific collection
+          types.
+        </p>
+        <CodeBlock code={collectionsCode} lang="dart" />
+      </div>
+
+      <div class="annotation-card">
+        <h3>Map Entries</h3>
+        <p>
+          Custom entry classes for Map support with @RdfMapEntry annotation.
+        </p>
+        <CodeBlock code={mapEntriesCode} lang="dart" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Use?</h2>
+      <p class="cta-description">
+        Go back to the full guide or explore the API docs.
+      </p>
+      <div class="cta-buttons">
+        <a href="/rdf/mapper/" class="cta-primary">← Back to Mapper Guide</a>
+        <a
+          href="https://pub.dev/documentation/locorda_rdf_mapper_annotations/latest/"
+          class="cta-secondary">API Docs</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .blob-1 {
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    top: -200px;
+    right: -100px;
+    animation-delay: 0s;
+  }
+
+  .blob-2 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%);
+    bottom: -150px;
+    left: -100px;
+    animation-delay: 7s;
+  }
+
+  .section h2 {
+    font-size: 2.5rem;
+    color: #1e293b;
+    margin-bottom: 2rem;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #e11d48;
+  }
+
+  .intro-section {
+    background: #f8fafc;
+  }
+
+  .intro-box {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #8b5cf6;
+  }
+
+  .intro-box p {
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  .intro-box p:last-child {
+    margin-bottom: 0;
+  }
+
+  .intro-box a {
+    color: #8b5cf6;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .intro-box a:hover {
+    text-decoration: underline;
+  }
+
+  .annotations-section {
+    background: white;
+  }
+
+  .property-annotations-section {
+    background: #f8fafc;
+  }
+
+  .iri-strategies-section {
+    background: white;
+  }
+
+  .collections-section {
+    background: #f8fafc;
+  }
+
+  .section-intro {
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 1.125rem;
+  }
+
+  .annotation-card {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .annotation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .annotation-card h3 {
+    color: #8b5cf6;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .annotation-card p {
+    color: #64748b;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  .cta-section {
+    background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+    color: white;
+    text-align: center;
+  }
+
+  .cta-section h2 {
+    color: white;
+  }
+
+  .cta-description {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+</style>

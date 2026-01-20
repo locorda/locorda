@@ -1,0 +1,11 @@
+# Add runtime dependencies
+dart pub add locorda_rdf_core locorda_rdf_mapper locorda_rdf_mapper_annotations
+
+# Add Schema.org vocabulary constants (optional)
+dart pub add locorda_rdf_terms_schema
+
+# Add development dependencies (for code generation)
+dart pub add build_runner locorda_rdf_mapper_generator --dev
+
+# Generate the mappers
+dart run build_runner build --delete-conflicting-outputs

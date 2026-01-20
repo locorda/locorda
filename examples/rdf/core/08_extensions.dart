@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'package:locorda_rdf_core/core.dart';
 // import 'package:locorda_rdf_xml/xml.dart';
 

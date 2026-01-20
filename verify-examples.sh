@@ -4,14 +4,46 @@ set -e
 echo "🧪 Verifying RDF code examples..."
 echo ""
 
-cd "$(dirname "$0")/examples/rdf"
-
-echo "📦 Installing dependencies..."
+# Verify core examples
+echo "📦 Core: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/core"
 dart pub get
 
 echo ""
-echo "🔍 Running example tests..."
+echo "🔍 Core: Running example tests..."
 dart test
+
+popd
+
+# Verify mapper examples
+echo ""
+echo "📦 Mapper: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/mapper"
+dart pub get
+
+echo ""
+echo "⚙️ Mapper: Generating code..."
+dart run build_runner build --delete-conflicting-outputs
+
+echo ""
+echo "🔍 Mapper: Running example tests..."
+dart test
+popd
+
+# Verify mapper annotations examples
+echo ""
+echo "📦 Mapper Annotations: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/mapper/annotations"
+dart pub get
+
+echo ""
+echo "⚙️ Mapper Annotations: Generating code..."
+dart run build_runner build --delete-conflicting-outputs
+
+echo ""
+echo "🔍 Mapper Annotations: Running example tests..."
+dart test
+popd
 
 echo ""
 echo "✅ All examples verified successfully!"

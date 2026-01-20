@@ -1,0 +1,500 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Hero from "../../../components/Hero.astro";
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_mapper_generator",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "← Back to Mapper Guide",
+  href: "/rdf/mapper/",
+  external: false,
+};
+---
+
+<BaseLayout
+  title="RDF Mapper Generator - Locorda"
+  description="Code generation for zero-boilerplate RDF mapping in Dart."
+  activeNav="rdf"
+>
+  <Hero
+    title="RDF Mapper Generator"
+    description="Code generation for zero-boilerplate RDF mapping.<br/>Transform annotations into optimized, type-safe mapper code."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Mapper", href: "/rdf/mapper/" },
+      { label: "Generator" },
+    ]}
+  />
+
+  <section class="section intro-section">
+    <div class="container">
+      <div class="intro-box">
+        <p>
+          <strong>locorda_rdf_mapper_generator</strong> is a build_runner plugin that
+          processes <a href="/rdf/mapper/annotations/">annotations</a>
+          to generate optimized mapping code at build time. No runtime reflection,
+          no boilerplate, just pure generated performance.
+        </p>
+        <p>
+          See the <a href="/rdf/mapper/">full mapper guide</a> for complete examples
+          and getting started instructions.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section how-it-works-section">
+    <div class="container">
+      <h2>How It Works</h2>
+
+      <div class="workflow-grid">
+        <div class="workflow-step">
+          <div class="step-number">1</div>
+          <h3>Annotate Your Classes</h3>
+          <p>Add RDF mapping annotations to your domain model.</p>
+          <pre><code>{'@RdfGlobalResource(\n  SchemaBook.classIri,\n  IriStrategy(\'https://example.org/books/{isbn}\'),\n)\nclass Book { ... }'}</code></pre>
+        </div>
+
+        <div class="workflow-step">
+          <div class="step-number">2</div>
+          <h3>Run Build Runner</h3>
+          <p>Execute the code generator to create mappers.</p>
+          <pre><code>dart run build_runner build --delete-conflicting-outputs</code></pre>
+        </div>
+
+        <div class="workflow-step">
+          <div class="step-number">3</div>
+          <h3>Use Generated Mappers</h3>
+          <p>Initialize and use type-safe mappers automatically.</p>
+          <pre><code>{'final mapper = initRdfMapper();\nfinal turtle = mapper.encodeObject(book);\nfinal book = mapper.decodeObject<Book>(turtle);'}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section generated-code-section">
+    <div class="container">
+      <h2>What Gets Generated</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>📄 Main Initialization File</h3>
+          <p><code>init_rdf_mapper.g.dart</code></p>
+          <p class="detail">
+            Central initialization function that registers all mappers and
+            automatically requires any dependencies from your annotations
+            (providers, custom mappers, etc.).
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>🔧 Individual Mapper Files</h3>
+          <p><code>*.rdf_mapper.g.dart</code></p>
+          <p class="detail">
+            One mapper file per annotated class with optimized
+            serialization/deserialization code.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>⚡ Optimized IRI Parsing</h3>
+          <p>Regex-based pattern matching</p>
+          <p class="detail">
+            Efficient IRI parsing with pre-compiled regular expressions for
+            template strategies.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>🛡️ Type-Safe Mapping</h3>
+          <p>Full compile-time guarantees</p>
+          <p class="detail">
+            Generated code is strongly typed with null safety throughout.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Generator Features</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🔥</span> Zero Boilerplate</h3>
+          <p>
+            Write domain models, not serialization code. The generator handles
+            all the tedious mapping logic.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Zero Runtime Overhead</h3>
+          <p>
+            All mapping logic is generated at compile time. No reflection, no
+            runtime analysis.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🌳</span> Tree-Shakeable</h3>
+          <p>
+            Only the mappers you actually use are included in your final build.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🛡️</span> Type Safety</h3>
+          <p>
+            Compile-time validation of all mappings. Catch errors before
+            runtime.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔧</span> Smart Defaults</h3>
+          <p>Intelligent default value handling and null safety throughout.</p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📦</span> Collection Inference</h3>
+          <p>Automatic detection and handling of List, Set, Map types.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section development-section">
+    <div class="container">
+      <h2>Development Workflow</h2>
+
+      <div class="workflow-list">
+        <div class="workflow-item">
+          <div class="workflow-icon">✏️</div>
+          <div class="workflow-content">
+            <h3>1. Annotate Classes</h3>
+            <p>Add RDF mapping annotations to your domain model classes.</p>
+          </div>
+        </div>
+
+        <div class="workflow-item">
+          <div class="workflow-icon">⚙️</div>
+          <div class="workflow-content">
+            <h3>2. Run Generator</h3>
+            <p>
+              Execute <code>dart run build_runner build</code> to generate mappers.
+            </p>
+          </div>
+        </div>
+
+        <div class="workflow-item">
+          <div class="workflow-icon">🧪</div>
+          <div class="workflow-content">
+            <h3>3. Test & Iterate</h3>
+            <p>
+              Test your mappers, adjust annotations, re-run generator as needed.
+            </p>
+          </div>
+        </div>
+
+        <div class="workflow-item">
+          <div class="workflow-icon">🚀</div>
+          <div class="workflow-content">
+            <h3>4. Ship</h3>
+            <p>Generated code is optimized and ready for production.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Generate?</h2>
+      <p class="cta-description">
+        Go back to the full guide or explore the API docs.
+      </p>
+      <div class="cta-buttons">
+        <a href="/rdf/mapper/" class="cta-primary">← Back to Mapper Guide</a>
+        <a
+          href="https://pub.dev/documentation/locorda_rdf_mapper_generator/latest/"
+          class="cta-secondary">API Docs</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .blob-1 {
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%);
+    top: -200px;
+    right: -100px;
+    animation-delay: 0s;
+  }
+
+  .blob-2 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    bottom: -150px;
+    left: -100px;
+    animation-delay: 7s;
+  }
+
+  .section h2 {
+    font-size: 2.5rem;
+    color: #1e293b;
+    margin-bottom: 2rem;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #e11d48;
+  }
+
+  .intro-section {
+    background: #f8fafc;
+  }
+
+  .intro-box {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #ec4899;
+  }
+
+  .intro-box p {
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  .intro-box p:last-child {
+    margin-bottom: 0;
+  }
+
+  .intro-box a {
+    color: #ec4899;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .intro-box a:hover {
+    text-decoration: underline;
+  }
+
+  .how-it-works-section {
+    background: white;
+  }
+
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+
+  .workflow-step {
+    background: linear-gradient(135deg, #f8fafc 0%, #faf5ff 100%);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+  }
+
+  .step-number {
+    position: absolute;
+    top: -15px;
+    left: 1.5rem;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+  }
+
+  .workflow-step h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .workflow-step p {
+    color: #64748b;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  .workflow-step pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .workflow-step pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .generated-code-section {
+    background: #f8fafc;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+
+  .feature-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .feature-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .feature-card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-card .detail {
+    font-size: 0.9rem;
+    color: #94a3b8;
+  }
+
+  .features-section {
+    background: white;
+  }
+
+  .features-section .card {
+    background: linear-gradient(135deg, #f8fafc 0%, #faf5ff 100%);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s;
+  }
+
+  .features-section .card:hover {
+    transform: translateY(-4px);
+  }
+
+  .features-section .card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+
+  .features-section .card p {
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  .card-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+  }
+
+  .development-section {
+    background: #f8fafc;
+  }
+
+  .workflow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .workflow-item {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .workflow-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+  }
+
+  .workflow-content h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .workflow-content p {
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  .workflow-content code {
+    white-space: nowrap;
+  }
+
+  .cta-section {
+    background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%);
+    color: white;
+    text-align: center;
+  }
+
+  .cta-section h2 {
+    color: white;
+  }
+
+  .cta-description {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+</style>

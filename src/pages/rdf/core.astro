@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const examplesDir = join(__dirname, '../../../examples/rdf');
+const examplesDir = join(__dirname, '../../../examples/rdf/core');
 
 const installCode = await readFile(join(examplesDir, '01_install.txt'), 'utf-8');
 const parseCode = await readFile(join(examplesDir, '02_parse_turtle.dart'), 'utf-8');
@@ -297,42 +297,47 @@ const secondaryCta = {
 	
 	.tabs-header {
 		display: flex;
-		gap: 0.25rem;
-		border-bottom: 2px solid #e2e8f0;
-		margin-bottom: 0;
+		gap: 0.5rem;
+		background: #f8fafc;
+		padding: 0.5rem;
+		border-radius: 0.75rem 0.75rem 0 0;
 		overflow-x: auto;
-		scrollbar-width: thin;
+		scrollbar-width: none;
+	}
+	
+	.tabs-header::-webkit-scrollbar {
+		display: none;
 	}
 	
 	.tab-button {
 		background: transparent;
 		border: none;
-		padding: 0.75rem 1rem;
+		padding: 0.75rem 1.25rem;
 		font-size: 0.9rem;
-		font-weight: 500;
+		font-weight: 600;
 		color: #64748b;
 		cursor: pointer;
 		position: relative;
 		transition: all 0.2s;
-		border-bottom: 2px solid transparent;
-		margin-bottom: -2px;
 		white-space: nowrap;
 		flex-shrink: 0;
+		border-radius: 0.5rem;
 	}
 	
 	.tab-button:hover {
-		color: #3b82f6;
-		background: #f8fafc;
+		color: #1e293b;
+		background: rgba(59, 130, 246, 0.1);
 	}
 	
 	.tab-button.active {
-		color: #3b82f6;
-		border-bottom-color: #3b82f6;
+		color: white;
+		background: #3b82f6;
+		box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 	}
 	
 	.tabs-content {
 		background: white;
-		border-radius: 0 0.75rem 0.75rem 0.75rem;
+		border-radius: 0 0 0.75rem 0.75rem;
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 		overflow: hidden;
 	}
@@ -408,17 +413,17 @@ const secondaryCta = {
 	
 	/* Use Cases */
 	.use-cases-section {
-		background: #f8fafc;
+		background: white;
 	}
 	
 	/* Features */
 	.features-section {
-		background: white;
+		background: #f8fafc;
 	}
 	
 	/* Solutions */
 	.solutions-section {
-		background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+		background: white;
 	}
 	
 	.solutions-intro {
