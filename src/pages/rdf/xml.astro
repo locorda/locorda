@@ -1,0 +1,1081 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../examples/rdf/xml");
+
+// Load example code from actual files
+const quickStartCode = await readFile(
+  join(examplesDir, "lib/quick_start.dart"),
+  "utf-8",
+);
+const rdfcoreIntegrationCode = await readFile(
+  join(examplesDir, "lib/rdfcore_integration.dart"),
+  "utf-8",
+);
+const configurationCode = await readFile(
+  join(examplesDir, "lib/configuration.dart"),
+  "utf-8",
+);
+const baseUriCode = await readFile(
+  join(examplesDir, "lib/base_uri.dart"),
+  "utf-8",
+);
+const xmlEntitiesCode = await readFile(
+  join(examplesDir, "lib/xml_entities.dart"),
+  "utf-8",
+);
+const installCode = await readFile(
+  join(examplesDir, "01_install.txt"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_xml",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_xml",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="RDF/XML - Locorda"
+  description="Complete W3C-compliant RDF/XML parser and serializer for Dart. Decode and encode RDF/XML with full support for all RDF/XML features including typed nodes, containers, collections, and more."
+  activeNav="rdf"
+>
+  <Hero
+    title="RDF/XML"
+    description="W3C-compliant RDF/XML parsing and serialization.<br/>Full-featured, high-performance, and easy to use."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "XML" },
+    ]}
+  />
+
+  <section class="section problem-section">
+    <div class="container">
+      <h2>The Challenge</h2>
+      <p class="section-intro">
+        RDF/XML is one of the most widely used RDF serialization formats, but
+        it's also one of the most complex to parse and generate correctly.
+      </p>
+
+      <div class="problem-demo">
+        <div class="demo-card">
+          <h3>Complex Syntax</h3>
+          <CodeBlock
+            code={`<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description rdf:about="http://example.org/book">
+    <dc:title>The Semantic Web</dc:title>
+    <dc:creator>Tim Berners-Lee</dc:creator>
+  </rdf:Description>
+</rdf:RDF>`}
+            lang="xml"
+          />
+        </div>
+
+        <div class="demo-card">
+          <h3>Many Features</h3>
+          <ul class="feature-list">
+            <li>Typed node elements</li>
+            <li>Property elements</li>
+            <li>Containers (Bag, Seq, Alt)</li>
+            <li>Collections (rdf:List)</li>
+            <li>parseType variations</li>
+            <li>XML Base support</li>
+            <li>Language tags</li>
+            <li>Blank nodes</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="problem-explanation">
+        <p>
+          <strong>You need a robust, standards-compliant implementation.</strong
+          > Parsing and generating RDF/XML correctly requires:
+        </p>
+        <ul>
+          <li>Complete W3C RDF/XML specification support</li>
+          <li>Proper handling of all RDF/XML syntax variations</li>
+          <li>Efficient XML processing</li>
+          <li>Configurable behavior for different use cases</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section solution-section">
+    <div class="container">
+      <h2>The Solution</h2>
+      <p class="section-intro">
+        A complete, W3C-compliant RDF/XML implementation that handles all the
+        complexity for you.
+      </p>
+
+      <div class="solution-demo">
+        <div class="solution-card">
+          <h3>Simple API, Powerful Features</h3>
+          <CodeBlock
+            code={`import 'package:locorda_rdf_xml/locorda_rdf_xml.dart';
+
+// Decode RDF/XML to a graph
+final graph = rdfxml.decode(xmlContent);
+
+// Encode a graph to RDF/XML
+final xml = rdfxml.encode(graph);`}
+            lang="dart"
+          />
+          <p class="demo-note">
+            ✓ One-line decoding and encoding<br />
+            ✓ Full W3C RDF/XML specification support<br />
+            ✓ Configurable for your needs
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Install the package</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-button active" data-tab="quickstart"
+            >Quick Start</button
+          >
+          <button class="tab-button" data-tab="rdfcore"
+            >RdfCore Integration</button
+          >
+          <button class="tab-button" data-tab="config">Configuration</button>
+          <button class="tab-button" data-tab="baseuri">Base URIs</button>
+          <button class="tab-button" data-tab="entities">XML Entities</button>
+        </div>
+
+        <div class="tabs-content">
+          <div class="tab-panel active" data-tab="quickstart">
+            <CodeBlock code={quickStartCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="rdfcore">
+            <CodeBlock code={rdfcoreIntegrationCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="config">
+            <CodeBlock code={configurationCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="baseuri">
+            <CodeBlock code={baseUriCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="entities">
+            <CodeBlock code={xmlEntitiesCode} lang="dart" />
+          </div>
+        </div>
+      </div>
+
+      <div class="github-link">
+        <a
+          href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_xml/example"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View more examples on GitHub →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section use-cases-section">
+    <div class="container">
+      <h2>Use Cases</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>📚 Legacy Data Integration</h3>
+          <p>
+            Parse RDF/XML from existing systems and databases. Many legacy
+            semantic web applications use RDF/XML as their primary format.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🌐 Web Services</h3>
+          <p>
+            Consume and produce RDF/XML APIs. Many semantic web services and
+            SPARQL endpoints return results in RDF/XML format.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>📄 Document Processing</h3>
+          <p>
+            Extract metadata from RDF/XML documents. Process Dublin Core, FOAF,
+            and other vocabularies embedded in XML documents.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🔄 Format Conversion</h3>
+          <p>
+            Convert between RDF serialization formats. Parse RDF/XML and
+            serialize to Turtle, JSON-LD, or N-Triples.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>📊 Data Publishing</h3>
+          <p>
+            Publish semantic data in RDF/XML format. Generate well-formed,
+            readable RDF/XML for documentation and data exchange.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🧪 Testing & Validation</h3>
+          <p>
+            Validate RDF/XML documents against the W3C specification. Test your
+            RDF data processing pipelines with strict or lenient modes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Key Features</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">✅</span> Complete W3C Support</h3>
+          <p>
+            Full implementation of the W3C RDF/XML specification. All syntax
+            features including typed nodes, containers, collections, and
+            parseType variations.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> High Performance</h3>
+          <p>
+            Optimized for both speed and memory efficiency. Fast XML parsing
+            with efficient RDF graph construction.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎛️</span> Configurable Behavior</h3>
+          <p>
+            Choose between strict W3C compliance or lenient parsing. Control
+            formatting, indentation, and namespace prefixes.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔗</span> Seamless Integration</h3>
+          <p>
+            Works perfectly with locorda_rdf_core. Register as a codec to enable
+            automatic RDF/XML support across your application.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎨</span> Pretty Printing</h3>
+          <p>
+            Generate human-readable RDF/XML with configurable indentation.
+            Perfect for documentation and debugging.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🌍</span> Base URI Support</h3>
+          <p>
+            Full support for xml:base attributes and relative URI resolution.
+            Control base URI declaration in output.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🏷️</span> Custom Prefixes</h3>
+          <p>
+            Define custom namespace prefixes for cleaner output. Automatic
+            prefix generation for unknown namespaces.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🧪</span> Well Tested</h3>
+          <p>
+            Comprehensive test suite with real-world examples. Tested against
+            W3C test cases and production RDF/XML documents.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section api-section">
+    <div class="container">
+      <h2>Core API</h2>
+
+      <div class="api-grid">
+        <div class="api-card">
+          <h3>rdfxml.decode()</h3>
+          <p>Parse RDF/XML string to RdfGraph</p>
+          <CodeBlock
+            code={`final graph = rdfxml.decode(xmlContent);`}
+            lang="dart"
+          />
+        </div>
+
+        <div class="api-card">
+          <h3>rdfxml.encode()</h3>
+          <p>Serialize RdfGraph to RDF/XML string</p>
+          <CodeBlock code={`final xml = rdfxml.encode(graph);`} lang="dart" />
+        </div>
+
+        <div class="api-card">
+          <h3>RdfXmlCodec.strict()</h3>
+          <p>Create codec with strict W3C validation</p>
+          <CodeBlock
+            code={`final codec = RdfXmlCodec.strict();
+final graph = codec.decode(xml);`}
+            lang="dart"
+          />
+        </div>
+
+        <div class="api-card">
+          <h3>RdfXmlCodec.lenient()</h3>
+          <p>Create codec that tolerates variations</p>
+          <CodeBlock
+            code={`final codec = RdfXmlCodec.lenient();
+final graph = codec.decode(xml);`}
+            lang="dart"
+          />
+        </div>
+
+        <div class="api-card">
+          <h3>RdfXmlCodec.readable()</h3>
+          <p>Create codec for pretty-printed output</p>
+          <CodeBlock
+            code={`final codec = RdfXmlCodec.readable();
+final xml = codec.encode(graph);`}
+            lang="dart"
+          />
+        </div>
+
+        <div class="api-card">
+          <h3>RdfXmlCodec.compact()</h3>
+          <p>Create codec for minimal output size</p>
+          <CodeBlock
+            code={`final codec = RdfXmlCodec.compact();
+final xml = codec.encode(graph);`}
+            lang="dart"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section rdfxml-features-section">
+    <div class="container">
+      <h2>RDF/XML Features Supported</h2>
+
+      <div class="features-grid">
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Resource Descriptions</h4>
+            <p>rdf:Description elements</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Typed Node Elements</h4>
+            <p>Custom element types</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Property Elements</h4>
+            <p>All property variations</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Containers</h4>
+            <p>rdf:Bag, rdf:Seq, rdf:Alt</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Collections</h4>
+            <p>rdf:List with parseType</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>parseType Variations</h4>
+            <p>Resource, Literal, Collection</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>XML Base</h4>
+            <p>xml:base attribute support</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Language Tags</h4>
+            <p>xml:lang attribute support</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Datatyped Literals</h4>
+            <p>rdf:datatype attribute</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Blank Nodes</h4>
+            <p>Anonymous and labeled</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>RDF Reification</h4>
+            <p>Statement reification</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>Namespace Prefixes</h4>
+            <p>Custom and automatic</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">✓</span>
+          <div>
+            <h4>XML Entities (Parsing)</h4>
+            <p>DOCTYPE entity declarations</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section standards-section">
+    <div class="container">
+      <h2>Standards & Specifications</h2>
+
+      <div class="standards-grid">
+        <a
+          href="https://www.w3.org/TR/rdf-syntax-grammar/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>RDF/XML Syntax Specification</h3>
+          <p>W3C Recommendation for RDF/XML syntax and grammar</p>
+        </a>
+
+        <a
+          href="https://www.w3.org/TR/rdf11-concepts/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>RDF 1.1 Concepts</h3>
+          <p>Core RDF concepts and abstract syntax</p>
+        </a>
+
+        <a
+          href="https://www.w3.org/TR/rdf11-primer/"
+          class="standard-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h3>RDF 1.1 Primer</h3>
+          <p>Introduction to RDF with RDF/XML examples</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Parse RDF/XML?</h2>
+      <p class="cta-description">
+        Start using W3C-compliant RDF/XML in your Dart projects today.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/packages/locorda_rdf_xml"
+          class="cta-primary"
+          target="_blank"
+          rel="noopener noreferrer">View on pub.dev</a
+        >
+        <a
+          href="https://pub.dev/documentation/locorda_rdf_xml/latest/"
+          class="cta-secondary"
+          target="_blank"
+          rel="noopener noreferrer">Read API Docs</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Problem Section */
+  .problem-section {
+    background: #fef2f2;
+  }
+
+  .problem-demo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .demo-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .demo-card h3 {
+    color: #991b1b;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+  }
+
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: #475569;
+  }
+
+  .feature-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+
+  .feature-list li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: #dc2626;
+  }
+
+  .problem-explanation {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 0.75rem;
+    border-left: 4px solid #dc2626;
+  }
+
+  .problem-explanation p {
+    color: #1e293b;
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .problem-explanation ul {
+    color: #475569;
+    line-height: 1.8;
+    margin-left: 2rem;
+  }
+
+  .problem-explanation li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Solution Section */
+  .solution-section {
+    background: #f0fdf4;
+  }
+
+  .solution-demo {
+    margin-top: 2rem;
+  }
+
+  .solution-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #16a34a;
+  }
+
+  .solution-card h3 {
+    color: #15803d;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+  }
+
+  .demo-note {
+    margin-top: 1.5rem;
+    color: #15803d;
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+
+  /* Getting Started Section */
+  .getting-started-section {
+    background: white;
+  }
+
+  .install-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .install-section h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .tabs-container {
+    margin-top: 2rem;
+  }
+
+  .tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+  }
+
+  .tab-button:hover {
+    color: #1e293b;
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  .tab-button.active {
+    color: white;
+    background: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  }
+
+  .tabs-content {
+    background: white;
+    border-radius: 0 0 0.75rem 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .tab-panel {
+    display: none;
+    padding: 2rem;
+  }
+
+  .tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .github-link {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .github-link a {
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .github-link a:hover {
+    color: #8b5cf6;
+  }
+
+  /* Use Cases Section */
+  .use-cases-section {
+    background: #f8fafc;
+  }
+
+  /* Features Section */
+  .features-section {
+    background: white;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    border: 1px solid #e2e8f0;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #8b5cf6;
+  }
+
+  .card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    font-size: 1.125rem;
+  }
+
+  .card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .card-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+  }
+
+  /* API Section */
+  .api-section {
+    background: #f8fafc;
+  }
+
+  .api-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .api-card {
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s;
+  }
+
+  .api-card:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+  }
+
+  .api-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-family: "Fira Code", "Courier New", monospace;
+    font-size: 1.125rem;
+  }
+
+  .api-card > p {
+    color: #64748b;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+
+  /* RDF/XML Features Section */
+  .rdfxml-features-section {
+    background: white;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+  }
+
+  .feature-item:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.1);
+  }
+
+  .feature-icon {
+    color: #16a34a;
+    font-size: 1.5rem;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .feature-item h4 {
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+  }
+
+  .feature-item p {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  /* Standards Section */
+  .standards-section {
+    background: #f8fafc;
+  }
+
+  .standards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .standard-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border: 2px solid transparent;
+  }
+
+  .standard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #8b5cf6;
+  }
+
+  .standard-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+
+  .standard-card p {
+    color: #64748b;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    background: white;
+    text-align: center;
+  }
+
+  .cta-description {
+    font-size: 1.125rem;
+    color: #64748b;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cta-primary,
+  .cta-secondary {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 1.125rem;
+  }
+
+  .cta-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  }
+
+  .cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  }
+
+  .cta-secondary {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+  }
+
+  .cta-secondary:hover {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+    transform: translateY(-2px);
+  }
+
+  /* General Section Styling */
+  .section {
+    padding: 4rem 0;
+  }
+
+  .section h2 {
+    font-size: 2.5rem;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .section-intro {
+    text-align: center;
+    font-size: 1.25rem;
+    color: #64748b;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #e11d48;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .problem-demo,
+    .api-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  // Tab switching functionality
+  document.addEventListener("DOMContentLoaded", () => {
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const targetTab = button.getAttribute("data-tab");
+
+        // Remove active class from all buttons and panels
+        tabButtons.forEach((btn) => btn.classList.remove("active"));
+        tabPanels.forEach((panel) => panel.classList.remove("active"));
+
+        // Add active class to clicked button and corresponding panel
+        button.classList.add("active");
+        document
+          .querySelector(`.tab-panel[data-tab="${targetTab}"]`)
+          ?.classList.add("active");
+      });
+    });
+  });
+</script>

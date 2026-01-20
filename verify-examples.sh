@@ -56,5 +56,16 @@ echo "🔍 Canonicalization: Running example tests..."
 dart test
 popd
 
+# Verify XML examples
+echo ""
+echo "📦 XML: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/xml"
+dart pub get
+
+echo ""
+echo "🔍 XML: Running example tests..."
+dart test
+popd
+
 echo ""
 echo "✅ All examples verified successfully!"
