@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Hero from "../components/Hero.astro";
+import SimpleHero from "../components/SimpleHero.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 
 const primaryCta = {
@@ -21,12 +21,11 @@ const secondaryCta = {
   description="Offline-first synchronization for Flutter apps. Connect user storage (Google Drive, Solid Pods) with simple clicks. No database required."
   activeNav="sync"
 >
-  <Hero
+  <SimpleHero
     title="Sync Engine"
     description="Offline-first synchronization without the complexity.<br/>Annotate your domain classes, connect user storage, done."
     primaryCta={primaryCta}
     secondaryCta={secondaryCta}
-    breadcrumbs={[{ label: "Home", href: "/" }, { label: "Sync Engine" }]}
   />
 
   <section class="section status-section">

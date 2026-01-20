@@ -1,0 +1,74 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  showLogo?: boolean;
+  primaryCta?: { text: string; href: string; external?: boolean };
+  secondaryCta?: { text: string; href: string; external?: boolean };
+}
+
+const {
+  title,
+  description,
+  showLogo = true,
+  primaryCta,
+  secondaryCta,
+} = Astro.props;
+---
+
+<div class="hero-gradient">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-title">
+        {
+          showLogo && (
+            <img src="/logo-light.svg" alt="Locorda Logo" class="hero-logo" />
+          )
+        }
+        <h1>{title}</h1>
+      </div>
+
+      <p class="hero-description" set:html={description} />
+
+      {
+        (primaryCta || secondaryCta) && (
+          <div class="hero-cta">
+            {primaryCta && (
+              <a
+                href={primaryCta.href}
+                class="cta-primary"
+                {...(primaryCta.external
+                  ? { target: "_blank", rel: "noopener" }
+                  : {})}
+              >
+                {primaryCta.text}
+              </a>
+            )}
+            {secondaryCta && (
+              <a
+                href={secondaryCta.href}
+                class="cta-secondary"
+                {...(secondaryCta.external
+                  ? { target: "_blank", rel: "noopener" }
+                  : {})}
+              >
+                {secondaryCta.text}
+              </a>
+            )}
+          </div>
+        )
+      }
+    </div>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+</div>
+
+<style>
+  /* Simple hero for pages without breadcrumbs */
+  .hero-gradient {
+    padding: 6rem 0;
+  }
+</style>
