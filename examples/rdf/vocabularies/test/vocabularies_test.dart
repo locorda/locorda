@@ -1,10 +1,11 @@
 import 'package:test/test.dart';
-import 'package:locorda_rdf_core/core.dart';
 import '../lib/class_specific_approach.dart' as class_specific;
 import '../lib/direct_vocabulary_approach.dart' as direct;
 import '../lib/cross_vocabulary_properties.dart' as cross_vocab;
 import '../lib/core_usage.dart' as core_usage;
 import '../lib/common_usage.dart' as common_usage;
+import '../lib/schema_usage.dart' as schema_usage;
+import '../lib/schema_http_usage.dart' as schema_http_usage;
 
 void main() {
   group('Class-Specific Approach', () {
@@ -38,6 +39,18 @@ void main() {
   group('Common Vocabularies Usage', () {
     test('demonstrates common semantic web vocabularies', () {
       common_usage.main();
+      // If it runs without error, the example is valid
+    });
+  });
+
+  group('Schema.org Vocabularies Usage', () {
+    test('demonstrates Schema.org HTTPS vocabulary', () {
+      schema_usage.main();
+      // If it runs without error, the example is valid
+    });
+
+    test('demonstrates Schema.org HTTP vocabulary', () {
+      schema_http_usage.main();
       // If it runs without error, the example is valid
     });
   });

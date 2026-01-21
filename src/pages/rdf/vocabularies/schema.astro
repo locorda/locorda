@@ -1,0 +1,292 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Hero from "../../../components/Hero.astro";
+import CodeBlock from "../../../components/CodeBlock.astro";
+import "../../../styles/vocabularies-package.css";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../../examples/rdf/vocabularies");
+
+const installCode = `# Install Schema.org vocabulary (HTTPS)
+dart pub add locorda_rdf_terms_schema`;
+
+const usageCode = await readFile(
+  join(examplesDir, "lib/schema_usage.dart"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_terms_schema",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf-vocabularies/tree/main/packages/locorda_rdf_terms_schema",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="Schema.org RDF Vocabulary - Locorda"
+  description="Complete Schema.org vocabulary as type-safe Dart constants. HTTPS URIs, class-specific helpers, and cross-vocabulary discovery for structured data."
+  activeNav="rdf"
+>
+  <Hero
+    title="Schema.org Vocabulary (HTTPS)"
+    description="The full Schema.org vocabulary as type-safe Dart constants.<br/>HTTPS URIs, class-specific helpers, and IDE discovery out of the box."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Vocabularies", href: "/rdf/vocabularies/" },
+      { label: "Schema.org" },
+    ]}
+  />
+
+  <section class="section overview-section">
+    <div class="container">
+      <h2>Schema.org at Full Fidelity</h2>
+      <p class="section-intro">
+        Use the complete Schema.org vocabulary with class-specific constants and
+        cross-vocabulary properties for clean, discoverable structured data.
+      </p>
+
+      <div class="popular-section">
+        <h3>Most Popular Included Vocabularies</h3>
+        <p>
+          A quick snapshot of high-traffic Schema.org classes you get out of the
+          box. The package includes the full vocabulary beyond this list.
+        </p>
+        <div class="tag-grid">
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaPerson-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaPerson</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaOrganization-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaOrganization</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaProduct-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaProduct</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaEvent-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaEvent</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaArticle-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaArticle</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaPlace-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaPlace</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaLocalBusiness-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaLocalBusiness</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaWebSite-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaWebSite</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaWebPage-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaWebPage</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema/latest/schema/SchemaOffer-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaOffer</a
+          >
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🏷️</span> Full Vocabulary</h3>
+          <p>
+            Every Schema.org class and property as compile-time constants with
+            inline documentation.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🧭</span> Class-Specific Helpers</h3>
+          <p>
+            Use `SchemaPerson` and similar helpers to discover valid properties
+            through IDE autocompletion.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔗</span> Cross-Vocabulary Links</h3>
+          <p>
+            Related RDF properties from connected vocabularies are included and
+            properly prefixed.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Zero Runtime Cost</h3>
+          <p>
+            Constants are compile-time only. No runtime penalties for richer
+            vocabularies.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Installation</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="usage-section">
+        <h3>Usage Example</h3>
+        <CodeBlock code={usageCode} lang="dart" />
+      </div>
+
+      <div class="info-box">
+        <h4>💡 Package Size</h4>
+        <p>
+          At around <strong>~5MB</strong> compressed, this package contains the
+          full Schema.org vocabulary. Use it when Schema.org is central to your
+          application.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Why Use This Package?</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🌐</span> SEO &amp; Structured Data</h3>
+          <p>
+            Model rich metadata for web content, products, events, and
+            organizations using the standard vocabulary.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🧩</span> IDE Discovery</h3>
+          <p>
+            Explore thousands of terms with autocomplete and inline
+            documentation instead of memorizing IRIs.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🧱</span> Generator-Proven</h3>
+          <p>
+            Generated by `locorda_rdf_terms_generator` for consistent structure
+            and up-to-date coverage.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Type Safety</h3>
+          <p>
+            Catch vocabulary errors at compile time while keeping RDF graphs
+            flexible.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section related-section">
+    <div class="container">
+      <h2>Related Packages</h2>
+
+      <div class="related-grid">
+        <a href="/rdf/vocabularies/schema-http/" class="related-card">
+          <span class="related-icon">🌐</span>
+          <div>
+            <h3>Schema.org (HTTP)</h3>
+            <p>Legacy compatibility with HTTP URIs</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/common/" class="related-card">
+          <span class="related-icon">📦</span>
+          <div>
+            <h3>Common Vocabularies</h3>
+            <p>FOAF, Dublin Core, DCAT, SKOS, and more</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/generator/" class="related-card">
+          <span class="related-icon">⚙️</span>
+          <div>
+            <h3>Generator</h3>
+            <p>Generate custom vocabulary packages for your domain</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Use Schema.org?</h2>
+      <p class="cta-description">
+        Ship structured data with type-safe Schema.org constants in Dart.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/packages/locorda_rdf_terms_schema"
+          target="_blank"
+          rel="noopener"
+          class="cta-primary">View on pub.dev</a
+        >
+        <a href="/rdf/vocabularies/" class="cta-secondary"
+          >← Back to Vocabularies</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>

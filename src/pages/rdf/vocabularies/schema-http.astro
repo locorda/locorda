@@ -1,0 +1,292 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Hero from "../../../components/Hero.astro";
+import CodeBlock from "../../../components/CodeBlock.astro";
+import "../../../styles/vocabularies-package.css";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../../examples/rdf/vocabularies");
+
+const installCode = `# Install Schema.org vocabulary (HTTP)
+dart pub add locorda_rdf_terms_schema_http`;
+
+const usageCode = await readFile(
+  join(examplesDir, "lib/schema_http_usage.dart"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_terms_schema_http",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf-vocabularies/tree/main/packages/locorda_rdf_terms_schema_http",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="Schema.org RDF Vocabulary (HTTP) - Locorda"
+  description="Schema.org vocabulary with HTTP URIs for legacy compatibility. Type-safe Dart constants with the same API surface as the HTTPS package."
+  activeNav="rdf"
+>
+  <Hero
+    title="Schema.org Vocabulary (HTTP)"
+    description="Legacy-friendly Schema.org terms using HTTP URIs.<br/>Same type-safe API, for systems that still require http://schema.org/."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Vocabularies", href: "/rdf/vocabularies/" },
+      { label: "Schema.org (HTTP)" },
+    ]}
+  />
+
+  <section class="section overview-section">
+    <div class="container">
+      <h2>HTTP URIs for Legacy Compatibility</h2>
+      <p class="section-intro">
+        Use this package when your data or integrations still rely on
+        http://schema.org/ identifiers. The API mirrors the HTTPS package.
+      </p>
+
+      <div class="popular-section">
+        <h3>Most Popular Included Vocabularies</h3>
+        <p>
+          A quick snapshot of high-traffic Schema.org classes using HTTP URIs.
+          The package includes the full vocabulary beyond this list.
+        </p>
+        <div class="tag-grid">
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpPerson-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpPerson</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpOrganization-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpOrganization</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpProduct-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpProduct</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpEvent-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpEvent</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpArticle-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpArticle</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpPlace-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpPlace</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpLocalBusiness-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpLocalBusiness</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpWebSite-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpWebSite</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpWebPage-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpWebPage</a
+          >
+          <a
+            class="tag"
+            href="https://pub.dev/documentation/locorda_rdf_terms_schema_http/latest/schema_http/SchemaHttpOffer-class.html"
+            target="_blank"
+            rel="noopener"
+            >SchemaHttpOffer</a
+          >
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🌐</span> HTTP Namespace</h3>
+          <p>
+            All IRIs use the legacy http://schema.org/ namespace for maximum
+            compatibility.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔁</span> Same API Surface</h3>
+          <p>
+            Identical class-specific helpers and vocabulary constants as the
+            HTTPS package.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🧭</span> Class-Specific Access</h3>
+          <p>
+            Use `SchemaHttpPerson` and similar helpers to discover valid
+            properties quickly.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Compile-Time Constants</h3>
+          <p>
+            Pure constants with no runtime overhead, even at large vocabulary
+            size.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Installation</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="usage-section">
+        <h3>Usage Example</h3>
+        <CodeBlock code={usageCode} lang="dart" />
+      </div>
+
+      <div class="info-box">
+        <h4>💡 When to Use HTTP</h4>
+        <p>
+          Prefer the HTTPS package for new projects. Use HTTP only when
+          integrating with existing datasets or systems that require legacy
+          Schema.org URIs.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Why Use This Package?</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🧩</span> HTTP URI Parity</h3>
+          <p>
+            Use the same structure and concepts as the HTTPS package, but with
+            http://schema.org/ IRIs for legacy datasets.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🛡️</span> Type Safety</h3>
+          <p>
+            Maintain compile-time guarantees while staying compatible with
+            legacy IRIs.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔗</span> Cross-Vocabulary Support</h3>
+          <p>
+            Connected vocabularies remain available through class-specific
+            helpers.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🧱</span> Generator-Proven</h3>
+          <p>
+            Built using `locorda_rdf_terms_generator` for consistent structure
+            and updates.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section related-section">
+    <div class="container">
+      <h2>Related Packages</h2>
+
+      <div class="related-grid">
+        <a href="/rdf/vocabularies/schema/" class="related-card">
+          <span class="related-icon">🏷️</span>
+          <div>
+            <h3>Schema.org (HTTPS)</h3>
+            <p>Modern HTTPS URIs for new projects</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/common/" class="related-card">
+          <span class="related-icon">📦</span>
+          <div>
+            <h3>Common Vocabularies</h3>
+            <p>FOAF, Dublin Core, DCAT, SKOS, and more</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/generator/" class="related-card">
+          <span class="related-icon">⚙️</span>
+          <div>
+            <h3>Generator</h3>
+            <p>Generate custom vocabulary packages for your domain</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Need HTTP Schema.org Support?</h2>
+      <p class="cta-description">
+        Use the legacy Schema.org HTTP package when compatibility matters.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/packages/locorda_rdf_terms_schema_http"
+          target="_blank"
+          rel="noopener"
+          class="cta-primary">View on pub.dev</a
+        >
+        <a href="/rdf/vocabularies/" class="cta-secondary"
+          >← Back to Vocabularies</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
