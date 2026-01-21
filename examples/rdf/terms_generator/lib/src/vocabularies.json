@@ -1,0 +1,16 @@
+{
+  "vocabularies": {
+    "rdf": {
+      "generate": true
+    },
+    "foaf": {
+      "generate": true
+    },
+    "myOntology": {
+      "type": "file",
+      "namespace": "https://example.com/my#",
+      "source": "file://ontologies/my.ttl",
+      "generate": true
+    }
+  }
+}

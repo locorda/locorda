@@ -1,0 +1,7 @@
+# Install the generator
+
+dart pub add locorda_rdf_core
+
+dart pub add dev:build_runner
+
+dart pub add dev:locorda_rdf_terms_generator

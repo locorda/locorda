@@ -1,0 +1,11 @@
+# List preconfigured vocabularies (all are generate: false by default)
+
+dart run locorda_rdf_terms_generator list
+
+# Initialize a vocabulary configuration template
+
+dart run locorda_rdf_terms_generator init
+
+# Generate the Dart constants
+
+dart run build_runner build

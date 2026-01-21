@@ -1,0 +1,184 @@
+Available Vocabularies (80 total)
+======================================================================
+
+📚 Standard Vocabularies:
+  acl
+    http://www.w3.org/ns/auth/acl#
+  bibo
+    http://purl.org/ontology/bibo/
+  cmns-business-auth
+    https://www.omg.org/spec/Commons/BusinessAuthorizations/
+  cmns-cls
+    https://www.omg.org/spec/Commons/Classifiers/
+  cmns-codes
+    https://www.omg.org/spec/Commons/CodesAndCodeSets/
+  cmns-collections
+    https://www.omg.org/spec/Commons/Collections/
+  cmns-ctx-designators
+    https://www.omg.org/spec/Commons/ContextualDesignators/
+  cmns-ctx-id
+    https://www.omg.org/spec/Commons/ContextualIdentifiers/
+  cmns-dates
+    https://www.omg.org/spec/Commons/DatesAndTimes/
+  cmns-designators
+    https://www.omg.org/spec/Commons/Designators/
+  cmns-documents
+    https://www.omg.org/spec/Commons/Documents/
+  cmns-identifiers
+    https://www.omg.org/spec/Commons/Identifiers/
+  cmns-loc
+    https://www.omg.org/spec/Commons/Locations/
+  cmns-organizations
+    https://www.omg.org/spec/Commons/Organizations/
+  cmns-parties
+    https://www.omg.org/spec/Commons/PartiesAndSituations/
+  cmns-quantities
+    https://www.omg.org/spec/Commons/QuantitiesAndUnits/
+  cmns-roles
+    https://www.omg.org/spec/Commons/RolesAndCompositions/
+  contact
+    http://www.w3.org/2000/10/swap/pim/contact#
+  dc
+    http://purl.org/dc/elements/1.1/
+  dcat
+    http://www.w3.org/ns/dcat#
+  dcmitype
+    http://purl.org/dc/dcmitype/
+  dcterms
+    http://purl.org/dc/terms/
+  event
+    http://purl.org/NET/c4dm/event.owl#
+  fibo-be-corp-corp
+    https://spec.edmcouncil.org/fibo/ontology/BE/Corporations/Corporations/
+  fibo-be-fct-fct
+    https://spec.edmcouncil.org/fibo/ontology/BE/FunctionalEntities/FunctionalEntities/
+  fibo-be-fct-pub
+    https://spec.edmcouncil.org/fibo/ontology/BE/FunctionalEntities/Publishers/
+  fibo-be-le-cb
+    https://spec.edmcouncil.org/fibo/ontology/BE/LegalEntities/CorporateBodies/
+  fibo-be-le-fbo
+    https://spec.edmcouncil.org/fibo/ontology/BE/LegalEntities/FormalBusinessOrganizations/
+  fibo-be-le-lp
+    https://spec.edmcouncil.org/fibo/ontology/BE/LegalEntities/LegalPersons/
+  fibo-fbc-pas-fpas
+    https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/FinancialProductsAndServices/
+  fibo-fnd-agr-agr
+    https://spec.edmcouncil.org/fibo/ontology/FND/Agreements/Agreements/
+  fibo-fnd-agr-ctr
+    https://spec.edmcouncil.org/fibo/ontology/FND/Agreements/Contracts/
+  fibo-fnd-arr
+    https://spec.edmcouncil.org/fibo/ontology/FND/Arrangements/Arrangements/
+  fibo-fnd-arr-cls
+    https://spec.edmcouncil.org/fibo/ontology/FND/Arrangements/ClassificationSchemes/
+  fibo-fnd-arr-doc
+    https://spec.edmcouncil.org/fibo/ontology/FND/Arrangements/Documents/
+  fibo-fnd-arr-id
+    https://spec.edmcouncil.org/fibo/ontology/FND/Arrangements/IdentifiersAndIndices/
+  fibo-fnd-arr-lfc
+    https://spec.edmcouncil.org/fibo/ontology/FND/Arrangements/Lifecycles/
+  fibo-fnd-dt-fd
+    https://spec.edmcouncil.org/fibo/ontology/FND/DatesAndTimes/FinancialDates/
+  fibo-fnd-dt-oc
+    https://spec.edmcouncil.org/fibo/ontology/FND/DatesAndTimes/Occurrences/
+  fibo-fnd-gao-obj
+    https://spec.edmcouncil.org/fibo/ontology/FND/GoalsAndObjectives/Objectives/
+  fibo-fnd-law-cor
+    https://spec.edmcouncil.org/fibo/ontology/FND/Law/LegalCore/
+  fibo-fnd-law-lcap
+    https://spec.edmcouncil.org/fibo/ontology/FND/Law/LegalCapacity/
+  fibo-fnd-oac-own
+    https://spec.edmcouncil.org/fibo/ontology/FND/OwnershipAndControl/Ownership/
+  fibo-fnd-pas-pas
+    https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/ProductsAndServices/
+  fibo-fnd-people
+    https://spec.edmcouncil.org/fibo/ontology/FND/AgentsAndPeople/People/
+  fibo-fnd-plc-adr
+    https://spec.edmcouncil.org/fibo/ontology/FND/Places/Addresses/
+  fibo-fnd-pty-pty
+    https://spec.edmcouncil.org/fibo/ontology/FND/Parties/Parties/
+  foaf
+    http://xmlns.com/foaf/0.1/
+  gen
+    http://www.w3.org/2006/gen/ont#
+  geo
+    http://www.w3.org/2003/01/geo/wgs84_pos#
+  gs1
+    https://ref.gs1.org/voc/
+  hydra
+    http://www.w3.org/ns/hydra/core#
+  lcc-cr
+    https://www.omg.org/spec/LCC/Countries/CountryRepresentation/
+  lcc-lr
+    https://www.omg.org/spec/LCC/Languages/LanguageRepresentation/
+  ldp
+    http://www.w3.org/ns/ldp#
+  owl
+    http://www.w3.org/2002/07/owl#
+  pim
+    http://www.w3.org/ns/pim/space#
+  prov
+    http://www.w3.org/ns/prov#
+  rdf
+    http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  rdfs
+    http://www.w3.org/2000/01/rdf-schema#
+  schema
+    https://schema.org/
+  schema-http
+    http://schema.org/
+  sioc
+    http://rdfs.org/sioc/ns#
+  skos
+    http://www.w3.org/2004/02/skos/core#
+  solid
+    http://www.w3.org/ns/solid/terms#
+  vcard
+    http://www.w3.org/2006/vcard/ns#
+  void
+    http://rdfs.org/ns/void#
+  vs
+    http://www.w3.org/2003/06/sw-vocab-status/ns#
+  xsd
+    http://www.w3.org/2001/XMLSchema#
+
+⛔ Skipped Vocabularies:
+  SNOMEDCT
+    http://purl.bioontology.org/ontology/SNOMEDCT/
+    Reason: Licensed vocabulary, requires authentication for access
+  cmns-geo
+    https://www.omg.org/spec/Commons/GeopoliticalEntities/
+    Reason: No reliable source known
+  fibo-be-nfpo
+    https://spec.edmcouncil.org/fibo/ontology/BE/NotForProfitOrganizations/NotForProfitOrganizations/
+    Reason: No reliable source known
+  fibo-fnd-locations
+    https://spec.edmcouncil.org/fibo/ontology/FND/Places/Locations/
+    Reason: No reliable source known
+  fibo-fnd-organizations
+    https://spec.edmcouncil.org/fibo/ontology/FND/Organizations/Organizations/
+    Reason: No reliable source known
+  fibo-pay-services
+    https://spec.edmcouncil.org/fibo/ontology/PAY/PaymentServices/PaymentServices/
+    Reason: No reliable source known
+  gs1-voc
+    https://gs1.org/voc/
+    Reason: Alternative namespace for gs1 vocabulary, covered by existing gs1 entry
+  gs1-voc-www
+    https://www.gs1.org/voc/
+    Reason: Alternative namespace for gs1 vocabulary, covered by existing gs1 entry
+  lrm
+    http://iflastandards.info/ns/lrm/lrmoo/
+    Reason: No reliable source known
+  sarif
+    http://sarif.info/
+    Reason: Not available as RDF vocabulary, only as JSON Schema
+  unece
+    http://unece.org/vocab#
+    Reason: No reliable source known
+
+🔧 Custom Vocabularies:
+  myOntology ✓ GENERATING
+    https://example.com/my#
+    Source: file://ontologies/my.ttl
+
+To generate a vocabulary, set "generate": true in your vocabularies.json

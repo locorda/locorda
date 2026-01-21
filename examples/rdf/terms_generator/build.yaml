@@ -1,0 +1,10 @@
+targets:
+  $default:
+    builders:
+      locorda_rdf_terms_generator|vocabulary_builder:
+        options:
+          vocabulary_configs:
+            - 'package:my_shared_package/vocabularies.json'
+            - lib/src/vocabularies.json
+          output_dir: "lib/src/vocab/generated"
+          cache_dir: ".dart_tool/rdf_vocabulary_cache"

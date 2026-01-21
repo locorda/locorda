@@ -78,5 +78,16 @@ echo "🔍 Vocabularies: Running example tests..."
 dart test
 popd
 
+# Verify terms generator examples
+echo ""
+echo "📦 Terms Generator: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/terms_generator"
+dart pub get
+
+echo ""
+echo "🔍 Terms Generator: Running example tests..."
+dart test
+popd
+
 echo ""
 echo "✅ All examples verified successfully!"

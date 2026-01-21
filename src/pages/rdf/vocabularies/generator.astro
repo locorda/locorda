@@ -1,0 +1,322 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Hero from "../../../components/Hero.astro";
+import CodeBlock from "../../../components/CodeBlock.astro";
+import "../../../styles/vocabularies-package.css";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../../examples/rdf/terms_generator");
+
+const installCode = await readFile(join(examplesDir, "snippets/install.txt"), "utf-8");
+const commandsCode = await readFile(
+  join(examplesDir, "snippets/commands.txt"),
+  "utf-8",
+);
+const listOutputCode = await readFile(
+  join(examplesDir, "snippets/list_output.txt"),
+  "utf-8",
+);
+const vocabConfigCode = await readFile(
+  join(examplesDir, "lib/src/vocabularies.json"),
+  "utf-8",
+);
+const buildConfigCode = await readFile(
+  join(examplesDir, "build.yaml"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_terms_generator",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_terms_generator",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="RDF Terms Generator - Locorda"
+  description="Generate type-safe Dart vocabularies from RDF, Turtle, JSON-LD, and RDF/XML sources with locorda_rdf_terms_generator."
+  activeNav="rdf"
+>
+  <Hero
+    title="RDF Terms Generator"
+    description="Turn your domain ontologies into type-safe Dart packages.<br/>IDE autocomplete for custom vocabularies—just like locorda_rdf_terms_core."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Vocabularies", href: "/rdf/vocabularies/" },
+      { label: "Generator" },
+    ]}
+  />
+
+  <section class="section overview-section">
+    <div class="container">
+      <h2>Build Your Own Vocabulary Packages</h2>
+      <p class="section-intro">
+        The same tool that powers <a href="/rdf/vocabularies/core/">locorda_rdf_terms_core</a>,
+        <a href="/rdf/vocabularies/common/">locorda_rdf_terms_common</a>, and
+        <a href="/rdf/vocabularies/schema/">locorda_rdf_terms_schema</a>—now available
+        for your custom ontologies. Generate type-safe Dart constants from any
+        Turtle, RDF/XML, or JSON-LD source.
+      </p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Custom + Standard</h3>
+          <p>
+            Generate packages for your domain ontologies alongside 30+
+            preconfigured vocabularies (Schema.org, FOAF, Dublin Core, etc.).
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🧠</span> Two APIs, One Tool</h3>
+          <p>
+            Get both vocabulary classes (<code>MyVocab</code>) and class-specific
+            helpers (<code>MyVocabPerson</code>) for maximum flexibility.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔗</span> Cross-Vocabulary Intelligence</h3>
+          <p>
+            The generator follows <code>rdfs:domain</code> and <code>rdfs:range</code>
+            to include related properties from linked vocabularies automatically.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Zero Runtime Cost</h3>
+          <p>
+            All constants are generated at build time. No reflection, no dynamic
+            lookups—just pure compile-time safety.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>1. Install the generator</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="usage-section list-output-section">
+        <h3>2. Discover preconfigured vocabularies</h3>
+        <p>
+          The generator ships with 80+ well-known vocabularies preconfigured—all
+          set to <code>generate: false</code> by default. Use <code>list</code> to
+          see what's available.
+        </p>
+        <div class="scrollable-code">
+          <CodeBlock code={listOutputCode} lang="text" />
+        </div>
+      </div>
+
+      <div class="usage-section">
+        <h3>3. Initialize your project</h3>
+        <p>
+          Run <code>init</code> to create a <code>vocabularies.json</code> config
+          file with all preconfigured vocabularies. Then enable the ones you need
+          by setting <code>generate: true</code>.
+        </p>
+        <CodeBlock code={commandsCode} lang="bash" />
+      </div>
+
+      <div class="info-box">
+        <h4>✅ Generated Output Location</h4>
+        <p>
+          By default, files land in <strong>lib/src/vocab/generated/</strong>.
+          Override this in <code>build.yaml</code> if you need a custom path.
+        </p>
+      </div>
+
+      <div class="info-box">
+        <h4>💡 Use Your Generated Classes</h4>
+        <p>
+          Check the generated classes into version control and import them just
+          like <code>locorda_rdf_terms_core</code> or <code
+            >locorda_rdf_terms_common</code
+          >. Your team gets full IDE autocomplete for both standard and custom
+          vocabularies.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Configuration</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🗂️</span> vocabularies.json</h3>
+          <p>
+            Generated by <code>init</code>. Enable standard vocabularies with
+            <code>generate: true</code>, or add custom sources from files, URLs,
+            or pub.dev packages.
+          </p>
+          <CodeBlock code={vocabConfigCode} lang="json" />
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚙️</span> build.yaml (Optional)</h3>
+          <p>
+            Fine-tune builder options: output directories, caching, and config
+            stacking (merges package-provided configs with your own).
+          </p>
+          <CodeBlock code={buildConfigCode} lang="yaml" />
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h4>📚 Full Configuration Reference</h4>
+        <p>
+          See all <code>vocabularies.json</code> properties (namespace prefixes,
+          cross-vocabulary imports, output naming, etc.) in the
+          <a
+            href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_terms_generator#configuration-options"
+            target="_blank"
+            rel="noopener"
+            >generator documentation on GitHub</a
+          >.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section use-cases-section">
+    <div class="container">
+      <h2>Common Use Cases</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🏢</span> Domain Ontologies</h3>
+          <p>
+            Model your business domain with custom RDF vocabularies. Generate
+            type-safe Dart classes for internal ontologies just like the
+            prebuilt packages do for Schema.org.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📦</span> On-Demand Standard Vocabs</h3>
+          <p>
+            Need FOAF or Dublin Core without pulling in the full <code
+              >locorda_rdf_terms_common</code
+            > package? Enable only what you need and keep your bundle size minimal.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔧</span> Custom Vocabulary Variants</h3>
+          <p>
+            Fork standard vocabularies with custom prefixes, extra properties,
+            or different output structures. Full control over generated code.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🌐</span> Multi-Ontology Projects</h3>
+          <p>
+            Combine multiple vocabularies (standard + custom) in one package
+            with cross-vocabulary property discovery and consistent naming.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section related-section">
+    <div class="container">
+      <h2>Related Packages</h2>
+
+      <div class="related-grid">
+        <a href="/rdf/vocabularies/core/" class="related-card">
+          <span class="related-icon">🔷</span>
+          <div>
+            <h3>Core Vocabularies</h3>
+            <p>RDF, RDFS, OWL, XSD - essential foundations</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/common/" class="related-card">
+          <span class="related-icon">📦</span>
+          <div>
+            <h3>Common Vocabularies</h3>
+            <p>FOAF, Dublin Core, DCAT, SKOS, and more</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/schema/" class="related-card">
+          <span class="related-icon">🏷️</span>
+          <div>
+            <h3>Schema.org</h3>
+            <p>Complete Schema.org vocabulary with HTTPS URIs</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Start Building Type-Safe Vocabularies</h2>
+      <p class="cta-description">
+        Generate packages for your domain ontologies in minutes—with the same
+        developer experience as locorda_rdf_terms_core.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/packages/locorda_rdf_terms_generator"
+          target="_blank"
+          rel="noopener"
+          class="cta-primary">View on pub.dev</a
+        >
+        <a
+          href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_terms_generator"
+          target="_blank"
+          rel="noopener"
+          class="cta-secondary">Read the Docs</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .list-output-section {
+    margin-top: 3rem;
+  }
+
+  .scrollable-code {
+    margin-top: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .scrollable-code :global(.code-block-wrapper) {
+    margin-top: 0;
+  }
+
+  .scrollable-code :global(pre) {
+    margin: 0;
+    border-radius: 0.5rem;
+  }
+</style>
