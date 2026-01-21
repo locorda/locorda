@@ -6,7 +6,12 @@
 	background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #0891b2 100%);
 	padding: 4rem 0 6rem 0;
 	overflow: hidden;
-	margin-bottom: 4rem;
+}
+
+/* First section after hero gets extra top padding for seamless transition */
+.hero-gradient + .section,
+.hero-gradient + section {
+	padding: 6rem 0 4rem 0;
 }
 
 .hero-content {
