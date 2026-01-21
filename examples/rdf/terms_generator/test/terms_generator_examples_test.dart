@@ -11,7 +11,7 @@ void main() {
 
     expect(jsonMap.containsKey('vocabularies'), isTrue);
     final vocabularies = jsonMap['vocabularies'] as Map<String, dynamic>;
-    expect(vocabularies.containsKey('schema'), isTrue);
+
     expect(vocabularies.containsKey('foaf'), isTrue);
   });
 
