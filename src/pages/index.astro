@@ -3,8 +3,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout 
-	title="Locorda" 
-	description="Libraries for powerful apps that respect user data ownership"
+	title="Locorda - Libraries for Privacy-Preserving Apps" 
+	description="Dart libraries for powerful applications that respect data ownership. RDF toolkit, CRDT sync, and semantic web tools for modern development."
 >
 	<div class="hero-gradient">
 		<div class="container">
@@ -14,14 +14,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 					<h1>Locorda</h1>
 				</div>
 				
+				<p class="hero-tagline">
+					Build <strong>powerful</strong> apps that respect <strong>data ownership</strong>
+				</p>
+				
 				<p class="hero-description">
-					Dart libraries for applications that are <strong>powerful</strong> <em>and</em> <strong>privacy-preserving</strong>.<br/>
-					Cloud-synced capabilities without sacrificing data ownership.
+					Dart libraries combining semantic web standards (RDF) with offline-first sync —<br/>
+					enabling cloud-synced apps where <strong>users own their data</strong>.
 				</p>
 				
 				<div class="hero-cta">
-					<a href="/rdf/" class="cta-primary">Explore RDF Libraries →</a>
-					<a href="#vision" class="cta-secondary">Our Vision</a>
+					<a href="#vision" class="cta-primary">Our Vision →</a>
+					<a href="/rdf/" class="cta-secondary">Explore RDF Libraries</a>
 				</div>
 			</div>
 			
@@ -33,65 +37,58 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 	
 	<section class="section">
 		<div class="container">
-			<h2>The RDF Ecosystem</h2>
+			<h2>The RDF Toolkit</h2>
 			
 			<p class="section-lead">
-				A complete, type-safe toolkit for working with RDF and Linked Data in Dart.
+				Everything you need to work with RDF and Linked Data in Dart — from parsing to object mapping to vocabularies.
 			</p>
 			
-			<div class="cards-grid">
-				<div class="card card-large">
-					<h3>Core Libraries</h3>
-					<p><strong>Parse, serialize, and query RDF data</strong></p>
-					<ul class="feature-list">
-						<li>🔷 <strong>Turtle, N-Triples, N-Quads, JSON-LD</strong> - All standard formats</li>
-						<li>🔷 <strong>RdfGraph & RdfDataset</strong> - Powerful graph operations</li>
-						<li>🔷 <strong>Zero dependencies</strong> - Except logging</li>
-						<li>🔷 <strong>W3C RDF 1.1 compliant</strong> - Standards-based</li>
-					</ul>
-
-					<a href="/rdf/#core" class="card-link">Explore Core →</a>
-				</div>
+			<div class="rdf-grid">
+				<a href="/rdf/core/" class="rdf-card">
+					<div class="rdf-card-icon">🔷</div>
+					<h3>Core Library</h3>
+					<p>Parse and serialize Turtle, N-Triples, N-Quads, JSON-LD. Query graphs and datasets.</p>
+				</a>
 				
-				<div class="card">
+				<a href="/rdf/mapper/" class="rdf-card">
+					<div class="rdf-card-icon">🎯</div>
 					<h3>Object Mapper</h3>
-					<p><strong>Annotate classes, get RDF for free</strong></p>
-					<p>Bidirectional mapping with code generation. Define your model once, serialize to any RDF format.</p>
-
-					<a href="/rdf/#mapper" class="card-link">Learn more →</a>
-				</div>
+					<p>Annotate classes, get bidirectional RDF mapping for free with code generation.</p>
+				</a>
 				
-				<div class="card">
-					<h3>Type-Safe Vocabularies</h3>
-					<p><strong>Never typo a property again</strong></p>
-					<p>Schema.org, FOAF, Dublin Core as Dart constants. IDE autocompletion included.</p>
-
-					<a href="/rdf-vocabularies/" class="card-link">Explore →</a>
-				</div>
+				<a href="/rdf/vocabularies/" class="rdf-card">
+					<div class="rdf-card-icon">📚</div>
+					<h3>Vocabularies</h3>
+					<p>Type-safe constants for Schema.org, FOAF, Dublin Core, and 30+ standards.</p>
+				</a>
 				
-				<div class="card">
+				<a href="/rdf/canonicalization/" class="rdf-card">
+					<div class="rdf-card-icon">🔐</div>
 					<h3>Canonicalization</h3>
-					<p><strong>RDF-CANON & isomorphism</strong></p>
-					<p>Canonical serialization and graph comparison.</p>
+					<p>RDF-CANON support for reliable graph comparison and digital signatures.</p>
+				</a>
+				
+				<a href="/rdf/xml/" class="rdf-card">
+					<div class="rdf-card-icon">📄</div>
+					<h3>RDF/XML</h3>
+					<p>Full encoder and decoder for legacy RDF/XML format support.</p>
+				</a>
+				
+				<a href="/rdf/vocabularies/generator/" class="rdf-card">
+					<div class="rdf-card-icon">⚙️</div>
+					<h3>Generator</h3>
+					<p>Create type-safe Dart constants from any RDF ontology or vocabulary.</p>
+				</a>
 			</div>
 			
-			<div class="card">
-				<h3>RDF/XML Support</h3>
-				<p><strong>Legacy format support</strong></p>
-				<p>Full RDF/XML encoder and decoder.</p>
-			</div>
-			
-			<div class="card">
-				<h3>Vocabulary Generator</h3>
-				<p><strong>Create your own</strong></p>
-				<p>Generate Dart constants from any RDF ontology.</p>
-				</div>
+			<div class="rdf-cta">
+				<a href="/rdf/" class="btn-large">Explore All RDF Libraries →</a>
 			</div>
 		</div>
 	</section>
 	
 	<section id="vision" class="section vision-section">
-		<div class="container">
+		<div class="container vision-container">
 			<div class="vision-personal">
 				<img src="https://github.com/kkalass.png" alt="Klas Kalaß" class="vision-avatar" />
 				<div class="vision-personal-text">
@@ -100,49 +97,60 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 				</div>
 			</div>
 			
-			<p class="vision-intro">
-				<strong>RDF and Linked Data enable applications that respect user ownership.</strong>
-			</p>
-			
-			<p class="vision-problem">
-				Most applications today lock your data in proprietary formats and vendor-controlled servers. RDF's open standards and semantic structure make it possible to build differently: apps where <strong>you</strong> control where data lives, who accesses it, and how it connects across applications.
-			</p>
-			
-			<p class="vision-question">
-				<strong>What becomes possible?</strong>
-			</p>
+			<div class="vision-statement">
+				<p class="vision-headline">
+					What if apps were powerful <em>and</em> respected your data ownership?
+				</p>
+				
+				<p class="vision-problem">
+					Most applications today lock your data in proprietary formats and vendor-controlled servers. You can't easily export it, own it, or use it with other apps. The vendor controls access, privacy policies, and longevity.
+				</p>
+				
+				<p class="vision-possibility">
+					<strong>RDF and semantic web standards make building differently possible:</strong> Apps where <strong>you</strong> decide where data lives, who accesses it, and how it connects across applications — without sacrificing modern features like cloud sync, collaboration, or rich UX.
+				</p>
+			</div>
 			
 			<div class="vision-principles">
 				<div class="principle">
-					<h3>🔐 User-Owned Data</h3>
-					<p>Data lives where <strong>you</strong> choose—your pod, your server, your rules. Not locked in vendor databases.</p>
+					<div class="principle-icon">🔐</div>
+					<h3>User-Owned Data</h3>
+					<p>Data lives where <strong>you</strong> choose — your pod, your server, your rules. Not locked in vendor silos.</p>
 				</div>
 				
 				<div class="principle">
-					<h3>🔗 Semantic Interoperability</h3>
-					<p>RDF's graph structure lets applications share and link data meaningfully, without tight coupling or data loss.</p>
+					<div class="principle-icon">🔗</div>
+					<h3>Semantic Interoperability</h3>
+					<p>RDF's graph structure lets apps share and link data meaningfully, without tight coupling or data loss.</p>
 				</div>
 				
 				<div class="principle">
-					<h3>🌐 Standards-Based</h3>
-					<p>Built on W3C standards (RDF 1.1, Turtle, JSON-LD) for long-term interoperability and vendor independence.</p>
+					<div class="principle-icon">⚡</div>
+					<h3>Developer-Friendly</h3>
+					<p>Type-safe APIs, code generation, excellent IDE support. Semantic web shouldn't be painful to build.</p>
 				</div>
 				
 				<div class="principle">
-					<h3>⚡ Developer-Friendly</h3>
-					<p>Type-safe APIs, code generation, and excellent IDE support. Semantic web development shouldn't be painful.</p>
+					<div class="principle-icon">🌐</div>
+					<h3>Standards-Based</h3>
+					<p>W3C standards (RDF 1.1, Turtle, JSON-LD) for long-term interoperability and vendor independence.</p>
 				</div>
 			</div>
 			
-			<p class="vision-inspiration">
-				These RDF libraries power real experiments in user-owned computing, including an <a href="/sync-engine/"><strong>alpha sync engine</strong></a> combining CRDTs with RDF for conflict-free synchronization to SOLID pods, cloud services, and other backends. Drawing inspiration from <a href="https://solidproject.org/" target="_blank" rel="noopener"><strong>SOLID's vision</strong></a> of decentralized, user-controlled data. The goal: cloud-synced apps that are easy to build and delightful to use—without sacrificing data ownership.
-			</p>
+			<div class="vision-inspiration">
+				<p>
+					These libraries power real experiments in user-owned computing, including an <a href="/sync-engine/"><strong>alpha sync engine</strong></a> combining CRDTs with RDF for conflict-free synchronization. Drawing inspiration from <a href="https://solidproject.org/" target="_blank" rel="noopener"><strong>SOLID's vision</strong></a> of decentralized, user-controlled data.
+				</p>
+				<p class="vision-goal">
+					<strong>The goal:</strong> Cloud-synced apps that are delightful to build and use — <em>without</em> sacrificing data ownership.
+				</p>
+			</div>
 		</div>
 	</section>
 	
-	<section class="section">
+	<section class="section quick-start-section">
 		<div class="container">
-			<h2>Quick Start</h2>
+			<h2>Get Started</h2>
 			
 			<div class="code-examples">
 				<div class="code-example">
@@ -152,11 +160,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import 'package:locorda_rdf_core/core.dart';
 
 final graph = turtle.decode('''
-  @prefix schema: &lt;http://schema.org/> .
-  <#alice> a schema:Person ; schema:name "Alice" .
+  @prefix schema: &lt;https://schema.org/&gt; .
+  &lt;#alice&gt; a schema:Person ;
+    schema:name "Alice" .
 ''');
 
-print(jsonldGraph.encode(graph));  // Convert to JSON-LD</code></pre>
+// Convert to JSON-LD
+print(jsonldGraph.encode(graph));</code></pre>
 				</div>
 				
 				<div class="code-example">
@@ -166,28 +176,70 @@ print(jsonldGraph.encode(graph));  // Convert to JSON-LD</code></pre>
 import 'package:locorda_rdf_terms_schema/schema.dart';
 
 // No more string typos!
-final nameProperty = SchemaPerson.name;  // IDE autocomplete ✨
-final emailProperty = SchemaPerson.email;</code></pre>
+final nameProperty = SchemaPerson.name;
+final emailProperty = SchemaPerson.email;
+
+// IDE autocomplete ✨</code></pre>
 				</div>
 			</div>
 		</div>
 	</section>
 	
-	<section class="section future-section">
+	<section class="section projects-section">
 		<div class="container">
-			<h2>What's Next</h2>
+			<h2>Active Projects</h2>
 			
-			<div class="cards-grid cards-grid-2">
-				<div class="card">
-					<span class="status-badge status-warning">⚠️ Alpha - Under Assessment</span>
-					<h3>🔄 Sync Engine</h3>
-				<p><strong>Offline-first Flutter sync (Alpha)</strong></p>
-				<p>CRDT-based synchronization for Flutter apps with various backends (SOLID pods, cloud services).</p>
-				<div class="card">
-					<span class="status-badge status-info">🚧 In Development</span>
-					<h3>💬 Chat Essence</h3>
-				<p><strong>Matrix Chat Browser with AI Insights</strong></p>
-				<p>Explore Matrix conversations with LLM-generated summaries, topic extraction, and daily/weekly briefings.</p>
+			<div class="projects-grid">
+				<a href="/rdf/" class="project-card project-card-featured">
+					<div class="project-status">
+						<span class="status-badge status-stable">✅ Stable</span>
+					</div>
+					<div class="project-icon">🔷</div>
+					<h3>RDF Libraries</h3>
+					<p class="project-tagline">Complete, type-safe RDF toolkit for Dart</p>
+					<p class="project-description">
+						Parse, serialize, query RDF data. Object mapping with code generation. Type-safe vocabularies for Schema.org, FOAF, and 30+ standards. W3C RDF 1.1 compliant.
+					</p>
+					<div class="project-features">
+						<span class="feature-tag">Turtle</span>
+						<span class="feature-tag">JSON-LD</span>
+						<span class="feature-tag">RDF/XML</span>
+						<span class="feature-tag">Type-Safe</span>
+					</div>
+				</a>
+				
+				<a href="/sync-engine/" class="project-card">
+					<div class="project-status">
+						<span class="status-badge status-alpha">⚗️ Alpha</span>
+					</div>
+					<div class="project-icon">🔄</div>
+					<h3>Sync Engine</h3>
+					<p class="project-tagline">Offline-first sync with CRDTs + RDF</p>
+					<p class="project-description">
+						Experimental conflict-free synchronization for Flutter apps. Combines CRDT algorithms with RDF for semantic conflict resolution across SOLID pods and cloud services.
+					</p>
+					<div class="project-features">
+						<span class="feature-tag">CRDTs</span>
+						<span class="feature-tag">Offline-First</span>
+						<span class="feature-tag">SOLID</span>
+					</div>
+				</a>
+				
+				<div class="project-card project-card-future">
+					<div class="project-status">
+						<span class="status-badge status-planned">🚧 Planned</span>
+					</div>
+					<div class="project-icon">💬</div>
+					<h3>Chat Essence</h3>
+					<p class="project-tagline">Matrix conversations with AI insights</p>
+					<p class="project-description">
+						Browse Matrix chat with LLM-generated summaries, topic extraction, and daily/weekly briefings. Stay connected without notification overload.
+					</p>
+					<div class="project-features">
+						<span class="feature-tag">Matrix</span>
+						<span class="feature-tag">AI Summaries</span>
+						<span class="feature-tag">Topics</span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -199,9 +251,8 @@ final emailProperty = SchemaPerson.email;</code></pre>
 	.hero-gradient {
 		position: relative;
 		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #0891b2 100%);
-		padding: 6rem 0;
+		padding: 8rem 0;
 		overflow: hidden;
-		margin-bottom: 4rem;
 	}
 	
 	.hero-content {
@@ -209,6 +260,8 @@ final emailProperty = SchemaPerson.email;</code></pre>
 		z-index: 10;
 		text-align: center;
 		color: white;
+		max-width: 900px;
+		margin: 0 auto;
 	}
 	
 	.hero-title {
@@ -216,35 +269,39 @@ final emailProperty = SchemaPerson.email;</code></pre>
 		align-items: center;
 		justify-content: center;
 		gap: 1.5rem;
-		margin-bottom: 1.5rem;
+		margin-bottom: 2rem;
 	}
 	
 	.hero-logo {
-		width: 80px;
-		height: 80px;
+		width: 100px;
+		height: 100px;
 	}
 	
 	.hero-content h1 {
 		color: white;
 		margin-bottom: 0;
+		font-size: 3.5rem;
+	}
+	
+	.hero-tagline {
+		font-size: 2rem;
+		line-height: 1.3;
+		color: #ffffff;
+		margin-bottom: 1.5rem;
+		font-weight: 600;
 	}
 	
 	.hero-description {
-		font-size: 1.5rem;
+		font-size: 1.25rem;
 		line-height: 1.6;
 		color: #e0e7ff;
-		margin-bottom: 2.5rem;
+		margin-bottom: 3rem;
 		font-weight: 300;
 	}
 	
 	.hero-description strong {
-		font-weight: 700;
+		font-weight: 600;
 		color: #ffffff;
-	}
-	
-	.hero-description em {
-		font-style: normal;
-		color: #a5b4fc;
 	}
 	
 	.hero-cta {
@@ -257,7 +314,7 @@ final emailProperty = SchemaPerson.email;</code></pre>
 	.cta-primary,
 	.cta-secondary {
 		display: inline-block;
-		padding: 1rem 2.5rem;
+		padding: 1.125rem 2.75rem;
 		border-radius: 0.75rem;
 		font-weight: 600;
 		text-decoration: none;
@@ -268,25 +325,25 @@ final emailProperty = SchemaPerson.email;</code></pre>
 	.cta-primary {
 		background: white;
 		color: #1e40af;
-		box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+		box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
 	}
 	
 	.cta-primary:hover {
 		background: #e0e7ff;
 		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+		box-shadow: 0 8px 24px rgba(255, 255, 255, 0.35);
 	}
 	
 	.cta-secondary {
-		background: rgba(255, 255, 255, 0.1);
+		background: rgba(255, 255, 255, 0.12);
 		color: white;
-		border: 2px solid rgba(255, 255, 255, 0.3);
+		border: 2px solid rgba(255, 255, 255, 0.4);
 		backdrop-filter: blur(10px);
 	}
 	
 	.cta-secondary:hover {
-		background: rgba(255, 255, 255, 0.2);
-		border-color: rgba(255, 255, 255, 0.5);
+		background: rgba(255, 255, 255, 0.22);
+		border-color: rgba(255, 255, 255, 0.6);
 		transform: translateY(-2px);
 	}
 	
@@ -327,112 +384,28 @@ final emailProperty = SchemaPerson.email;</code></pre>
 		animation-delay: -16s;
 	}
 	
-	/* Section Styling */
-	.section-lead {
-		font-size: 1.25rem;
-		line-height: 1.6;
-		color: #64748b;
-		text-align: center;
-		max-width: 800px;
-		margin: 0 auto 3rem;
-	}
-	
-	/* Cards Grid */
-	.cards-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 1.5rem;
-		margin-top: 2rem;
-	}
-	
-	.cards-grid-2 {
-		grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-	}
-	
-	.card {
-		background: white;
-		border: 1px solid #e2e8f0;
-		border-radius: 1rem;
-		padding: 2rem;
-		transition: all 0.2s ease;
-	}
-	
-	.card:hover {
-		transform: translateY(-4px);
-		box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15);
-		border-color: #3b82f6;
-	}
-	
-	.card-large {
-		grid-column: span 2;
-	}
-	
-	@media (max-width: 768px) {
-		.card-large {
-			grid-column: span 1;
+	@keyframes float {
+		0%, 100% {
+			transform: translate(0, 0) scale(1);
 		}
-	}
-	
-	.card h3 {
-		margin-bottom: 1rem;
-		color: #0f172a;
-	}
-	
-	.card p {
-		color: #64748b;
-		line-height: 1.6;
-		margin-bottom: 1rem;
-	}
-	
-	.feature-list {
-		list-style: none;
-		margin: 1.5rem 0;
-	}
-	
-	.feature-list li {
-		color: #475569;
-		line-height: 1.8;
-		margin-bottom: 0.5rem;
-	}
-	
-	.card-link {
-		display: inline-block;
-		color: #3b82f6;
-		font-weight: 600;
-		margin-top: 1rem;
-		transition: color 0.2s;
-	}
-	
-	.card-link:hover {
-		color: #1e40af;
-	}
-	
-	/* Status Badges */
-	.status-badge {
-		display: inline-block;
-		padding: 0.25rem 0.75rem;
-		border-radius: 9999px;
-		font-size: 0.875rem;
-		font-weight: 600;
-		background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-		color: white;
-		margin-bottom: 1rem;
-	}
-	
-	.status-badge.status-warning {
-		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-	}
-	
-	.status-badge.status-info {
-		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+		33% {
+			transform: translate(30px, -30px) scale(1.1);
+		}
+		66% {
+			transform: translate(-20px, 20px) scale(0.9);
+		}
 	}
 	
 	/* Vision Section */
 	.vision-section {
-		background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-		border-radius: 1.5rem;
-		padding: 4rem 2rem;
-		margin: 4rem auto;
+		background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+		padding: 6rem 2rem;
+		margin: 0;
+	}
+	
+	.vision-container {
+		max-width: 900px;
+		margin: 0 auto;
 	}
 	
 	.vision-personal {
@@ -440,53 +413,76 @@ final emailProperty = SchemaPerson.email;</code></pre>
 		align-items: center;
 		justify-content: center;
 		gap: 1.5rem;
-		margin-bottom: 2rem;
+		margin-bottom: 3rem;
 	}
 	
 	.vision-avatar {
-		width: 80px;
-		height: 80px;
+		width: 90px;
+		height: 90px;
 		border-radius: 50%;
-		border: 3px solid #3b82f6;
-		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-	}
-	
-	.vision-personal-text {
-		text-align: left;
+		border: 4px solid #3b82f6;
+		box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25);
 	}
 	
 	.vision-personal-text h2 {
 		margin-bottom: 0.25rem;
-		text-align: left;
+		font-size: 2.5rem;
+		color: #0f172a;
 	}
 	
 	.vision-byline {
 		color: #64748b;
 		font-size: 1.125rem;
 		margin: 0;
+		font-style: italic;
 	}
 	
-	.vision-intro,
-	.vision-problem,
-	.vision-question {
+	.vision-statement {
+		margin-bottom: 3rem;
+	}
+	
+	.vision-headline {
+		font-size: 2rem;
+		line-height: 1.4;
 		text-align: center;
-		font-size: 1.25rem;
-		max-width: 700px;
-		margin: 0 auto 1.5rem;
-		color: #475569;
-		line-height: 1.6;
+		color: #0f172a;
+		font-weight: 600;
+		margin-bottom: 2rem;
 	}
 	
-	.vision-intro strong,
-	.vision-question strong {
+	.vision-headline em {
+		color: #3b82f6;
+		font-style: normal;
+	}
+	
+	.vision-problem,
+	.vision-possibility {
+		font-size: 1.25rem;
+		line-height: 1.7;
+		color: #475569;
+		margin-bottom: 1.5rem;
+		text-align: center;
+	}
+	
+	.vision-possibility strong {
 		color: #0f172a;
+		font-weight: 600;
 	}
 	
 	.vision-principles {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-		gap: 2rem;
-		margin: 3rem 0;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 2.5rem;
+		margin: 4rem 0;
+	}
+	
+	.principle {
+		text-align: center;
+	}
+	
+	.principle-icon {
+		font-size: 3rem;
+		margin-bottom: 1rem;
 	}
 	
 	.principle h3 {
@@ -498,27 +494,234 @@ final emailProperty = SchemaPerson.email;</code></pre>
 	.principle p {
 		color: #64748b;
 		line-height: 1.6;
+		font-size: 0.95rem;
 	}
 	
 	.vision-inspiration {
-		text-align: center;
-		font-size: 1.125rem;
-		margin-top: 2rem;
-		color: #64748b;
-		font-style: italic;
+		margin-top: 3rem;
+		padding: 2rem;
+		background: white;
+		border-radius: 1rem;
+		border: 2px solid #e5e7eb;
 	}
 	
-	.vision-inspiration strong {
+	.vision-inspiration p {
+		font-size: 1.05rem;
+		line-height: 1.7;
+		color: #475569;
+		margin-bottom: 1rem;
+	}
+	
+	.vision-inspiration a {
 		color: #3b82f6;
+		font-weight: 600;
+		text-decoration: none;
+		border-bottom: 2px solid transparent;
+		transition: border-color 0.2s;
+	}
+	
+	.vision-inspiration a:hover {
+		border-color: #3b82f6;
+	}
+	
+	.vision-goal {
+		font-style: italic;
+		color: #64748b;
+	}
+	
+	.vision-goal strong {
+		color: #0f172a;
 		font-weight: 600;
 	}
 	
-	/* Code Examples */
+	/* Projects Section */
+	.projects-section {
+		background: white;
+	}
+	
+	.projects-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+		gap: 2rem;
+		margin-top: 3rem;
+	}
+	
+	.project-card {
+		background: white;
+		border: 2px solid #e5e7eb;
+		border-radius: 1rem;
+		padding: 2rem;
+		transition: all 0.3s;
+		text-decoration: none;
+		color: inherit;
+		display: block;
+		position: relative;
+	}
+	
+	.project-card:hover {
+		transform: translateY(-6px);
+		box-shadow: 0 16px 40px rgba(59, 130, 246, 0.2);
+		border-color: #3b82f6;
+	}
+	
+	.project-card-featured {
+		border-color: #3b82f6;
+		background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+	}
+	
+	.project-card-future {
+		opacity: 0.8;
+	}
+	
+	.project-status {
+		margin-bottom: 1rem;
+	}
+	
+	.project-icon {
+		font-size: 3.5rem;
+		margin-bottom: 1rem;
+	}
+	
+	.project-card h3 {
+		font-size: 1.75rem;
+		margin-bottom: 0.5rem;
+		color: #0f172a;
+	}
+	
+	.project-tagline {
+		font-size: 1.125rem;
+		color: #3b82f6;
+		font-weight: 600;
+		margin-bottom: 1rem;
+	}
+	
+	.project-description {
+		color: #64748b;
+		line-height: 1.6;
+		margin-bottom: 1.5rem;
+	}
+	
+	.project-features {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	
+	.feature-tag {
+		background: #f1f5f9;
+		color: #475569;
+		padding: 0.375rem 0.875rem;
+		border-radius: 9999px;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+	
+	.status-badge {
+		display: inline-block;
+		padding: 0.375rem 1rem;
+		border-radius: 9999px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: white;
+	}
+	
+	.status-stable {
+		background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+	}
+	
+	.status-alpha {
+		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+	}
+	
+	.status-planned {
+		background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+	}
+	
+	/* RDF Toolkit Section */
+	.rdf-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+		gap: 1.5rem;
+		margin-top: 3rem;
+	}
+	
+	.rdf-card {
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.75rem;
+		padding: 1.75rem;
+		transition: all 0.2s;
+		text-decoration: none;
+		color: inherit;
+		display: block;
+	}
+	
+	.rdf-card:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 12px 24px rgba(59, 130, 246, 0.15);
+		border-color: #3b82f6;
+	}
+	
+	.rdf-card-icon {
+		font-size: 2.5rem;
+		margin-bottom: 0.75rem;
+	}
+	
+	.rdf-card h3 {
+		font-size: 1.125rem;
+		margin-bottom: 0.5rem;
+		color: #0f172a;
+	}
+	
+	.rdf-card p {
+		color: #64748b;
+		line-height: 1.5;
+		font-size: 0.95rem;
+		margin: 0;
+	}
+	
+	.rdf-cta {
+		text-align: center;
+		margin-top: 3rem;
+	}
+	
+	.btn-large {
+		display: inline-block;
+		padding: 1rem 2.5rem;
+		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+		color: white;
+		border-radius: 0.75rem;
+		font-weight: 600;
+		font-size: 1.125rem;
+		text-decoration: none;
+		box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+		transition: all 0.2s;
+	}
+	
+	.btn-large:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+	}
+	
+	/* Quick Start Section */
+	.quick-start-section {
+		background: #f8fafc;
+	}
+	
+	.section-lead {
+		font-size: 1.25rem;
+		line-height: 1.6;
+		color: #64748b;
+		text-align: center;
+		max-width: 800px;
+		margin: 0 auto 3rem;
+	}
+	
 	.code-examples {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
 		gap: 2rem;
-		margin-top: 2rem;
+		margin-top: 3rem;
 	}
 	
 	.code-example {
@@ -526,12 +729,14 @@ final emailProperty = SchemaPerson.email;</code></pre>
 		border-radius: 1rem;
 		padding: 1.5rem;
 		overflow-x: auto;
+		box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
 	}
 	
 	.code-example h3 {
 		color: #e0e7ff;
 		font-size: 1rem;
 		margin-bottom: 1rem;
+		font-weight: 600;
 	}
 	
 	.code-example pre {
@@ -542,33 +747,54 @@ final emailProperty = SchemaPerson.email;</code></pre>
 		color: #e0e7ff;
 		font-size: 0.875rem;
 		line-height: 1.6;
+		font-family: 'Fira Code', 'Courier New', monospace;
 	}
 	
-	/* Future Section */
-	.future-section {
-		background: linear-gradient(135deg, #fef3c7 0%, #fef08a 100%);
-		border-radius: 1.5rem;
-		padding: 4rem 2rem;
-	}
-	
+	/* Responsive */
 	@media (max-width: 768px) {
 		.hero-gradient {
-			padding: 4rem 0;
+			padding: 5rem 0;
+		}
+		
+		.hero-logo {
+			width: 70px;
+			height: 70px;
+		}
+		
+		.hero-content h1 {
+			font-size: 2.5rem;
+		}
+		
+		.hero-tagline {
+			font-size: 1.5rem;
 		}
 		
 		.hero-description {
 			font-size: 1.125rem;
 		}
 		
-		.cards-grid,
-		.cards-grid-2,
+		.vision-section {
+			padding: 4rem 1.5rem;
+		}
+		
+		.vision-headline {
+			font-size: 1.5rem;
+		}
+		
+		.vision-problem,
+		.vision-possibility {
+			font-size: 1.125rem;
+		}
+		
+		.projects-grid,
+		.rdf-grid,
 		.code-examples {
 			grid-template-columns: 1fr;
 		}
 		
-		.vision-section,
-		.future-section {
-			padding: 3rem 1.5rem;
+		.vision-principles {
+			grid-template-columns: 1fr;
+			gap: 2rem;
 		}
 	}
 </style>
