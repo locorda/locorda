@@ -1,0 +1,438 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Hero from "../../../components/Hero.astro";
+import CodeBlock from "../../../components/CodeBlock.astro";
+import VocabularyCard from "../../../components/VocabularyCard.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../../examples/rdf/vocabularies");
+
+const installCode = `# Install core vocabularies
+dart pub add locorda_rdf_terms_core`;
+
+// Load example code from actual files
+const usageCode = await readFile(
+  join(examplesDir, "lib/core_usage.dart"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_terms_core",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_terms_core",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="Core RDF Vocabularies - Locorda"
+  description="Type-safe constants for foundational RDF vocabularies: RDF, RDFS, OWL, and XSD. Essential vocabularies for semantic web development."
+  activeNav="rdf"
+>
+  <Hero
+    title="Core RDF Vocabularies"
+    description="Type-safe constants for RDF, RDFS, OWL, and XSD.<br/>The foundational vocabularies for semantic web development."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Vocabularies", href: "/rdf/vocabularies/" },
+      { label: "Core" },
+    ]}
+  />
+
+  <section class="section overview-section">
+    <div class="container">
+      <h2>What's Included</h2>
+      <p class="section-intro">
+        The essential RDF vocabularies that form the foundation of semantic web
+        development.
+      </p>
+
+      <div class="vocab-grid">
+        <VocabularyCard
+          title="RDF"
+          subtitle="Resource Description Framework"
+          description="Core RDF vocabulary for defining resources, properties, and collections"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_core/latest/rdf/"
+        />
+
+        <VocabularyCard
+          title="RDFS"
+          subtitle="RDF Schema"
+          description="Schema vocabulary for labels, comments, class hierarchies, and property constraints"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_core/latest/rdfs/"
+        />
+
+        <VocabularyCard
+          title="OWL"
+          subtitle="Web Ontology Language"
+          description="Ontology modeling vocabulary for classes, properties, and relationships"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_core/latest/owl/"
+        />
+
+        <VocabularyCard
+          title="XSD"
+          subtitle="XML Schema Datatypes"
+          description="Standard datatypes for strings, numbers, dates, and more"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_core/latest/xsd/"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Installation</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="usage-section">
+        <h3>Usage Example</h3>
+        <CodeBlock code={usageCode} lang="dart" />
+      </div>
+
+      <div class="info-box">
+        <h4>💡 Package Size</h4>
+        <p>
+          At only <strong>~27KB</strong> compressed, this is the smallest vocabulary
+          package. It contains only the essential RDF vocabularies that most applications
+          need.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Why Use This Package?</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">📦</span> Minimal Size</h3>
+          <p>
+            Only ~27KB compressed. Perfect for applications that only need the
+            core RDF vocabularies.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔷</span> Essential Vocabularies</h3>
+          <p>
+            RDF, RDFS, OWL, and XSD are the foundation of semantic web
+            development. Most applications need these.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Zero Runtime Overhead</h3>
+          <p>
+            All constants are compile-time. No performance impact, just pure
+            type safety.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Type Safety</h3>
+          <p>
+            Catch vocabulary errors at compile time. Full IDE support with
+            autocompletion.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section related-section">
+    <div class="container">
+      <h2>Related Packages</h2>
+
+      <div class="related-grid">
+        <a href="/rdf/vocabularies/common/" class="related-card">
+          <span class="related-icon">📦</span>
+          <div>
+            <h3>Common Vocabularies</h3>
+            <p>
+              FOAF, Dublin Core, DCAT, SKOS, and more semantic web vocabularies
+            </p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/schema/" class="related-card">
+          <span class="related-icon">🏷️</span>
+          <div>
+            <h3>Schema.org</h3>
+            <p>Complete Schema.org vocabulary with HTTPS URIs</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/generator/" class="related-card">
+          <span class="related-icon">⚙️</span>
+          <div>
+            <h3>Generator</h3>
+            <p>Generate custom vocabulary packages for your specific needs</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Use Core Vocabularies?</h2>
+      <p class="cta-description">
+        Start using type-safe RDF vocabulary constants in your Dart projects.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/packages/locorda_rdf_terms_core"
+          target="_blank"
+          rel="noopener"
+          class="cta-primary">View on pub.dev</a
+        >
+        <a href="/rdf/vocabularies/" class="cta-secondary"
+          >← Back to Vocabularies</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Overview Section */
+  .overview-section {
+    background: white;
+  }
+
+  .vocab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .vocab-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    transition: all 0.3s;
+  }
+
+  .vocab-card:hover {
+    border-color: #8b5cf6;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .vocab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+  }
+
+  .vocab-card h3 {
+    color: #1e293b;
+    font-size: 1.5rem;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .vocab-name {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+
+  .vocab-card p:last-of-type {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+    flex-grow: 1;
+  }
+
+  /* Getting Started Section */
+  .getting-started-section {
+    background: #f8fafc;
+  }
+
+  .install-section,
+  .usage-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .install-section h3,
+  .usage-section h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .info-box {
+    margin-top: 2rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-left: 4px solid #3b82f6;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+  }
+
+  .info-box h4 {
+    color: #1e40af;
+    margin-bottom: 0.75rem;
+  }
+
+  .info-box p {
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Features Section */
+  .features-section {
+    background: white;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    transition: all 0.3s;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .card h3 {
+    color: #1e293b;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-icon {
+    font-size: 1.5rem;
+  }
+
+  .card p {
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  /* Related Section */
+  .related-section {
+    background: #f8fafc;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .related-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+  }
+
+  .related-card:hover {
+    border-color: #8b5cf6;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .related-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+  }
+
+  .related-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1.125rem;
+  }
+
+  .related-card p {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+  }
+
+  .cta-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: white;
+  }
+
+  .cta-description {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .vocab-grid,
+    .card-grid,
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .cta-section h2 {
+      font-size: 2rem;
+    }
+  }
+</style>

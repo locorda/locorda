@@ -1,0 +1,451 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Hero from "../../../components/Hero.astro";
+import CodeBlock from "../../../components/CodeBlock.astro";
+import VocabularyCard from "../../../components/VocabularyCard.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../../examples/rdf/vocabularies");
+
+const installCode = `# Install common vocabularies
+dart pub add locorda_rdf_terms_common`;
+
+// Load example code from actual files
+const usageCode = await readFile(
+  join(examplesDir, "lib/common_usage.dart"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_terms_common",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf-vocabularies/tree/main/packages/locorda_rdf_terms_common",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="Common RDF Vocabularies - Locorda"
+  description="Type-safe constants for essential semantic web vocabularies: FOAF, Dublin Core, DCAT, SKOS, vCard, ACL, Solid, and more."
+  activeNav="rdf"
+>
+  <Hero
+    title="Common RDF Vocabularies"
+    description="Type-safe constants for FOAF, Dublin Core, DCAT, SKOS, and more.<br/>Essential vocabularies for semantic web applications."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Vocabularies", href: "/rdf/vocabularies/" },
+      { label: "Common" },
+    ]}
+  />
+
+  <section class="section overview-section">
+    <div class="container">
+      <h2>Included Vocabularies</h2>
+      <p class="section-intro">
+        Essential semantic web vocabularies for building linked data
+        applications.
+      </p>
+
+      <div class="vocab-grid">
+        <VocabularyCard
+          title="FOAF"
+          subtitle="Friend of a Friend"
+          description="Describe people, their relationships, and activities"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/foaf/"
+        />
+
+        <VocabularyCard
+          title="Dublin Core"
+          subtitle="DC / DCTerms / DCMIType"
+          description="Metadata for describing resources and documents"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/dc/"
+        />
+
+        <VocabularyCard
+          title="DCAT"
+          subtitle="Data Catalog Vocabulary"
+          description="Describe datasets and data catalogs"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/dcat/"
+        />
+
+        <VocabularyCard
+          title="SKOS"
+          subtitle="Simple Knowledge Organization"
+          description="Taxonomies, thesauri, and classification schemes"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/skos/"
+        />
+
+        <VocabularyCard
+          title="vCard"
+          subtitle="Contact Information"
+          description="Represent contact and address information"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/vcard/"
+        />
+
+        <VocabularyCard
+          title="ACL"
+          subtitle="Web Access Control"
+          description="Define access permissions for resources"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/acl/"
+        />
+
+        <VocabularyCard
+          title="LDP"
+          subtitle="Linked Data Platform"
+          description="RESTful interaction with linked data"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/ldp/"
+        />
+
+        <VocabularyCard
+          title="Solid"
+          subtitle="Solid Platform Terms"
+          description="Solid pod and application vocabulary"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/solid/"
+        />
+
+        <VocabularyCard
+          title="Contact"
+          subtitle="Contact Vocabulary"
+          description="Contact information and relationships"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/contact/"
+        />
+
+        <VocabularyCard
+          title="Event"
+          subtitle="Event Ontology"
+          description="Describe events and their properties"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/event/"
+        />
+
+        <VocabularyCard
+          title="GEO"
+          subtitle="WGS84 Geospatial"
+          description="Geographic coordinates and locations"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/geo/"
+        />
+
+        <VocabularyCard
+          title="PIM"
+          subtitle="Personal Information Management"
+          description="Personal data organization"
+          docsUrl="https://pub.dev/documentation/locorda_rdf_terms_common/latest/pim/"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Installation</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="usage-section">
+        <h3>Usage Example</h3>
+        <CodeBlock code={usageCode} lang="dart" />
+      </div>
+
+      <div class="info-box">
+        <h4>💡 Recommended for Most Projects</h4>
+        <p>
+          At <strong>~800KB</strong> compressed, this package provides the most commonly
+          used semantic web vocabularies. It's the recommended starting point for
+          most applications.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Why Use This Package?</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Most Popular Vocabularies</h3>
+          <p>
+            Includes the vocabularies used by the vast majority of semantic web
+            applications.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚖️</span> Balanced Size</h3>
+          <p>
+            At ~800KB, it's larger than core but much smaller than Schema.org.
+            Good balance for most use cases.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔗</span> Linked Data Ready</h3>
+          <p>
+            Perfect for building Solid apps, knowledge graphs, and linked data
+            applications.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Zero Runtime Overhead</h3>
+          <p>
+            All constants are compile-time. No performance impact, just pure
+            type safety.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section related-section">
+    <div class="container">
+      <h2>Related Packages</h2>
+
+      <div class="related-grid">
+        <a href="/rdf/vocabularies/core/" class="related-card">
+          <span class="related-icon">🔷</span>
+          <div>
+            <h3>Core Vocabularies</h3>
+            <p>RDF, RDFS, OWL, XSD - the foundational vocabularies (~27KB)</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/schema/" class="related-card">
+          <span class="related-icon">🏷️</span>
+          <div>
+            <h3>Schema.org</h3>
+            <p>Complete Schema.org vocabulary with HTTPS URIs (~5MB)</p>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/generator/" class="related-card">
+          <span class="related-icon">⚙️</span>
+          <div>
+            <h3>Generator</h3>
+            <p>Generate custom vocabulary packages for your specific needs</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Use Common Vocabularies?</h2>
+      <p class="cta-description">
+        Start using type-safe semantic web vocabulary constants in your Dart
+        projects.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/packages/locorda_rdf_terms_common"
+          target="_blank"
+          rel="noopener"
+          class="cta-primary">View on pub.dev</a
+        >
+        <a href="/rdf/vocabularies/" class="cta-secondary"
+          >← Back to Vocabularies</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Overview Section */
+  .overview-section {
+    background: white;
+  }
+
+  .vocab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  /* Getting Started Section */
+  .getting-started-section {
+    background: #f8fafc;
+  }
+
+  .install-section,
+  .usage-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .install-section h3,
+  .usage-section h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .info-box {
+    margin-top: 2rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-left: 4px solid #3b82f6;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+  }
+
+  .info-box h4 {
+    color: #1e40af;
+    margin-bottom: 0.75rem;
+  }
+
+  .info-box p {
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Features Section */
+  .features-section {
+    background: white;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    transition: all 0.3s;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .card h3 {
+    color: #1e293b;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-icon {
+    font-size: 1.5rem;
+  }
+
+  .card p {
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  /* Related Section */
+  .related-section {
+    background: #f8fafc;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .related-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+  }
+
+  .related-card:hover {
+    border-color: #8b5cf6;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .related-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+  }
+
+  .related-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1.125rem;
+  }
+
+  .related-card p {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+  }
+
+  .cta-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: white;
+  }
+
+  .cta-description {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .vocab-grid,
+    .card-grid,
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .cta-section h2 {
+      font-size: 2rem;
+    }
+  }
+</style>

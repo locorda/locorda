@@ -1,0 +1,74 @@
+---
+interface Props {
+  title: string;
+  subtitle: string;
+  description: string;
+  docsUrl: string;
+}
+
+const { title, subtitle, description, docsUrl } = Astro.props;
+---
+
+<div class="vocab-card">
+  <h3>{title}</h3>
+  <p class="vocab-name">{subtitle}</p>
+  <p>{description}</p>
+  <a href={docsUrl} target="_blank" rel="noopener" class="docs-link">Docs →</a>
+</div>
+
+<style>
+  .vocab-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .vocab-card:hover {
+    border-color: #8b5cf6;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .vocab-card h3 {
+    color: #1e293b;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+  }
+
+  .vocab-name {
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+
+  .vocab-card p:last-of-type {
+    color: #64748b;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+    flex-grow: 1;
+  }
+
+  .docs-link {
+    color: #8b5cf6;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-block;
+    margin-top: auto;
+  }
+
+  .docs-link:hover {
+    color: #7c3aed;
+    text-decoration: underline;
+  }
+</style>
