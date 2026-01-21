@@ -67,5 +67,16 @@ echo "🔍 XML: Running example tests..."
 dart test
 popd
 
+# Verify vocabularies examples
+echo ""
+echo "📦 Vocabularies: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/vocabularies"
+dart pub get
+
+echo ""
+echo "🔍 Vocabularies: Running example tests..."
+dart test
+popd
+
 echo ""
 echo "✅ All examples verified successfully!"

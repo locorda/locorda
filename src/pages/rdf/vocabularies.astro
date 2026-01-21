@@ -1,0 +1,835 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../examples/rdf/vocabularies");
+
+// Load example code from actual files
+const classSpecificCode = await readFile(
+  join(examplesDir, "lib/class_specific_approach.dart"),
+  "utf-8",
+);
+const directVocabularyCode = await readFile(
+  join(examplesDir, "lib/direct_vocabulary_approach.dart"),
+  "utf-8",
+);
+const crossVocabularyCode = await readFile(
+  join(examplesDir, "lib/cross_vocabulary_properties.dart"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "Explore Packages",
+  href: "#packages",
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf-vocabularies",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="RDF Vocabularies - Type-Safe RDF Terms for Dart"
+  description="Stop typing IRIs as strings. Get autocomplete for Schema.org, FOAF, Dublin Core and more using type-safe vocabulary constants for Dart."
+  activeNav="rdf"
+>
+  <Hero
+    title="Type-Safe RDF Vocabularies"
+    description="Stop wrestling with RDF vocabulary URIs.<br/>Type-safe Dart constants with IDE autocompletion and compile-time validation."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Vocabularies" },
+    ]}
+  />
+
+  <section class="section problem-section">
+    <div class="container">
+      <h2>Why Not Just Use Strings?</h2>
+      <p class="section-intro">
+        String-based RDF development is error-prone, lacks IDE support, and
+        makes discovering vocabulary relationships nearly impossible.
+      </p>
+
+      <div class="problem-demo">
+        <div class="demo-card problem-card">
+          <h3>❌ The String-Based Approach</h3>
+          <CodeBlock
+            code={`// Typos detected only at runtime
+Triple(subject, predicate, 
+  IriTerm('http://schema.org/Persn')); // Oops!
+
+// No IDE assistance
+Triple(subject, 
+  IriTerm('http://xmlns.com/foaf/0.1/knows'), ...);
+
+// Hidden relationships
+// How do you know foaf:knows works with schema:Person?
+// You need to manually research vocabulary compatibility`}
+            lang="dart"
+          />
+          <ul class="problem-list">
+            <li>Runtime errors from typos</li>
+            <li>No autocompletion</li>
+            <li>Manual vocabulary research</li>
+            <li>Hidden cross-vocabulary patterns</li>
+          </ul>
+        </div>
+
+        <div class="demo-card solution-card">
+          <h3>✅ The Type-Safe Solution</h3>
+          <CodeBlock
+            code={`// Compile-time validation
+Triple(subject, SchemaPerson.rdfType, 
+  SchemaPerson.classIri);
+
+// IDE shows foafKnows, foafAge, etc.
+SchemaPerson. // → autocomplete!
+
+// Discover cross-vocabulary properties
+// SchemaPerson includes FOAF properties automatically
+Triple(person, SchemaPerson.foafAge, 
+  LiteralTerm.integer(42));`}
+            lang="dart"
+          />
+          <ul class="solution-list">
+            <li>Catch errors before runtime</li>
+            <li>Full IDE autocompletion</li>
+            <li>Discover valid combinations</li>
+            <li>Learn relationships naturally</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="packages" class="section packages-section">
+    <div class="container">
+      <h2>Choose Your Package</h2>
+      <p class="section-intro">
+        Modular packages from 27KB to 12MB — take only what you need.
+      </p>
+
+      <div class="packages-grid">
+        <a href="/rdf/vocabularies/core/" class="package-card-link">
+          <div class="package-card">
+            <div class="package-header">
+              <span class="package-icon">🔷</span>
+              <div>
+                <h3>Core Vocabularies</h3>
+                <p class="package-name">locorda_rdf_terms_core</p>
+              </div>
+            </div>
+            <p class="package-size">~27KB</p>
+            <p class="package-desc">
+              Foundational RDF vocabularies: RDF, RDFS, OWL, XSD. Essential for
+              most applications.
+            </p>
+            <div class="package-badges">
+              <span class="badge">Essential</span>
+              <span class="badge">Minimal Size</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/common/" class="package-card-link">
+          <div class="package-card">
+            <div class="package-header">
+              <span class="package-icon">📦</span>
+              <div>
+                <h3>Common Vocabularies</h3>
+                <p class="package-name">locorda_rdf_terms_common</p>
+              </div>
+            </div>
+            <p class="package-size">~800KB</p>
+            <p class="package-desc">
+              Essential semantic web vocabularies: FOAF, Dublin Core, DCAT,
+              SKOS, vCard, ACL, Solid, and more.
+            </p>
+            <div class="package-badges">
+              <span class="badge">Recommended</span>
+              <span class="badge">Most Popular</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/schema/" class="package-card-link">
+          <div class="package-card">
+            <div class="package-header">
+              <span class="package-icon">🏷️</span>
+              <div>
+                <h3>Schema.org</h3>
+                <p class="package-name">locorda_rdf_terms_schema</p>
+              </div>
+            </div>
+            <p class="package-size">~5MB</p>
+            <p class="package-desc">
+              Complete Schema.org vocabulary with HTTPS URIs. Modern standard
+              for structured data.
+            </p>
+            <div class="package-badges">
+              <span class="badge">HTTPS</span>
+              <span class="badge">Modern</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="/rdf/vocabularies/schema-http/" class="package-card-link">
+          <div class="package-card">
+            <div class="package-header">
+              <span class="package-icon">🌐</span>
+              <div>
+                <h3>Schema.org (HTTP)</h3>
+                <p class="package-name">locorda_rdf_terms_schema_http</p>
+              </div>
+            </div>
+            <p class="package-size">~5MB</p>
+            <p class="package-desc">
+              Schema.org vocabulary with HTTP URIs for legacy compatibility.
+            </p>
+            <div class="package-badges">
+              <span class="badge">HTTP</span>
+              <span class="badge">Legacy</span>
+            </div>
+          </div>
+        </a>
+
+        <div class="package-card generator-card">
+          <div class="package-header">
+            <span class="package-icon">⚙️</span>
+            <div>
+              <h3>Custom Generation</h3>
+              <p class="package-name">locorda_rdf_terms_generator</p>
+            </div>
+          </div>
+          <p class="package-desc">
+            Need different vocabularies? Generate your own custom packages with
+            exactly the vocabularies you need.
+          </p>
+          <a href="/rdf/vocabularies/generator/" class="generator-link"
+            >Learn about the generator →</a
+          >
+        </div>
+      </div>
+
+      <div class="package-guide">
+        <h3>💡 Quick Selection Guide</h3>
+        <ul>
+          <li>
+            <strong>Most projects:</strong> Start with
+            <code>locorda_rdf_terms_common</code> (~800KB)
+          </li>
+          <li>
+            <strong>Using RDF/RDFS/OWL/XSD directly?</strong> Add
+            <code>locorda_rdf_terms_core</code> (~27KB)
+          </li>
+          <li>
+            <strong>Need Schema.org?</strong> Add
+            <code>locorda_rdf_terms_schema</code>
+          </li>
+          <li>
+            <strong>Custom vocabularies?</strong> Use the
+            <a href="/rdf/vocabularies/generator/">generator</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Install packages</h3>
+        <CodeBlock
+          code={`# Most projects: common vocabularies
+dart pub add locorda_rdf_terms_common
+
+# Add core if using RDF/RDFS/OWL/XSD directly
+dart pub add locorda_rdf_terms_core
+
+# Add Schema.org if needed
+dart pub add locorda_rdf_terms_schema`}
+          lang="bash"
+        />
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-button active" data-tab="beginner"
+            >For Beginners</button
+          >
+          <button class="tab-button" data-tab="expert">For Experts</button>
+          <button class="tab-button" data-tab="cross">Cross-Vocabulary</button>
+        </div>
+
+        <div class="tabs-content">
+          <div class="tab-panel active" data-tab="beginner">
+            <h4>Class-Specific Approach</h4>
+            <p>
+              Use class-specific constants that guide you to the correct
+              properties. Perfect for RDF newcomers!
+            </p>
+            <CodeBlock code={classSpecificCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="expert">
+            <h4>Direct Vocabulary Approach</h4>
+            <p>
+              Use vocabulary classes directly for maximum flexibility. Ideal for
+              RDF experts!
+            </p>
+            <CodeBlock code={directVocabularyCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="cross">
+            <h4>Cross-Vocabulary Properties</h4>
+            <p>
+              Discover how class-specific constants include properties from
+              related vocabularies automatically.
+            </p>
+            <CodeBlock code={crossVocabularyCode} lang="dart" />
+          </div>
+        </div>
+      </div>
+
+      <div class="github-link">
+        <a
+          href="https://github.com/locorda/rdf-vocabularies/tree/main/packages"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View more examples on GitHub →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section benefits-section">
+    <div class="container">
+      <h2>Key Benefits</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Zero Runtime Overhead</h3>
+          <p>
+            All constants are compile-time. No performance impact, just pure
+            type safety.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Type Safety</h3>
+          <p>
+            Catch vocabulary errors at compile time, not runtime. Full IDE
+            support with autocompletion.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🌲</span> Tree Shaking</h3>
+          <p>
+            Unused vocabularies are eliminated from builds. Only pay for what
+            you use.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">💡</span> IDE Integration</h3>
+          <p>
+            Full autocompletion and inline documentation. Hover to see ontology
+            descriptions.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔗</span> Cross-Vocabulary Discovery</h3>
+          <p>
+            Class-specific constants include properties from related
+            vocabularies. Learn relationships naturally.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📦</span> Modular Packages</h3>
+          <p>
+            Choose from 27KB to 12MB. Take only what you need for optimal bundle
+            size.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Build with Type-Safe RDF?</h2>
+      <p class="cta-description">
+        Join developers using Locorda RDF vocabularies to build semantic
+        applications in Dart and Flutter.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://github.com/locorda/rdf-vocabularies"
+          target="_blank"
+          rel="noopener"
+          class="cta-primary">View on GitHub</a
+        >
+        <a href="/rdf/vocabularies/generator/" class="cta-secondary"
+          >Generate Custom Vocabularies</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Problem Section */
+  .problem-section {
+    background: #fef2f2;
+  }
+
+  .problem-demo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .demo-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .problem-card {
+    border-left: 4px solid #dc2626;
+  }
+
+  .solution-card {
+    border-left: 4px solid #16a34a;
+  }
+
+  .demo-card h3 {
+    margin-bottom: 1.5rem;
+    font-size: 1.125rem;
+  }
+
+  .problem-card h3 {
+    color: #991b1b;
+  }
+
+  .solution-card h3 {
+    color: #15803d;
+  }
+
+  .problem-list,
+  .solution-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1.5rem;
+    color: #475569;
+  }
+
+  .problem-list li,
+  .solution-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+
+  .problem-list li::before {
+    content: "×";
+    position: absolute;
+    left: 0;
+    color: #dc2626;
+    font-weight: bold;
+  }
+
+  .solution-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #16a34a;
+    font-weight: bold;
+  }
+
+  /* Packages Section */
+  .packages-section {
+    background: white;
+  }
+
+  .packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .package-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .package-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    height: 100%;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .package-card-link:hover .package-card {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    border-color: #8b5cf6;
+  }
+
+  .generator-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: #cbd5e1;
+  }
+
+  .package-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .package-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+  }
+
+  .package-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+    font-size: 1.25rem;
+  }
+
+  .package-name {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-family: "Courier New", monospace;
+    margin: 0;
+  }
+
+  .package-size {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #8b5cf6;
+    margin-bottom: 1rem;
+  }
+
+  .package-desc {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+  }
+
+  .package-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .generator-link {
+    color: #8b5cf6;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 1rem;
+  }
+
+  .generator-link:hover {
+    text-decoration: underline;
+  }
+
+  .package-guide {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    border-left: 4px solid #8b5cf6;
+  }
+
+  .package-guide h3 {
+    color: #1e293b;
+    margin-bottom: 1rem;
+  }
+
+  .package-guide ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .package-guide li {
+    padding: 0.75rem 0;
+    color: #475569;
+    line-height: 1.6;
+  }
+
+  .package-guide code {
+    background: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+    color: #7c3aed;
+  }
+
+  .package-guide a {
+    color: #8b5cf6;
+    text-decoration: none;
+  }
+
+  .package-guide a:hover {
+    text-decoration: underline;
+  }
+
+  /* Getting Started Section */
+  .getting-started-section {
+    background: #f8fafc;
+  }
+
+  .install-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .install-section h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .tabs-container {
+    margin-top: 2rem;
+  }
+
+  .tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+  }
+
+  .tab-button:hover {
+    color: #1e293b;
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  .tab-button.active {
+    color: white;
+    background: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  }
+
+  .tabs-content {
+    background: white;
+    border-radius: 0 0 0.75rem 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .tab-panel {
+    display: none;
+    padding: 2rem;
+  }
+
+  .tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .tab-panel h4 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+
+  .tab-panel p {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .github-link {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .github-link a {
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .github-link a:hover {
+    color: #8b5cf6;
+  }
+
+  /* Benefits Section */
+  .benefits-section {
+    background: white;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    transition: all 0.3s;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .card h3 {
+    color: #1e293b;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-icon {
+    font-size: 1.5rem;
+  }
+
+  .card p {
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+  }
+
+  .cta-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: white;
+  }
+
+  .cta-description {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .problem-demo,
+    .packages-grid,
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .cta-section h2 {
+      font-size: 2rem;
+    }
+  }
+</style>
+
+<script>
+  // Tab switching functionality
+  const tabButtons = document.querySelectorAll(".tab-button");
+  const tabPanels = document.querySelectorAll(".tab-panel");
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetTab = button.getAttribute("data-tab");
+
+      // Remove active class from all buttons and panels
+      tabButtons.forEach((btn) => btn.classList.remove("active"));
+      tabPanels.forEach((panel) => panel.classList.remove("active"));
+
+      // Add active class to clicked button and corresponding panel
+      button.classList.add("active");
+      document
+        .querySelector(`.tab-panel[data-tab="${targetTab}"]`)
+        ?.classList.add("active");
+    });
+  });
+</script>
