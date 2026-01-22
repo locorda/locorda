@@ -384,6 +384,57 @@ _:b1 pn:categoryColor "red" .`}
     </div>
   </section>
 
+  <section class="section resources-section">
+    <div class="container">
+      <h2>Resources & Specifications</h2>
+      <p class="section-intro">
+        Explore the formal vocabularies and merge contracts that define the sync
+        engine's semantic model
+      </p>
+
+      <div class="resource-grid">
+        <a href="/vocab/" class="resource-card">
+          <div class="resource-icon">📚</div>
+          <h3>Vocabularies</h3>
+          <p>
+            RDF vocabularies defining CRDT mechanics, synchronization metadata,
+            and indexing strategies
+          </p>
+          <div class="resource-footer">
+            <span class="resource-count">4 vocabularies</span>
+            <span class="resource-arrow">→</span>
+          </div>
+        </a>
+
+        <a href="/mappings/" class="resource-card">
+          <div class="resource-icon">🎯</div>
+          <h3>Mappings</h3>
+          <p>
+            Merge contracts declaring conflict resolution strategies and
+            synchronization rules
+          </p>
+          <div class="resource-footer">
+            <span class="resource-count">Core mappings</span>
+            <span class="resource-arrow">→</span>
+          </div>
+        </a>
+
+        <a href="/example/personal_notes_app/" class="resource-card">
+          <div class="resource-icon">📱</div>
+          <h3>Example App</h3>
+          <p>
+            Live demo of the personal notes app showcasing sync engine
+            capabilities (alpha stage)
+          </p>
+          <div class="resource-footer">
+            <span class="resource-count">Try it now</span>
+            <span class="resource-arrow">→</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <section class="section project-scope-section">
     <div class="container">
       <h2>Project Scope</h2>
@@ -849,6 +900,76 @@ _:b1 pn:categoryColor "red" .`}
   /* Project Scope Section */
   .project-scope-section {
     background: white;
+  }
+
+  /* Resources Section */
+  .resources-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  }
+
+  .resource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .resource-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .resource-card:hover {
+    border-color: #8b5cf6;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+  }
+
+  .resource-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .resource-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+  }
+
+  .resource-card p {
+    color: #64748b;
+    line-height: 1.6;
+    flex: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .resource-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #8b5cf6;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .resource-count {
+    opacity: 0.8;
+  }
+
+  .resource-arrow {
+    font-size: 1.25rem;
+    transition: transform 0.3s ease;
+  }
+
+  .resource-card:hover .resource-arrow {
+    transform: translateX(4px);
   }
 
   .scope-grid {

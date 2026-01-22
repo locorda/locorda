@@ -1,0 +1,179 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import TTLViewer from "../../components/TTLViewer.astro";
+
+// Import generated metadata
+let mappingData: { files: Array<{ filename: string; title: string; description: string | null; version: string | null; namespace: string | null }> } = { files: [] };
+try {
+  mappingData = await import('../../data/mappings.json');
+} catch (e) {
+  console.warn('mappings.json not found - run ./copy-sync-engine-content.sh first');
+}
+
+const mappingFiles = mappingData.files;
+
+const secondaryCta = {
+  text: "← Back to Sync Engine",
+  href: "/sync-engine/",
+  external: false,
+};
+---
+
+<BaseLayout
+  title="Sync Engine Mappings - Locorda"
+  description="CRDT merge contracts for the Locorda Sync Engine: conflict resolution strategies and synchronization rules"
+  activeNav="sync"
+>
+  <Hero
+    title="Sync Engine Mappings"
+    description="CRDT merge contracts that define how different resource properties are synchronized and how conflicts are resolved."
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "Sync Engine", href: "/sync-engine/" },
+      { label: "Mappings" },
+    ]}
+  />
+
+  <section class="section">
+    <div class="container">
+      <div class="info-box">
+        <h2>About Merge Contracts</h2>
+        <p>
+          Mappings (merge contracts) are public declarations of how data should
+          synchronize. They specify:
+        </p>
+        <ul>
+          <li>
+            <strong>CRDT Algorithms:</strong> Which conflict resolution strategy
+            to use for each property (LWW, Set, List, etc.)
+          </li>
+          <li>
+            <strong>Synchronization Rules:</strong> How to detect changes, merge
+            updates, and resolve conflicts
+          </li>
+          <li>
+            <strong>Immutability:</strong> Which properties cannot be changed after
+            creation
+          </li>
+          <li>
+            <strong>Versioning:</strong> Contract versions ensure compatibility
+            across application updates
+          </li>
+        </ul>
+        <p>
+          All applications using the same merge contract can synchronize their
+          data conflict-free, even if they're written in different languages or
+          by different developers.
+        </p>
+      </div>
+
+      {
+        mappingFiles.length === 0 ? (
+          <div class="warning-box">
+            <p>
+              <strong>No mapping files found.</strong>
+            </p>
+            <p>
+              Run <code>./copy-sync-engine-content.sh</code> to copy mappings
+              from the sync-engine repository.
+            </p>
+          </div>
+        ) : (
+          <div class="item-list">
+            {mappingFiles.map((fileData) => {
+              const { filename, title, description, version } = fileData;
+              const baseUrl = "https://locorda.dev/mappings/";
+              const fullUrl = baseUrl + filename;
+
+              return (
+                <div 
+                  class="item-card mapping-card"
+                  onclick={`openTTLViewer('/mappings/${filename}', '${title.replace(/'/g, "\\'")}')`}
+                  role="button"
+                  tabindex="0"
+                >
+                  <div class="item-header">
+                    <div>
+                      <h3>{title}</h3>
+                      {version && <span class="badge version-badge">v{version}</span>}
+                    </div>
+                  </div>
+                  <p class="item-description">{description || 'CRDT merge contract'}</p>
+                  <div class="item-meta">
+                    <div class="meta-item">
+                      <span class="meta-label">File:</span>
+                      <code>{filename}</code>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">URL:</span>
+                      <code>{fullUrl}</code>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      }
+
+      <div class="info-box">
+        <h2>How Applications Use Mappings</h2>
+        <p>Applications reference mappings in their synchronized documents:</p>
+        <pre><code>@prefix sync: &lt;https://w3id.org/solid-crdt-sync/vocab/sync#&gt; .
+@prefix mappings: &lt;https://locorda.dev/mappings/&gt; .
+
+&lt;document&gt; a sync:ManagedDocument ;
+    sync:isGovernedBy ( mappings:core-v1.ttl ) .</code></pre>
+        <p>
+          The sync engine then applies the rules defined in the mapping to ensure
+          conflict-free synchronization across all devices and users.
+        </p>
+      </div>
+
+      <div class="info-box">
+        <h2>w3id.org Redirects</h2>
+        <p>
+          Mappings are accessible via permanent w3id.org identifiers:
+        </p>
+        <div class="redirect-list">
+          <div class="redirect-item">
+            <code>https://w3id.org/solid-crdt-sync/mappings/core-v1</code>
+            <span class="redirect-arrow">→</span>
+            <code>https://locorda.dev/mappings/core-v1.ttl</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <TTLViewer />
+</BaseLayout>
+
+<style>
+  /* Page-specific color theming */
+  .mapping-card {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mapping-card:hover {
+    border-color: #f5576c;
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .mapping-card:active {
+    transform: translateY(0);
+  }
+
+  .version-badge {
+    background: #f5576c;
+    color: white;
+  }
+
+  .redirect-arrow {
+    color: #f5576c;
+  }
+</style>

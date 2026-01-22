@@ -19,3 +19,13 @@ pnpm-debug.log*
 
 # macOS-specific files
 .DS_Store
+
+# sync-engine generated files (copied during build)
+public/vocab/*.ttl
+public/mappings/*.ttl
+src/data/vocabularies.json
+src/data/mappings.json
+
+# tools dependencies
+tools/.dart_tool/
+tools/pubspec.lock

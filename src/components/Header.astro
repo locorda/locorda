@@ -114,12 +114,46 @@ const { activeNav } = Astro.props;
         </div>
       </div>
 
-      <a
-        href="/sync-engine/"
-        class:list={["nav-link", { active: activeNav === "sync" }]}
-      >
-        Sync Engine
-      </a>
+      <div class="nav-dropdown">
+        <a
+          href="/sync-engine/"
+          class:list={["nav-link", { active: activeNav === "sync" }]}
+        >
+          Sync Engine
+          <svg
+            class="dropdown-icon"
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="currentColor"
+          >
+            <path d="M6 8L2 4h8L6 8z"></path>
+          </svg>
+        </a>
+        <div class="dropdown-menu">
+          <a href="/vocab/" class="dropdown-item">
+            <span class="dropdown-emoji">📚</span>
+            <div>
+              <div class="dropdown-title">Vocabularies</div>
+              <div class="dropdown-desc">RDF vocabularies</div>
+            </div>
+          </a>
+          <a href="/mappings/" class="dropdown-item">
+            <span class="dropdown-emoji">🎯</span>
+            <div>
+              <div class="dropdown-title">Mappings</div>
+              <div class="dropdown-desc">Merge contracts</div>
+            </div>
+          </a>
+          <a href="/example/personal_notes_app/" class="dropdown-item">
+            <span class="dropdown-emoji">📱</span>
+            <div>
+              <div class="dropdown-title">Example App</div>
+              <div class="dropdown-desc">Live demo (alpha)</div>
+            </div>
+          </a>
+        </div>
+      </div>
     </nav>
 
     <div class="header-actions">

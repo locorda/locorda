@@ -1,0 +1,163 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import TTLViewer from "../../components/TTLViewer.astro";
+
+// Import generated metadata
+let vocabData: { files: Array<{ filename: string; title: string; description: string | null; version: string | null; namespace: string | null }> } = { files: [] };
+try {
+  vocabData = await import('../../data/vocabularies.json');
+} catch (e) {
+  console.warn('vocabularies.json not found - run ./copy-sync-engine-content.sh first');
+}
+
+const vocabFiles = vocabData.files;
+
+const secondaryCta = {
+  text: "← Back to Sync Engine",
+  href: "/sync-engine/",
+  external: false,
+};
+---
+
+<BaseLayout
+  title="Sync Engine Vocabularies - Locorda"
+  description="RDF vocabularies for the Locorda Sync Engine: CRDT-based synchronization, indexing, and semantic interoperability"
+  activeNav="sync"
+>
+  <Hero
+    title="Sync Engine Vocabularies"
+    description="RDF vocabularies defining the sync engine's semantic model for CRDT-based synchronization, indexing strategies, and document management."
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "Sync Engine", href: "/sync-engine/" },
+      { label: "Vocabularies" },
+    ]}
+  />
+
+  <section class="section">
+    <div class="container">
+      <div class="info-box">
+        <h2>About These Vocabularies</h2>
+        <p>
+          These vocabularies define the semantic layer of the Locorda Sync Engine.
+          They enable:
+        </p>
+        <ul>
+          <li>
+            <strong>Interoperability:</strong> Different applications can understand
+            and process each other's synchronized data
+          </li>
+          <li>
+            <strong>Transparency:</strong> All synchronization metadata is stored
+            as standard RDF triples
+          </li>
+          <li>
+            <strong>Extensibility:</strong> Applications can add custom properties
+            while preserving core sync functionality
+          </li>
+        </ul>
+      </div>
+
+      {
+        vocabFiles.length === 0 ? (
+          <div class="warning-box">
+            <p>
+              <strong>No vocabulary files found.</strong>
+            </p>
+            <p>
+              Run <code>./copy-sync-engine-content.sh</code> to copy vocabularies
+              from the sync-engine repository.
+            </p>
+          </div>
+        ) : (
+          <div class="item-list">
+            {vocabFiles.map((fileData) => {
+              const { filename, title, description } = fileData;
+              const baseUrl = "https://locorda.dev/vocab/";
+              const fullUrl = baseUrl + filename;
+
+              return (
+                <div 
+                  class="item-card vocab-card"
+                  onclick={`openTTLViewer('/vocab/${filename}', '${title.replace(/'/g, "\\'")}')`}
+                  role="button"
+                  tabindex="0"
+                >
+                  <div class="item-header">
+                    <h3>{title}</h3>
+                  </div>
+                  <p class="item-description">{description || 'Sync engine vocabulary'}</p>
+                  <div class="item-meta">
+                    <div class="meta-item">
+                      <span class="meta-label">File:</span>
+                      <code>{filename}</code>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">URL:</span>
+                      <code>{fullUrl}</code>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      }
+
+      <div class="info-box">
+        <h2>w3id.org Redirects</h2>
+        <p>
+          These vocabularies are accessible via permanent w3id.org identifiers:
+        </p>
+        <div class="redirect-list">
+          <div class="redirect-item">
+            <code>https://w3id.org/solid-crdt-sync/vocab/sync</code>
+            <span class="redirect-arrow">→</span>
+            <code>https://locorda.dev/vocab/sync.ttl</code>
+          </div>
+          <div class="redirect-item">
+            <code>https://w3id.org/solid-crdt-sync/vocab/idx</code>
+            <span class="redirect-arrow">→</span>
+            <code>https://locorda.dev/vocab/idx.ttl</code>
+          </div>
+          <div class="redirect-item">
+            <code>https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics</code>
+            <span class="redirect-arrow">→</span>
+            <code>https://locorda.dev/vocab/crdt-mechanics.ttl</code>
+          </div>
+          <div class="redirect-item">
+            <code>https://w3id.org/solid-crdt-sync/vocab/crdt-algorithms</code>
+            <span class="redirect-arrow">→</span>
+            <code>https://locorda.dev/vocab/crdt-algorithms.ttl</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <TTLViewer />
+</BaseLayout>
+
+<style>
+  /* Page-specific color theming */
+  .vocab-card {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .vocab-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .vocab-card:active {
+    transform: translateY(0);
+  }
+
+  .redirect-arrow {
+    color: #667eea;
+  }
+</style>

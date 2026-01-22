@@ -9,11 +9,44 @@ The GitHub Actions workflow at [.github/workflows/deploy.yml](.github/workflows/
 1. **Accept triggers from sync-engine**: Added `repository_dispatch` with type `sync-engine-update`
 2. **Checkout both repositories**: Homepage and sync-engine are checked out during the build
 3. **Setup Flutter and Melos**: Required for building the sync-engine Flutter example app
-4. **Build sync-engine artifacts**: 
+4. **Copy sync-engine content**: Vocabularies and mappings are copied to `public/vocab/` and `public/mappings/` for direct file access
+5. **Extract metadata**: Uses a Dart tool with `locorda_rdf_core` to parse TTL files from `public/` and generate JSON metadata in `src/data/`
+6. **Build sync-engine artifacts**: 
    - Bootstrap the melos workspace
    - Build the Flutter web app
-   - Copy vocabularies, mappings, and the example app to the deployment directory
-5. **Deploy combined content**: Everything is deployed together to GitHub Pages
+   - Copy the example app to the deployment directory
+7. **Deploy combined content**: Everything is deployed together to GitHub Pages
+
+### Direct File Access
+
+TTL files are directly accessible at their canonical URLs:
+- `https://locorda.dev/vocab/crdt-algorithms.ttl` - Serves the actual TTL file
+- `https://locorda.dev/vocab/` - Index page with metadata and download links
+- Content negotiation works: Astro serves `text/turtle` MIME type for `.ttl` files
+
+### Automated Content Discovery
+
+The vocabularies and mappings are automatically discovered using proper RDF parsing:
+- [tools/extract_vocab_metadata.dart](tools/extract_vocab_metadata.dart) - Uses `locorda_rdf_core` to parse TTL files from `public/` and extract metadata
+- [/src/pages/vocab/index.astro](src/pages/vocab/index.astro) - Lists vocabularies with extracted metadata
+- [/src/pages/mappings/index.astro](src/pages/mappings/index.astro) - Lists mappings with extracted metadata
+- Content is linked from the sync-engine page and in the navigation menu
+
+### Local Development
+
+Use the [copy-sync-engine-content.sh](copy-sync-engine-content.sh) script to copy content locally:
+
+```bash
+./copy-sync-engine-content.sh [path-to-sync-engine]
+# Example: ./copy-sync-engine-content.sh ../sync-engine
+```
+
+This script:
+- Copies TTL files to `public/vocab/` and `public/mappings/`
+- Runs the Dart metadata extraction tool (reads from `public/`, writes JSON to `src/data/`)
+- Generates `src/data/vocabularies.json` and `src/data/mappings.json`
+
+All generated files are in `.gitignore` since they're created during the build process.
 
 ## What Still Needs to Be Done
 

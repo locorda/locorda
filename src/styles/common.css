@@ -251,3 +251,209 @@
 	opacity: 0.15;
 	animation: float 20s ease-in-out infinite;
 }
+
+/* Info Box Styles (used for intro, example, warning boxes) */
+.info-box {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 2rem;
+	margin-bottom: 3rem;
+}
+
+.info-box h2 {
+	margin-top: 0;
+	color: #1e293b;
+	text-align: left;
+	font-size: 1.5rem;
+}
+
+.info-box ul {
+	margin: 1rem 0 0;
+	padding-left: 1.5rem;
+}
+
+.info-box li {
+	margin-bottom: 0.5rem;
+	color: #475569;
+}
+
+.info-box pre {
+	background: white;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	padding: 1rem;
+	overflow-x: auto;
+	margin: 1rem 0;
+}
+
+.info-box code {
+	font-family: "Monaco", "Courier New", monospace;
+	font-size: 0.9rem;
+	line-height: 1.5;
+}
+
+.warning-box {
+	background: #fef3c7;
+	border: 1px solid #fde68a;
+	border-radius: 8px;
+	padding: 1.5rem;
+	margin-bottom: 2rem;
+}
+
+.warning-box code {
+	background: #fbbf24;
+	color: #78350f;
+	padding: 0.2rem 0.5rem;
+	border-radius: 4px;
+	font-size: 0.9rem;
+}
+
+/* Resource/Item Cards (vocab, mapping cards etc.) */
+.item-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	margin-bottom: 3rem;
+}
+
+.item-card {
+	background: white;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 1.5rem;
+	transition: all 0.2s;
+}
+
+.item-card:hover {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.item-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 0.75rem;
+	gap: 1rem;
+}
+
+.item-header > div {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.item-card h3 {
+	margin: 0;
+	font-size: 1.25rem;
+	text-align: left;
+}
+
+.item-card h3 a {
+	color: #1e293b;
+	text-decoration: none;
+}
+
+.item-description {
+	color: #64748b;
+	margin: 0 0 1rem;
+	line-height: 1.6;
+}
+
+.item-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	font-size: 0.9rem;
+}
+
+.meta-item {
+	display: flex;
+	gap: 0.5rem;
+	align-items: flex-start;
+}
+
+.meta-label {
+	color: #64748b;
+	font-weight: 500;
+	min-width: 40px;
+	flex-shrink: 0;
+}
+
+.meta-item code {
+	background: #f1f5f9;
+	padding: 0.2rem 0.5rem;
+	border-radius: 4px;
+	font-size: 0.85rem;
+	word-break: break-all;
+}
+
+/* Badge styles */
+.badge {
+	padding: 0.2rem 0.6rem;
+	border-radius: 12px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+/* Download/Action buttons */
+.download-btn, .action-btn {
+	padding: 0.4rem 1rem;
+	border-radius: 6px;
+	text-decoration: none;
+	font-size: 0.9rem;
+	font-weight: 500;
+	transition: all 0.2s;
+	white-space: nowrap;
+	color: white;
+}
+
+/* Redirect/Link Info Styles */
+.redirect-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.redirect-item {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.75rem;
+	background: white;
+	border-radius: 6px;
+	font-size: 0.9rem;
+	flex-wrap: wrap;
+}
+
+.redirect-item code {
+	background: #f1f5f9;
+	padding: 0.3rem 0.6rem;
+	border-radius: 4px;
+	font-size: 0.85rem;
+}
+
+.redirect-arrow {
+	font-weight: bold;
+	flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+	.item-header {
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.redirect-item {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+
+	.redirect-arrow {
+		transform: rotate(90deg);
+	}
+}

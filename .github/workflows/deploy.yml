@@ -59,6 +59,19 @@ jobs:
         run: |
           ./verify-examples.sh
 
+      - name: Copy sync-engine content
+        run: |
+          # Copy vocabularies and mappings to public/ for direct access
+          mkdir -p public/vocab
+          mkdir -p public/mappings
+          cp sync-engine/spec/vocabularies/* public/vocab/
+          cp sync-engine/spec/mappings/* public/mappings/
+
+      - name: Extract metadata from vocabularies and mappings
+        run: |
+          cd tools && dart pub get && cd ..
+          dart run tools/extract_vocab_metadata.dart
+
       - name: Build website
         run: npm run build:no-verify
 
@@ -70,19 +83,11 @@ jobs:
         working-directory: sync-engine/packages/locorda/example
         run: flutter build web --release --base-href /example/personal_notes_app/
 
-      - name: Integrate sync-engine content into site
+      - name: Integrate Flutter app into site
         run: |
-          # Create directory structure
-          mkdir -p dist/vocab
-          mkdir -p dist/mappings
+          # Create directory structure for Flutter app and its assets
           mkdir -p dist/example/personal_notes_app/mappings
           mkdir -p dist/example/personal_notes_app/auth
-          
-          # Copy vocabularies
-          cp sync-engine/spec/vocabularies/* dist/vocab/
-          
-          # Copy mappings
-          cp sync-engine/spec/mappings/* dist/mappings/
           
           # Copy built Flutter app
           cp -r sync-engine/packages/locorda/example/build/web/* dist/example/personal_notes_app/
