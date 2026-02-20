@@ -79,6 +79,10 @@ jobs:
         working-directory: sync-engine
         run: melos bootstrap
 
+      - name: Build Runner - generate dart code, turtle files and .js worker
+        working-directory: sync-engine/packages/locorda/example/personal_notes_app
+        run: dart run build_runner build -d
+
       - name: Build sync-engine Flutter example app
         working-directory: sync-engine/packages/locorda/example/personal_notes_app
         run: flutter build web --release --base-href /example/personal_notes_app/
