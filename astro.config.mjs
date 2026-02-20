@@ -34,12 +34,15 @@ export default defineConfig({
 							collapsed: false,
 							items: [
 								{ label: 'Getting Started', slug: 'docs/sync-engine/guides/getting-started' },
+								{ label: 'Repository Pattern', slug: 'docs/sync-engine/guides/repository-pattern' },
 							],
 						},
 						{
 							label: 'Core Concepts',
 							collapsed: false,
 							items: [
+								{ label: 'Architecture', slug: 'docs/sync-engine/core-concepts/architecture' },
+								{ label: 'Sync Lifecycle', slug: 'docs/sync-engine/core-concepts/sync-lifecycle' },
 								{ label: 'Conflict Resolution', slug: 'docs/sync-engine/core-concepts/conflict-resolution' },
 							],
 						},

@@ -1,0 +1,303 @@
+---
+title: Architecture
+description: Understanding Locorda's architecture - components, layers, and how they interact
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Locorda's architecture is designed for **offline-first apps that sync automatically**. This page explains the components, their responsibilities, and how they work together.
+
+## High-Level Overview
+
+```
+┌─────────────────────────────────────────────────┐
+│           Your Flutter App (UI Layer)           │
+│  • Widgets, State Management, User Interaction  │
+└────────────────┬────────────────────────────────┘
+                 │
+                 ↓
+┌─────────────────────────────────────────────────┐
+│         Your Repository (Data Layer)            │
+│  • Local Database (Drift/Hive/Isar)             │
+│  • Query Logic, Transactions                    │
+└────────────────┬────────────────────────────────┘
+                 │
+                 ↓
+┌─────────────────────────────────────────────────┐
+│      Locorda Sync Engine (Main Thread)         │
+│  • Object ↔ RDF Conversion                      │
+│  • Callback Registration                        │
+│  • Main Thread API                              │
+└────────────────┬────────────────────────────────┘
+                 │
+                 ↓ (communicates via isolate)
+┌─────────────────────────────────────────────────┐
+│       Sync Worker (Background Thread)           │
+│  • RDF Storage (Quads, Named Graphs)            │
+│  • Conflict Resolution (CRDT Merge)             │
+│  • Remote Communication                         │
+└────────────────┬────────────────────────────────┘
+                 │
+                 ↓
+┌─────────────────────────────────────────────────┐
+│          Remote Storage Backends                │
+│  • Solid Pods, Google Drive, Local Dir, etc.    │
+└─────────────────────────────────────────────────┘
+```
+
+## Component Responsibilities
+
+### UI Layer (Your Code)
+
+**Responsibility**: Display data and handle user interactions.
+
+**Key Points:**
+- Standard Flutter widgets (`ListView`, `TextField`, etc.)
+- Works with any state management (Provider, Riverpod, BLoC)
+- No sync awareness needed - just reads/writes via repository
+
+**Example:**
+```dart
+StreamBuilder<List<Task>>(
+  stream: repository.watchAll(),
+  builder: (context, snapshot) {
+    // Just display the data - sync happens automatically
+    return ListView(children: snapshot.data!.map(TaskTile.new).toList());
+  },
+)
+```
+
+### Repository Layer (Your Code)
+
+**Responsibility**: Connect your local database to Locorda's sync engine.
+
+**Key Points:**
+- Owns your local database (Drift, Hive, Isar, etc.)
+- Implements business logic (queries, filters, transactions)
+- Registers callbacks with sync engine
+- Provides reactive streams to UI
+
+**Example:**
+```dart
+class TaskRepository {
+  final ObjectSyncEngine _syncEngine;
+  final MyDatabase _db;
+  
+  Future<void> save(Task task) => _syncEngine.save<Task>(task);
+  Stream<List<Task>> watchAll() => _db.watchTasks();
+}
+```
+
+See [Repository Pattern](/docs/sync-engine/guides/repository-pattern) for implementation details.
+
+### Sync Engine Main Thread (Locorda Framework)
+
+**Responsibility**: Main thread API and object-RDF conversion.
+
+**Key Points:**
+- Provides the API your app uses (`save()`, `delete()`, `hydrateWithCallbacks()`)
+- Converts Dart objects to RDF (via generated mappers)
+- Manages callback registration
+- Forwards operations to worker thread
+- Calls your callbacks when data changes
+
+**Not responsible for:**
+- Actual sync logic (handled by worker)
+- Remote communication (handled by worker)
+- Storage (handled by worker)
+
+### Sync Worker Background Thread (Locorda Framework)
+
+**Responsibility**: All sync logic in isolation from UI thread.
+
+**Key Points:**
+- Runs in a separate Dart isolate (web: Web Worker)
+- Manages RDF quad storage
+- Implements CRDT merge algorithms
+- Handles remote communication
+- Detects conflicts and resolves them automatically
+- Queues local changes for upload
+
+**Why a separate thread?**
+- Sync can be slow (network I/O, large merges)
+- Keeps UI responsive during sync
+- Allows sync to continue in background
+
+<Aside type="tip">
+The worker thread is **completely isolated** - it cannot directly access your UI or database. All communication happens via the callback pattern.
+</Aside>
+
+### Remote Storage Backends (Pluggable)
+
+**Responsibility**: Persist data remotely.
+
+**Supported Backends:**
+- **Solid Pods** - Decentralized personal data stores
+- **Google Drive** - Cloud storage via Google's API
+- **Local Directory** - File system (for testing/debugging)
+- **Custom** - Implement your own backend
+
+**Interface:**
+All backends implement the same interface, so your code works with any backend without changes.
+
+## Data Flow
+
+### Local Save Flow
+
+```
+1. User edits task in UI
+   ↓
+2. UI calls repository.save(task)
+   ↓
+3. Repository calls syncEngine.save<Task>(task)
+   ↓
+4. Main thread: Converts Task → RDF via generated mapper
+   ↓
+5. Main thread: Sends RDF to worker thread
+   ↓
+6. Worker thread: Stores RDF in local quad storage
+   ↓
+7. Worker thread: Queues change for upload
+   ↓
+8. Worker thread: Notifies main thread of change
+   ↓
+9. Main thread: Calls repository's onUpdate(task)
+   ↓
+10. Repository: Saves to local DB, notifies UI
+   ↓
+11. UI: Updates automatically via StreamBuilder
+```
+
+**Key insight**: Your repository saves to its DB in the `onUpdate` callback, not in the `save()` method.
+
+### Remote Sync Flow
+
+```
+1. Worker thread: Periodic sync check (or manual trigger)
+   ↓
+2. Worker thread: Fetches changes from remote
+   ↓
+3. Worker thread: Merges remote RDF with local RDF (CRDT)
+   ↓
+4. Worker thread: Uploads queued local changes
+   ↓
+5. Worker thread: Notifies main thread of merged state
+   ↓
+6. Main thread: Converts RDF → Task via generated mapper
+   ↓
+7. Main thread: Calls repository's onUpdate(task)
+   ↓
+8. Repository: Saves to local DB, notifies UI
+   ↓
+9. UI: Updates automatically via StreamBuilder
+```
+
+**Key insight**: Remote changes flow through the same `onUpdate` callback as local changes.
+
+## Storage Layers
+
+Locorda uses **two storage layers**:
+
+### Layer 1: Locorda's RDF Storage (Worker Thread)
+
+**Purpose**: Sync metadata and canonical merged state.
+
+**Format**: RDF quads (subject-predicate-object-graph)
+
+**Managed by**: Locorda framework (you don't access this directly)
+
+**Contents:**
+- Your data in RDF format
+- Sync metadata (cursors, timestamps, conflict resolution data)
+- Queued local changes waiting for sync
+
+**Persistence Options:**
+- `InMemoryStorage` - RAM only (testing)
+- `DriftStorage` - SQLite via Drift (production)
+
+### Layer 2: Your Application Database (Main Thread)
+
+**Purpose**: Fast queries, indexes, application-specific structure.
+
+**Format**: Whatever you want (Drift tables, Hive boxes, Isar collections, etc.)
+
+**Managed by**: Your repository code
+
+**Contents:**
+- Just your data, structured for your app's needs
+- No sync metadata
+
+**Why two layers?**
+- **RDF storage**: Enables sync, conflict resolution, interoperability
+- **Your storage**: Enables fast queries, indexes, migrations without RDF knowledge
+
+## Worker Thread Isolation
+
+### Communication Model
+
+The main thread and worker thread communicate via **message passing**:
+
+```dart
+Main Thread                          Worker Thread
+    │                                      │
+    ├─── save(task) ────────────────────→ │
+    │                                      ├─ Store in RDF
+    │                                      ├─ Queue for sync
+    │                                      │
+    │                 ←──── onUpdate ───── │
+    ├─ Call callback                       │
+    │                                      │
+```
+
+**Platform-specific implementation:**
+- **Dart (mobile/desktop)**: Dart isolates with `SendPort`/`ReceivePort`
+- **Web**: Web Workers with `postMessage()`
+
+### Benefits of Isolation
+
+1. **UI Responsiveness**: Sync never blocks the UI
+2. **Safety**: Worker cannot accidentally access UI state
+3. **Resource Control**: Worker can use heavy CPU without affecting UI
+4. **Crash Isolation**: Worker crash doesn't crash the app
+
+## Configuration
+
+All components are configured in `initLocorda()`:
+
+```dart
+final locorda = await initLocorda(
+  // Which remotes to sync with
+  remotes: [solidPod, googleDrive],
+  
+  // Where worker stores RDF data
+  storage: DriftStorageMainHandler(),
+  
+  // Optional: Worker thread setup
+  onWorkerSpawn: () => setupLogging(level: Level.INFO),
+);
+```
+
+The generated `initLocorda()` function wires up:
+- All registered resource types
+- RDF mappers
+- CRDT merge strategies
+- Vocabulary definitions
+
+## Next Steps
+
+- [Sync Lifecycle](/docs/sync-engine/core-concepts/sync-lifecycle) - How sync states progress
+- [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) - How conflicts are resolved
+- [Repository Pattern](/docs/sync-engine/guides/repository-pattern) - Implement repositories
+- [Data Model](/docs/sync-engine/core-concepts/data-model) - Understanding RDF triples and quads
+
+## Summary
+
+**Locorda's architecture separates concerns:**
+
+1. **UI Layer**: Display and user interaction (your code)
+2. **Repository Layer**: Local storage and queries (your code)
+3. **Sync Engine Main**: Object-RDF conversion (framework)
+4. **Sync Worker**: Sync logic in background thread (framework)
+5. **Remote Backends**: Pluggable storage (framework + your choice)
+
+The callback pattern connects these layers, ensuring all changes flow through a single path regardless of their source.

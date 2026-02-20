@@ -1,0 +1,368 @@
+---
+title: Repository Pattern
+description: Understanding how repositories connect your local storage to Locorda's sync engine
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The **repository pattern** is how you connect your local storage (database) to Locorda's sync engine. This guide shows you how to implement repositories for your app.
+
+<Aside type="tip">
+For understanding the architecture and how sync works internally, see [Architecture](/docs/sync-engine/core-concepts/architecture) and [Sync Lifecycle](/docs/sync-engine/core-concepts/sync-lifecycle).
+</Aside>
+
+## What is a Repository?
+
+A repository is a class that:
+- **Manages your local database** (Drift, Hive, Isar, or even a simple Map)
+- **Connects to the sync engine** via callbacks
+- **Provides a clean API** to your UI (save, delete, query)
+
+## Creating a Repository
+
+Here's a complete repository implementation:
+
+```dart
+import 'dart:async';
+import 'package:locorda/locorda.dart';
+
+/// Repository integrating local storage with Locorda sync.
+///
+/// This example uses a simple Map as a mock database. In a real app,
+/// you'd use your preferred storage solution (Drift, Hive, Isar, etc.)
+/// and connect it to sync via the same callback pattern.
+class TaskRepository {
+  final ObjectSyncEngine _syncEngine;
+  final Map<String, Task> _tasks = {}; // Mock DB - use Drift/Hive/etc. in real apps
+  final StreamController<List<Task>> _controller = StreamController.broadcast();
+  StreamSubscription? _hydrationSubscription;
+
+  TaskRepository._(this._syncEngine);
+
+  /// Create and initialize repository with sync.
+  static Future<TaskRepository> create(ObjectSyncEngine syncEngine) async {
+    final repo = TaskRepository._(syncEngine);
+
+    // Connect your local storage to sync via callbacks.
+    //
+    // IMPORTANT: These callbacks are your "single source of truth" for data updates.
+    // ALL changes (local saves, remote sync, conflict resolution) flow through these
+    // callbacks. This ensures your UI always shows the merged, conflict-free state.
+    repo._hydrationSubscription = await syncEngine.hydrateWithCallbacks<Task>(
+      getCurrentCursor: () async => null, // Simple: no cursor persistence
+      onUpdate: (task) async {
+        repo._tasks[task.id] = task; // In real app: await db.upsert(task)
+        repo._notifyListeners();
+      },
+      onDelete: (id) async {
+        repo._tasks.remove(id); // In real app: await db.delete(id)
+        repo._notifyListeners();
+      },
+      onCursorUpdate: (cursor) async {}, // Skipped for simplicity
+    );
+
+    return repo;
+  }
+
+  /// Watch all tasks reactively
+  Stream<List<Task>> watchAll() => _controller.stream;
+
+  /// Get all tasks (snapshot)
+  List<Task> getAll() => _tasks.values.toList()
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+  /// Save task (create or update) - queued for sync to other devices.
+  ///
+  /// IMPORTANT: Do NOT update _tasks directly here!
+  /// The sync engine will call our onUpdate callback, which updates _tasks.
+  Future<void> save(Task task) async {
+    await _syncEngine.save<Task>(task);
+  }
+
+  /// Delete task - queued for sync to other devices.
+  Future<void> delete(String id) async {
+    await _syncEngine.deleteDocument<Task>(id);
+  }
+
+  void _notifyListeners() {
+    _controller.add(getAll());
+  }
+
+  void dispose() {
+    _hydrationSubscription?.cancel();
+    _controller.close();
+  }
+}
+```
+
+## The Callback Pattern
+
+The key to understanding the repository is the **callback pattern**:
+
+### hydrateWithCallbacks()
+
+This method connects your local storage to sync:
+
+```dart
+await syncEngine.hydrateWithCallbacks<Task>(
+  getCurrentCursor: () async => null,
+  onUpdate: (task) async { /* save to your DB */ },
+  onDelete: (id) async { /* delete from your DB */ },
+  onCursorUpdate: (cursor) async { /* save sync cursor */ },
+);
+```
+
+**Parameters:**
+
+- **`getCurrentCursor`** - Returns the last sync position (for incremental sync)
+- **`onUpdate`** - Called when a task is created or updated (from any source)
+- **`onDelete`** - Called when a task is deleted (from any source)
+- **`onCursorUpdate`** - Called to persist sync progress
+
+<Aside type="tip">
+**Single Source of Truth**: ALL data changes flow through `onUpdate`/`onDelete`, whether they come from:
+- Local `save()` calls
+- Remote sync
+- Conflict resolution
+- Initial hydration
+
+This guarantees your UI always shows the correctly merged state.
+</Aside>
+
+<Aside>
+Want to understand HOW sync works under the hood? See [Sync Lifecycle](/docs/sync-engine/core-concepts/sync-lifecycle) for the complete flow of local changes, remote sync, and offline mode.
+</Aside>
+
+## Storage Integration
+
+### Using Your Own Database
+
+The callback pattern works with any storage solution:
+
+**With Drift:**
+```dart
+onUpdate: (task) async {
+  await database.into(database.tasks).insertOnConflictUpdate(
+    TasksCompanion.insert(
+      id: task.id,
+      title: task.title,
+      completed: task.completed,
+      createdAt: task.createdAt,
+    ),
+  );
+  _notifyListeners();
+},
+onDelete: (id) async {
+  await (database.delete(database.tasks)..where((t) => t.id.equals(id))).go();
+  _notifyListeners();
+}
+```
+
+**With Hive:**
+```dart
+onUpdate: (task) async {
+  final box = await Hive.openBox<Task>('tasks');
+  await box.put(task.id, task);
+  _notifyListeners();
+},
+onDelete: (id) async {
+  final box = await Hive.openBox<Task>('tasks');
+  await box.delete(id);
+  _notifyListeners();
+}
+```
+
+**With Isar:**
+```dart
+onUpdate: (task) async {
+  await isar.writeTxn(() async {
+    await isar.tasks.put(task);
+  });
+  _notifyListeners();
+},
+onDelete: (id) async {
+  await isar.writeTxn(() async {
+    await isar.tasks.delete(id);
+  });
+  _notifyListeners();
+}
+```
+
+### Cursor Tracking
+
+For efficient incremental sync, persist the cursor:
+
+```dart
+getCurrentCursor: () async {
+  // Load from your preferences/database
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('sync_cursor_tasks');
+},
+onCursorUpdate: (cursor) async {
+  // Save to your preferences/database
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('sync_cursor_tasks', cursor);
+}
+```
+
+The cursor tracks "what you've already synced" so future syncs only fetch new changes.
+
+## State Management
+
+### Reactive Updates
+
+Use streams for reactive UI:
+
+```dart
+class TaskRepository {
+  final StreamController<List<Task>> _controller = StreamController.broadcast();
+  
+  Stream<List<Task>> watchAll() => _controller.stream;
+  
+  void _notifyListeners() {
+    _controller.add(getAll());
+  }
+}
+```
+
+In your UI:
+
+```dart
+StreamBuilder<List<Task>>(
+  stream: repository.watchAll(),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) return CircularProgressIndicator();
+    final tasks = snapshot.data!;
+    return ListView.builder(
+      itemCount: tasks.length,
+      itemBuilder: (context, i) => TaskTile(tasks[i]),
+    );
+  },
+)
+```
+
+### State Management Libraries
+
+The repository pattern works with any state management solution:
+
+**With Provider:**
+```dart
+class TaskNotifier extends ChangeNotifier {
+  final TaskRepository _repo;
+  StreamSubscription? _subscription;
+  
+  TaskNotifier(this._repo) {
+    _subscription = _repo.watchAll().listen((_) {
+      notifyListeners();
+    });
+  }
+  
+  List<Task> get tasks => _repo.getAll();
+}
+```
+
+**With Riverpod:**
+```dart
+final taskRepositoryProvider = Provider<TaskRepository>((ref) {
+  return TaskRepository.create(ref.watch(syncEngineProvider));
+});
+
+final tasksProvider = StreamProvider<List<Task>>((ref) {
+  return ref.watch(taskRepositoryProvider).watchAll();
+});
+```
+
+**With BLoC:**
+```dart
+class TaskBloc extends Bloc<TaskEvent, TaskState> {
+  final TaskRepository _repository;
+  StreamSubscription? _subscription;
+  
+  TaskBloc(this._repository) : super(TaskInitial()) {
+    _subscription = _repository.watchAll().listen((tasks) {
+      add(TasksUpdated(tasks));
+    });
+  }
+}
+```
+
+## Best Practices
+
+### ✅ Do
+
+- Use callbacks for ALL database updates (local and remote)
+- Let the sync engine handle conflict resolution
+- Persist cursors for efficient incremental sync
+- Use streams for reactive UI updates
+- Dispose subscriptions properly
+
+### ❌ Don't
+
+- Don't bypass callbacks and update your database directly in `save()`
+- Don't ignore `onUpdate` - it's essential for showing merged data
+- Don't forget to call `_notifyListeners()` in your callbacks
+- Don't mix sync-managed data with non-sync data in the same table (use separate repositories)
+
+## Advanced Patterns
+
+### Transactions
+
+For multi-step operations, wrap in a transaction:
+
+```dart
+Future<void> archiveCompletedTasks() async {
+  final completed = getAll().where((t) => t.completed).toList();
+  
+  // Delete all at once - sync engine batches them
+  for (final task in completed) {
+    await delete(task.id);
+  }
+}
+```
+
+The sync engine batches operations efficiently.
+
+### Filtered Queries
+
+Your repository can expose filtered views:
+
+```dart
+Stream<List<Task>> watchActive() =>
+    _controller.stream.map((tasks) => 
+      tasks.where((t) => !t.completed).toList()
+    );
+
+Stream<List<Task>> watchByTag(String tag) =>
+    _controller.stream.map((tasks) => 
+      tasks.where((t) => t.tags.contains(tag)).toList()
+    );
+```
+
+### Multiple Resource Types
+
+Create one repository per resource type:
+
+```dart
+class NoteRepository { /* ... */ }
+class CategoryRepository { /* ... */ }
+class TagRepository { /* ... */ }
+```
+
+Each repository manages its own sync callbacks and storage.
+
+## Next Steps
+
+- [Sync Lifecycle](/docs/sync-engine/core-concepts/sync-lifecycle) - How sync works (local changes, remote sync, offline mode)
+- [Architecture](/docs/sync-engine/core-concepts/architecture) - Understanding components and layers
+- [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) - How conflicts are resolved automatically
+- [Testing Guide](/docs/sync-engine/guides/testing) - Test your repositories
+
+## Summary
+
+The repository pattern in Locorda:
+
+1. **Callbacks = Single Source of Truth** - All changes flow through `onUpdate`/`onDelete`
+2. **You control storage** - Use any database you want
+3. **Sync is automatic** - Local changes are queued, remote changes are merged
+4. **Framework handles conflicts** - CRDT algorithms ensure consistency
+5. **Works with any state management** - Streams, Provider, Riverpod, BLoC, etc.

@@ -22,15 +22,15 @@ This document tracks the implementation of the Locorda documentation structure.
 ### Guides (Task-oriented)
 
 - [x] `/docs/sync-engine/guides/getting-started.mdx` - Move current getting-started here
-- [ ] `/docs/sync-engine/guides/repository-pattern.mdx` - State management, transactions, queries
+- [x] `/docs/sync-engine/guides/repository-pattern.mdx` - State management, transactions, queries
 - [ ] `/docs/sync-engine/guides/testing.mdx` - Unit testing, integration testing, mocking
 - [ ] `/docs/sync-engine/guides/production-deployment.mdx` - Backend setup, monitoring, scaling
 
 ### Core Concepts (Understanding internals)
 
-- [ ] `/docs/sync-engine/core-concepts/architecture.mdx` - Detailed architecture, worker thread, storage layers
+- [x] `/docs/sync-engine/core-concepts/architecture.mdx` - Detailed architecture, worker thread, storage layers
 - [x] `/docs/sync-engine/core-concepts/conflict-resolution.mdx` - HLC, merge contracts, custom resolution strategies
-- [ ] `/docs/sync-engine/core-concepts/sync-lifecycle.mdx` - Sync states, error handling, retry logic
+- [x] `/docs/sync-engine/core-concepts/sync-lifecycle.mdx` - Sync states, error handling, retry logic
 - [ ] `/docs/sync-engine/core-concepts/data-model.mdx` - RDF foundation, triples, quads, named graphs
 
 **Priority:** Conflict resolution should be comprehensive - current "Understanding Conflicts" section is too shallow for production use. ✅ DONE
@@ -112,12 +112,15 @@ This document tracks the implementation of the Locorda documentation structure.
 ### Phase 1: Foundation ✅ COMPLETE
 1. ✅ Create Sync Engine hub page (`sync-engine/index.mdx`)
 2. ✅ Reorganize getting-started into `guides/` subdirectory
-3. ✅ Create `data-modeling/merge-contracts.mdx` (foundational concept)
-4. ✅ Create `core-concepts/conflict-resolution.mdx` (expand beyond current shallow coverage)
-5. ✅ Update Starlight sidebar configuration
+3. ✅ Create `guides/repository-pattern.mdx` (task-oriented guide)
+4. ✅ Create `data-modeling/merge-contracts.mdx` (foundational concept)
+5. ✅ Create `core-concepts/conflict-resolution.mdx` (expand beyond current shallow coverage)
+6. ✅ Create `core-concepts/architecture.mdx` (components, layers, worker thread)
+7. ✅ Create `core-concepts/sync-lifecycle.mdx` (sync flow, offline mode, error handling)
+8. ✅ Update Starlight sidebar configuration
 
 ### Phase 2: Core Documentation
-1. Complete all Core Concepts pages
+1. Complete remaining Core Concepts pages (data-model.mdx)
 2. Complete all Data Modeling pages
 3. Create Vocabularies section (generated + external)
 4. Storage Backends overview and Solid Pods guide

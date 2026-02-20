@@ -1,0 +1,343 @@
+---
+title: Sync Lifecycle
+description: Understanding how sync works - from local changes to remote sync, offline queuing, and error handling
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The **sync lifecycle** describes how data flows through Locorda - from local changes to remote sync, how offline changes are queued, and how errors are handled.
+
+## Overview
+
+Sync in Locorda is **automatic and bidirectional**:
+- **Local → Remote**: Your changes are queued and uploaded when connected
+- **Remote → Local**: Remote changes are downloaded and merged automatically
+
+Both directions flow through the same callback pattern, ensuring your UI always shows the merged state.
+
+## Local Changes Flow
+
+When you make a local change (`repository.save(task)`):
+
+```
+1. 📱 Your app calls save(task)
+   ↓
+2. 🔧 SyncEngine merges & stores in Locorda's local storage
+   ↓
+3. 📞 onUpdate callback → your app saves to its own database
+   ↓
+4. 🎨 UI updates via StreamBuilder
+   ↓
+   [Change is queued for sync when connected]
+```
+
+**Key insight**: You don't directly update your database in `save()`. The sync engine calls your `onUpdate` callback, which updates your database. This keeps everything consistent.
+
+### Why This Pattern?
+
+The callback pattern ensures:
+1. **Consistency**: Local and remote changes handled identically
+2. **Conflict-free**: CRDT merge happens before callback
+3. **Single source of truth**: Only one code path for database updates
+4. **Testability**: Easy to mock and test
+
+## Background Sync Flow
+
+Sync process runs automatically in a background worker thread:
+
+```
+1. 🔄 Worker checks remote storage for changes
+   ↓
+2. 📥 Downloads new/updated data
+   ↓
+3. 🔧 SyncEngine merges with local storage (resolves conflicts)
+   ↓
+4. 📤 Uploads merged state + queued local changes to remote
+   ↓
+5. 📞 onUpdate callback → your app saves to its database
+   ↓
+6. 🎨 UI updates via StreamBuilder
+```
+
+**Key insight**: Remote changes go through the same `onUpdate` callback as local changes. Your database and UI don't need to know where changes came from.
+
+### Sync Triggers
+
+Sync can be triggered by:
+
+1. **Automatic periodic sync** (default behavior)
+2. **Network connectivity change** (reconnection after offline)
+3. **Manual sync request** (user presses sync button)
+4. **App resume** (app comes to foreground)
+
+## Offline Mode
+
+Locorda is **offline-first** - your app works fully offline, and changes sync when you reconnect.
+
+### Offline Behavior
+
+When offline:
+1. **Local changes are queued**: Saved to Locorda's local storage
+2. **UI updates immediately**: Via `onUpdate` callbacks
+3. **No remote sync**: Worker waits for connection
+4. **No data loss**: All changes persisted locally
+
+When you reconnect:
+1. **Sync process runs automatically**
+2. **Downloads remote changes** (what others did while you were offline)
+3. **Merges with your queued local changes** (using CRDT algorithms)
+4. **Both remote and local changes flow through `onUpdate`**
+5. **UI shows the final merged state**
+
+<Aside type="tip">
+Offline mode is transparent to your UI. Your repository continues to work exactly the same whether online or offline.
+</Aside>
+
+### Conflict Resolution During Sync
+
+When offline changes from multiple devices are merged:
+
+```
+Device A (offline):          Device B (offline):
+task.title = "Buy milk"      task.title = "Buy bread"
+    ↓                            ↓
+    Both reconnect
+    ↓
+Sync merges using CRDT rules (last-write-wins by timestamp)
+    ↓
+Final merged state: task.title = "Buy bread" (if B's timestamp is later)
+```
+
+See [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) for details on merge strategies.
+
+## Sync States
+
+### Connection States
+
+Your app can be in one of these sync states:
+
+| State | Description | User Can |
+|-------|-------------|----------|
+| **Disconnected** | No remote configured or intentionally disconnected | Make local changes (queued) |
+| **Connecting** | Attempting to establish connection to remote | Wait |
+| **Connected** | Successfully connected, sync operational | Everything |
+| **Syncing** | Actively syncing data | Everything (sync in background) |
+| **Error** | Connection or sync error occurred | Retry or continue offline |
+
+### Monitoring Sync State
+
+Subscribe to sync state changes:
+
+```dart
+// TODO: Provide actual API for sync state monitoring
+// This is planned but not yet implemented in the framework
+```
+
+## Error Handling
+
+### Network Errors
+
+When network errors occur:
+
+**Transient errors** (network timeout, temporary 500 errors):
+- Sync automatically retries with exponential backoff
+- Local changes remain queued
+- UI continues to work offline
+
+**Permanent errors** (401 unauthorized, 404 not found):
+- Sync stops retrying
+- Error exposed to UI for user action
+- Local changes remain queued
+
+### Conflict Errors
+
+Conflicts are **not errors** in Locorda - they're resolved automatically using CRDT merge strategies. See [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution).
+
+### Storage Errors
+
+If local storage fails (disk full, database corruption):
+- Sync engine exposes the error
+- App should prompt user to free space or reinstall
+- Remote data remains safe
+
+## Retry Logic
+
+### Exponential Backoff
+
+Failed sync attempts retry with increasing delays:
+
+```
+Attempt 1: Immediate
+Attempt 2: 1 second delay
+Attempt 3: 2 seconds delay
+Attempt 4: 4 seconds delay
+Attempt 5: 8 seconds delay
+...
+Max delay: 60 seconds
+```
+
+After max delay is reached, sync retries every 60 seconds until successful.
+
+### Manual Retry
+
+Users can always trigger manual sync:
+
+```dart
+// TODO: Provide actual API for manual sync trigger
+// This is planned but not yet implemented in the framework
+```
+
+## Sync Optimizations
+
+### Incremental Sync
+
+Locorda uses **cursors** to track sync position:
+
+```dart
+getCurrentCursor: () async {
+  // Return the last sync position
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('sync_cursor_tasks');
+},
+onCursorUpdate: (cursor) async {
+  // Save the new sync position
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('sync_cursor_tasks', cursor);
+}
+```
+
+**Benefits:**
+- Only fetches changes since last sync (not entire dataset)
+- Dramatically reduces bandwidth and sync time
+- Essential for large datasets
+
+### Batching
+
+Multiple local changes are batched before upload:
+
+```dart
+// These 3 saves are batched into a single sync request
+await repository.save(task1);
+await repository.save(task2);
+await repository.save(task3);
+```
+
+**Benefits:**
+- Fewer network requests
+- More efficient use of bandwidth
+- Faster sync
+
+## Testing Sync Behavior
+
+### Testing Offline Mode
+
+```dart
+test('saves work offline', () async {
+  // Disconnect
+  await syncEngine.disconnect();
+  
+  // Make changes
+  await repository.save(task);
+  
+  // Verify stored locally
+  expect(repository.getAll(), contains(task));
+  
+  // Reconnect and verify sync
+  await syncEngine.connect();
+  await syncEngine.waitForSync();
+  
+  // Verify on remote
+  expect(await remote.fetch(task.id), equals(task));
+});
+```
+
+### Testing Conflict Resolution
+
+```dart
+test('merges conflicting changes', () async {
+  // Device A changes title
+  final taskA = task.copyWith(title: 'Buy milk');
+  await repositoryA.save(taskA);
+  
+  // Device B changes same task (offline)
+  final taskB = task.copyWith(title: 'Buy bread');
+  await repositoryB.save(taskB);
+  
+  // Both sync
+  await syncEngine.waitForSync();
+  
+  // Verify last-write-wins (or your merge strategy)
+  expect(repositoryA.get(task.id).title, equals('Buy bread'));
+  expect(repositoryB.get(task.id).title, equals('Buy bread'));
+});
+```
+
+## Performance Considerations
+
+### Large Datasets
+
+For large datasets:
+- **Use cursors** to enable incremental sync
+- **Implement pagination** in your UI
+- **Consider lazy loading** (fetch on demand, not all at once)
+
+See [Advanced Features - Lazy Loading](/docs/sync-engine/advanced-features/lazy-loading) for details.
+
+### Frequent Changes
+
+For rapidly changing data:
+- **Use debouncing** in your UI (avoid save on every keystroke)
+- **Trust batching** - sync engine batches automatically
+- **Monitor network usage** if on mobile data
+
+## Debugging Sync Issues
+
+### Enable Logging
+
+```dart
+final locorda = await initLocorda(
+  remotes: [solidPod],
+  storage: DriftStorageMainHandler(),
+  onWorkerSpawn: () => setupLogging(
+    level: Level.ALL, // Verbose logging
+    threadName: 'WORKER',
+  ),
+);
+```
+
+### Common Issues
+
+**Changes not syncing:**
+- Check connection state
+- Verify remote credentials
+- Check for network errors in logs
+
+**Unexpected merge results:**
+- Review CRDT merge strategies on your models
+- Check timestamps (last-write-wins depends on clock sync)
+- See [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution)
+
+**Slow sync performance:**
+- Implement cursor tracking
+- Check dataset size
+- Consider lazy loading
+
+## Next Steps
+
+- [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) - How conflicts are resolved
+- [Architecture](/docs/sync-engine/core-concepts/architecture) - Understanding components and layers
+- [Repository Pattern](/docs/sync-engine/guides/repository-pattern) - Implement sync-aware repositories
+- [Testing Guide](/docs/sync-engine/guides/testing) - Test sync behavior
+
+## Summary
+
+**Sync lifecycle in Locorda:**
+
+1. **Local changes**: Queued automatically, flow through `onUpdate` callback
+2. **Background sync**: Automatic, bidirectional, runs in worker thread
+3. **Offline mode**: Fully supported, changes queued until reconnection
+4. **Conflict resolution**: Automatic via CRDT merge strategies
+5. **Error handling**: Exponential backoff retry with error exposure
+6. **Optimizations**: Incremental sync (cursors), batching, background processing
+
+The callback pattern ensures all changes (local and remote) flow through a single code path, keeping your UI in sync with the merged state.
