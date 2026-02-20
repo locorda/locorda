@@ -363,6 +363,10 @@ Event(id: 'task-1', name: 'Buy milk');
 
 **Do I need to learn RDF?** No! The code generator creates RDF vocabularies from your Dart classes automatically. You work with normal Dart objects.
 
+**But what if I DO care about RDF?** If you know RDF and want precise control over your data model, our annotations give you complete control over every aspect - predicates, types, namespaces, cardinality. See the [RDF Mapper annotations](https://pub.dev/documentation/locorda_rdf_mapper_annotations/latest/) for details.
+
+**For RDF experts:** Locorda is highly modular. You can bypass annotations entirely and work directly with the `RdfGraph` class while still leveraging the sync engine, conflict resolution, and storage backends. Use our building blocks however you need them.
+
 ## Get Help
 
 - [GitHub Discussions](https://github.com/locorda/sync-engine/discussions)
