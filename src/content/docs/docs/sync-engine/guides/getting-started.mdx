@@ -28,6 +28,23 @@ Remote Storage (Solid Pods, Google Drive, etc.)
 **Want to see the full code?** Check out the [complete minimal example on GitHub](https://github.com/locorda/sync-engine/tree/main/packages/locorda/example/minimal) - includes the full Task model, repository, UI, and initialization code.
 </Aside>
 
+### Preview
+
+<div class="not-content" style="display: flex; gap: 1rem; margin: 2rem 0; align-items: flex-start;">
+  <div class="not-content" style="flex: 1;">
+    <div class="not-content">
+      <img src="/images/sync-engine/getting-started/01-empty-app.png" alt="Empty task app on startup" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+      <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">Fresh start - no tasks yet</p>
+    </div>
+  </div>
+  <div class="not-content" style="flex: 1;">
+    <div class="not-content">
+      <img src="/images/sync-engine/getting-started/07-synced.png" alt="Successfully synced task list" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+      <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">Synced and working across devices</p>
+    </div>
+  </div>
+</div>
+
 ## Installation
 
 <Steps>
@@ -50,7 +67,7 @@ Remote Storage (Solid Pods, Google Drive, etc.)
    Annotate your Dart class to make it syncable:
 
    ```dart
-   import 'package:locorda/locorda.dart';
+   import 'package:locorda/annotations.dart';
 
    @RootResource(AppVocab(appBaseUri: 'https://locorda.dev/example/minimal'))
    class Task {
@@ -235,7 +252,23 @@ MultiBackendStatusWidget(
 )
 ```
 
-This lets users select remotes, connect, and trigger manual sync.
+This widget renders as a **cloud icon** that users can tap to open a bottom sheet for selecting remotes, connecting, and triggering manual sync. **We recommend placing it in the app bar** as shown below (top-right corner).
+
+<div class="not-content" style="margin: 1.5rem 0;">
+  <img src="/images/sync-engine/getting-started/04-offline-indicator.png" alt="Cloud icon in app toolbar" style="max-width: 400px; height: auto; display: block; margin: 0 auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+  <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">The cloud icon (top-right) is the MultiBackendStatusWidget</p>
+</div>
+
+<div class="not-content" style="display: flex; gap: 1rem; margin: 2rem 0; align-items: flex-start;">
+  <div class="not-content" style="flex: 1;">
+    <img src="/images/sync-engine/getting-started/05-backend-selector.png" alt="Backend selector showing available remotes" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+    <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">Select a storage backend</p>
+  </div>
+  <div class="not-content" style="flex: 1;">
+    <img src="/images/sync-engine/getting-started/08-backend-selector-connected-with-sync-now.png" alt="Backend connected with manual sync button" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+    <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">Connected and ready to sync</p>
+  </div>
+</div>
 
 ## Running the Example
 
@@ -250,6 +283,27 @@ flutter run
 **Platform compatibility**: The Local Directory remote (`locorda_dir`) works best on desktop platforms. For mobile or web, use Solid Pods or Google Drive instead.
 
 **Need the complete runnable example?** The full working app is available in the [minimal example repository](https://github.com/locorda/sync-engine/tree/main/packages/locorda/example/minimal).
+
+### The App in Action
+
+<div class="not-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0; align-items: start;">
+  <div class="not-content">
+    <img src="/images/sync-engine/getting-started/03-add-task.png" alt="Add new task dialog" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+    <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">Adding a new task</p>
+  </div>
+  <div class="not-content">
+    <img src="/images/sync-engine/getting-started/04-offline-indicator.png" alt="Offline mode indicator" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+    <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">Works offline - syncs when connected</p>
+  </div>
+  <div class="not-content">
+    <img src="/images/sync-engine/getting-started/06-local-directory-sync.png" alt="Local directory sync in progress" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+    <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">Syncing with local directory</p>
+  </div>
+  <div class="not-content">
+    <img src="/images/sync-engine/getting-started/02-task-list.png" alt="Task list with completed and active tasks" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+    <p style="text-align: center; font-size: 0.9em; color: var(--sl-color-gray-3); margin-top: 0.5rem;">Working with multiple tasks</p>
+  </div>
+</div>
 
 ## Generated Files
 
