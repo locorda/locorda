@@ -236,7 +236,7 @@ class NoteRepository {
   
   // Reactive query - automatically updates when data changes
   Stream<List<NoteIndexEntry>> watchAllNotes() {
-    return (db.select(db.noteIndexEntries)
+    return (db.select(db.notes)
       ..orderBy([
         (n) => OrderingTerm(
           expression: n.dateModified,
