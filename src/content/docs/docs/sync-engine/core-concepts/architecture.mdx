@@ -112,7 +112,7 @@ See [Repository Pattern](/docs/sync-engine/guides/repository-pattern) for implem
 
 **Key Points:**
 - Runs in a separate Dart isolate (web: Web Worker)
-- Manages RDF quad storage
+- Stores and retrieves RDF data (using injected storage backend)
 - Implements CRDT merge algorithms
 - Handles remote communication
 - Detects conflicts and resolves them automatically
@@ -140,6 +140,9 @@ The worker thread is **completely isolated** - it cannot directly access your UI
 **Interface:**
 All backends implement the same interface, so your code works with any backend without changes.
 
+**Storage Format:**
+Backends may store resources as individual files or as RDF Datasets (shard-level files with named graphs). Individual files reduce bandwidth, while datasets reduce remote operation overhead. Some backends let you configure this tradeoff.
+
 ## Data Flow
 
 <Aside type="tip">
@@ -164,7 +167,7 @@ Locorda uses **two storage layers**:
 
 **Purpose**: Sync metadata and canonical merged state.
 
-**Format**: RDF quads (subject-predicate-object-graph)
+**Format**: RDF triples (each resource in its own named graph)
 
 **Managed by**: Locorda framework (you don't access this directly)
 
@@ -177,13 +180,15 @@ Locorda uses **two storage layers**:
 - `InMemoryStorage` - RAM only (testing)
 - `DriftStorage` - SQLite via Drift (production)
 
-### Layer 2: Your Application Database (Main Thread)
+### Layer 2: Your Application Database
 
 **Purpose**: Fast queries, indexes, application-specific structure.
 
 **Format**: Whatever you want (Drift tables, Hive boxes, Isar collections, etc.)
 
 **Managed by**: Your repository code
+
+**Threading**: May run in its own isolate (e.g., Drift) or share a thread - depends on your database choice
 
 **Contents:**
 - Just your data, structured for your app's needs
