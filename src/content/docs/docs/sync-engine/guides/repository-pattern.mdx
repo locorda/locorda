@@ -150,11 +150,9 @@ onUpdate: (task) async {
       createdAt: task.createdAt,
     ),
   );
-  _notifyListeners();
 },
 onDelete: (id) async {
   await (database.delete(database.tasks)..where((t) => t.id.equals(id))).go();
-  _notifyListeners();
 }
 ```
 
@@ -294,59 +292,29 @@ void _notifyListeners() {
 - Don't ignore `onUpdate` - it's essential for showing merged data
 - Don't mix sync-managed data with non-sync data in the same table (use separate repositories)
 
-## Advanced Patterns
-
-### Transactions
-
-For multi-step operations, wrap in a transaction:
-
-```dart
-Future<void> archiveCompletedTasks() async {
-  final completed = getAll().where((t) => t.completed).toList();
-  
-  // Delete all at once - sync engine batches them
-  for (final task in completed) {
-    await delete(task.id);
-  }
-}
-```
-
-The sync engine batches operations efficiently.
-
-### Filtered Queries
-
-Your repository can expose filtered views:
-
-```dart
-Stream<List<Task>> watchActive() =>
-    _controller.stream.map((tasks) => 
-      tasks.where((t) => !t.completed).toList()
-    );
-
-Stream<List<Task>> watchByTag(String tag) =>
-    _controller.stream.map((tasks) => 
-      tasks.where((t) => t.tags.contains(tag)).toList()
-    );
-```
+## Locorda-Specific Considerations
 
 ### Multiple Resource Types
 
-Create one repository per resource type:
+Create **one repository per resource type**. Each repository manages its own sync callbacks and storage:
 
 ```dart
-class NoteRepository { /* ... */ }
-class CategoryRepository { /* ... */ }
-class TagRepository { /* ... */ }
+class NoteRepository {
+  // Handles Note objects via syncEngine.hydrateWithCallbacks<Note>(...)
+}
+
+class CategoryRepository {
+  // Handles Category objects via syncEngine.hydrateWithCallbacks<Category>(...)
+}
 ```
 
-Each repository manages its own sync callbacks and storage.
+This keeps sync state isolated - each type has its own cursor, callbacks, and storage table.
 
 ## Next Steps
 
 - [Sync Lifecycle](/docs/sync-engine/core-concepts/sync-lifecycle) - How sync works (local changes, remote sync, offline mode)
 - [Architecture](/docs/sync-engine/core-concepts/architecture) - Understanding components and layers
 - [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) - How conflicts are resolved automatically
-- [Testing Guide](/docs/sync-engine/guides/testing) - Test your repositories
 
 ## Summary
 
