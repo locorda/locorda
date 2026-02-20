@@ -374,14 +374,16 @@ Event(id: 'task-1', name: 'Buy milk'); // same underlying data!
 
 When you use standard RDF vocabularies (like schema.org), different apps can understand each other's data. No API needed!
 
-### Choose Your Storage Backend
+### Support Multiple Storage Backends
+
+We recommend supporting as many backends as possible. Your users then choose where their data lives:
 
 - **Solid Pods** - User-owned decentralized storage
 - **Google Drive** - Familiar, free storage
 - **Local Directory** - For development/testing
 - **More coming** - Dropbox, OneDrive, etc.
 
-Your app code stays the same regardless of where data is stored.
+Your app code stays the same regardless of which backend a user selects.
 
 ### Future-proof Data
 
