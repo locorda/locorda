@@ -171,3 +171,13 @@ This document tracks the implementation of the Locorda documentation structure.
 - Merge contracts are central to understanding how RootResource/SubResource/LocalResource work together
 - Conflict resolution needs much deeper coverage than current "Understanding Conflicts" section
 - External vocabularies enable interoperability - important use case to document well
+
+---
+## "Mut zur Lücke" - TBD
+
+### sync-lifecycle.mdx
+- [ ] Batching
+- [ ] Testing Sync Behavior
+- [ ] Testing Offline Mode
+- [ ] Testing Conflict Resolution
+- [ ] Performance Considerations

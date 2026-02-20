@@ -17,21 +17,28 @@ Both directions flow through the same callback pattern, ensuring your UI always 
 
 ## Local Changes Flow
 
+<Aside type="note">
+**Quick orientation:** `initLocorda()` returns a `locorda` instance. From it, you obtain an `ObjectSyncEngine` and pass it to your repository. During repository initialization, you call `syncEngine.hydrateWithCallbacks()` to register your `onUpdate` / `onDelete` callbacks — these are what keep your local database in sync. When your UI then calls `repository.save(task)`, the repository forwards it to `syncEngine.save<Task>(task)` internally.
+
+See [Getting Started](/docs/sync-engine/guides/getting-started) and [Repository Pattern](/docs/sync-engine/guides/repository-pattern) for the full setup.
+</Aside>
+
 When you make a local change (`repository.save(task)`):
 
 ```
-1. 📱 Your app calls save(task)
-   ↓
+1. 📱 Your app calls repository.save(task)
+   ↓  (repository forwards to syncEngine.save<Task>(task))
 2. 🔧 SyncEngine merges & stores in Locorda's local storage
    ↓
-3. 📞 onUpdate callback → your app saves to its own database
+3. 📞 onUpdate callback (registered via hydrateWithCallbacks)
+      → your app saves to its own database
    ↓
 4. 🎨 UI updates via StreamBuilder
    ↓
    [Change is queued for sync when connected]
 ```
 
-**Key insight**: You don't directly update your database in `save()`. The sync engine calls your `onUpdate` callback, which updates your database. This keeps everything consistent.
+**Key insight**: You don't directly update your database in `save()`. The sync engine calls your `onUpdate` callback (which you registered with `hydrateWithCallbacks()` during initialization), which updates your database. This keeps everything consistent.
 
 ### Why This Pattern?
 
@@ -66,9 +73,11 @@ Sync process runs automatically in a background worker thread:
 Sync can be triggered by:
 
 1. **Automatic periodic sync** (default behavior)
-2. **Network connectivity change** (reconnection after offline)
-3. **Manual sync request** (user presses sync button)
-4. **App resume** (app comes to foreground)
+2. **Manual sync request** (user presses sync button)
+
+<Aside type="note">
+**Planned triggers:** Network connectivity change and app resume are not yet implemented. For now, trigger sync manually after reconnection via `syncManager.sync(trigger: SyncTrigger.manual)` or enable periodic auto-sync.
+</Aside>
 
 ## Offline Mode
 
@@ -103,7 +112,7 @@ task.title = "Buy milk"      task.title = "Buy bread"
     ↓                            ↓
     Both reconnect
     ↓
-Sync merges using CRDT rules (last-write-wins by timestamp)
+Sync merges using CRDT rules (for example last-write-wins by timestamp)
     ↓
 Final merged state: task.title = "Buy bread" (if B's timestamp is later)
 ```
@@ -130,10 +139,10 @@ Sync operations can be triggered by:
 - **manual** - User explicitly requested sync (e.g., "Sync Now" button)
 - **startup** - Automatic sync on application startup
 - **scheduled** - Automatic sync on a scheduled interval
-- **dataChange** - Sync triggered after local data changes
-- **connectionRestore** - Sync triggered after network connectivity is restored
 - **pullToRefresh** - Sync triggered by pull-to-refresh gesture
 - **login** - Sync triggered after user authentication/login
+- **dataChange** - *(planned, not yet implemented)* - Sync triggered after local data changes
+- **connectionRestore** *(planned, not yet implemented)* - Sync after network connectivity is restored
 
 ### Monitoring Sync State
 
@@ -228,95 +237,36 @@ After max delay is reached, sync retries every 60 seconds until successful.
 
 ## Sync Optimizations
 
-### Incremental Sync
+### Cursor Tracking
 
-Locorda uses **cursors** to track sync position:
+Locorda uses **cursors** to track how far it has replayed its local storage into your app's database.
+
+When `hydrateWithCallbacks()` is called, Locorda replays stored objects into your app via `onUpdate`/`onDelete`. The cursor records the position of the last successfully delivered update. On the next app start, Locorda resumes from that position — so only objects your app hasn't seen yet are replayed.
 
 ```dart
 getCurrentCursor: () async {
-  // Return the last sync position
+  // Return the position your app has already processed
   final prefs = await SharedPreferences.getInstance();
   return prefs.getString('sync_cursor_tasks');
 },
 onCursorUpdate: (cursor) async {
-  // Save the new sync position
+  // Persist the position after each successful delivery
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('sync_cursor_tasks', cursor);
 }
 ```
 
 **Benefits:**
-- Only fetches changes since last sync (not entire dataset)
-- Dramatically reduces bandwidth and sync time
-- Essential for large datasets
+- App startup is fast — only unprocessed updates are replayed
+- Survives crashes: replays from last committed cursor, not from scratch
+- Essential when your local database already holds the full dataset
 
-### Batching
-
-Multiple local changes are batched before upload:
-
-```dart
-// These 3 saves are batched into a single sync request
-await repository.save(task1);
-await repository.save(task2);
-await repository.save(task3);
-```
-
-**Benefits:**
-- Fewer network requests
-- More efficient use of bandwidth
-- Faster sync
-
-## Testing Sync Behavior
-
-### Testing Offline Mode
-
-```dart
-test('saves work offline', () async {
-  // Disconnect
-  await syncEngine.disconnect();
-  
-  // Make changes
-  await repository.save(task);
-  
-  // Verify stored locally
-  expect(repository.getAll(), contains(task));
-  
-  // Reconnect and verify sync
-  await syncEngine.connect();
-  await syncEngine.waitForSync();
-  
-  // Verify on remote
-  expect(await remote.fetch(task.id), equals(task));
-});
-```
-
-### Testing Conflict Resolution
-
-```dart
-test('merges conflicting changes', () async {
-  // Device A changes title
-  final taskA = task.copyWith(title: 'Buy milk');
-  await repositoryA.save(taskA);
-  
-  // Device B changes same task (offline)
-  final taskB = task.copyWith(title: 'Buy bread');
-  await repositoryB.save(taskB);
-  
-  // Both sync
-  await syncEngine.waitForSync();
-  
-  // Verify last-write-wins (or your merge strategy)
-  expect(repositoryA.get(task.id).title, equals('Buy bread'));
-  expect(repositoryB.get(task.id).title, equals('Buy bread'));
-});
-```
 
 ## Performance Considerations
 
 ### Large Datasets
 
 For large datasets:
-- **Use cursors** to enable incremental sync
 - **Implement pagination** in your UI
 - **Consider lazy loading** (fetch on demand, not all at once)
 
@@ -337,6 +287,7 @@ For rapidly changing data:
 final locorda = await initLocorda(
   remotes: [solidPod],
   storage: DriftStorageMainHandler(),
+  // setupLogging would be provided by you, the developer
   onWorkerSpawn: () => setupLogging(
     level: Level.ALL, // Verbose logging
     threadName: 'WORKER',
@@ -357,16 +308,15 @@ final locorda = await initLocorda(
 - See [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution)
 
 **Slow sync performance:**
-- Implement cursor tracking
 - Check dataset size
 - Consider lazy loading
+- Consider "shard dataset" mode for the backends - this means that all resources of a shard would be stored in the shard file instead of separately as a file per resource.
 
 ## Next Steps
 
 - [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) - How conflicts are resolved
 - [Architecture](/docs/sync-engine/core-concepts/architecture) - Understanding components and layers
 - [Repository Pattern](/docs/sync-engine/guides/repository-pattern) - Implement sync-aware repositories
-- [Testing Guide](/docs/sync-engine/guides/testing) - Test sync behavior
 
 ## Summary
 
