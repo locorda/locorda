@@ -80,7 +80,7 @@ jobs:
         run: melos bootstrap
 
       - name: Build sync-engine Flutter example app
-        working-directory: sync-engine/packages/locorda/example
+        working-directory: sync-engine/packages/locorda/example/personal_notes_app
         run: flutter build web --release --base-href /example/personal_notes_app/
 
       - name: Integrate Flutter app into site
