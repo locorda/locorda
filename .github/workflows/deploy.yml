@@ -82,6 +82,9 @@ jobs:
       - name: Build sync-engine Flutter example app
         working-directory: sync-engine/packages/locorda/example/personal_notes_app
         run: flutter build web --release --base-href /example/personal_notes_app/
+      - name: Deploy RDF mappings for Flutter app
+        working-directory: sync-engine/packages/locorda/example/personal_notes_app
+        run: dart run locorda_dev:deploy_mappings dist/example/personal_notes_app/mappings/
 
       - name: Integrate Flutter app into site
         run: |
@@ -91,9 +94,6 @@ jobs:
           
           # Copy built Flutter app
           cp -r sync-engine/packages/locorda/example/personal_notes_app/build/web/* dist/example/personal_notes_app/
-          
-          # deploy generated mappings
-          dart run locorda_dev:deploy_mappings dist/example/personal_notes_app/mappings/
           
           # Copy auth configuration
           cp sync-engine/packages/locorda/example/personal_notes_app/contracts/auth/client-config.json dist/example/personal_notes_app/auth/
