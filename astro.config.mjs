@@ -26,14 +26,36 @@ export default defineConfig({
 				},
 				{
 					label: 'Sync Engine',
+					collapsed: false,
 					items: [
-						{ label: 'Getting Started', slug: 'docs/sync-engine/getting-started' },
+						{ label: 'Overview', slug: 'docs/sync-engine' },
+						{
+							label: 'Guides',
+							collapsed: false,
+							items: [
+								{ label: 'Getting Started', slug: 'docs/sync-engine/guides/getting-started' },
+							],
+						},
+						{
+							label: 'Core Concepts',
+							collapsed: false,
+							items: [
+								{ label: 'Conflict Resolution', slug: 'docs/sync-engine/core-concepts/conflict-resolution' },
+							],
+						},
+						{
+							label: 'Data Modeling',
+							collapsed: false,
+							items: [
+								{ label: 'Merge Contracts & Resource Types', slug: 'docs/sync-engine/data-modeling/merge-contracts' },
+							],
+						},
 					],
 				},
 				{
 					label: 'RDF Libraries',
 					items: [
-						{ label: 'Coming Soon', slug: 'docs/rdf' },
+						{ label: 'Overview', slug: 'docs/rdf' },
 					],
 				},
 			],

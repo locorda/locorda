@@ -1,0 +1,99 @@
+---
+title: Sync Engine
+description: Offline-first sync for Flutter apps with user-controlled storage
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Build Flutter apps that sync automatically across devices without backend code. Conflict-free, privacy-focused, and built on web standards.
+
+## Quick Start
+
+<LinkCard
+  title="Getting Started Guide"
+  description="Build your first syncing app in 15 minutes with the minimal task example"
+  href="/docs/sync-engine/guides/getting-started"
+/>
+
+## Documentation Sections
+
+<CardGrid>
+  <Card title="Guides" icon="open-book">
+    Task-oriented tutorials for common scenarios:
+    - Getting started
+    - Repository pattern
+    - Testing strategies
+    - Production deployment
+    
+    [Browse Guides →](/docs/sync-engine/guides/getting-started)
+  </Card>
+
+  <Card title="Core Concepts" icon="puzzle">
+    Understand how Locorda works internally:
+    - Architecture overview
+    - Conflict resolution (HLC)
+    - Sync lifecycle
+    - RDF data model
+    
+    [Learn Concepts →](/docs/sync-engine/core-concepts/conflict-resolution)
+  </Card>
+
+  <Card title="Data Modeling" icon="pencil">
+    Design your data structures:
+    - Root, Sub, and Local Resources
+    - Merge contracts
+    - Annotations reference
+    
+    [Design Your Data →](/docs/sync-engine/data-modeling/merge-contracts)
+  </Card>
+
+  <Card title="Vocabularies" icon="document">
+    Work with RDF vocabularies:
+    - Auto-generated vocabularies
+    - External vocabularies (schema.org, FOAF)
+    - Custom vocabularies
+    - Evolution & versioning
+    
+    Coming soon!
+  </Card>
+
+  <Card title="Advanced Features" icon="rocket">
+    Optimize and scale:
+    - Indexing & lazy loading
+    - Selective sync
+    - Multi-user collaboration
+    
+    Coming soon!
+  </Card>
+
+  <Card title="Storage Backends" icon="setting">
+    Choose where data lives:
+    - Solid Pods
+    - Google Drive
+    - Local directory
+    - Custom backends
+    
+    Coming soon!
+  </Card>
+</CardGrid>
+
+## Key Features
+
+**Automatic Conflict Resolution**: Hybrid Logical Clocks ensure edits across devices merge automatically.
+
+**User-Controlled Storage**: Users choose where data lives - Solid Pods, Google Drive, or their own infrastructure.
+
+**No Backend Code**: Sync happens directly between devices and user-controlled storage.
+
+**Standards-Based**: Built on RDF and Linked Data web standards for interoperability.
+
+**Type-Safe**: Code generation from Dart classes ensures compile-time safety.
+
+## Resources
+
+- [GitHub Repository](https://github.com/locorda/sync-engine)
+- [Package on pub.dev](https://pub.dev/packages/locorda)
+- [Example Apps](https://github.com/locorda/sync-engine/tree/main/packages/locorda/example)
+- [API Documentation](https://pub.dev/documentation/locorda/latest/)
+- [Issue Tracker](https://github.com/locorda/sync-engine/issues)
+- [Discussions](https://github.com/locorda/sync-engine/discussions)

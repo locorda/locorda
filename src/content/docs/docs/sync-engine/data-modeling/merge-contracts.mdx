@@ -1,0 +1,379 @@
+---
+title: Merge Contracts & Resource Types
+description: Understanding RootResource, SubResource, LocalResource, and how merge contracts control conflict resolution
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This page explains the foundational concepts that govern how your data syncs across devices: **resource types** and **merge contracts**.
+
+## The Three Resource Types
+
+Locorda uses three annotations to classify your data classes, each serving a distinct purpose in the sync architecture:
+
+### @RootResource - Syncable Entities
+
+A **RootResource** is an independent entity that syncs across all devices. Each instance has:
+
+- **Unique IRI** (Internationalized Resource Identifier) - Generated from fields marked with `@RdfIriPart()`
+- **Independent lifecycle** - Can be created, modified, deleted independently
+- **Merge contract** - Defines how conflicts are resolved when edited on multiple devices
+
+```dart
+@RootResource(AppVocab(appBaseUri: 'https://example.org/app'))
+class Task {
+  @RdfIriPart()
+  final String id;  // Part of the unique identifier
+  
+  final String title;
+  final bool completed;
+  final DateTime createdAt;
+  
+  // Constructor and methods...
+}
+```
+
+**Examples of RootResources:**
+- A task in a todo app
+- A note in a notes app
+- A contact in an address book
+- A calendar event
+
+### @SubResource - Composed Parts
+
+A **SubResource** is a part of a RootResource that doesn't exist independently. It:
+
+- **No independent IRI** - Identified only within its parent RootResource
+- **Syncs with its parent** - Cannot sync separately
+- **Inherits merge contract** - Uses the same conflict resolution as its parent
+
+```dart
+@SubResource()
+class TaskAttachment {
+  final String fileName;
+  final String url;
+  final int sizeInBytes;
+  
+  // No @RdfIriPart needed - this is always part of a Task
+}
+
+@RootResource(AppVocab(appBaseUri: 'https://example.org/app'))
+class Task {
+  @RdfIriPart()
+  final String id;
+  
+  final String title;
+  final List<TaskAttachment> attachments;  // SubResources embedded in RootResource
+}
+```
+
+**Examples of SubResources:**
+- Attachments in a note
+- Line items in an invoice
+- Steps in a recipe
+- Sections in a document
+
+**When to use SubResource:**
+- The data only makes sense within its parent
+- You want it to sync atomically with its parent
+- It doesn't need separate conflict resolution
+
+### @LocalResource - Device-Specific Data
+
+A **LocalResource** is stored locally but **never synced**. Use it for:
+
+- **Device-specific state** - UI preferences, cache, temporary data
+- **Sensitive data** - That should never leave the device
+- **Ephemeral data** - That doesn't need to persist across devices
+
+```dart
+@LocalResource()
+class TaskListUIState {
+  final String sortOrder;
+  final Set<String> expandedSections;
+  final String searchQuery;
+  
+  // This state stays on this device only
+}
+```
+
+**Examples of LocalResources:**
+- Filter/sort preferences
+- Scroll positions
+- Selected items in UI
+- Local cache data
+
+<Aside type="tip">
+LocalResources still benefit from Locorda's repository pattern and code generation, but they're stored in local-only storage and never touch the sync engine.
+</Aside>
+
+## Merge Contracts: Defining Conflict Resolution
+
+A **merge contract** defines **how conflicts are resolved** when the same RootResource is edited on multiple devices while offline.
+
+### Default Merge Contract
+
+By default, RootResources use **Last-Write-Wins (LWW)** with **Hybrid Logical Clocks (HLC)**:
+
+- **Per-field resolution** - Each field is resolved independently
+- **Causality awareness** - If edit B causally follows edit A, B wins
+- **Timestamp tie-breaking** - For concurrent edits, most recent timestamp wins
+- **Deletion wins** - If one device deletes while another edits, deletion wins
+
+```dart
+// This Task uses the default merge contract
+@RootResource(AppVocab(appBaseUri: 'https://example.org/app'))
+class Task {
+  @RdfIriPart()
+  final String id;
+  
+  final String title;      // LWW - newest edit wins
+  final bool completed;    // LWW - newest edit wins
+  final DateTime dueDate;  // LWW - newest edit wins
+}
+```
+
+### Example: Default Behavior
+
+Scenario: Two devices offline, both edit the same task
+
+```
+Device A (offline):     Task(id: "1", title: "Buy milk", completed: false)
+Device B (offline):     Task(id: "1", title: "Buy groceries", completed: true)
+
+After both sync:        Task(id: "1", title: "Buy groceries", completed: true)
+                                      ↑                        ↑
+                                      Device B's title wins    Device B's completed wins
+                                      (most recent)            (most recent)
+```
+
+**Key insight**: Fields are resolved **independently**. Device B edited both fields more recently, so both win.
+
+### Custom Merge Contracts
+
+You can define custom merge contracts for specialized conflict resolution:
+
+```dart
+// Custom merge contract for a counter that should sum values
+@RootResource(
+  AppVocab(appBaseUri: 'https://example.org/app'),
+  mergeContract: SummingMergeContract(),
+)
+class Counter {
+  @RdfIriPart()
+  final String id;
+  
+  @SumOnMerge()  // Custom annotation for summing behavior
+  final int count;
+}
+```
+
+<Aside type="caution">
+Custom merge contracts are an advanced topic. Most apps work perfectly with the default LWW contract. See [Custom Merge Contracts](/docs/sync-engine/core-concepts/conflict-resolution#custom-contracts) for details.
+</Aside>
+
+## How Resource Types and Merge Contracts Interact
+
+### Hierarchy and Inheritance
+
+```dart
+@RootResource(AppVocab(appBaseUri: 'https://example.org/notes'))
+class Note {
+  @RdfIriPart()
+  final String id;
+  
+  final String title;                    // Uses Note's merge contract (LWW)
+  final List<NoteSection> sections;      // SubResources inherit merge contract
+  final NoteUIState? uiState;            // LocalResource - not synced
+}
+
+@SubResource()
+class NoteSection {
+  final String heading;                  // Inherits Note's merge contract
+  final String content;                  // Inherits Note's merge contract
+  final List<ImageAttachment> images;    // These also inherit
+}
+
+@SubResource()
+class ImageAttachment {
+  final String url;                      // All SubResources use parent's contract
+  final String caption;
+}
+
+@LocalResource()
+class NoteUIState {
+  final bool isPinned;                   // Never synced - no merge contract
+  final String selectedSection;
+}
+```
+
+**Inheritance rules:**
+1. **RootResource** - Defines the merge contract
+2. **SubResource** - Inherits parent's merge contract automatically
+3. **LocalResource** - No merge contract (not synced)
+
+### Composition Example
+
+A real-world note-taking app structure:
+
+```dart
+// Synced note with metadata
+@RootResource(AppVocab(appBaseUri: 'https://myapp.com/notes'))
+class Note {
+  @RdfIriPart()
+  final String id;
+  
+  final String title;
+  final DateTime createdAt;
+  final DateTime modifiedAt;
+  final List<String> tags;
+  
+  // Composed SubResources
+  final List<ContentBlock> blocks;     // Sections, paragraphs, images
+  final List<Comment> comments;        // SubResources with their own structure
+}
+
+@SubResource()
+class ContentBlock {
+  final String type;  // 'text', 'image', 'code'
+  final String content;
+  final Map<String, dynamic> metadata;
+}
+
+@SubResource()
+class Comment {
+  final String author;
+  final String text;
+  final DateTime timestamp;
+  final List<CommentReply> replies;    // Nested SubResources!
+}
+
+@SubResource()
+class CommentReply {
+  final String author;
+  final String text;
+  final DateTime timestamp;
+}
+
+// Editor state - device specific
+@LocalResource()
+class NoteEditorState {
+  final String noteId;
+  final int cursorPosition;
+  final String selectedBlockId;
+  final bool isFullscreen;
+}
+```
+
+## Design Guidelines
+
+### When to Use RootResource
+
+Use `@RootResource` when:
+- ✅ The entity has independent meaning outside any context
+- ✅ It should be individually addressable (has its own ID)
+- ✅ Different devices might create/edit/delete it independently
+- ✅ You want to query/filter/index it separately
+
+### When to Use SubResource
+
+Use `@SubResource` when:
+- ✅ The data only exists within a parent entity
+- ✅ You want atomic sync (all-or-nothing with parent)
+- ✅ Individual conflict resolution doesn't make sense
+- ✅ It's a composition relationship (part-of, not references)
+
+### When to Use LocalResource
+
+Use `@LocalResource` when:
+- ✅ The data is device-specific (UI state, cache)
+- ✅ It should never sync to other devices
+- ✅ Privacy/security requires it stays local
+- ✅ It's ephemeral or temporary
+
+### Anti-patterns to Avoid
+
+❌ **Don't use SubResource for relationships**
+
+```dart
+// WRONG: Author should be a RootResource
+@SubResource()
+class Author {
+  final String name;
+  final String email;
+}
+
+@RootResource(...)
+class BlogPost {
+  final Author author;  // This should be a reference, not a SubResource!
+}
+```
+
+Instead, reference by IRI:
+
+```dart
+// CORRECT: Reference Author by ID
+@RootResource(...)
+class Author {
+  @RdfIriPart()
+  final String id;
+  final String name;
+  final String email;
+}
+
+@RootResource(...)
+class BlogPost {
+  @RdfIriPart()
+  final String id;
+  final String authorId;  // Reference to Author's ID
+  final String title;
+}
+```
+
+❌ **Don't make everything a RootResource**
+
+Over-engineering creates unnecessary complexity. Ask: "Could this exist independently?"
+
+```dart
+// WRONG: Line items shouldn't be RootResources
+@RootResource(...)
+class InvoiceLineItem {
+  @RdfIriPart()
+  final String id;
+  final String product;
+  final double price;
+}
+
+// CORRECT: Line items are SubResources of Invoice
+@SubResource()
+class InvoiceLineItem {
+  final String product;
+  final double price;
+}
+
+@RootResource(...)
+class Invoice {
+  @RdfIriPart()
+  final String id;
+  final List<InvoiceLineItem> items;
+}
+```
+
+## Next Steps
+
+Now that you understand resource types and merge contracts:
+
+- 📘 [Root Resources Deep Dive](/docs/sync-engine/data-modeling/root-resources) - IRI generation, best practices
+- 📘 [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) - HLC algorithm, custom contracts
+- 📘 [Annotations Reference](/docs/sync-engine/data-modeling/annotations-reference) - All available annotations
+- 📘 [Getting Started Guide](/docs/sync-engine/guides/getting-started) - Build your first syncing app
+
+## Key Takeaways
+
+1. **RootResource** = Synced entity with its own IRI and merge contract
+2. **SubResource** = Part of a RootResource, inherits its merge contract
+3. **LocalResource** = Device-only data, never synced
+4. **Merge contracts** define conflict resolution behavior
+5. **Default LWW contract** works for most use cases
+6. **SubResources inherit** their parent's merge contract
+7. **Composition vs. reference**: SubResource for parts, IRI references for relationships

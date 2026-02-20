@@ -6,6 +6,7 @@ This document tracks the implementation of the Locorda documentation structure.
 
 - [x] Initial Starlight integration at `/docs`
 - [x] Getting Started guide (minimal example)
+- [x] Phase 1: Foundation complete
 - [ ] Comprehensive Sync Engine documentation structure
 - [ ] RDF Libraries documentation
 
@@ -15,12 +16,12 @@ This document tracks the implementation of the Locorda documentation structure.
 
 ### Core Pages
 
-- [x] `/docs/sync-engine/getting-started.mdx` - Quick start with minimal task app
-- [ ] `/docs/sync-engine/index.mdx` - Hub page with overview and navigation cards
+- [x] `/docs/sync-engine/getting-started.mdx` - Quick start with minimal task app (moved to guides/)
+- [x] `/docs/sync-engine/index.mdx` - Hub page with overview and navigation cards
 
 ### Guides (Task-oriented)
 
-- [ ] `/docs/sync-engine/guides/getting-started.mdx` - Move current getting-started here
+- [x] `/docs/sync-engine/guides/getting-started.mdx` - Move current getting-started here
 - [ ] `/docs/sync-engine/guides/repository-pattern.mdx` - State management, transactions, queries
 - [ ] `/docs/sync-engine/guides/testing.mdx` - Unit testing, integration testing, mocking
 - [ ] `/docs/sync-engine/guides/production-deployment.mdx` - Backend setup, monitoring, scaling
@@ -28,21 +29,21 @@ This document tracks the implementation of the Locorda documentation structure.
 ### Core Concepts (Understanding internals)
 
 - [ ] `/docs/sync-engine/core-concepts/architecture.mdx` - Detailed architecture, worker thread, storage layers
-- [ ] `/docs/sync-engine/core-concepts/conflict-resolution.mdx` - HLC, merge contracts, custom resolution strategies
+- [x] `/docs/sync-engine/core-concepts/conflict-resolution.mdx` - HLC, merge contracts, custom resolution strategies
 - [ ] `/docs/sync-engine/core-concepts/sync-lifecycle.mdx` - Sync states, error handling, retry logic
 - [ ] `/docs/sync-engine/core-concepts/data-model.mdx` - RDF foundation, triples, quads, named graphs
 
-**Priority:** Conflict resolution should be comprehensive - current "Understanding Conflicts" section is too shallow for production use.
+**Priority:** Conflict resolution should be comprehensive - current "Understanding Conflicts" section is too shallow for production use. ✅ DONE
 
 ### Data Modeling (Designing your data structures)
 
 - [ ] `/docs/sync-engine/data-modeling/root-resources.mdx` - `@RootResource` deep dive, IRI generation
 - [ ] `/docs/sync-engine/data-modeling/sub-resources.mdx` - `@SubResource`, composition, relationships
 - [ ] `/docs/sync-engine/data-modeling/local-resources.mdx` - `@LocalResource`, device-specific data, non-synced
-- [ ] `/docs/sync-engine/data-modeling/merge-contracts.mdx` - How RootResource, SubResource, LocalResource, and merge contracts interact
+- [x] `/docs/sync-engine/data-modeling/merge-contracts.mdx` - How RootResource, SubResource, LocalResource, and merge contracts interact
 - [ ] `/docs/sync-engine/data-modeling/annotations-reference.mdx` - Complete reference of all annotations
 
-**Priority:** `merge-contracts.mdx` is foundational - should be created early as it explains the relationship between all resource types.
+**Priority:** `merge-contracts.mdx` is foundational - should be created early as it explains the relationship between all resource types. ✅ DONE
 
 ### Vocabularies
 
@@ -108,12 +109,12 @@ This document tracks the implementation of the Locorda documentation structure.
 
 ## Implementation Phases
 
-### Phase 1: Foundation (Recommended first)
-1. Create Sync Engine hub page (`sync-engine/index.mdx`)
-2. Reorganize getting-started into `guides/` subdirectory
-3. Create `data-modeling/merge-contracts.mdx` (foundational concept)
-4. Create `core-concepts/conflict-resolution.mdx` (expand beyond current shallow coverage)
-5. Update Starlight sidebar configuration
+### Phase 1: Foundation ✅ COMPLETE
+1. ✅ Create Sync Engine hub page (`sync-engine/index.mdx`)
+2. ✅ Reorganize getting-started into `guides/` subdirectory
+3. ✅ Create `data-modeling/merge-contracts.mdx` (foundational concept)
+4. ✅ Create `core-concepts/conflict-resolution.mdx` (expand beyond current shallow coverage)
+5. ✅ Update Starlight sidebar configuration
 
 ### Phase 2: Core Documentation
 1. Complete all Core Concepts pages
@@ -137,34 +138,17 @@ This document tracks the implementation of the Locorda documentation structure.
 
 ## Sidebar Configuration
 
-Update `astro.config.mjs` sidebar to reflect new structure once pages are created. Current sidebar is flat and will need to be organized into collapsible groups:
+✅ **Updated** - `astro.config.mjs` sidebar now reflects new structure with collapsible groups:
 
-```javascript
-sidebar: [
-  { label: 'Overview', slug: 'docs' },
-  {
-    label: 'Sync Engine',
-    collapsed: false,
-    items: [
-      { label: 'Overview', slug: 'docs/sync-engine' },
-      {
-        label: 'Guides',
-        collapsed: true,
-        items: [
-          { label: 'Getting Started', slug: 'docs/sync-engine/guides/getting-started' },
-          // ... more guides
-        ],
-      },
-      {
-        label: 'Core Concepts',
-        // ...
-      },
-      // ... other sections
-    ],
-  },
-  { label: 'RDF Libraries', slug: 'docs/rdf' },
-]
-```
+- Overview section with Introduction
+- Sync Engine with nested sections:
+  - Overview (hub page)
+  - Guides (Getting Started)
+  - Core Concepts (Conflict Resolution)
+  - Data Modeling (Merge Contracts)
+- RDF Libraries section
+
+**Next**: Add pages to sidebar as they're created in subsequent phases.
 
 ---
 

@@ -1,0 +1,571 @@
+---
+title: Conflict Resolution
+description: How Locorda automatically resolves conflicts using Hybrid Logical Clocks and merge contracts
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+In offline-first apps, conflicts are inevitable: multiple devices editing the same data while disconnected. Locorda resolves these automatically using **Hybrid Logical Clocks (HLC)** and **merge contracts**.
+
+## Why Conflicts Happen
+
+Consider this scenario:
+
+<Steps>
+
+1. **Initial state**: Both devices have `Task(id: "1", title: "Buy milk", completed: false)`
+
+2. **Go offline**: Both devices lose network connection
+
+3. **Device A edits**: Changes title to `"Buy groceries"`
+
+4. **Device B edits**: Sets `completed = true`
+
+5. **Go online**: Both devices sync to the server
+
+6. **Conflict**: Server has two versions of the same task - which one wins?
+
+</Steps>
+
+Without automatic resolution, you'd need to:
+- Show conflict UI to users (terrible UX)
+- Manually write merge logic (error-prone)
+- Accept data loss (one edit discarded)
+
+Locorda does better: **deterministic, automatic, conflict-free merge**.
+
+## Hybrid Logical Clocks (HLC)
+
+Locorda uses **Hybrid Logical Clocks** to establish **causal ordering** between edits across devices, even without synchronized clocks.
+
+### What is HLC?
+
+An HLC timestamp combines:
+- **Physical time**: Wall clock timestamp (milliseconds since epoch)
+- **Logical counter**: Increments when physical time doesn't advance
+- **Node ID**: Unique device identifier for tie-breaking
+
+```dart
+// Conceptual structure (simplified)
+class HLCTimestamp {
+  final int physicalTime;   // Wall clock
+  final int logicalCounter; // Increments for same physical time
+  final String nodeId;      // Device identifier
+}
+```
+
+### Causality Tracking
+
+HLC enables **causality detection**:
+
+```
+Device A creates Task at HLC: {time: 1000, counter: 0, node: "A"}
+Device B receives that Task, then edits at HLC: {time: 1001, counter: 0, node: "B"}
+
+Result: B's edit causally follows A's creation (B "happens after" A)
+```
+
+**Causal relationship rules:**
+1. If `B.time > A.time` → B happened after A
+2. If `B.time == A.time && B.counter > A.counter` → B happened after A
+3. Otherwise → A and B are concurrent (no causal relationship)
+
+### The Algorithm
+
+When merging two edits:
+
+```
+if (edit_B happens_after edit_A) {
+  // B causally follows A → B wins
+  result = edit_B
+} else if (edit_A happens_after edit_B) {
+  // A causally follows B → A wins
+  result = edit_A
+} else {
+  // Concurrent edits → Last-Write-Wins using timestamp
+  result = (edit_A.timestamp > edit_B.timestamp) ? edit_A : edit_B
+}
+```
+
+<Aside type="note">
+HLC guarantees: If A causally influences B (B reads A's value), then A's timestamp < B's timestamp, so B always wins. This preserves user intent!
+</Aside>
+
+## Last-Write-Wins (LWW) Semantics
+
+The default merge contract uses **Last-Write-Wins** per field:
+
+### Per-Field Resolution
+
+Each field is resolved **independently**:
+
+```dart
+@RootResource(AppVocab(appBaseUri: 'example.org/app'))
+class Task {
+  @RdfIriPart()
+  final String id;
+  
+  final String title;      // Resolved independently
+  final bool completed;    // Resolved independently
+  final DateTime? dueDate; // Resolved independently
+}
+```
+
+**Example conflict:**
+
+```
+Initial:   Task(title: "Buy milk", completed: false, dueDate: null)
+
+Device A:  Task(title: "Buy groceries", completed: false, dueDate: null)
+           HLC: {time: 1000, counter: 0, node: "A"}
+
+Device B:  Task(title: "Buy milk", completed: true, dueDate: 2026-02-25)
+           HLC: {time: 1001, counter: 0, node: "B"}
+
+Merged:    Task(title: "Buy groceries", completed: true, dueDate: 2026-02-25)
+                ↑ Device A wins         ↑ Device B wins  ↑ Device B wins
+                (A edited this field)   (B edited this)  (B edited this)
+```
+
+Wait, why does A's title win if B has a later timestamp?
+
+**Answer**: Because fields are resolved based on **when that field was edited**, not when the whole object was edited.
+
+### Field-Level Timestamps
+
+Internally, each field has its own HLC timestamp:
+
+```
+Device A's edit:
+  title:     {time: 1000, counter: 0, node: "A"}  ← Last changed at 1000
+  completed: {time: 500, counter: 0, node: "A"}   ← Unchanged (original from 500)
+  dueDate:   {time: 500, counter: 0, node: "A"}   ← Unchanged
+
+Device B's edit:
+  title:     {time: 500, counter: 0, node: "B"}   ← Unchanged
+  completed: {time: 1001, counter: 0, node: "B"}  ← Last changed at 1001
+  dueDate:   {time: 1001, counter: 0, node: "B"}  ← Last changed at 1001
+
+Merged result:
+  title:     Device A wins (1000 > 500)
+  completed: Device B wins (1001 > 500)
+  dueDate:   Device B wins (1001 > 500)
+```
+
+**Key insight**: Only fields you **actually change** get new timestamps. Unchanged fields keep their old timestamps.
+
+## Concurrent Edits
+
+When edits are truly **concurrent** (neither causally follows the other), tie-breaking uses:
+
+1. **Physical timestamp** - Most recent wall clock time wins
+2. **Logical counter** - If same physical time, higher counter wins
+3. **Node ID** - If still tied, lexicographically larger node ID wins
+
+```
+Device A: {time: 1000, counter: 5, node: "device-a"} edits title to "Task A"
+Device B: {time: 1000, counter: 5, node: "device-b"} edits title to "Task B"
+
+Result: "Task B" wins (device-b > device-a lexicographically)
+```
+
+<Aside type="caution">
+Relying on node ID tie-breaking is rare in practice. Physical timestamps are typically sufficient even for concurrent edits on different devices.
+</Aside>
+
+## Deletion Semantics
+
+What happens when one device deletes a task while another edits it?
+
+### Deletion Wins
+
+Locorda implements **deletion-wins semantics**: If one device deletes while another edits, **the deletion takes precedence**.
+
+```
+Initial state: Task(id: "1", title: "Old title")
+
+Device A (offline): Deletes task "1"
+Device B (offline): Edits task "1", sets title = "New title"
+
+After sync: Task "1" is deleted (Device A wins)
+```
+
+**Rationale**: Prevents "zombie" resources that keep coming back after deletion.
+
+### Tombstones
+
+Deletions are represented as **tombstones** - special markers that:
+- Record the deletion timestamp
+- Prevent future edits from resurrecting the resource
+- Can be garbage collected after all devices sync
+
+```dart
+// Conceptual (you don't write this code)
+class Tombstone {
+  final String resourceIri;
+  final HLCTimestamp deletedAt;
+}
+```
+
+When merging:
+- Edit vs. Edit → LWW based on timestamps
+- Edit vs. Tombstone → Tombstone wins (deletion wins)
+- Tombstone vs. Tombstone → Keep the one with later timestamp
+
+### Resurrection
+
+What if you **want** to resurrect a deleted item?
+
+Create a **new** resource with the **same ID** but a **newer timestamp**:
+
+```dart
+// Device deletes task
+await repository.delete(task.id);
+
+// Later, user wants to resurrect it
+// Create with explicit timestamp newer than deletion
+final resurrectedTask = Task(
+  id: task.id,  // Same ID
+  title: 'Resurrected task',
+  // ... other fields
+);
+await repository.save(resurrectedTask);
+```
+
+The new save has a timestamp after the tombstone, so it wins.
+
+## Collection Handling
+
+How are lists and sets merged?
+
+### List Fields
+
+Lists use **element-wise merging**:
+
+```dart
+@RootResource(AppVocab(appBaseUri: 'example.org/app'))
+class Note {
+  @RdfIriPart()
+  final String id;
+  
+  final List<String> tags;  // How do tags merge?
+}
+```
+
+**Merge strategy**: List is treated as a **set** by default - duplicates removed, order not guaranteed.
+
+```
+Device A: tags = ["work", "urgent"]
+Device B: tags = ["urgent", "meeting"]
+
+Merged:   tags = ["work", "urgent", "meeting"]  (union of sets)
+```
+
+<Aside type="tip">
+For ordered lists where order matters, use SubResources with explicit ordering fields:
+
+```dart
+@SubResource()
+class OrderedItem {
+  final int position;
+  final String value;
+}
+```
+</Aside>
+
+### Map Fields
+
+Maps merge **key-by-key** with LWW per key:
+
+```dart
+final Map<String, String> metadata;
+```
+
+```
+Device A: metadata = {"color": "red", "priority": "high"}
+Device B: metadata = {"color": "blue", "category": "work"}
+
+Merged:   metadata = {"color": "blue", "priority": "high", "category": "work"}
+                      ↑ B wins for "color" key
+```
+
+Each map entry is independently timestamped and resolved.
+
+## Edge Cases and Gotchas
+
+### Clock Skew
+
+What if device clocks are wildly out of sync?
+
+```
+Device A (clock 2 hours ahead): Creates task at "12:00"
+Device B (correct time): Creates task at "10:00"
+
+HLC says: A happened before B (A: 12:00 vs B: 10:00)
+Reality: B happened before A
+```
+
+**HLC mitigation**: When devices sync, they **synchronize logical clocks**:
+- Each device maintains a logical clock that advances with each edit
+- On sync, clocks are adjusted to be monotonically increasing
+- Even with 2-hour skew, logical counters ensure causality
+
+**Best practice**: Keep device clocks reasonably synchronized (NTP, automatic time zones) to avoid confusion.
+
+### Rapid Concurrent Edits
+
+What if the same field is edited multiple times rapidly on different devices?
+
+All edits are timestamped independently. The edit with the **highest timestamp** wins, which is typically the **most recent** edit.
+
+### Schema Evolution
+
+What happens when you add a new field to your model?
+
+```dart
+// Version 1
+@RootResource(...)
+class Task {
+  final String title;
+  final bool completed;
+}
+
+// Version 2 - added dueDate
+@RootResource(...)
+class Task {
+  final String title;
+  final bool completed;
+  final DateTime? dueDate;  // New field
+}
+```
+
+**Behavior**:
+- Old devices (v1) ignore `dueDate` field when reading
+- New devices (v2) see `dueDate = null` for tasks created by old devices
+- When v2 device sets `dueDate`, it syncs to server with its own timestamp
+- Old devices continue to ignore it
+
+<Aside type="note">
+RDF's schema-flexible nature makes evolution graceful. See [Vocabulary Evolution](/docs/sync-engine/vocabularies/vocabulary-evolution) for versioning strategies.
+</Aside>
+
+## Custom Merge Contracts
+
+For specialized use cases, you can define **custom merge contracts**:
+
+### Use Cases
+
+- **Counters**: Sum values instead of picking one
+- **Sets**: Always union sets
+- **Append-only logs**: Merge all entries
+- **Custom business logic**: Application-specific rules
+
+### Example: Summing Counter
+
+```dart
+// Custom merge contract (simplified)
+class SummingMergeContract extends MergeContract {
+  @override
+  dynamic mergeValues(dynamic valueA, dynamic valueB, FieldMetadata field) {
+    if (field.name == 'count') {
+      return (valueA as int) + (valueB as int);  // Sum instead of LWW
+    }
+    return super.mergeValues(valueA, valueB, field);  // LWW for other fields
+  }
+}
+
+@RootResource(
+  AppVocab(appBaseUri: 'example.org/app'),
+  mergeContract: SummingMergeContract(),
+)
+class Counter {
+  @RdfIriPart()
+  final String id;
+  
+  final int count;  // Will be summed on merge
+}
+```
+
+```
+Device A: Counter(count: 5)
+Device B: Counter(count: 3)
+
+Default LWW: Counter(count: 5) or Counter(count: 3) - one wins
+Custom sum:  Counter(count: 8) - both contributions counted
+```
+
+<Aside type="caution">
+Custom merge contracts are complex and should be used sparingly. Most apps work perfectly with LWW. See [Advanced: Custom Merge Contracts](#custom-contracts-advanced) for implementation details.
+</Aside>
+
+## Conflict-Free Replicated Data Types (CRDTs)
+
+You might wonder: Is Locorda a CRDT?
+
+**Short answer**: Locorda uses CRDT principles but isn't a pure CRDT implementation.
+
+**What it uses from CRDTs:**
+- ✅ Commutative merges (order-independent)
+- ✅ Associative merges (can merge pairwise)
+- ✅ Idempotent merges (merging twice = merging once)
+- ✅ Conflict-free convergence (all devices eventually agree)
+
+**What it doesn't use:**
+- ❌ Not limited to specific CRDT types (G-Counter, LWW-Register, etc.)
+- ❌ LWW is simpler than full CRDT algebra
+- ❌ Focuses on developer ergonomics over theoretical purity
+
+Think of it as **"CRDT-inspired with practical trade-offs"**.
+
+## Debugging Conflicts
+
+### Viewing Conflict Resolution
+
+Locorda logs conflict resolution decisions:
+
+```dart
+// Enable verbose logging
+Locorda.setLogLevel(LogLevel.debug);
+
+// You'll see logs like:
+// [MERGE] Task(id=1) field 'title': A(1000) vs B(1001) -> B wins
+// [MERGE] Task(id=1) field 'completed': A(500) vs B(1001) -> B wins
+```
+
+### Testing Conflict Scenarios
+
+Write unit tests for conflict scenarios:
+
+```dart
+test('concurrent edits merge correctly', () async {
+  final repo = await TestRepository.create();
+  
+  // Device A: Edit title
+  final taskA = task.copyWith(title: 'Title A');
+  await repo.save(taskA);
+  
+  // Device B: Edit completed (simulate concurrent edit)
+  final taskB = task.copyWith(completed: true);
+  await repo.save(taskB);
+  
+  // Sync and verify merge
+  await repo.sync();
+  final merged = await repo.get(task.id);
+  
+  expect(merged.title, 'Title A');        // A's edit preserved
+  expect(merged.completed, true);          // B's edit preserved
+});
+```
+
+## Best Practices
+
+1. **Trust the defaults**: LWW works for 99% of use cases
+2. **Design for eventual consistency**: Don't assume immediate synchronization
+3. **Use immutable models**: Makes reasoning about changes easier
+4. **Test conflict scenarios**: Write unit tests for concurrent edits
+5. **Keep clocks synchronized**: Use NTP or platform automatic time sync
+6. **Monitor merge behavior**: Log and analyze conflict patterns in production
+
+## Summary
+
+- **HLC** provides causal ordering across devices without synchronized clocks
+- **Last-Write-Wins** per field resolves most conflicts automatically
+- **Deletion wins** prevents zombie resources
+- **Field-level timestamps** enable fine-grained merging
+- **Custom merge contracts** available for specialized needs
+- **Locorda converges** deterministically - all devices eventually agree
+
+## Next Steps
+
+- 📘 [Merge Contracts Deep Dive](/docs/sync-engine/data-modeling/merge-contracts) - Understand RootResource, SubResource, LocalResource
+- 📘 [Architecture Overview](/docs/sync-engine/core-concepts/architecture) - How sync engine works internally
+- 📘 [Testing Guide](/docs/sync-engine/guides/testing) - Write tests for conflict scenarios
+- 🔧 [Advanced: Custom Merge Contracts](#custom-contracts-advanced) - Implement your own resolution logic
+
+## Custom Contracts (Advanced) {#custom-contracts-advanced}
+
+<Aside type="danger">
+This section is for advanced users. Custom merge contracts add significant complexity. Ensure you truly need this before proceeding.
+</Aside>
+
+### Implementing a Custom Merge Contract
+
+```dart
+import 'package:locorda/locorda.dart';
+
+class CustomMergeContract extends MergeContract {
+  const CustomMergeContract();
+  
+  @override
+  MergeResult<T> merge<T>(
+    T? localValue,
+    HLCTimestamp localTimestamp,
+    T? remoteValue,
+    HLCTimestamp remoteTimestamp,
+    FieldMetadata fieldMetadata,
+  ) {
+    // Your custom logic here
+    
+    // Example: For 'count' field, sum values
+    if (fieldMetadata.name == 'count' && T == int) {
+      final merged = (localValue as int? ?? 0) + (remoteValue as int? ?? 0);
+      final maxTimestamp = localTimestamp.compareTo(remoteTimestamp) > 0 
+          ? localTimestamp 
+          : remoteTimestamp;
+      return MergeResult(
+        value: merged as T,
+        timestamp: maxTimestamp,
+      );
+    }
+    
+    // Fall back to LWW for other fields
+    return super.merge(
+      localValue,
+      localTimestamp,
+      remoteValue,
+      remoteTimestamp,
+      fieldMetadata,
+    );
+  }
+}
+```
+
+### Registering Your Contract
+
+```dart
+@RootResource(
+  AppVocab(appBaseUri: 'https://example.org/app'),
+  mergeContract: CustomMergeContract(),
+)
+class MyResource {
+  // ...
+}
+```
+
+### Testing Your Contract
+
+```dart
+test('custom merge contract sums counts', () async {
+  final contract = CustomMergeContract();
+  
+  final result = contract.merge(
+    5,  // local value
+    HLCTimestamp(1000, 0, 'deviceA'),
+    3,  // remote value
+    HLCTimestamp(1001, 0, 'deviceB'),
+    FieldMetadata(name: 'count', type: int),
+  );
+  
+  expect(result.value, 8);  // 5 + 3
+});
+```
+
+### Contract Constraints
+
+Your merge contract **must** be:
+
+1. **Commutative**: `merge(A, B) == merge(B, A)`
+2. **Associative**: `merge(merge(A, B), C) == merge(A, merge(B, C))`
+3. **Idempotent**: `merge(A, A) == A`
+
+Violating these properties leads to **divergence** - devices won't converge to the same state!
