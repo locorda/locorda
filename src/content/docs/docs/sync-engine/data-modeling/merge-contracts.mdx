@@ -1,379 +1,339 @@
 ---
 title: Merge Contracts & Resource Types
-description: Understanding RootResource, SubResource, LocalResource, and how merge contracts control conflict resolution
+description: TODO - Understanding RootResource, SubResource, LocalResource, and how merge contracts control conflict resolution
 ---
 
 import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Aside type="caution">
+**Documentation Under Construction**
+
+This documentation is being updated to accurately reflect the actual implementation. Content below is incomplete and may contain placeholders.
+</Aside>
 
 This page explains the foundational concepts that govern how your data syncs across devices: **resource types** and **merge contracts**.
 
 ## The Three Resource Types
 
-Locorda uses three annotations to classify your data classes, each serving a distinct purpose in the sync architecture:
+Locorda uses three annotations to classify your data classes, each serving a distinct purpose in the sync architecture.
 
 ### @RootResource - Syncable Entities
 
-A **RootResource** is an independent entity that syncs across all devices. Each instance has:
+A **RootResource** is an independent entity that syncs across storage backends using state-based CRDTs. Each instance has:
 
 - **Unique IRI** (Internationalized Resource Identifier) - Generated from fields marked with `@RdfIriPart()`
-- **Independent lifecycle** - Can be created, modified, deleted independently
-- **Merge contract** - Defines how conflicts are resolved when edited on multiple devices
+- **Independent lifecycle** - Can be created, modified, deleted independently  
+- **Merge contract** - Defines CRDT merge strategies for conflict resolution
+
+Real example from the personal notes app:
 
 ```dart
-@RootResource(AppVocab(appBaseUri: 'https://example.org/app'))
-class Task {
+@RootResource(
+  appVocab,
+  mergeContract: MergeContract(
+    label: 'Personal Note CRDT Document Mapping v1',
+    comment: 'Defines how personal notes should merge when conflicts occur during sync.',
+  ),
+  iriStrategy: RootIriStrategy(RootIriConfig('note')),
+  fullIndex: FullIndex.disabled(),
+  subClassOf: SchemaNoteDigitalDocument.classIri,
+)
+class Note {
   @RdfIriPart()
-  final String id;  // Part of the unique identifier
+  final String id;
   
+  @RdfProperty(SchemaNoteDigitalDocument.name)
+  @CrdtLwwRegister()
   final String title;
-  final bool completed;
+  
+  @RdfProperty(SchemaNoteDigitalDocument.text)
+  @CrdtLwwRegister()
+  final String content;
+  
+  @RdfProperty(SchemaNoteDigitalDocument.keywords)
+  @CrdtOrSet()
+  final Set<String> tags;
+  
+  @RdfProperty(SchemaNoteDigitalDocument.dateCreated)
+  @CrdtImmutable()
   final DateTime createdAt;
   
-  // Constructor and methods...
+  // ...
 }
 ```
 
 **Examples of RootResources:**
-- A task in a todo app
 - A note in a notes app
-- A contact in an address book
-- A calendar event
+- A category for organizing notes
+- TODO: Add more examples
 
-### @SubResource - Composed Parts
+### @SubResource - Nested Resources with Fragment IRIs
 
-A **SubResource** is a part of a RootResource that doesn't exist independently. It:
+A **SubResource** is a nested resource within a RootResource that has its own fragment IRI but is not registered globally in the type index. It:
 
-- **No independent IRI** - Identified only within its parent RootResource
-- **Syncs with its parent** - Cannot sync separately
-- **Inherits merge contract** - Uses the same conflict resolution as its parent
+- **Fragment IRI** - Identified using fragment IRIs derived from parent resource
+- **Inherits merge contract** - Uses merge strategies from parent's CRDT mapping
+- **Not globally indexed** - Not registered in type index
+
+Real example from the personal notes app:
 
 ```dart
-@SubResource()
-class TaskAttachment {
-  final String fileName;
-  final String url;
-  final int sizeInBytes;
-  
-  // No @RdfIriPart needed - this is always part of a Task
-}
-
-@RootResource(AppVocab(appBaseUri: 'https://example.org/app'))
-class Task {
+@SubResource(
+  appVocab,
+  SubIriStrategy('#comment-{id}'),
+  subClassOf: SchemaComment.classIri,
+)
+class Comment {
   @RdfIriPart()
-  final String id;
+  final String id;  // Used in fragment template
   
-  final String title;
-  final List<TaskAttachment> attachments;  // SubResources embedded in RootResource
+  @RdfProperty(SchemaComment.text)
+  @CrdtLwwRegister()
+  final String text;
+  
+  @RdfProperty(SchemaComment.dateCreated)
+  @CrdtImmutable()
+  final DateTime createdAt;
+  
+  // ...
 }
 ```
 
 **Examples of SubResources:**
-- Attachments in a note
-- Line items in an invoice
-- Steps in a recipe
-- Sections in a document
+- Comments on a note (IRI-identified sub-resources)
+- TODO: Add more examples
 
 **When to use SubResource:**
-- The data only makes sense within its parent
-- You want it to sync atomically with its parent
-- It doesn't need separate conflict resolution
+- TODO: Document decision criteria
 
-### @LocalResource - Device-Specific Data
+### @LocalResource - Blank Nodes (Local RDF Resources)
 
-A **LocalResource** is stored locally but **never synced**. Use it for:
+A **LocalResource** represents a blank node in RDF - a resource without a globally unique IRI that exists only within the context of a parent resource.
 
-- **Device-specific state** - UI preferences, cache, temporary data
-- **Sensitive data** - That should never leave the device
-- **Ephemeral data** - That doesn't need to persist across devices
+**CRDT Merge Identification:**
 
+Blank nodes can be identified for CRDT merging in two ways:
+
+1. **Single-path blank nodes** - Reachable via exactly one property path (e.g., `Category → displaySettings`). No identification annotation needed.
+
+2. **Property-identified blank nodes** - Multiple instances identified by a unique property marked with `@MergeIdentifying()`.
+
+Real examples from the personal notes app:
+
+**Single-path blank node:**
 ```dart
-@LocalResource()
-class TaskListUIState {
-  final String sortOrder;
-  final Set<String> expandedSections;
-  final String searchQuery;
+@LocalResource(appVocab)
+class CategoryDisplaySettings {
+  @RdfProperty.define(fragment: 'color')
+  @CrdtLwwRegister()
+  final String? color;
   
-  // This state stays on this device only
+  @RdfProperty.define(fragment: 'icon')
+  @CrdtLwwRegister()
+  final String? icon;
+}
+```
+
+**Property-identified blank node:**
+```dart
+@LocalResource(appVocab, subClassOf: SchemaThing.classIri)
+class Weblink {
+  @RdfProperty(SchemaThing.url)
+  @MergeIdentifying()  // Identifies this blank node for CRDT merging
+  @CrdtImmutable()
+  final String url;
+  
+  @RdfProperty(SchemaThing.name)
+  @CrdtLwwRegister()
+  final String? title;
 }
 ```
 
 **Examples of LocalResources:**
-- Filter/sort preferences
-- Scroll positions
-- Selected items in UI
-- Local cache data
+- Display settings for a category (single-path)
+- Weblinks referenced by a note (property-identified)
+- TODO: Add more examples
 
-<Aside type="tip">
-LocalResources still benefit from Locorda's repository pattern and code generation, but they're stored in local-only storage and never touch the sync engine.
+<Aside type="note">
+LocalResources inherit CRDT merge strategies from their parent RootResource's merge contract.
 </Aside>
 
-## Merge Contracts: Defining Conflict Resolution
+## Merge Contracts: Defining CRDT Strategies
 
-A **merge contract** defines **how conflicts are resolved** when the same RootResource is edited on multiple devices while offline.
+A **merge contract** is a published RDF document that defines CRDT merge strategies for properties of a RootResource.
 
-### Default Merge Contract
+### CRDT Property Annotations
 
-By default, RootResources use **Last-Write-Wins (LWW)** with **Hybrid Logical Clocks (HLC)**:
+Locorda provides three CRDT merge strategies via property annotations:
 
-- **Per-field resolution** - Each field is resolved independently
-- **Causality awareness** - If edit B causally follows edit A, B wins
-- **Timestamp tie-breaking** - For concurrent edits, most recent timestamp wins
-- **Deletion wins** - If one device deletes while another edits, deletion wins
+#### @CrdtLwwRegister() - Last-Write-Wins Register
+
+TODO: Document:
+- How LWW resolution works
+- Hybrid Logical Clock usage
+- Causality tracking
+- Tie-breaking rules
+
+#### @CrdtOrSet() - Observed-Remove Set
+
+TODO: Document:
+- How OR-Set merges additions and removals
+- Use cases (tags, collections)
+- Behavior with re-additions
+
+#### @CrdtImmutable() - Immutable Values
+
+Used for properties that should never change once set:
+- Creation timestamps
+- Identifying properties
+- Write-once data
+
+### Example: Mixed CRDT Strategies
 
 ```dart
-// This Task uses the default merge contract
-@RootResource(AppVocab(appBaseUri: 'https://example.org/app'))
-class Task {
+@RootResource(appVocab, mergeContract: MergeContract())
+class Note {
   @RdfIriPart()
   final String id;
   
-  final String title;      // LWW - newest edit wins
-  final bool completed;    // LWW - newest edit wins
-  final DateTime dueDate;  // LWW - newest edit wins
+  @RdfProperty(Schema.name)
+  @CrdtLwwRegister()  // Last writer wins
+  final String title;
+  
+  @RdfProperty(Schema.keywords)
+  @CrdtOrSet()  // Additions/removals merge independently
+  final Set<String> tags;
+  
+  @RdfProperty(Schema.dateCreated)
+  @CrdtImmutable()  // Never changes
+  final DateTime createdAt;
 }
 ```
 
-### Example: Default Behavior
+TODO: Add concrete merge scenario examples
 
-Scenario: Two devices offline, both edit the same task
+### Generated vs External Merge Contracts
 
-```
-Device A (offline):     Task(id: "1", title: "Buy milk", completed: false)
-Device B (offline):     Task(id: "1", title: "Buy groceries", completed: true)
-
-After both sync:        Task(id: "1", title: "Buy groceries", completed: true)
-                                      ↑                        ↑
-                                      Device B's title wins    Device B's completed wins
-                                      (most recent)            (most recent)
-```
-
-**Key insight**: Fields are resolved **independently**. Device B edited both fields more recently, so both win.
-
-### Custom Merge Contracts
-
-You can define custom merge contracts for specialized conflict resolution:
-
+**Automatic generation** (recommended):
 ```dart
-// Custom merge contract for a counter that should sum values
-@RootResource(
-  AppVocab(appBaseUri: 'https://example.org/app'),
-  mergeContract: SummingMergeContract(),
+MergeContract(
+  label: 'Note CRDT Mapping v1',
+  comment: 'Defines merge strategies for notes',
 )
-class Counter {
-  @RdfIriPart()
-  final String id;
-  
-  @SumOnMerge()  // Custom annotation for summing behavior
-  final int count;
-}
 ```
+The builder scans CRDT annotations on properties and generates merge contract RDF documents.
 
-<Aside type="caution">
-Custom merge contracts are an advanced topic. Most apps work perfectly with the default LWW contract. See [Custom Merge Contracts](/docs/sync-engine/core-concepts/conflict-resolution#custom-contracts) for details.
-</Aside>
+**External contracts** (for shared/standard vocabularies):
+```dart
+MergeContract.external('https://vocab.example.org/mappings/note-v1#')
+```
+References a manually authored CRDT mapping document.
+
+TODO: Document:
+- How merge contracts are published
+- How clients discover and validate compatibility
+- Versioning strategies
 
 ## How Resource Types and Merge Contracts Interact
 
 ### Hierarchy and Inheritance
 
+Real example from personal notes app:
+
 ```dart
-@RootResource(AppVocab(appBaseUri: 'https://example.org/notes'))
+@RootResource(
+  appVocab,
+  mergeContract: MergeContract(
+    label: 'Personal Note CRDT Document Mapping v1',
+  ),
+)
 class Note {
   @RdfIriPart()
   final String id;
   
-  final String title;                    // Uses Note's merge contract (LWW)
-  final List<NoteSection> sections;      // SubResources inherit merge contract
-  final NoteUIState? uiState;            // LocalResource - not synced
+  @RdfProperty(Schema.name)
+  @CrdtLwwRegister()
+  final String title;
+  
+  @RdfProperty(Schema.relatedLink)
+  @CrdtOrSet()
+  final Set<Weblink> weblinks;  // LocalResources (blank nodes)
+  
+  @RdfProperty(Schema.comment)
+  @CrdtOrSet()
+  final Set<Comment> comments;  // SubResources with fragment IRIs
 }
 
-@SubResource()
-class NoteSection {
-  final String heading;                  // Inherits Note's merge contract
-  final String content;                  // Inherits Note's merge contract
-  final List<ImageAttachment> images;    // These also inherit
+@SubResource(appVocab, SubIriStrategy('#comment-{id}'))
+class Comment {
+  @RdfIriPart()
+  final String id;
+  
+  @RdfProperty(Schema.text)
+  @CrdtLwwRegister()  // Inherits from Note's merge contract
+  final String text;
 }
 
-@SubResource()
-class ImageAttachment {
-  final String url;                      // All SubResources use parent's contract
-  final String caption;
-}
-
-@LocalResource()
-class NoteUIState {
-  final bool isPinned;                   // Never synced - no merge contract
-  final String selectedSection;
+@LocalResource(appVocab)  // Blank node
+class Weblink {
+  @RdfProperty(Schema.url)
+  @MergeIdentifying()
+  @CrdtImmutable()
+  final String url;  // Identifies this blank node
+  
+  @RdfProperty(Schema.name)
+  @CrdtLwwRegister()  // Inherits from Note's merge contract
+  final String? title;
 }
 ```
 
 **Inheritance rules:**
 1. **RootResource** - Defines the merge contract
-2. **SubResource** - Inherits parent's merge contract automatically
-3. **LocalResource** - No merge contract (not synced)
+2. **SubResource** - Inherits parent's merge contract
+3. **LocalResource** - Inherits parent's merge contract
 
-### Composition Example
-
-A real-world note-taking app structure:
-
-```dart
-// Synced note with metadata
-@RootResource(AppVocab(appBaseUri: 'https://myapp.com/notes'))
-class Note {
-  @RdfIriPart()
-  final String id;
-  
-  final String title;
-  final DateTime createdAt;
-  final DateTime modifiedAt;
-  final List<String> tags;
-  
-  // Composed SubResources
-  final List<ContentBlock> blocks;     // Sections, paragraphs, images
-  final List<Comment> comments;        // SubResources with their own structure
-}
-
-@SubResource()
-class ContentBlock {
-  final String type;  // 'text', 'image', 'code'
-  final String content;
-  final Map<String, dynamic> metadata;
-}
-
-@SubResource()
-class Comment {
-  final String author;
-  final String text;
-  final DateTime timestamp;
-  final List<CommentReply> replies;    // Nested SubResources!
-}
-
-@SubResource()
-class CommentReply {
-  final String author;
-  final String text;
-  final DateTime timestamp;
-}
-
-// Editor state - device specific
-@LocalResource()
-class NoteEditorState {
-  final String noteId;
-  final int cursorPosition;
-  final String selectedBlockId;
-  final bool isFullscreen;
-}
-```
+TODO: Add composition examples once the actual patterns are documented
 
 ## Design Guidelines
 
+TODO: Document decision criteria based on actual patterns from the implementation:
+
 ### When to Use RootResource
 
-Use `@RootResource` when:
-- ✅ The entity has independent meaning outside any context
-- ✅ It should be individually addressable (has its own ID)
-- ✅ Different devices might create/edit/delete it independently
-- ✅ You want to query/filter/index it separately
+TODO: Define criteria
 
 ### When to Use SubResource
 
-Use `@SubResource` when:
-- ✅ The data only exists within a parent entity
-- ✅ You want atomic sync (all-or-nothing with parent)
-- ✅ Individual conflict resolution doesn't make sense
-- ✅ It's a composition relationship (part-of, not references)
+TODO: Document when to use SubResource vs LocalResource
+- SubResource: Has fragment IRI, not in type index
+- LocalResource: Blank node, no IRI
 
 ### When to Use LocalResource
 
-Use `@LocalResource` when:
-- ✅ The data is device-specific (UI state, cache)
-- ✅ It should never sync to other devices
-- ✅ Privacy/security requires it stays local
-- ✅ It's ephemeral or temporary
+TODO: Document blank node patterns:
+- Single-path identified (CategoryDisplaySettings)
+- Property-identified (Weblink)
 
-### Anti-patterns to Avoid
+### Common Patterns
 
-❌ **Don't use SubResource for relationships**
-
-```dart
-// WRONG: Author should be a RootResource
-@SubResource()
-class Author {
-  final String name;
-  final String email;
-}
-
-@RootResource(...)
-class BlogPost {
-  final Author author;  // This should be a reference, not a SubResource!
-}
-```
-
-Instead, reference by IRI:
-
-```dart
-// CORRECT: Reference Author by ID
-@RootResource(...)
-class Author {
-  @RdfIriPart()
-  final String id;
-  final String name;
-  final String email;
-}
-
-@RootResource(...)
-class BlogPost {
-  @RdfIriPart()
-  final String id;
-  final String authorId;  // Reference to Author's ID
-  final String title;
-}
-```
-
-❌ **Don't make everything a RootResource**
-
-Over-engineering creates unnecessary complexity. Ask: "Could this exist independently?"
-
-```dart
-// WRONG: Line items shouldn't be RootResources
-@RootResource(...)
-class InvoiceLineItem {
-  @RdfIriPart()
-  final String id;
-  final String product;
-  final double price;
-}
-
-// CORRECT: Line items are SubResources of Invoice
-@SubResource()
-class InvoiceLineItem {
-  final String product;
-  final double price;
-}
-
-@RootResource(...)
-class Invoice {
-  @RdfIriPart()
-  final String id;
-  final List<InvoiceLineItem> items;
-}
-```
+TODO: Add real-world patterns from personal_notes_app and other examples
 
 ## Next Steps
 
-Now that you understand resource types and merge contracts:
+TODO: Add proper links once corresponding pages are created
 
-- 📘 [Root Resources Deep Dive](/docs/sync-engine/data-modeling/root-resources) - IRI generation, best practices
-- 📘 [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) - HLC algorithm, custom contracts
-- 📘 [Annotations Reference](/docs/sync-engine/data-modeling/annotations-reference) - All available annotations
-- 📘 [Getting Started Guide](/docs/sync-engine/guides/getting-started) - Build your first syncing app
+- 📘 Conflict Resolution - TODO
+- 📘 Indexing Strategies - TODO
+- 📘 Getting Started Guide - TODO
 
 ## Key Takeaways
 
-1. **RootResource** = Synced entity with its own IRI and merge contract
-2. **SubResource** = Part of a RootResource, inherits its merge contract
-3. **LocalResource** = Device-only data, never synced
-4. **Merge contracts** define conflict resolution behavior
-5. **Default LWW contract** works for most use cases
-6. **SubResources inherit** their parent's merge contract
-7. **Composition vs. reference**: SubResource for parts, IRI references for relationships
+1. **RootResource** = Independent entity with IRI, defines merge contract
+2. **SubResource** = Nested resource with fragment IRI, inherits merge contract
+3. **LocalResource** = Blank node (no globally unique IRI), inherits merge contract
+4. **CRDT annotations** define property-level merge strategies:
+   - `@CrdtLwwRegister()` - Last-Write-Wins
+   - `@CrdtOrSet()` - Observed-Remove Set
+   - `@CrdtImmutable()` - Immutable
+5. **Merge contracts** are generated from CRDT annotations or referenced externally
+6. **@MergeIdentifying()** marks identifying properties for property-identified blank nodes
