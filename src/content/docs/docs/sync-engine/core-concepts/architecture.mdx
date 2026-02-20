@@ -5,7 +5,7 @@ description: Understanding Locorda's architecture - components, layers, and how 
 
 import { Aside } from '@astrojs/starlight/components';
 
-Locorda's architecture is designed for **offline-first apps that sync automatically**. This page explains the components, their responsibilities, and how they work together.
+Locorda's architecture is designed for **offline-first apps that sync automatically using BOS (Bring your Own Storage)** — whether that's Solid Pods, Google Drive, local directories, or any other storage you control. **Be the boss of your data.** This page explains the components, their responsibilities, and how they work together.
 
 ## High-Level Overview
 
@@ -127,15 +127,15 @@ See [Repository Pattern](/docs/sync-engine/guides/repository-pattern) for implem
 The worker thread is **completely isolated** - it cannot directly access your UI or database. All communication happens via the callback pattern.
 </Aside>
 
-### Remote Storage Backends (Pluggable)
+### BOS - Remote Storage Backends (Pluggable)
 
-**Responsibility**: Persist data remotely.
+**Responsibility**: Persist data to your chosen storage.
 
-**Supported Backends:**
+**Supported BOS Options:**
 - **Solid Pods** - Decentralized personal data stores
 - **Google Drive** - Cloud storage via Google's API
 - **Local Directory** - File system (for testing/debugging)
-- **Custom** - Implement your own backend
+- **Custom** - Implement your own backend (e.g., WebDAV, NAS, etc.)
 
 **Interface:**
 All backends implement the same interface, so your code works with any backend without changes.
