@@ -142,57 +142,19 @@ All backends implement the same interface, so your code works with any backend w
 
 ## Data Flow
 
-### Local Save Flow
+<Aside type="tip">
+**Want to understand how data flows through the system?** See [Sync Lifecycle](/docs/sync-engine/core-concepts/sync-lifecycle) for detailed explanations of:
+- Local changes flow (how `save()` works)
+- Remote sync flow (background sync process)
+- Offline mode and conflict resolution
+- Error handling and retry logic
+</Aside>
 
-```
-1. User edits task in UI
-   ↓
-2. UI calls repository.save(task)
-   ↓
-3. Repository calls syncEngine.save<Task>(task)
-   ↓
-4. Main thread: Converts Task → RDF via generated mapper
-   ↓
-5. Main thread: Sends RDF to worker thread
-   ↓
-6. Worker thread: Stores RDF in local quad storage
-   ↓
-7. Worker thread: Queues change for upload
-   ↓
-8. Worker thread: Notifies main thread of change
-   ↓
-9. Main thread: Calls repository's onUpdate(task)
-   ↓
-10. Repository: Saves to local DB, notifies UI
-   ↓
-11. UI: Updates automatically via StreamBuilder
-```
-
-**Key insight**: Your repository saves to its DB in the `onUpdate` callback, not in the `save()` method.
-
-### Remote Sync Flow
-
-```
-1. Worker thread: Periodic sync check (or manual trigger)
-   ↓
-2. Worker thread: Fetches changes from remote
-   ↓
-3. Worker thread: Merges remote RDF with local RDF (CRDT)
-   ↓
-4. Worker thread: Uploads queued local changes
-   ↓
-5. Worker thread: Notifies main thread of merged state
-   ↓
-6. Main thread: Converts RDF → Task via generated mapper
-   ↓
-7. Main thread: Calls repository's onUpdate(task)
-   ↓
-8. Repository: Saves to local DB, notifies UI
-   ↓
-9. UI: Updates automatically via StreamBuilder
-```
-
-**Key insight**: Remote changes flow through the same `onUpdate` callback as local changes.
+This architecture enables:
+- **Bidirectional sync**: Changes flow both ways (local → remote, remote → local)
+- **Worker isolation**: Sync operations never block the UI
+- **Callback pattern**: All changes (local and remote) flow through the same `onUpdate`/`onDelete` callbacks
+- **Storage flexibility**: Use any database you want for your app's data
 
 ## Storage Layers
 

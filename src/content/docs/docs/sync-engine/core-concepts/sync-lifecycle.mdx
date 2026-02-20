@@ -112,25 +112,69 @@ See [Conflict Resolution](/docs/sync-engine/core-concepts/conflict-resolution) f
 
 ## Sync States
 
-### Connection States
+### SyncStatus
 
 Your app can be in one of these sync states:
 
 | State | Description | User Can |
 |-------|-------------|----------|
-| **Disconnected** | No remote configured or intentionally disconnected | Make local changes (queued) |
-| **Connecting** | Attempting to establish connection to remote | Wait |
-| **Connected** | Successfully connected, sync operational | Everything |
-| **Syncing** | Actively syncing data | Everything (sync in background) |
-| **Error** | Connection or sync error occurred | Retry or continue offline |
+| **idle** | No sync in progress, waiting for trigger | Make local changes (queued) |
+| **syncing** | Actively syncing data | Everything (sync in background) |
+| **success** | Last sync completed successfully | Everything |
+| **error** | Last sync failed with an error | Retry or continue offline |
+
+### SyncTrigger
+
+Sync operations can be triggered by:
+
+- **manual** - User explicitly requested sync (e.g., "Sync Now" button)
+- **startup** - Automatic sync on application startup
+- **scheduled** - Automatic sync on a scheduled interval
+- **dataChange** - Sync triggered after local data changes
+- **connectionRestore** - Sync triggered after network connectivity is restored
+- **pullToRefresh** - Sync triggered by pull-to-refresh gesture
+- **login** - Sync triggered after user authentication/login
 
 ### Monitoring Sync State
 
 Subscribe to sync state changes:
 
 ```dart
-// TODO: Provide actual API for sync state monitoring
-// This is planned but not yet implemented in the framework
+// Access sync manager from your Locorda instance
+final syncManager = locorda.syncManager;
+
+// Listen to state changes
+syncManager.statusStream.listen((state) {
+  switch (state.status) {
+    case SyncStatus.idle:
+      print('Sync idle');
+    case SyncStatus.syncing:
+      print('Syncing... (trigger: ${state.lastTrigger})');
+    case SyncStatus.success:
+      print('Sync completed at ${state.lastSyncTime}');
+    case SyncStatus.error:
+      print('Sync error: ${state.errorMessage}');
+  }
+});
+
+// Check current state synchronously
+final currentState = syncManager.currentState;
+final isSyncing = syncManager.isSyncing;
+```
+
+### Manual Sync Trigger
+
+Trigger sync manually:
+
+```dart
+// Trigger manual sync
+await syncManager.sync(trigger: SyncTrigger.manual);
+
+// Enable auto-sync with custom interval
+syncManager.enableAutoSync(interval: Duration(minutes: 10));
+
+// Disable auto-sync
+syncManager.disableAutoSync();
 ```
 
 ## Error Handling
@@ -178,14 +222,9 @@ Max delay: 60 seconds
 
 After max delay is reached, sync retries every 60 seconds until successful.
 
-### Manual Retry
-
-Users can always trigger manual sync:
-
-```dart
-// TODO: Provide actual API for manual sync trigger
-// This is planned but not yet implemented in the framework
-```
+<Aside type="tip">
+**Manual retry is always available**: Users can trigger manual sync via `syncManager.sync()` regardless of automatic retry state. See [Monitoring Sync State](#monitoring-sync-state) for the complete API.
+</Aside>
 
 ## Sync Optimizations
 
