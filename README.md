@@ -6,7 +6,8 @@ Official website for the Locorda project - RDF libraries and tools for Dart and 
 
 ## Tech Stack
 
-- **Astro 5.16** - Static site generator
+- **Astro 5.17** - Static site generator
+- **Starlight 0.37** - Documentation framework (for `/docs` section)
 - **Custom Pages** - Marketing pages with gradient design
 
 ## Project Structure
@@ -21,6 +22,12 @@ locorda/
 │       └── test/               # Automated tests
 ├── src/
 │   ├── components/             # Header, Footer, etc.
+│   ├── content/
+│   │   └── docs/
+│   │       └── docs/          # Documentation (served at /docs)
+│   │           ├── index.mdx  # Docs homepage (/docs/)
+│   │           ├── sync-engine/ # Sync Engine docs
+│   │           └── rdf/       # RDF libraries docs
 │   ├── layouts/                # BaseLayout for pages
 │   ├── pages/
 │   │   ├── index.astro         # Homepage
@@ -34,6 +41,9 @@ locorda/
 ## Development
 
 ```bash
+# Use Node.js 22.9.0 (via nvm)
+nvm use
+
 # Install dependencies
 npm install
 

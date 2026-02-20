@@ -154,6 +154,13 @@ const { activeNav } = Astro.props;
           </a>
         </div>
       </div>
+
+      <a
+        href="/docs/"
+        class:list={["nav-link", { active: activeNav === "docs" }]}
+      >
+        Documentation
+      </a>
     </nav>
 
     <div class="header-actions">
