@@ -209,82 +209,74 @@ The cursor tracks "what you've already synced" so future syncs only fetch new ch
 
 ## State Management
 
-### Reactive Updates
+Locorda is **state management agnostic** - use whatever fits your app. The sync engine doesn't care how you manage UI state; it just provides callbacks for data changes.
 
-Use streams for reactive UI:
+### Reactive Updates with Drift (Recommended)
 
-```dart
-class TaskRepository {
-  final StreamController<List<Task>> _controller = StreamController.broadcast();
-  
-  Stream<List<Task>> watchAll() => _controller.stream;
-  
-  void _notifyListeners() {
-    _controller.add(getAll());
-  }
-}
-```
-
-In your UI:
+If you use [Drift](https://drift.simonbinder.eu/), you get reactive queries for free. No `StreamController`, no manual `notifyListeners()` - Drift's `watch()` automatically emits when data changes:
 
 ```dart
-StreamBuilder<List<Task>>(
-  stream: repository.watchAll(),
-  builder: (context, snapshot) {
-    if (!snapshot.hasData) return CircularProgressIndicator();
-    final tasks = snapshot.data!;
-    return ListView.builder(
-      itemCount: tasks.length,
-      itemBuilder: (context, i) => TaskTile(tasks[i]),
+class NoteRepository {
+  final Database db;
+  final ObjectSyncEngine _syncEngine;
+  
+  NoteRepository(this.db, this._syncEngine) {
+    // Connect sync callbacks to Drift operations
+    _syncEngine.hydrateWithCallbacks<Note>(
+      onUpdate: (note) async {
+        await db.into(db.notes).insertOnConflictUpdate(note);
+        // No need to call notifyListeners() - Drift handles it!
+      },
+      onDelete: (id) async {
+        await (db.delete(db.notes)..where((n) => n.id.equals(id))).go();
+      },
+      // ... other callbacks
     );
-  },
-)
-```
-
-### State Management Libraries
-
-The repository pattern works with any state management solution:
-
-**With Provider:**
-```dart
-class TaskNotifier extends ChangeNotifier {
-  final TaskRepository _repo;
-  StreamSubscription? _subscription;
-  
-  TaskNotifier(this._repo) {
-    _subscription = _repo.watchAll().listen((_) {
-      notifyListeners();
-    });
   }
   
-  List<Task> get tasks => _repo.getAll();
-}
-```
-
-**With Riverpod:**
-```dart
-final taskRepositoryProvider = Provider<TaskRepository>((ref) {
-  return TaskRepository.create(ref.watch(syncEngineProvider));
-});
-
-final tasksProvider = StreamProvider<List<Task>>((ref) {
-  return ref.watch(taskRepositoryProvider).watchAll();
-});
-```
-
-**With BLoC:**
-```dart
-class TaskBloc extends Bloc<TaskEvent, TaskState> {
-  final TaskRepository _repository;
-  StreamSubscription? _subscription;
+  // Reactive query - automatically updates when data changes
+  Stream<List<NoteIndexEntry>> watchAllNotes() {
+    return (db.select(db.noteIndexEntries)
+      ..orderBy([
+        (n) => OrderingTerm(
+          expression: n.dateModified,
+          mode: OrderingMode.desc,
+        )
+      ])).watch();
+  }
   
-  TaskBloc(this._repository) : super(TaskInitial()) {
-    _subscription = _repository.watchAll().listen((tasks) {
-      add(TasksUpdated(tasks));
-    });
+  // Filtered queries work the same way
+  Stream<List<NoteIndexEntry>> watchByCategory(String category) {
+    return (db.select(db.noteIndexEntries)
+      ..where((n) => n.category.equals(category))
+      ..orderBy([(n) => OrderingTerm(expression: n.dateModified)])
+    ).watch();
   }
 }
 ```
+
+**Why Drift is great with Locorda:**
+- Reactive queries out of the box
+- Type-safe SQL queries
+- Efficient indexing and filtering
+- No manual stream management
+
+### Other Approaches
+
+If you're not using Drift, you can use:
+
+**StreamController (simple but manual):**
+```dart
+final _controller = StreamController<List<Task>>.broadcast();
+
+Stream<List<Task>> watchAll() => _controller.stream;
+
+void _notifyListeners() {
+  _controller.add(getAll()); // Call this in onUpdate/onDelete callbacks
+}
+```
+
+**State management libraries:** Provider, Riverpod, BLoC, etc. all work - you know your framework better than we do. Just connect the sync callbacks to your state updates however your framework expects it.
 
 ## Best Practices
 
@@ -300,7 +292,6 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
 
 - Don't bypass callbacks and update your database directly in `save()`
 - Don't ignore `onUpdate` - it's essential for showing merged data
-- Don't forget to call `_notifyListeners()` in your callbacks
 - Don't mix sync-managed data with non-sync data in the same table (use separate repositories)
 
 ## Advanced Patterns
