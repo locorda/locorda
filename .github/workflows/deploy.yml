@@ -92,8 +92,8 @@ jobs:
           # Copy built Flutter app
           cp -r sync-engine/packages/locorda/example/personal_notes_app/build/web/* dist/example/personal_notes_app/
           
-          # Copy example-specific mappings
-          cp sync-engine/packages/locorda/example/personal_notes_app/contracts/mappings/* dist/example/personal_notes_app/mappings/
+          # deploy generated mappings
+          dart run locorda_dev:deploy_mappings dist/example/personal_notes_app/mappings/
           
           # Copy auth configuration
           cp sync-engine/packages/locorda/example/personal_notes_app/contracts/auth/client-config.json dist/example/personal_notes_app/auth/
