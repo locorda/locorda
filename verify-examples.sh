@@ -67,6 +67,29 @@ echo "🔍 XML: Running example tests..."
 dart test
 popd
 
+# Verify Jelly examples
+echo ""
+echo "📦 Jelly: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/jelly"
+dart pub get
+
+echo ""
+echo "🔍 Jelly: Running example tests..."
+dart test
+popd
+
+# Verify JSON-LD examples
+echo ""
+echo "📦 JSON-LD: Installing dependencies..."
+pushd "$(dirname "$0")/examples/rdf/jsonld"
+dart pub get
+
+echo ""
+echo "🔍 JSON-LD: Running example tests..."
+dart test
+popd
+
+
 # Verify vocabularies examples
 echo ""
 echo "📦 Vocabularies: Installing dependencies..."

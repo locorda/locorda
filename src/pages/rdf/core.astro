@@ -14,7 +14,6 @@ const parseCode = await readFile(join(examplesDir, '02_parse_turtle.dart'), 'utf
 const createGraphsCode = await readFile(join(examplesDir, '03_create_graphs.dart'), 'utf-8');
 const datasetCode = await readFile(join(examplesDir, '04_dataset_quads.dart'), 'utf-8');
 const queryUpdateCode = await readFile(join(examplesDir, '05_query_update.dart'), 'utf-8');
-const jsonldCode = await readFile(join(examplesDir, '06_jsonld.dart'), 'utf-8');
 const contentTypesCode = await readFile(join(examplesDir, '07_content_types.dart'), 'utf-8');
 const extensionsCode = await readFile(join(examplesDir, '08_extensions.dart'), 'utf-8');
 
@@ -63,7 +62,6 @@ const secondaryCta = {
 					<button class="tab-button" data-tab="create">Create Graphs</button>
 					<button class="tab-button" data-tab="dataset">Datasets & Quads</button>
 					<button class="tab-button" data-tab="query">Query & Update</button>
-					<button class="tab-button" data-tab="jsonld">JSON-LD</button>
 					<button class="tab-button" data-tab="contenttypes">Content Types</button>
 					<button class="tab-button" data-tab="extensions">Extensions</button>
 				</div>
@@ -83,10 +81,6 @@ const secondaryCta = {
 					
 					<div class="tab-panel" data-tab="query">
 						<CodeBlock code={queryUpdateCode} lang="dart" />
-					</div>
-					
-					<div class="tab-panel" data-tab="jsonld">
-						<CodeBlock code={jsonldCode} lang="dart" />
 					</div>
 					
 					<div class="tab-panel" data-tab="contenttypes">
@@ -123,7 +117,7 @@ const secondaryCta = {
 				
 				<div class="card">
 					<h3>🔄 Data Integration</h3>
-					<p>Merge data from multiple sources into a unified graph. Transform between formats (Turtle ↔ JSON-LD ↔ N-Triples) seamlessly.</p>
+					<p>Merge data from multiple sources into a unified graph. Transform between formats (Turtle ↔ N-Triples ↔ N-Quads) seamlessly. Additional formats like JSON-LD, RDF/XML, and Jelly are available via companion packages.</p>
 				</div>
 				
 				<div class="card">
@@ -146,12 +140,12 @@ const secondaryCta = {
 				
 				<div class="card">
 					<h3><span class="card-icon">🎯</span> Developer-Friendly API</h3>
-					<p>Global convenience variables (<code>turtle</code>, <code>jsonld</code>, <code>ntriples</code>) make parsing trivial. Fluent APIs for graph composition and chaining.</p>
+					<p>Global convenience variables (<code>turtle</code>, <code>ntriples</code>) make parsing trivial. Fluent APIs for graph composition and chaining. Additional format packages follow the same convention.</p>
 				</div>
 				
 				<div class="card">
-					<h3><span class="card-icon">📄</span> Multiple Formats</h3>
-					<p>Parse and serialize Turtle, N-Triples, N-Quads, and JSON-LD. W3C RDF 1.1 compliant.</p>
+					<h3><span class="card-icon">📄</span> Built-in Text Formats</h3>
+					<p>Parse and serialize Turtle, N-Triples, and N-Quads out of the box. Extend with additional format packages for JSON-LD, RDF/XML, or the high-performance Jelly binary format.</p>
 				</div>
 				
 				<div class="card">
@@ -189,14 +183,34 @@ const secondaryCta = {
 				
 				<div class="solution-card">
 					<div class="problem">
-						<h3>📄 "Do you support XML?"</h3>
+						<h3>🏷️ "I need JSON-LD"</h3>
 					</div>
 					<div class="solution">
-						<p><strong>→ Yes, via <a href="/rdf/xml/" class="inline-link">xml</a></strong></p>
+						<p><strong>→ Use <a href="/rdf/jsonld/" class="inline-link">locorda_rdf_jsonld</a></strong></p>
+						<p class="detail">Full JSON-LD 1.1 support: expansion, compaction, flattening, toRdf and fromRdf. W3C conformance tested. Plugs into RdfCore alongside other codecs.</p>
+					</div>
+				</div>
+
+				<div class="solution-card">
+					<div class="problem">
+						<h3>📄 "Do you support RDF/XML?"</h3>
+					</div>
+					<div class="solution">
+						<p><strong>→ Yes, via <a href="/rdf/xml/" class="inline-link">locorda_rdf_xml</a></strong></p>
 						<p class="detail">Full RDF/XML encoder and decoder for legacy format support and interoperability with older systems.</p>
 					</div>
 				</div>
-				
+
+				<div class="solution-card">
+					<div class="problem">
+						<h3>⚡ "I need high-performance binary encoding"</h3>
+					</div>
+					<div class="solution">
+						<p><strong>→ Use <a href="/rdf/jelly/" class="inline-link">locorda_rdf_jelly</a></strong></p>
+						<p class="detail">Jelly is a streaming binary format based on Protocol Buffers. Fastest encoder and decoder in the suite — significantly smaller output than Turtle or N-Triples.</p>
+					</div>
+				</div>
+
 				<div class="solution-card">
 					<div class="problem">
 						<h3>😩 "Typing IRIs is hell"</h3>

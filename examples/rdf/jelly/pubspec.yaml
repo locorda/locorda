@@ -1,0 +1,14 @@
+name: locorda_website_examples_jelly
+description: Verified code examples for locorda.dev website (jelly)
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  locorda_rdf_core: ^0.12.0
+  locorda_rdf_jelly: ^0.12.0
+
+dev_dependencies:
+  test: ^1.24.0

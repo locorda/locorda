@@ -11,10 +11,6 @@ void main() {
   final graph = rdf.decode(turtleData, contentType: 'text/turtle');
   print('Parsed ${graph.triples.length} triples');
 
-  // Convert to JSON-LD
-  final jsonld = rdf.encode(graph, contentType: 'application/ld+json');
-  print('\nJSON-LD:\n$jsonld');
-
   // Convert to N-Triples
   final ntriples = rdf.encode(graph, contentType: 'application/n-triples');
   print('\nN-Triples:\n$ntriples');

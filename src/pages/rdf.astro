@@ -32,8 +32,9 @@ const primaryCta = {
             </div>
             <p class="package-name">locorda_rdf_core</p>
             <p>
-              Parse and serialize Turtle, N-Triples, N-Quads, JSON-LD. Query
+              Parse and serialize Turtle, N-Triples, and N-Quads. Query
               graphs and work with datasets. The foundation for all RDF work.
+              Extend with format packages for JSON-LD, RDF/XML, and Jelly.
             </p>
           </div>
         </a>
@@ -66,16 +67,44 @@ const primaryCta = {
           </div>
         </a>
 
+        <a href="/rdf/jsonld/" class="card-link">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-icon">🏷️</span>
+              <h3>JSON-LD</h3>
+            </div>
+            <p class="package-name">locorda_rdf_jsonld</p>
+            <p>
+              Full JSON-LD 1.1 support: expansion, compaction, flattening,
+              toRdf and fromRdf. W3C conformance-tested.
+            </p>
+          </div>
+        </a>
+
         <a href="/rdf/xml/" class="card-link">
           <div class="card">
             <div class="card-header">
               <span class="card-icon">📄</span>
-              <h3>RDF/XML Support</h3>
+              <h3>RDF/XML</h3>
             </div>
             <p class="package-name">locorda_rdf_xml</p>
             <p>
               Full RDF/XML encoder and decoder for legacy format support.
               Integrate with older RDF systems and datasets.
+            </p>
+          </div>
+        </a>
+
+        <a href="/rdf/jelly/" class="card-link">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-icon">⚡</span>
+              <h3>Jelly Binary</h3>
+            </div>
+            <p class="package-name">locorda_rdf_jelly</p>
+            <p>
+              High-performance binary RDF format based on Protocol Buffers.
+              Fastest encoder and decoder in the suite — 7× faster decode than Turtle.
             </p>
           </div>
         </a>

@@ -1,0 +1,662 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../examples/rdf/jelly");
+
+const quickStartCode = await readFile(
+  join(examplesDir, "lib/quick_start.dart"),
+  "utf-8",
+);
+const streamingCode = await readFile(
+  join(examplesDir, "lib/streaming.dart"),
+  "utf-8",
+);
+const rdfcoreIntegrationCode = await readFile(
+  join(examplesDir, "lib/rdfcore_integration.dart"),
+  "utf-8",
+);
+const installCode = await readFile(
+  join(examplesDir, "01_install.txt"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_jelly",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_jelly",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="RDF Jelly - Locorda"
+  description="High-performance binary RDF serialization for Dart. Jelly encodes and decodes RDF graphs and datasets faster than any text-based format."
+  activeNav="rdf"
+>
+  <Hero
+    title="Jelly RDF Binary Codec"
+    description="The fastest RDF serialization format for Dart.<br/>Streaming binary encoding based on Protocol Buffers — significantly smaller and faster than Turtle or N-Triples."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "Jelly" },
+    ]}
+  />
+
+  <section class="section problem-section">
+    <div class="container">
+      <h2>The Challenge</h2>
+      <p class="section-intro">
+        Text-based RDF formats like Turtle and N-Triples are human-readable, but
+        they pay a steep performance price for that readability.
+      </p>
+
+      <div class="problem-demo">
+        <div class="demo-card demo-card--problem">
+          <h3>Text Formats Are Slow</h3>
+          <ul class="feature-list feature-list--problem">
+            <li>Every IRI is repeated in full on every triple</li>
+            <li>UTF-8 parsing is CPU-intensive at scale</li>
+            <li>No streaming: must buffer the entire document</li>
+            <li>Large output size means more I/O overhead</li>
+          </ul>
+        </div>
+
+        <div class="demo-card demo-card--solution">
+          <h3>Jelly Solves This</h3>
+          <ul class="feature-list">
+            <li>IRI lookup tables — referenced by compact integer ID</li>
+            <li>Protobuf wire format — minimal parsing overhead</li>
+            <li>Frame-level streaming — process data as it arrives</li>
+            <li>75% of Turtle's output size on real datasets</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="problem-explanation">
+        <p>
+          On the large benchmark (17.2k triples), Jelly
+          <strong>encodes in 81% of Turtle's time</strong> and
+          <strong>decodes in just 7% of Turtle's time</strong>, while producing
+          output that is <strong>25% smaller</strong>. See the full
+          <a
+            href="https://github.com/locorda/rdf/blob/main/BENCHMARKS.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-link">benchmark results</a
+          >.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section solution-section">
+    <div class="container">
+      <h2>The Solution</h2>
+      <p class="section-intro">
+        A complete Dart implementation of the
+        <a
+          href="https://jelly-rdf.github.io/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-link">Jelly RDF</a
+        > specification — batch and streaming, graphs and datasets.
+      </p>
+
+      <div class="solution-demo">
+        <div class="solution-card">
+          <h3>Batch API — drop-in replacement for text codecs</h3>
+          <CodeBlock
+            code={`import 'package:locorda_rdf_jelly/jelly.dart';
+
+// Encode a graph to compact binary Jelly format
+final bytes = jellyGraph.encode(graph);
+
+// Decode back
+final decoded = jellyGraph.decode(bytes);`}
+            lang="dart"
+          />
+          <p class="demo-note">
+            ✓ Same API as Turtle and other codecs<br />
+            ✓ Plugs into RdfCore for content-type dispatch<br />
+            ✓ 82 conformance tests pass (RDF 1.1)
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Install the package</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-button active" data-tab="quickstart"
+            >Quick Start</button
+          >
+          <button class="tab-button" data-tab="streaming">Streaming</button>
+          <button class="tab-button" data-tab="rdfcore"
+            >RdfCore Integration</button
+          >
+        </div>
+
+        <div class="tabs-content">
+          <div class="tab-panel active" data-tab="quickstart">
+            <CodeBlock code={quickStartCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="streaming">
+            <CodeBlock code={streamingCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="rdfcore">
+            <CodeBlock code={rdfcoreIntegrationCode} lang="dart" />
+          </div>
+        </div>
+      </div>
+
+      <div class="github-link">
+        <a
+          href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_jelly"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View more examples on GitHub →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Key Features</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Fastest in the Suite</h3>
+          <p>
+            Direct protobuf wire-format writing — no intermediate
+            <code>GeneratedMessage</code> allocation on either encode or decode.
+            O(1) LRU lookup tables, IRI term caching, and repeated-term delta
+            encoding compound to give Jelly its lead. See the
+            <a
+              href="https://github.com/locorda/rdf/blob/main/BENCHMARKS.md"
+              target="_blank"
+              rel="noopener noreferrer">benchmarks</a
+            >.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🌊</span> Frame-Level Streaming</h3>
+          <p>
+            <code>JellyTripleFrameEncoder</code> /
+            <code>JellyTripleFrameDecoder</code> (and quad equivalents) are
+            idiomatic <code>StreamTransformerBase</code> instances. Compose
+            with <code>.bind()</code> and <code>.expand()</code> just like any
+            other Dart stream transformer.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔗</span> Cross-Frame Table Sharing</h3>
+          <p>
+            In streaming mode, lookup tables accumulate across frames. IRIs and
+            datatypes seen in early frames are reused in later ones — giving
+            better compression for continuous streams than independent
+            per-frame encoding.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📊</span> Graphs &amp; Datasets</h3>
+          <p>
+            Batch and streaming APIs for both single graphs (TRIPLES physical
+            type) and full datasets (QUADS or GRAPHS physical type). Named
+            graph boundaries are preserved in GRAPHS mode.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">✅</span> Conformance Tested</h3>
+          <p>
+            82 official Jelly-RDF conformance tests pass (51 decode + 31
+            encode), executed via the
+            <a
+              href="https://github.com/Jelly-RDF/jelly-protobuf"
+              target="_blank"
+              rel="noopener noreferrer">jelly-protobuf</a
+            > test suite. All RDF 1.1 test cases pass.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔌</span> RdfCore Plugin</h3>
+          <p>
+            Register <code>JellyGraphCodec</code> and
+            <code>JellyDatasetCodec</code> with
+            <code>RdfCore.withStandardCodecs</code> for unified
+            content-type dispatch alongside Turtle, JSON-LD, and RDF/XML.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section use-cases-section">
+    <div class="container">
+      <h2>Use Cases</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>📡 High-Throughput Pipelines</h3>
+          <p>
+            Process millions of triples with minimal CPU and memory overhead.
+            Jelly's binary format eliminates the bottlenecks of text parsing at
+            scale.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>💾 Compact Storage</h3>
+          <p>
+            Store RDF graphs in databases or files with up to 25% less space
+            than Turtle. Lookup-table compression is especially effective for
+            datasets with repeated IRIs.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🌊 Streaming Ingestion</h3>
+          <p>
+            Feed triples into a consumer as they are decoded, without buffering
+            the entire dataset. Frame-level streaming keeps end-to-end latency
+            low.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Go Fast?</h2>
+      <p class="cta-description">
+        Read the documentation or explore other RDF packages.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/documentation/locorda_rdf_jelly/latest/"
+          class="cta-primary">Read the Docs</a
+        >
+        <a href="/rdf/" class="cta-secondary">← Back to RDF Overview</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Page-specific blob positioning */
+  .blob-1 {
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    top: -200px;
+    left: -100px;
+    animation-delay: 0s;
+  }
+
+  .blob-2 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    top: 100px;
+    right: -100px;
+    animation-delay: 7s;
+  }
+
+  /* Sections */
+  .section h2 {
+    font-size: 2.5rem;
+    color: #1e293b;
+  }
+
+  .section p {
+    line-height: 1.7;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #e11d48;
+  }
+
+  .inline-link {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .inline-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Problem section */
+  .problem-section {
+    background: #f8fafc;
+  }
+
+  .section-intro {
+    font-size: 1.2rem;
+    color: #475569;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    text-align: center;
+  }
+
+  .problem-demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .problem-demo {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .demo-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .demo-card h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .feature-list li {
+    padding: 0.4rem 0;
+    color: #475569;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .feature-list li::before {
+    content: "✓";
+    color: #10b981;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .feature-list--problem li::before {
+    content: "✗";
+    color: #ef4444;
+  }
+
+  .problem-explanation {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Solution section */
+  .solution-demo {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .solution-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    max-width: 680px;
+    width: 100%;
+  }
+
+  .solution-card h3 {
+    color: #334155;
+    margin-bottom: 1.25rem;
+    font-size: 1.2rem;
+  }
+
+  .demo-note {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f0fdf4;
+    border-radius: 0.5rem;
+    color: #166534;
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+
+  /* Getting Started */
+  .getting-started-section {
+    background: #f8fafc;
+  }
+
+  .install-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .install-section h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .tabs-container {
+    margin-top: 2rem;
+  }
+
+  .tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+  }
+
+  .tab-button:hover {
+    color: #1e293b;
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  .tab-button.active {
+    color: white;
+    background: #10b981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  }
+
+  .tabs-content {
+    background: white;
+    border-radius: 0 0 0.75rem 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .tab-panel {
+    display: none;
+    padding: 2rem;
+  }
+
+  .tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .github-link {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .github-link a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: color 0.2s;
+  }
+
+  .github-link a:hover {
+    color: #1d4ed8;
+  }
+
+  /* Features */
+  .features-section {
+    background: white;
+  }
+
+  /* Use Cases */
+  .use-cases-section {
+    background: #f8fafc;
+  }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    color: white;
+  }
+
+  .cta-section h2 {
+    color: white;
+  }
+
+  .cta-description {
+    font-size: 1.125rem;
+    opacity: 0.95;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+
+  .cta-primary {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: white;
+    color: #059669;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .cta-secondary {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    transition: all 0.2s;
+  }
+
+  .cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+</style>
+
+<script>
+  // Tab switching logic
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const tabId = button.getAttribute("data-tab");
+      const container = button.closest(".tabs-container");
+      if (!container) return;
+
+      container.querySelectorAll(".tab-button").forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      container.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.remove("active");
+      });
+
+      button.classList.add("active");
+      const panel = container.querySelector(`.tab-panel[data-tab="${tabId}"]`);
+      if (panel) panel.classList.add("active");
+    });
+  });
+</script>

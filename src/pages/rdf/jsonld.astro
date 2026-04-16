@@ -1,0 +1,665 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const examplesDir = join(__dirname, "../../../examples/rdf/jsonld");
+
+const quickStartCode = await readFile(
+  join(examplesDir, "lib/quick_start.dart"),
+  "utf-8",
+);
+const datasetsCode = await readFile(
+  join(examplesDir, "lib/datasets.dart"),
+  "utf-8",
+);
+const rdfcoreIntegrationCode = await readFile(
+  join(examplesDir, "lib/rdfcore_integration.dart"),
+  "utf-8",
+);
+const installCode = await readFile(
+  join(examplesDir, "01_install.txt"),
+  "utf-8",
+);
+
+const primaryCta = {
+  text: "View on pub.dev",
+  href: "https://pub.dev/packages/locorda_rdf_jsonld",
+  external: true,
+};
+
+const secondaryCta = {
+  text: "GitHub",
+  href: "https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_jsonld",
+  external: true,
+};
+---
+
+<BaseLayout
+  title="RDF JSON-LD - Locorda"
+  description="Full JSON-LD 1.1 support for Dart. W3C conformance-tested codec for decoding and encoding RDF graphs and datasets."
+  activeNav="rdf"
+>
+  <Hero
+    title="RDF JSON-LD"
+    description="Full JSON-LD 1.1 support for Dart.<br/>W3C conformance-tested. Plugs into RdfCore alongside other codecs."
+    primaryCta={primaryCta}
+    secondaryCta={secondaryCta}
+    breadcrumbs={[
+      { label: "Home", href: "/" },
+      { label: "RDF Libraries", href: "/rdf/" },
+      { label: "JSON-LD" },
+    ]}
+  />
+
+  <section class="section problem-section">
+    <div class="container">
+      <h2>The Challenge</h2>
+      <p class="section-intro">
+        JSON-LD is the most developer-friendly RDF format — but implementing the
+        full JSON-LD 1.1 processing algorithms correctly is anything but trivial.
+      </p>
+
+      <div class="problem-demo">
+        <div class="demo-card">
+          <h3>Familiar JSON</h3>
+          <CodeBlock
+            code={`{
+  "@context": {
+    "name": "http://schema.org/name",
+    "knows": {
+      "@id": "http://schema.org/knows",
+      "@type": "@id"
+    }
+  },
+  "@id": "http://example.org/alice",
+  "name": "Alice",
+  "knows": "http://example.org/bob"
+}`}
+            lang="json"
+          />
+        </div>
+
+        <div class="demo-card">
+          <h3>Many Subtleties</h3>
+          <ul class="feature-list">
+            <li>Context expansion &amp; compaction</li>
+            <li>Remote context loading</li>
+            <li>Named graphs via <code>@graph</code></li>
+            <li>Typed values and language tags</li>
+            <li>Base IRI resolution</li>
+            <li>Flattening</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="problem-explanation">
+        <p>
+          <strong>You need a battle-tested, spec-compliant implementation.</strong>
+          Getting JSON-LD right requires:
+        </p>
+        <ul>
+          <li>Complete W3C JSON-LD 1.1 processing algorithm support</li>
+          <li>Handling of all context forms (inline, remote, arrays)</li>
+          <li>Correct toRdf and fromRdf round-trips</li>
+          <li>Configurable strictness for real-world data</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section solution-section">
+    <div class="container">
+      <h2>The Solution</h2>
+      <p class="section-intro">
+        A complete, W3C conformance-tested JSON-LD 1.1 implementation that
+        integrates seamlessly with <code>locorda_rdf_core</code>.
+      </p>
+
+      <div class="solution-demo">
+        <div class="solution-card">
+          <h3>Simple API, Complete Spec Coverage</h3>
+          <CodeBlock
+            code={`import 'package:locorda_rdf_jsonld/jsonld.dart';
+
+// Decode JSON-LD to an RDF graph
+final graph = jsonldGraph.decode(jsonLdString);
+
+// Encode an RDF graph back to JSON-LD
+final json = jsonldGraph.encode(graph);`}
+            lang="dart"
+          />
+          <p class="demo-note">
+            ✓ One-line decoding and encoding<br />
+            ✓ Full JSON-LD 1.1 processing algorithms<br />
+            ✓ Drop-in integration with RdfCore
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started" class="section getting-started-section">
+    <div class="container">
+      <h2>Getting Started</h2>
+
+      <div class="install-section">
+        <h3>Install the package</h3>
+        <CodeBlock code={installCode} lang="bash" />
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-button active" data-tab="quickstart"
+            >Quick Start</button
+          >
+          <button class="tab-button" data-tab="datasets">Datasets</button>
+          <button class="tab-button" data-tab="rdfcore"
+            >RdfCore Integration</button
+          >
+        </div>
+
+        <div class="tabs-content">
+          <div class="tab-panel active" data-tab="quickstart">
+            <CodeBlock code={quickStartCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="datasets">
+            <CodeBlock code={datasetsCode} lang="dart" />
+          </div>
+
+          <div class="tab-panel" data-tab="rdfcore">
+            <CodeBlock code={rdfcoreIntegrationCode} lang="dart" />
+          </div>
+        </div>
+      </div>
+
+      <div class="github-link">
+        <a
+          href="https://github.com/locorda/rdf/tree/main/packages/locorda_rdf_jsonld/example"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View more examples on GitHub →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section features-section">
+    <div class="container">
+      <h2>Key Features</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><span class="card-icon">✅</span> W3C Conformance-Tested</h3>
+          <p>
+            Validated against the official JSON-LD 1.1 test suites: 465/467
+            <code>toRdf</code>, 52/53 <code>fromRdf</code>, 385/385
+            <code>expand</code>, 244/244 <code>compact</code>, 55/55
+            <code>flatten</code>. The skipped tests cover Generalized RDF
+            (blank-node predicates), which <code>locorda_rdf_core</code> does not support in favour of typesafe support for regular RDF.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Full Processing Algorithms</h3>
+          <p>
+            Expansion, compaction, flattening, <code>toRdf</code>, and
+            <code>fromRdf</code> — all JSON-LD 1.1 processing algorithms are
+            implemented. Context processing handles inline, remote, and array
+            contexts.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📊</span> Graphs &amp; Datasets</h3>
+          <p>
+            Decode and encode both <code>RdfGraph</code> (single graph) and
+            <code>RdfDataset</code> (named graphs via <code>@graph</code>).
+            Named graph boundaries are preserved across round-trips.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🌐</span> Async Remote Contexts</h3>
+          <p>
+            <code>AsyncJsonLdDecoder</code> supports loading remote
+            <code>@context</code> documents via a pluggable
+            <code>contextDocumentProvider</code>. Ideal for linked data
+            applications that reference schemas by URL.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚙️</span> Configurable Strictness</h3>
+          <p>
+            Fail-fast by default for correctness. Use
+            <code>skipInvalidRdfTerms: true</code> for best-effort conversion
+            of real-world data with invalid IRIs or language tags.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">🔌</span> RdfCore Plugin</h3>
+          <p>
+            Register with <code>RdfCore.withStandardCodecs</code> for unified
+            content-type dispatch alongside Turtle, N-Triples, RDF/XML, and
+            Jelly. Auto-detection works too.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section use-cases-section">
+    <div class="container">
+      <h2>Use Cases</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>🌐 Linked Data APIs</h3>
+          <p>
+            Consume and produce JSON-LD from REST APIs and semantic web
+            services. Handle <code>application/ld+json</code> alongside other
+            RDF content types.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🏷️ Schema.org Metadata</h3>
+          <p>
+            Parse and generate Schema.org structured data embedded in web
+            pages. JSON-LD is the recommended format for SEO-relevant
+            metadata.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🔄 Format Conversion</h3>
+          <p>
+            Decode JSON-LD documents and re-encode as Turtle, N-Triples, or
+            Jelly binary. RdfCore unifies all formats behind a single API.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🔐 Verifiable Credentials</h3>
+          <p>
+            JSON-LD is the foundation of W3C Verifiable Credentials. Parse and
+            produce VC documents with full context processing.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🗺️ Structured Object Mapping</h3>
+          <p>
+            JSON-LD framing is not supported, but <a href="/rdf/mapper/">locorda_rdf_mapper</a>
+            serves a similar purpose: map RDF graphs directly to typed Dart
+            objects with full round-trip support — no intermediate JSON needed.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <h2>Ready to Start?</h2>
+      <p class="cta-description">
+        Read the documentation or explore other RDF packages.
+      </p>
+      <div class="cta-buttons">
+        <a
+          href="https://pub.dev/documentation/locorda_rdf_jsonld/latest/"
+          class="cta-primary">Read the Docs</a
+        >
+        <a href="/rdf/" class="cta-secondary">← Back to RDF Overview</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Page-specific blob positioning */
+  .blob-1 {
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    top: -200px;
+    left: -100px;
+    animation-delay: 0s;
+  }
+
+  .blob-2 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #ef4444 0%, #ec4899 100%);
+    top: 100px;
+    right: -100px;
+    animation-delay: 7s;
+  }
+
+  /* Sections */
+  .section h2 {
+    font-size: 2.5rem;
+    color: #1e293b;
+  }
+
+  .section p {
+    line-height: 1.7;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #e11d48;
+  }
+
+  /* Problem section */
+  .problem-section {
+    background: #f8fafc;
+  }
+
+  .section-intro {
+    font-size: 1.2rem;
+    color: #475569;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    text-align: center;
+  }
+
+  .problem-demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .problem-demo {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .demo-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .demo-card h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .feature-list li {
+    padding: 0.4rem 0;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .feature-list li::before {
+    content: "✓";
+    color: #10b981;
+    font-weight: bold;
+  }
+
+  .problem-explanation {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .problem-explanation ul {
+    margin-top: 0.75rem;
+    padding-left: 1.5rem;
+  }
+
+  .problem-explanation li {
+    margin-bottom: 0.4rem;
+    color: #475569;
+  }
+
+  /* Solution section */
+  .solution-demo {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .solution-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    max-width: 680px;
+    width: 100%;
+  }
+
+  .solution-card h3 {
+    color: #334155;
+    margin-bottom: 1.25rem;
+    font-size: 1.2rem;
+  }
+
+  .demo-note {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f0fdf4;
+    border-radius: 0.5rem;
+    color: #166534;
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+
+  /* Getting Started */
+  .getting-started-section {
+    background: #f8fafc;
+  }
+
+  .install-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .install-section h3 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .tabs-container {
+    margin-top: 2rem;
+  }
+
+  .tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+  }
+
+  .tab-button:hover {
+    color: #1e293b;
+    background: rgba(245, 158, 11, 0.1);
+  }
+
+  .tab-button.active {
+    color: white;
+    background: #f59e0b;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  }
+
+  .tabs-content {
+    background: white;
+    border-radius: 0 0 0.75rem 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .tab-panel {
+    display: none;
+    padding: 2rem;
+  }
+
+  .tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .github-link {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .github-link a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: color 0.2s;
+  }
+
+  .github-link a:hover {
+    color: #1d4ed8;
+  }
+
+  /* Features */
+  .features-section {
+    background: white;
+  }
+
+  /* Use Cases */
+  .use-cases-section {
+    background: #f8fafc;
+  }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    color: white;
+  }
+
+  .cta-section h2 {
+    color: white;
+  }
+
+  .cta-description {
+    font-size: 1.125rem;
+    opacity: 0.95;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+
+  .cta-primary {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: white;
+    color: #d97706;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .cta-secondary {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    transition: all 0.2s;
+  }
+
+  .cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+</style>
+
+<script>
+  // Tab switching logic
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const tabId = button.getAttribute("data-tab");
+      const container = button.closest(".tabs-container");
+      if (!container) return;
+
+      container.querySelectorAll(".tab-button").forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      container.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.remove("active");
+      });
+
+      button.classList.add("active");
+      const panel = container.querySelector(`.tab-panel[data-tab="${tabId}"]`);
+      if (panel) panel.classList.add("active");
+    });
+  });
+</script>
