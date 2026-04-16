@@ -28,30 +28,6 @@ const secondaryCta = {
     secondaryCta={secondaryCta}
   />
 
-  <section class="section status-section">
-    <div class="container">
-      <div class="status-banner">
-        <div class="status-icon">⚠️</div>
-        <div class="status-content">
-          <h3>Alpha Stage - Under Assessment</h3>
-          <p>
-            A proof of concept is working, but <strong
-              >transmission time for documents to/from pods currently takes too
-              long</strong
-            >. The project is currently being evaluated to determine if this is
-            a fundamental limitation or a solvable optimization challenge.
-          </p>
-          <p style="margin-top: 0.75rem;">
-            <a href="/example/personal_notes_app/" class="demo-link">
-              → Try the alpha demo app
-            </a>
-            <span style="color: #94a3b8; font-size: 0.9rem;"> (expect slow sync times)</span>
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <section class="section vision-section">
     <div class="container">
       <h2>The Vision</h2>
@@ -190,8 +166,9 @@ class Category {
         <div class="card">
           <h3><span class="card-icon">⚡</span> Performance at Scale</h3>
           <p>
-            Flexible indexing and fetch strategies handle datasets from 100 to
-            100,000+ resources with smart sharding.
+            Flexible indexing and fetch strategies keep sync fast as your
+            dataset grows. Tested with ~15k resources; smart sharding is
+            designed to scale further.
           </p>
         </div>
 
@@ -203,6 +180,63 @@ class Category {
           </p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="section storage-strategy-section">
+    <div class="container">
+      <h2>Configure Your Storage Layout</h2>
+      <p class="section-intro">
+        Two independent axes give you full control: the <strong>layout</strong>
+        determines how many cloud files hold your data, while the
+        <strong>serialization format</strong> determines how each file is encoded.
+      </p>
+
+      <div class="strategy-grid">
+        <div class="strategy-card strategy-card--interop">
+          <div class="strategy-icon">🌐</div>
+          <h3>File-per-Resource Layout</h3>
+          <p class="strategy-backend">Required for Solid Pods · works everywhere</p>
+          <p>
+            Each managed resource lives in its own file. Fully linked-data
+            compliant: any Solid-compatible tool or SPARQL client can read and
+            write the data directly.
+          </p>
+          <ul>
+            <li>Maximum interoperability with other apps</li>
+            <li>Resources discoverable and addressable by IRI</li>
+            <li>More HTTP round-trips per sync cycle</li>
+            <li>Natural fit for Turtle encoding</li>
+          </ul>
+          <div class="strategy-badge strategy-badge--interop">Best for: open data, Solid ecosystem</div>
+        </div>
+
+        <div class="strategy-card strategy-card--perf">
+          <div class="strategy-icon">⚡</div>
+          <h3>Packed Layouts</h3>
+          <p class="strategy-backend">Google Drive, Dropbox &amp; any file-based backend</p>
+          <p>
+            Multiple resources are grouped into fewer files — from a handful of
+            shards down to a single file for the entire dataset. Bulk transfers
+            dramatically reduce round-trips and speed up sync cycles.
+          </p>
+          <ul>
+            <li>Far fewer network requests per sync</li>
+            <li>Great fit for <a href="/rdf/jelly/">Jelly</a>, TriG, or JSON-LD encoding</li>
+            <li>Single-file layout available; single-file-with-delta planned</li>
+            <li>Data not directly accessible by external RDF tools</li>
+          </ul>
+          <div class="strategy-badge strategy-badge--perf">Best for: private data, performance-critical apps</div>
+        </div>
+      </div>
+
+      <p class="strategy-note">
+        The serialization format — Turtle, <a href="/rdf/jelly/">Jelly</a>,
+        TriG, <a href="/rdf/jsonld/">JSON-LD</a> — is configured independently
+        of the layout. For Solid interoperability Turtle is the natural choice;
+        for packed layouts <a href="/rdf/jelly/">Jelly</a> gives the best
+        size and decode performance.
+      </p>
     </div>
   </section>
 
@@ -251,9 +285,8 @@ class Category {
         <h3>Real-World Output</h3>
         <p style="color: #64748b; margin-bottom: 1rem;">
           This is the actual output from the example application running on a
-          Solid Pod. Notice the generated IRIs and the metadata required for
-          synchronization. Once the performance is optimized, we can look into
-          generating a more readable IRI (and prefix) for the resources.
+          Solid Pod (interoperability mode). Notice the generated IRIs and the
+          metadata required for synchronization — all handled automatically.
         </p>
         <CodeBlock
           code={`@prefix category_1762183405043_136175: <https://experiments2.solidcommunity.net/data/aHR0cHM6Ly9sb2NvcmRhLmRldi9leGFtcGxlL3BlcnNvbmFsX25vdGVzX2FwcC92b2NhYnVsYXJ5L3BlcnNvbmFsLW5vdGVzI05vdGVzQ2F0ZWdvcnk=/category_1762183405043_136175#> .
@@ -424,7 +457,7 @@ _:b1 pn:categoryColor "red" .`}
           <h3>Example App</h3>
           <p>
             Live demo of the personal notes app showcasing sync engine
-            capabilities (alpha stage)
+            capabilities
           </p>
           <div class="resource-footer">
             <span class="resource-count">Try it now</span>
@@ -523,36 +556,106 @@ _:b1 pn:categoryColor "red" .`}
 </BaseLayout>
 
 <style>
-  /* Status Section */
-  .status-section {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  /* Storage Strategy Section */
+  .storage-strategy-section {
+    background: #f8fafc;
   }
 
-  .status-banner {
-    display: flex;
-    gap: 1.5rem;
+  .strategy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .strategy-card {
     background: white;
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     padding: 2rem;
-    border-left: 4px solid #f59e0b;
-    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
-  .status-icon {
-    font-size: 3rem;
+  .strategy-card--interop {
+    border-top-color: #8b5cf6;
+  }
+
+  .strategy-card--perf {
+    border-top-color: #10b981;
+  }
+
+  .strategy-icon {
+    font-size: 2.5rem;
     line-height: 1;
   }
 
-  .status-content h3 {
-    color: #92400e;
-    margin-bottom: 0.75rem;
-    font-size: 1.5rem;
+  .strategy-card h3 {
+    color: #1e293b;
+    font-size: 1.375rem;
+    margin: 0;
   }
 
-  .status-content p {
-    color: #78350f;
+  .strategy-backend {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .strategy-card p {
+    color: #475569;
     line-height: 1.6;
     margin: 0;
+  }
+
+  .strategy-card ul {
+    color: #475569;
+    line-height: 1.8;
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+
+  .strategy-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: auto;
+  }
+
+  .strategy-badge--interop {
+    background: #ede9fe;
+    color: #6d28d9;
+  }
+
+  .strategy-badge--perf {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .strategy-note {
+    margin-top: 2rem;
+    padding: 1rem 1.5rem;
+    background: white;
+    border-radius: 0.5rem;
+    border-left: 4px solid #8b5cf6;
+    color: #475569;
+    line-height: 1.7;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .strategy-note a {
+    color: #7c3aed;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .strategy-note a:hover {
+    text-decoration: underline;
   }
 
   /* Vision Section */
