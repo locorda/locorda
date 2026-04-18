@@ -183,6 +183,74 @@ class Category {
     </div>
   </section>
 
+  <section class="section status-section">
+    <div class="container">
+      <h2>Early Access</h2>
+      <p class="section-intro">
+        The core idea works. Try it out, build something real, and tell us what you need.
+      </p>
+
+      <div class="status-grid">
+        <div class="status-card status-card--works">
+          <div class="status-card-header">
+            <span class="status-icon">✅</span>
+            <h3>Works Today</h3>
+          </div>
+          <ul>
+            <li>Google Drive backend — fully implemented and tested</li>
+            <li>Offline-first sync with CRDT conflict resolution</li>
+            <li>File-per-resource layout (Solid Pods, linked-data interop)</li>
+            <li>Packed layouts: single-file and sharded (Google Drive)</li>
+            <li>Tested with ~15 000 resources</li>
+            <li>Core application API is stable</li>
+          </ul>
+        </div>
+
+        <div class="status-card status-card--gaps">
+          <div class="status-card-header">
+            <span class="status-icon">🚧</span>
+            <h3>Known Gaps</h3>
+          </div>
+          <ul>
+            <li>
+              <strong>Solid backend</strong>: each sync requires many HTTP requests — Solid Protocol currently
+              has no batch-write operation. This is a protocol-level limitation,
+              not something we can fix on our side. It is on the Solid roadmap,
+              but progress there is slow.
+            </li>
+            <li><code>ensure</code> and <code>delete</code> operations not yet implemented</li>
+            <li>
+              Delta layout not yet available — the full packed file is
+              uploaded/downloaded each cycle, even for small changes
+            </li>
+            <li>Limited set of CRDT types (LWW register, immutable, OR-Set; more planned)</li>
+            <li>Non-initial sync performance has room for optimization</li>
+          </ul>
+        </div>
+
+        <div class="status-card status-card--stability">
+          <div class="status-card-header">
+            <span class="status-icon">🔬</span>
+            <h3>Stability</h3>
+          </div>
+          <ul>
+            <li><strong>Core application API</strong> (annotations, mapper): stable</li>
+            <li>
+              <strong>Backend implementation API</strong> and
+              <strong>exchanged data format</strong> (index shards, wire
+              protocol): may have breaking changes
+            </li>
+            <li>Not production-ready yet — but definitely worth exploring</li>
+          </ul>
+          <p class="status-note-inline">
+            Other backends beyond Google Drive are planned.
+            Contributions are very welcome.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section storage-strategy-section">
     <div class="container">
       <h2>Configure Your Storage Layout</h2>
@@ -656,6 +724,92 @@ _:b1 pn:categoryColor "red" .`}
 
   .strategy-note a:hover {
     text-decoration: underline;
+  }
+
+  /* Status Section */
+  .status-section {
+    background: white;
+  }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+    align-items: start;
+  }
+
+  .status-card {
+    border-radius: 0.75rem;
+    padding: 1.75rem;
+    border: 1px solid #e2e8f0;
+    border-top-width: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .status-card--works {
+    border-top-color: #10b981;
+    background: #f0fdf4;
+  }
+
+  .status-card--gaps {
+    border-top-color: #f59e0b;
+    background: #fffbeb;
+  }
+
+  .status-card--stability {
+    border-top-color: #3b82f6;
+    background: #eff6ff;
+  }
+
+  .status-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .status-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .status-card h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.125rem;
+  }
+
+  .status-card ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: #475569;
+    line-height: 1.8;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .status-card ul li strong {
+    color: #1e293b;
+  }
+
+  .status-card ul li code {
+    background: rgba(0, 0, 0, 0.07);
+    padding: 0.1em 0.35em;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+  }
+
+  .status-note-inline {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 0.5rem;
+    color: #1e40af;
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 
   /* Vision Section */
