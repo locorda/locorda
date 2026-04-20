@@ -86,9 +86,6 @@ jobs:
       - name: Build sync-engine Flutter example app
         working-directory: sync-engine/packages/locorda/example/personal_notes_app
         run: flutter build web --release --base-href /example/personal_notes_app/
-      - name: Deploy RDF mappings for Flutter app
-        working-directory: sync-engine/packages/locorda/example/personal_notes_app
-        run: dart run locorda_dev:deploy_mappings dist/example/personal_notes_app/mappings/
 
       - name: Integrate Flutter app into site
         run: |
@@ -102,6 +99,9 @@ jobs:
           # Copy auth configuration
           cp sync-engine/packages/locorda/example/personal_notes_app/assets/contracts/auth/client-config.json dist/example/personal_notes_app/auth/
 
+      - name: Deploy RDF mappings for Flutter app
+        working-directory: sync-engine/packages/locorda/example/personal_notes_app
+        run: dart run locorda_dev:deploy_mappings $GITHUB_WORKSPACE/dist/example/personal_notes_app/mappings/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
