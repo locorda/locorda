@@ -26,7 +26,21 @@ const secondaryCta = {
     description="Offline-first synchronization without the complexity.<br/>Annotate your domain classes, connect user storage, done."
     primaryCta={primaryCta}
     secondaryCta={secondaryCta}
-  />
+  >
+    <a
+      slot="above-title"
+      href="https://pub.dev/packages/locorda"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="pub-version-badge"
+    >
+      <img
+        src="https://img.shields.io/pub/v/locorda?label=pub.dev&color=0175C2&style=flat-square"
+        alt="locorda on pub.dev"
+        height="20"
+      />
+    </a>
+  </SimpleHero>
 
   <section class="section vision-section">
     <div class="container">
@@ -624,6 +638,18 @@ _:b1 pn:categoryColor "red" .`}
 </BaseLayout>
 
 <style>
+  /* pub.dev version badge in hero */
+  .pub-version-badge {
+    display: inline-block;
+    margin-bottom: 1.25rem;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+  }
+
+  .pub-version-badge:hover {
+    opacity: 1;
+  }
+
   /* Storage Strategy Section */
   .storage-strategy-section {
     background: #f8fafc;

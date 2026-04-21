@@ -19,6 +19,7 @@ const {
 <div class="hero-gradient">
   <div class="container">
     <div class="hero-content">
+      <slot name="above-title" />
       <div class="hero-title">
         {
           showLogo && (
@@ -58,6 +59,9 @@ const {
           </div>
         )
       }
+      <div class="hero-meta">
+        <slot name="after-cta" />
+      </div>
     </div>
 
     <div class="blob blob-1"></div>
@@ -70,5 +74,29 @@ const {
   /* Simple hero for pages without breadcrumbs */
   .hero-gradient {
     padding: 6rem 0;
+  }
+
+  .hero-meta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    opacity: 0.75;
+    transition: opacity 0.2s;
+  }
+
+  .hero-meta:hover {
+    opacity: 1;
+  }
+
+  .hero-meta:empty {
+    display: none;
+  }
+
+  .hero-pill {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.25rem;
   }
 </style>
