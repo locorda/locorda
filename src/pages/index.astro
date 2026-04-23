@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout 
 	title="Locorda - Libraries for Privacy-Preserving Apps" 
-	description="Dart libraries for powerful applications that respect data ownership. RDF toolkit, CRDT sync, and semantic web tools for modern development."
+	description="Dart/Flutter libraries for privacy-preserving, offline-first apps: RDF toolkit, BYOB sync engine (Bring Your Own Backend), and semantic web tools. Unhosted philosophy — users own their data."
 >
 	<div class="hero-gradient">
 		<div class="container">
@@ -87,7 +87,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 			
 			<div class="vision-inspiration">
 				<p>
-					These libraries power active projects in user-owned computing, including an <a href="/sync-engine/"><strong>alpha sync engine</strong></a> combining CRDTs with RDF for conflict-free synchronization. Drawing inspiration from <a href="https://solidproject.org/" target="_blank" rel="noopener"><strong>SOLID's vision</strong></a> of decentralized, user-controlled data.
+					These libraries power active projects in user-owned computing, including an <a href="/sync-engine/"><strong>alpha sync engine</strong></a> combining CRDTs with RDF for conflict-free synchronization. Drawing inspiration from <a href="https://solidproject.org/" target="_blank" rel="noopener"><strong>SOLID's vision</strong></a> of decentralized, user-controlled data and the <a href="https://unhosted.org" target="_blank" rel="noopener"><strong>unhosted movement</strong></a> — BYOB (Bring Your Own Backend) for every app.
 				</p>
 				<p class="vision-goal">
 					<strong>The goal:</strong> Cloud-synced apps that are delightful to build and use — <em>without</em> sacrificing data ownership.
@@ -125,13 +125,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 						<span class="status-badge status-alpha">⚗️ Alpha</span>
 					</div>
 					<h3>Sync Engine</h3>
-					<p class="project-tagline">Offline-first sync with CRDTs + RDF</p>
+					<p class="project-tagline">Offline-first BYOB sync with CRDTs + RDF</p>
 					<p class="project-description">
-						Experimental conflict-free synchronization for Flutter apps. Combines CRDT algorithms with RDF for semantic conflict resolution across SOLID pods and cloud services.
+						Experimental conflict-free synchronization for Flutter apps. Users bring their own backend (Google Drive, Solid Pod) — no central server. Combines CRDT algorithms with RDF for semantic conflict resolution.
 					</p>
 					<div class="project-features">
 						<span class="feature-tag">CRDTs</span>
 						<span class="feature-tag">Offline-First</span>
+						<span class="feature-tag">BYOB</span>
 						<span class="feature-tag">SOLID</span>
 					</div>
 				</a>

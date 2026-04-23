@@ -7,9 +7,13 @@ interface Props {
 	title: string;
 	description?: string;
 	activeNav?: 'rdf' | 'vocabularies' | 'sync' | 'docs';
+	/** Absolute URL to an OG image; falls back to the site logo. */
+	ogImage?: string;
 }
 
-const { title, description, activeNav } = Astro.props;
+const { title, description, activeNav, ogImage } = Astro.props;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://locorda.dev');
+const resolvedOgImage = ogImage ?? `${canonicalUrl.origin}/logos/locorda-og.png`;
 ---
 
 <!DOCTYPE html>
@@ -19,6 +23,21 @@ const { title, description, activeNav } = Astro.props;
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>{title} | Locorda</title>
 	{description && <meta name="description" content={description} />}
+	<link rel="canonical" href={canonicalUrl.href} />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content={canonicalUrl.href} />
+	<meta property="og:title" content={`${title} | Locorda`} />
+	{description && <meta property="og:description" content={description} />}
+	<meta property="og:image" content={resolvedOgImage} />
+
+	<!-- Twitter / X Card -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={`${title} | Locorda`} />
+	{description && <meta name="twitter:description" content={description} />}
+	<meta name="twitter:image" content={resolvedOgImage} />
+
 	<link rel="icon" type="image/svg+xml" href="/logo.svg" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

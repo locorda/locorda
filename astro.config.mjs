@@ -1,11 +1,13 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://locorda.dev',
 	integrations: [
+		sitemap(),
 		starlight({
 			title: 'Locorda Documentation',
 			description: 'Documentation for Locorda projects - Sync Engine and RDF libraries',
