@@ -5,11 +5,9 @@ import CodeBlock from "../../../components/CodeBlock.astro";
 import VocabularyCard from "../../../components/VocabularyCard.astro";
 import "../../../styles/vocabularies-package.css";
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const examplesDir = join(__dirname, "../../../../examples/rdf/vocabularies");
+const examplesDir = join(process.cwd(), "examples/rdf/vocabularies");
 
 const installCode = `# Install common vocabularies
 dart pub add locorda_rdf_terms_common`;

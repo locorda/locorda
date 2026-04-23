@@ -4,11 +4,9 @@ import Hero from "../../../components/Hero.astro";
 import CodeBlock from "../../../components/CodeBlock.astro";
 import "../../../styles/vocabularies-package.css";
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const examplesDir = join(__dirname, "../../../../examples/rdf/terms_generator");
+const examplesDir = join(process.cwd(), "examples/rdf/terms_generator");
 
 const installCode = await readFile(join(examplesDir, "snippets/install.txt"), "utf-8");
 const commandsCode = await readFile(

@@ -3,14 +3,9 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Hero from "../../../components/Hero.astro";
 import CodeBlock from "../../../components/CodeBlock.astro";
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const examplesDir = join(
-  __dirname,
-  "../../../../examples/rdf/mapper/annotations/lib",
-);
+const examplesDir = join(process.cwd(), "examples/rdf/mapper/annotations/lib");
 
 // Load annotation examples
 const globalResourceCode = await readFile(
