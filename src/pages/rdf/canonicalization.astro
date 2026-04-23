@@ -136,6 +136,7 @@ _:c14n1 <foaf:name> "Bob" .`}
       <div class="install-section">
         <h3>Install the package</h3>
         <CodeBlock code={installCode} lang="bash" />
+        <p class="formerly-known-as">Formerly published as <a href="https://pub.dev/packages/rdf_canonicalization" target="_blank" rel="noopener"><code>rdf_canonicalization</code></a> on pub.dev.</p>
       </div>
 
       <div class="tabs-container">
@@ -489,6 +490,14 @@ if (canonical1 == canonical2) { ... }`}
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
+
+  .formerly-known-as {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+  .formerly-known-as a { color: #7c3aed; text-decoration: none; }
+  .formerly-known-as a:hover { text-decoration: underline; }
 
   .install-section h3 {
     color: #334155;
