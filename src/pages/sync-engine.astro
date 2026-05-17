@@ -23,7 +23,7 @@ const secondaryCta = {
 >
   <SimpleHero
     title="Sync Engine"
-    description="BYOB — Bring Your Own Backend:<br/>sync via Google Drive, Solid Pod, or any file storage — no central server.<br/>Annotate your domain classes, connect user storage, done."
+    description="BYOB — Bring Your Own Backend:<br/>sync via Google Drive, Solid Pod, or any file storage — no central server.<br/>No sync protocol to implement. No conflict code to write."
     primaryCta={primaryCta}
     secondaryCta={secondaryCta}
   >
@@ -330,7 +330,7 @@ class Category {
     <div class="container">
       <h2>Architecture Overview</h2>
       <p class="section-intro">
-        A 4-layer architecture designed for both simplicity and power
+        A 4-layer architecture designed for both simplicity and power.
       </p>
 
       <div class="architecture-layers">
@@ -368,12 +368,14 @@ class Category {
       </div>
 
       <div class="architecture-example">
-        <h3>Real-World Output</h3>
-        <p style="color: #64748b; margin-bottom: 1rem;">
-          This is the actual output from the example application running on a
-          Solid Pod (interoperability mode). Notice the generated IRIs and the
-          metadata required for synchronization — all handled automatically.
-        </p>
+        <h3>What the Engine Generates for You</h3>
+        <div class="engine-output-callout">
+          <strong>You never write or read any of this.</strong>
+          The actual file stored on a Solid Pod (interoperability mode) for a
+          single <code>Category</code> object — generated entirely from the
+          annotations you saw in step 1. Clock vectors, index shard references,
+          blank node mappings: all managed internally.
+        </div>
         <CodeBlock
           code={`@prefix category_1762183405043_136175: <https://experiments2.solidcommunity.net/data/aHR0cHM6Ly9sb2NvcmRhLmRldi9leGFtcGxlL3BlcnNvbmFsX25vdGVzX2FwcC92b2NhYnVsYXJ5L3BlcnNvbmFsLW5vdGVzI05vdGVzQ2F0ZWdvcnk=/category_1762183405043_136175#> .
 @prefix cm: <https://w3id.org/solid-crdt-sync/vocab/crdt-mechanics#> .
@@ -413,11 +415,7 @@ category_1762183405043_136175:lcrd-ibn-md5-3c7f9db5b14024d37f19f8dd09ec7c84 sync
 _:b1 pn:categoryColor "red" .`}
           lang="turtle"
         />
-        <p style="color: #64748b; margin-top: 1rem; font-size: 0.9rem;">
-          You can see the complexity typically hidden from the developer: clock
-          vectors for conflict resolution, index shard references, and blank
-          node mappings - all handled automatically by the sync engine.
-        </p>
+
       </div>
     </div>
   </section>
@@ -495,9 +493,9 @@ _:b1 pn:categoryColor "red" .`}
               Not for everyday use. You annotate your Dart domain classes
               (<code>@RootResource</code>, <code>@CrdtLwwRegister</code>, …) and the RDF
               layer is generated and managed entirely by the engine. The complex output in the
-              "Real-World Output" example above — clock vectors, index shard references, blank
-              node mappings — is internal engine detail, fully hidden from the application
-              developer.
+              "What the Engine Generates for You" example above — clock vectors, index shard
+              references, blank node mappings — is internal engine detail, fully hidden from
+              the application developer.
             </p>
             <p>
               Basic familiarity with the idea of RDF (data as subject–predicate–object triples)
@@ -1189,7 +1187,24 @@ _:b1 pn:categoryColor "red" .`}
 
   .architecture-example h3 {
     color: #1e293b;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .engine-output-callout {
+    background: #ede9fe;
+    border-left: 4px solid #7c3aed;
+    border-radius: 0.5rem;
+    padding: 0.9rem 1.25rem;
+    color: #3b0764;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  .engine-output-callout code {
+    background: rgba(124, 58, 237, 0.15);
+    padding: 0.1em 0.4em;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
   }
 
   /* Use Cases Section */
