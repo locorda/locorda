@@ -59,7 +59,9 @@ const secondaryCta = {
             conflict resolution strategies right in your code.
           </p>
           <CodeBlock
-            code={`@LcrdRootResource(PersonalNotesVocab.NotesCategory)
+            code={`const appVocab = AppVocab(appBaseUri: 'https://locorda.dev/example/personal_notes_app');
+
+@RootResource(appVocab, subClassOf: SchemaCreativeWork.classIri)
 class Category {
   @RdfIriPart()
   final String id;
@@ -416,6 +418,107 @@ _:b1 pn:categoryColor "red" .`}
           vectors for conflict resolution, index shard references, and blank
           node mappings - all handled automatically by the sync engine.
         </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section faq-section">
+    <div class="container">
+      <h2>Common Questions</h2>
+      <p class="section-intro">
+        Clearing up misconceptions about what Locorda requires — and what it doesn't.
+      </p>
+
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary class="faq-question">Does my app need to support Solid Pods?</summary>
+          <div class="faq-answer">
+            <p>
+              No. <strong>Google Drive is the recommended backend for most apps</strong> and is
+              fully implemented and tested today. Solid Pod support exists but comes with a
+              significant limitation: the Solid Protocol currently has no batch-write operation,
+              making each sync cycle slow (many individual HTTP requests). Solid is best suited
+              for open-data and interoperability scenarios. Other backends (Dropbox, custom file
+              storage) are planned.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Do users need a WebID, Solid account, or Semantic Web knowledge?</summary>
+          <div class="faq-answer">
+            <p>
+              Only if you choose the Solid backend. With Google Drive, users authenticate via
+              standard Google Sign-In — no special accounts, no WebID, no Solid Pod required.
+              The user experience is identical to any other "sign in with Google" app.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Must I use Schema.org, FOAF, or other "generic" vocabularies?</summary>
+          <div class="faq-answer">
+            <p>
+              No. Three approaches are supported — you choose:
+            </p>
+            <div class="vocab-approaches">
+              <div class="vocab-approach">
+                <strong>Generated vocabulary</strong> (simplest) — the code generator derives
+                all IRIs from your Dart class structure and generates the vocab file.
+                Zero manual RDF authoring.
+                <pre class="faq-code-block"><code>@RootResource(AppVocab(appBaseUri: 'https://myapp.example.com'))</code></pre>
+              </div>
+              <div class="vocab-approach">
+                <strong>Middle path</strong> — vocab still generated, but the class is declared
+                as a subclass of an existing type (e.g. <code>schema:CreativeWork</code>)
+                for interoperability.
+                <pre class="faq-code-block"><code>@RootResource(AppVocab(appBaseUri: '…'), subClassOf: SchemaCreativeWork.classIri)</code></pre>
+              </div>
+              <div class="vocab-approach">
+                <strong>External vocabulary</strong> — use external IRIs as-is;
+                annotate each property with <code>@RdfProperty(SchemaCreativeWork.name)</code>.
+                No custom vocab file is generated.
+                <pre class="faq-code-block"><code>@RootResource.externalVocab(SchemaCreativeWork.classIri, 'https://myapp.example.com')</code></pre>
+              </div>
+            </div>
+            <p>
+              Generic vocabularies are never mandated. Pick whichever approach fits your
+              interoperability needs.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Do I need RDF or Semantic Web expertise to use the sync engine?</summary>
+          <div class="faq-answer">
+            <p>
+              Not for everyday use. You annotate your Dart domain classes
+              (<code>@RootResource</code>, <code>@CrdtLwwRegister</code>, …) and the RDF
+              layer is generated and managed entirely by the engine. The complex output in the
+              "Real-World Output" example above — clock vectors, index shard references, blank
+              node mappings — is internal engine detail, fully hidden from the application
+              developer.
+            </p>
+            <p>
+              Basic familiarity with the idea of RDF (data as subject–predicate–object triples)
+              helps when naming your vocabulary IRIs, but you never hand-craft triples or write
+              SPARQL.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Is Locorda only for the Solid / decentralized web ecosystem?</summary>
+          <div class="faq-answer">
+            <p>
+              No. The BYOB (Bring Your Own Backend) architecture is storage-agnostic: any
+              file-based storage works. The <em>data format</em> is RDF-based for semantic
+              interoperability, but the auth and storage layer can be Google Drive, Dropbox,
+              or any custom file backend. Solid is one option among several — not a
+              prerequisite.
+            </p>
+          </div>
+        </details>
       </div>
     </div>
   </section>
@@ -1385,6 +1488,121 @@ _:b1 pn:categoryColor "red" .`}
     border-color: #8b5cf6;
     color: #8b5cf6;
     transform: translateY(-2px);
+  }
+
+  /* FAQ Section */
+  .faq-section {
+    background: white;
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .faq-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .faq-item[open] {
+    border-color: #8b5cf6;
+  }
+
+  .faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    list-style: none;
+    gap: 1rem;
+    user-select: none;
+    background: #f8fafc;
+  }
+
+  .faq-question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-question::after {
+    content: "+";
+    font-size: 1.5rem;
+    color: #8b5cf6;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    line-height: 1;
+  }
+
+  .faq-item[open] .faq-question::after {
+    transform: rotate(45deg);
+  }
+
+  .faq-item[open] .faq-question {
+    color: #7c3aed;
+    background: #faf5ff;
+  }
+
+  .faq-answer {
+    padding: 1.25rem 1.5rem 1.5rem;
+    color: #475569;
+    line-height: 1.7;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .faq-answer p {
+    margin: 0;
+  }
+
+  .faq-answer p + p {
+    margin-top: 0.75rem;
+  }
+
+  .faq-answer code {
+    background: #f1f5f9;
+    padding: 0.1em 0.4em;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    color: #7c3aed;
+  }
+
+  .faq-answer .vocab-approaches {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0.5rem 0;
+  }
+
+  .faq-answer .vocab-approach {
+    padding-left: 0.9rem;
+    border-left: 3px solid #ede9fe;
+  }
+
+  .faq-answer .faq-code-block {
+    margin: 0.4rem 0 0;
+    padding: 0.45rem 0.75rem;
+    background: #f1f5f9;
+    border-radius: 0.25rem;
+    font-size: 0.82em;
+    overflow-x: auto;
+    white-space: pre;
+    color: #7c3aed;
+  }
+
+  .faq-answer .faq-code-block code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
   }
 
   /* Responsive */

@@ -1,0 +1,40 @@
+# Locorda
+
+> Open-source Dart/Flutter libraries for building offline-first, cloud-synced apps where users own their data. Combines CRDTs and RDF for conflict-free synchronization with BYOB (Bring Your Own Backend) storage — no central server required.
+
+## Documentation
+
+- [Getting Started](https://locorda.dev/docs/sync-engine/guides/getting-started/): Step-by-step quick start — build a minimal offline-first task app with Locorda in minutes.
+- [Sync Engine](https://locorda.dev/sync-engine/): The BYOB sync engine — annotate Dart classes, connect user storage, sync automatically.
+- [RDF Libraries](https://locorda.dev/rdf/): Complete RDF toolkit for Dart (parse, serialize, query, map objects).
+- [RDF Vocabularies](https://locorda.dev/rdf/vocabularies/): Type-safe Dart wrappers for Schema.org, FOAF, Solid, Dublin Core, and 30+ standard vocabularies.
+- [Vocabularies (sync engine)](https://locorda.dev/vocab/): RDF vocabularies defining CRDT mechanics, synchronization metadata, and indexing strategies.
+- [Mappings](https://locorda.dev/mappings/): Merge contracts declaring conflict resolution strategies and synchronization rules.
+
+## Key Facts
+
+- **Primary backend: Google Drive** — fully implemented and tested. Users authenticate via standard Google Sign-In; no special accounts or platform knowledge needed.
+- **Solid Pod** support is available but secondary: the Solid Protocol currently has no batch-write operation, making each sync slow (many individual HTTP requests). Use it for open-data and interoperability scenarios, not as the everyday default.
+- **Other backends** (Dropbox, custom file storage) are planned; the architecture is backend-agnostic.
+- **Vocabulary freedom**: Three approaches, all supported: (1) `@RootResource(AppVocab(appBaseUri: 'https://myapp.example.com'))` — code generator derives all IRIs from Dart class structure and generates a vocab file, zero manual RDF authoring; (2) same default constructor with `subClassOf: SchemaCreativeWork.classIri` — still generates vocab but declares the class as a subtype of an external vocabulary term for interoperability; (3) `@RootResource.externalVocab(SchemaCreativeWork.classIri, 'https://myapp.example.com')` with `@RdfProperty(SchemaCreativeWork.name)` on each field — uses external IRIs as-is, no custom vocab file generated. Generic vocabularies (Schema.org, FOAF) are never required.
+- **No RDF expertise required** for everyday use: annotate Dart domain classes with `@RootResource`, `@CrdtLwwRegister`, etc. The entire RDF layer is generated and managed automatically by the engine. For RDF experts who want full control: Locorda is highly modular — you can bypass annotations entirely and work directly with the `RdfGraph` class while still leveraging the sync engine, conflict resolution, and storage backends.
+- **No Solid / WebID required** unless you explicitly choose the Solid backend. With Google Drive, users authenticate with their existing Google account.
+- **Worker isolation**: CRDT merge logic, SQLite I/O, HTTP requests, and auth all run in a background Dart Isolate (native) or Web Worker (web), keeping the UI thread responsive.
+- **Status**: Alpha / early access. Google Drive backend is the recommended starting point; Solid backend works but is slow pending upstream protocol improvements.
+
+## Misconceptions to Avoid
+
+- Locorda is **not** Solid-only. Solid is one of several supported backends, and currently not the recommended one for most apps.
+- Locorda does **not** require users to have a Solid Pod, WebID, or knowledge of decentralized identity systems.
+- Locorda does **not** require developers to use Schema.org, FOAF, or any specific standard vocabulary. Developers can use AppVocab-based code generation (derives vocab from Dart class structure), existing external IRIs directly, or a mix of both.
+- The "BYOB / unhosted" framing describes the *architecture principle* (user-owned storage), not a requirement to use any particular identity or storage provider.
+- The internal RDF output (clock vectors, index shard references, blank node mappings) is fully hidden complexity — the developer writes only Dart annotations, not RDF triples.
+- The learning curve for basic usage is low: annotate your Dart classes, add a dependency, obtain a Google OAuth client credential. Solid-specific concepts (WebACL, DPoP, WebID) are only relevant if you choose the Solid backend.
+
+## Optional Details
+
+- [GitHub organization](https://github.com/locorda)
+- [sync-engine repository](https://github.com/locorda/sync-engine): The CRDT+RDF sync engine implementation.
+- [rdf repository](https://github.com/locorda/rdf): The Dart RDF libraries.
+- [pub.dev: locorda](https://pub.dev/packages/locorda): Main package entry point.
+- [pub.dev: locorda_worker](https://pub.dev/packages/locorda_worker): Worker infrastructure (isolate/web-worker abstraction).
