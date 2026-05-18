@@ -9,11 +9,31 @@ interface Props {
 	activeNav?: 'rdf' | 'vocabularies' | 'sync' | 'docs';
 	/** Absolute URL to an OG image; falls back to the site logo. */
 	ogImage?: string;
+	/** Page-specific JSON-LD schema objects, merged alongside the site-wide Organization + WebSite schemas. */
+	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { title, description, activeNav, ogImage } = Astro.props;
+const { title, description, activeNav, ogImage, jsonLd } = Astro.props;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://locorda.dev');
 const resolvedOgImage = ogImage ?? `${canonicalUrl.origin}/logos/locorda-og.png`;
+
+const baseSchemas = [
+	{
+		'@context': 'https://schema.org',
+		'@type': 'Organization',
+		name: 'Locorda',
+		url: 'https://locorda.dev',
+		logo: 'https://locorda.dev/logo.svg',
+		sameAs: ['https://github.com/locorda', 'https://pub.dev/publishers/locorda.dev'],
+	},
+	{
+		'@context': 'https://schema.org',
+		'@type': 'WebSite',
+		name: 'Locorda',
+		url: 'https://locorda.dev',
+	},
+];
+const pageSchemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 ---
 
 <!DOCTYPE html>
@@ -43,6 +63,10 @@ const resolvedOgImage = ogImage ?? `${canonicalUrl.origin}/logos/locorda-og.png`
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+	<!-- Structured data -->
+	<script type="application/ld+json" set:html={JSON.stringify(baseSchemas)} />
+	{pageSchemas.length > 0 && <script type="application/ld+json" set:html={JSON.stringify(pageSchemas)} />}
 </head>
 <body>
 	<Header activeNav={activeNav} />
