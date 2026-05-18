@@ -7,7 +7,11 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
 	site: 'https://locorda.dev',
 	integrations: [
-		sitemap(),
+		sitemap({
+			changefreq: 'weekly',
+			priority: 0.7,
+			lastmod: new Date(),
+		}),
 		starlight({
 			title: 'Locorda Documentation',
 			description: 'Documentation for Locorda projects - Sync Engine and RDF libraries',
